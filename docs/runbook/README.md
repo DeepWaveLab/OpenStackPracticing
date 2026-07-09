@@ -34,6 +34,13 @@
 12. [Day 3: Nova Compute](./day-3-nova-compute.md) ✅（Hypervisor，LXD VM + KVM；⚠️ 必須接 `cloud-credentials`）
 13. [Day 3: Network Stack (OVN + Neutron)](./day-3-network-stack.md) ✅（4 charm + 13 relation；⚠️ SSC interface 不合 → 要 Vault）
 14. [Day 3: Vault TLS for OVN](./day-3-vault-tls.md) ✅（Vault 1.8/stable；OVN legacy interface 解藥）
+15. [Day 3: Horizon (openstack-dashboard)](./day-3-horizon.md) ✅（Web UI，走 HTTP + SSH tunnel）
+16. [Day 4: Configure OpenStack — 開第一台 VM](./day-4-configure-openstack.md) ✅（Ubuntu VM end-to-end SSH 通）
+17. [Day 5: Heat (Orchestration)](./day-5-heat.md) ✅（Magnum 前置，demo stack 驗證）
+18. [Day 6: Magnum (Container Infra)](./day-6-magnum.md) ✅（API 上線 + domain-setup）
+19. [Day 7: Magnum K8s Cluster 實建](./day-7-magnum-k8s-cluster.md) 🟡（2 nodes Ready；workload 卡在 Magnum upstream 舊 image URL）
+20. [Day 8: Storage 嘗試與 LXD 限制](./day-8-storage-attempts.md) ❌（Ceph / Cinder LVM 在 LXD container 撞 kernel 權限，沒跑完）
+21. [Sprint 回顧 + 下一步規劃](../reflection.md) 📝 整個 9 天總結
 
 ## ✅ 2026-04-19 nova-compute 重建完成
 
@@ -44,8 +51,8 @@
 
 ## 尚未完成
 
-- **openstack-dashboard (Horizon)** — Install OpenStack 章最後一塊
-- **Configure OpenStack** — external network、security group、keypair、first VM 開機
+- **Configure OpenStack** — external network、flavor、security group、keypair、first VM 開機
+- **Ceph / Cinder**（刻意跳過，Glance file backend 已夠；未來 Magnum 要 persistent volume 再補）
 
 ## 快速重登 VM
 

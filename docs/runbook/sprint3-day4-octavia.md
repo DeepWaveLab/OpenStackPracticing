@@ -1,0 +1,153 @@
+# Sprint 3 / Day 4: Octavia LBaaS(Sprint 1 雪恥項 #2)
+
+> 課程定位:部署 Octavia 並手動走完 LB 全流程(LB → listener → pool → member → health monitor → VIP FIP)。
+> Sprint 1 這一步死於 Canonical charm 在 amd64 的 2024.1 斷代(solutions #21)—— 根本沒得裝。Kolla 這邊 Octavia 是一等公民。
+
+## 原理與架構
+
+### 1. Amphora 模型:LB 是「一台幫你養的 VM」
+
+```
+openstack CLI ─► octavia-api ─► octavia-worker ──(nova boot)──► amphora VM
+                                                                 │ 裡面跑 haproxy
+     octavia-health-manager ◄──(UDP 5555 心跳)── amphora-agent ──┤
+     octavia-housekeeping(清孤兒、輪替憑證)                       │
+                     tenant traffic:VIP port ─► haproxy ─► members
+```
+
+- **worker**:收到 LB 需求 → 叫 Nova 開 amphora VM、叫 Neutron 插 VIP port、把 haproxy 設定推進去
+- **health-manager**:收 amphora 心跳,失聯就 failover(砍掉重開一台)
+- **housekeeping**:清理孤兒資源、憑證輪替
+- LB 的資料面 = amphora VM 裡的 haproxy;**control plane 掛了,現有 LB 照常轉發**
+
+### 2. mTLS dual CA(`kolla-ansible octavia-certificates`)
+
+controller ↔ amphora-agent(:9443)雙向驗證:
+- `server_ca`:簽 amphora 端的 server 憑證(controller 驗 amphora)
+- `client_ca`:簽 controller 端的 client 憑證(amphora 驗 controller)
+兩個 CA 分開 = 偷到 amphora image 也偽造不了 controller 身分。
+
+### 3. lb-mgmt-net:tenant 模式的 o-hm0 魔術(本日最重要的架構點)
+
+Octavia 管理面需要一條 controller ↔ amphora 的網路。兩種模式:
+
+| | provider 模式(kolla 預設) | **tenant 模式(本 lab 採用)** |
+|---|---|---|
+| lb-mgmt-net | 實體 VLAN/flat,host 介面直接在上面 | 普通 Geneve tenant 網路 |
+| controller 怎麼接進去 | host 網卡本來就在該 L2 | kolla 建一個 neutron port,然後 `ovs-vsctl add-port br-int o-hm0 -- set Interface o-hm0 external-ids:iface-id=<port_id>` —— **把 host 假扮成一個 VM port 插進 overlay** |
+| 適用 | 有真實網路可用的生產環境 | 單機 lab / 無 VLAN 環境(如 Azure) |
+
+**設計變更紀錄**:原計畫仿 ext-net 做第二組 dummy1/br-ex2/physnet2(provider 模式)。動手前直接讀裝好的 role 原始碼(`roles/octavia/tasks/hm-interface.yml`)發現 tenant 模式的 o-hm0 手法與 OVN 相容(ovn-controller 認 iface-id 就綁 port),整條手術省掉。**教訓:查「這版怎麼做」永遠以 `~/kolla-venv/share/kolla-ansible/ansible/roles/` 的原始碼為準,部落格文章常是舊版做法。**
+
+### 4. Amphora image:OSISM 預建 vs DIB 自建
+
+官方做法是 diskimage-builder 自建(~15 分、需 debootstrap)。[OSISM 每月發布預建 image](https://github.com/osism/openstack-octavia-amphora-image),有對應 2025.1 的版本,lab 直接用;生產環境建議自建(控制內容物與更新節奏)。
+
+### 5. Bonus:OVN provider driver
+
+Epoxy 的 kolla 在 `neutron_plugin_agent == 'ovn'` 時自動註冊第二個 LB provider:`ovn`。它把 L4 LB 規則直接寫進 OVN 邏輯流表,**不開 amphora VM**——沒有 L7、沒有 health monitor 完整功能,但零額外資源。課程對照:amphora = 功能全、成本高;ovn = 陽春、免費。
+
+## 步驟
+
+### 1. 前置
+
+```bash
+# amphora image(背景下載)
+curl -sL -o /tmp/amphora.qcow2 \
+  https://nbg1.your-objectstorage.com/osism/openstack-octavia-amphora-image/octavia-amphora-haproxy-2025.1.qcow2
+
+# globals.yml
+enable_octavia: "yes"
+octavia_network_type: "tenant"
+octavia_auto_configure: yes     # kolla 自建 lb-mgmt-net/router/flavor/SG/keypair
+
+# 憑證(注意:這個子指令也要 -i,否則找預設 inventory 路徑報錯)
+kolla-ansible octavia-certificates -i ~/all-in-one
+```
+
+### 2. Deploy
+
+```bash
+kolla-ansible deploy -i ~/all-in-one
+```
+
+### 3. 上傳 amphora image + LB lab
+
+```bash
+# image 上傳到 octavia.conf 的 amp_image_owner_id 那個 project,tag 必須是 amphora
+AMP_PROJECT=$(sudo docker exec octavia_worker grep amp_image_owner_id /etc/octavia/octavia.conf | awk '{print $3}')
+source /etc/kolla/admin-openrc.sh
+openstack image create amphora-x64-haproxy --file /tmp/amphora.qcow2 \
+  --disk-format qcow2 --container-format bare --private --tag amphora \
+  --project $AMP_PROJECT --property hw_architecture=x86_64 --property hw_rng_model=virtio
+pip install python-octaviaclient
+
+# 兩台 web member(user-data 起 http server 回 hostname)
+source ~/demo-openrc.sh
+openstack security group rule create --proto tcp --dst-port 80 default
+openstack server create --flavor m1.small --image ubuntu-24.04 --network net1 \
+  --key-name oslab --config-drive True --user-data /tmp/web-userdata.sh --wait vm-web1   # web2 同
+
+# LB 全流程(第一次 create 會觸發 amphora VM 開機,2-4 分)
+openstack loadbalancer create --name lb2 --vip-subnet-id subnet1 --wait
+openstack loadbalancer listener create --name listener1 --protocol HTTP --protocol-port 80 --wait lb2
+openstack loadbalancer pool create --name pool1 --lb-algorithm ROUND_ROBIN --listener listener1 --protocol HTTP --wait
+openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 --protocol-port 80 --wait pool1
+openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.188 --protocol-port 80 --wait pool1
+openstack loadbalancer healthmonitor create --name hm1 --delay 5 --max-retries 3 --timeout 3 --type HTTP --url-path / --wait pool1
+
+# VIP 掛 FIP → host 直接打
+VIPPORT=$(openstack loadbalancer show lb2 -c vip_port_id -f value)
+LBFIP=$(openstack floating ip create ext-net -c floating_ip_address -f value)
+openstack floating ip set --port $VIPPORT $LBFIP
+for i in $(seq 6); do curl -s http://$LBFIP/; done   # web1/web2 交替 = round robin
+```
+
+### 4. Bonus:OVN provider 對照組
+
+```bash
+openstack loadbalancer create --name lb-ovn --provider ovn --vip-subnet-id subnet1 --wait
+openstack loadbalancer listener create --name lis-ovn --protocol TCP --protocol-port 80 --wait lb-ovn
+openstack loadbalancer pool create --name pool-ovn --lb-algorithm SOURCE_IP_PORT --listener lis-ovn --protocol TCP --wait
+openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 --protocol-port 80 --wait pool-ovn
+# 特徵:L4 only、SOURCE_IP_PORT、無 amphora VM、規則直接進 OVN 流表
+```
+
+## Checkpoint(全數通過 2026-07-08)
+
+| 驗證 | 判準 | 實測 |
+|---|---|---|
+| octavia 容器 | api/worker/health-manager/housekeeping/driver-agent 全 Up | ✅ |
+| o-hm0 | 從 lb-mgmt-subnet 拿到 DHCP IP | ✅ 10.1.0.29/24(OVN 原生 DHCP) |
+| auto-configure | lb-mgmt-net/router/flavor/SG 自動建立,octavia.conf 填好 id | ✅ |
+| amphora | ALLOCATED / STANDALONE,mgmt IP 可達 | ✅ 10.1.0.85 |
+| lb2(amphora provider) | ACTIVE/ONLINE,members 全 ONLINE | ✅ |
+| **round robin** | curl FIP 交替回 web1/web2 | ✅ 6/6 完美交替 |
+| lb-ovn(ovn provider) | ACTIVE/ONLINE,tenant 內可打通 | ✅ 無 amphora,零額外 VM |
+| **雪恥驗證** | Sprint 1 solutions #21(charm 斷代)不存在於 Kolla 路線 | ✅ |
+
+## 踩坑
+
+### 1. `octavia-certificates` 不吃預設 inventory
+
+`kolla-ansible octavia-certificates` 單獨跑會找 `/etc/kolla/ansible/inventory/all-in-one` 報 Path does not exist —— 跟 deploy 一樣要 `-i ~/all-in-one`。
+
+### 2. Ubuntu 24.04 沒有 dhclient → octavia-interface.service 起不來(solutions 級)
+
+deploy 死在 `Restart octavia-interface.service`,`systemctl status` 顯示 `dhclient ... status=203/EXEC`(執行檔不存在)。**Noble cloud image 已移除 isc-dhcp-client**(上游棄案),kolla 的 unit 還寫死 `/sbin/dhclient`。修:`apt install isc-dhcp-client` → `systemctl reset-failed && systemctl start octavia-interface` → 補跑 `deploy --tags octavia`。詳見 `solutions/integration-issues/kolla-octavia-dhclient-noble.md`。
+
+### 3. amphora driver 需要 Redis jobboard,kolla 不會自動開(solutions 級)
+
+LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundError: No master found for 'kolla'` + `Error 111 connecting to 127.0.0.1:6379`。**Epoxy 的 amphora provider 走 taskflow jobboard(Redis sentinel),但 `enable_redis` 預設 no 且 octavia 不會幫你拉起來**。修:`enable_redis: "yes"` → `deploy --tags redis,octavia`。詳見 `solutions/integration-issues/kolla-octavia-redis-jobboard.md`。
+
+### 4. octavia-openrc.sh 沒有生成
+
+文件說會有 `/etc/kolla/octavia-openrc.sh`,實際沒出現。不影響:image 上傳改用 admin + `--project <amp_image_owner_id>`(從 octavia.conf 讀,auto-configure 已填好)。
+
+### 5. 卡在 PENDING_* 的 LB 無法刪除(擴展知識)
+
+Redis 壞掉期間建立的 lb1 永遠停在 `PENDING_CREATE`,delete 回 409(PENDING 狀態 immutable,而 job 從未進 queue,永遠不會有人來改狀態)。社群公認處置(**lab 限定,生產環境先開 ticket**):DB 把 `provisioning_status` 改 `ERROR` → `loadbalancer delete --cascade`。這是本 lab 唯一一次手改 DB,原因:Octavia 沒有提供 stuck-PENDING 的官方重置工具。
+
+## 下一步(Day 5)
+
+Barbican(Magnum 的憑證倉庫)+ Heat 複習(白撿的,Day 1 已部)。
