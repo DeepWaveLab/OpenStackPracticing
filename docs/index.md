@@ -25,6 +25,44 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 </div>
 
+## 這朵雲能做成什麼
+
+你在公有雲用過的東西,OpenStack 幾乎都有對應的積木——這門課會親手把它們一塊塊拼起來:
+
+| | 服務 | 它給你什麼 | AWS | GCP | Azure |
+|---|---|---|---|---|---|
+| ![Keystone](assets/mascots/keystone.png){ width="32" } | [Keystone](runbook/sprint3-day2-openstack-resource-flow.md) | 身分認證與存取控制 | IAM | Cloud IAM | Entra ID |
+| ![Glance](assets/mascots/glance.png){ width="32" } | [Glance](runbook/sprint3-day2-openstack-resource-flow.md) | VM 映像檔管理 | AMI | Images | Compute Gallery |
+| ![Nova](assets/mascots/nova.png){ width="32" } | [Nova](runbook/sprint3-day2-openstack-resource-flow.md) | 虛擬機生命週期與運算調度 | EC2 | Compute Engine | Virtual Machines |
+| ![Neutron](assets/mascots/neutron.png){ width="32" } | [Neutron](runbook/sprint3-day2-openstack-resource-flow.md) | 軟體定義網路:網段、路由、防火牆 | VPC | VPC | Virtual Network |
+| ![Cinder](assets/mascots/cinder.png){ width="32" } | [Cinder](runbook/sprint3-day3-cinder-lvm.md) | 區塊儲存:可掛載、可搬移的持久磁碟 | EBS | Persistent Disk | Managed Disks |
+| ![Octavia](assets/mascots/octavia.png){ width="32" } | [Octavia](runbook/sprint3-day4-octavia.md) | 負載平衡即服務(LBaaS) | ELB | Cloud Load Balancing | Load Balancer |
+| ![Barbican](assets/mascots/barbican.png){ width="32" } | [Barbican](runbook/sprint3-day5-barbican-heat.md) | 金鑰、憑證與機密集中管理 | Secrets Manager | Secret Manager | Key Vault |
+| ![Heat](assets/mascots/heat.png){ width="32" } | [Heat](runbook/sprint3-day5-barbican-heat.md) | 宣告式資源編排(IaC) | CloudFormation | Infrastructure Manager | Bicep / ARM |
+| ![Magnum](assets/mascots/magnum.png){ width="32" } | [Magnum](runbook/sprint3-day7-magnum-capi-driver.md) | 代管 Kubernetes 叢集 | EKS | GKE | AKS |
+| ![Horizon](assets/mascots/horizon.png){ width="32" } | [Horizon](runbook/sprint3-day1-kolla-aio-core.md) | 雲資源的網頁管理介面 | Console | Cloud Console | Portal |
+
+點服務名稱可以直接跳到認識它的那一天。
+
+### 還沒拼上的積木
+
+同一盒積木裡還有更多——這些本課程沒有部署,想擴充你的雲時就從這裡挑:
+
+| | 服務 | 它給你什麼 | AWS | GCP | Azure |
+|---|---|---|---|---|---|
+| ![Swift](assets/mascots/swift.png){ width="32" } | [Swift](runbook/sprint3-day11-openstack-service-map.md) | 物件儲存 | S3 | Cloud Storage | Blob Storage |
+| ![Manila](assets/mascots/manila.png){ width="32" } | [Manila](runbook/sprint3-day11-openstack-service-map.md) | 共享檔案系統 | EFS | Filestore | Azure Files |
+| ![Designate](assets/mascots/designate.png){ width="32" } | [Designate](runbook/sprint3-day11-openstack-service-map.md) | DNS 代管 | Route 53 | Cloud DNS | Azure DNS |
+| ![Trove](assets/mascots/trove.png){ width="32" } | [Trove](runbook/sprint3-day11-openstack-service-map.md) | 資料庫即服務 | RDS | Cloud SQL | Azure Database |
+| ![Zun](assets/mascots/zun.png){ width="32" } | [Zun](runbook/sprint3-day11-openstack-service-map.md) | 容器即服務(不經 K8s) | Fargate | Cloud Run | Container Instances |
+| ![Ironic](assets/mascots/ironic.png){ width="32" } | [Ironic](runbook/sprint3-day11-openstack-service-map.md) | 裸機佈建與生命週期管理 | EC2 Bare Metal | Bare Metal Solution | Azure BareMetal |
+| ![Telemetry](assets/mascots/telemetry.png){ width="32" } | [Telemetry](runbook/sprint3-day11-openstack-service-map.md) | 計量、監控與告警 | CloudWatch | Cloud Monitoring | Azure Monitor |
+| ![CloudKitty](assets/mascots/cloudkitty.png){ width="32" } | [CloudKitty](runbook/sprint3-day11-openstack-service-map.md) | 用量計費與費率管理 | Cost Explorer | Cloud Billing | Cost Management |
+| ![Masakari](assets/mascots/masakari.png){ width="32" } | [Masakari](runbook/sprint3-day11-openstack-service-map.md) | 虛擬機高可用與自動復原 | (EC2 內建自動復原) | (內建即時遷移) | (內建服務修復) |
+
+每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。
+
+
 ## 從這裡出發
 
 <div class="grid cards" markdown>
@@ -60,76 +98,6 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
     OpenStack 有幾十個服務,我們用了 11 個。官方 Landscape 一張圖看懂整個版圖。
 
     [:octicons-arrow-right-24: 看地圖](runbook/sprint3-day11-openstack-service-map.md)
-
-</div>
-
-## 這朵雲的居民
-
-<div class="grid cards" markdown>
-
--   ![Keystone](assets/mascots/keystone.png){ width="44" } __Keystone__
-
-    ---
-
-    帳號與權限的守門人——之後每一個指令都先過它這關。
-
-    [:octicons-arrow-right-24: Day 2 認識它](runbook/sprint3-day2-openstack-resource-flow.md)
-
--   ![Nova](assets/mascots/nova.png){ width="44" } __Nova__
-
-    ---
-
-    開虛擬機的引擎。這朵雲上每一台 VM(連 K8s 節點)都是它開的。
-
-    [:octicons-arrow-right-24: Day 2 開第一台 VM](runbook/sprint3-day2-openstack-resource-flow.md)
-
--   ![Neutron](assets/mascots/neutron.png){ width="44" } __Neutron__
-
-    ---
-
-    一切網路的織網者——虛擬網路、路由器、防火牆全是它。
-
-    [:octicons-arrow-right-24: Day 2 建網路](runbook/sprint3-day2-openstack-resource-flow.md)
-
--   ![Cinder](assets/mascots/cinder.png){ width="44" } __Cinder__
-
-    ---
-
-    拔得下來的硬碟:VM 刪了資料還在,還能掛給下一台。
-
-    [:octicons-arrow-right-24: Day 3 掛硬碟](runbook/sprint3-day3-cinder-lvm.md)
-
--   ![Octavia](assets/mascots/octavia.png){ width="44" } __Octavia__
-
-    ---
-
-    流量的帶位員。負載平衡器其實是一台幫你養的小 VM。
-
-    [:octicons-arrow-right-24: Day 4 建 LB](runbook/sprint3-day4-octavia.md)
-
--   ![Barbican](assets/mascots/barbican.png){ width="44" } __Barbican__
-
-    ---
-
-    秘密的保險箱:密碼、金鑰、憑證加密集中存放。
-
-    [:octicons-arrow-right-24: Day 5 存秘密](runbook/sprint3-day5-barbican-heat.md)
-
--   ![Heat](assets/mascots/heat.png){ width="44" } __Heat__
-
-    ---
-
-    照藍圖蓋房子:一份 YAML,一個指令蓋好一組資源、一個指令全拆。
-
-    [:octicons-arrow-right-24: Day 5 寫藍圖](runbook/sprint3-day5-barbican-heat.md)
-
--   ![Magnum](assets/mascots/magnum.png){ width="44" } __Magnum__
-
-    ---
-
-    一鍵長出 K8s——課程壓軸的那行指令,就是對它下的。
-
-    [:octicons-arrow-right-24: Day 7 接上它](runbook/sprint3-day7-magnum-capi-driver.md)
 
 </div>
 
