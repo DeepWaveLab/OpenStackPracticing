@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # nova-compute Caracal 必須接 `cloud-credentials` 才能工作
 
-## Symptom
+## 症狀
 
 部署完成後 **`juju status` 一切正常**：
 ```
@@ -31,7 +31,7 @@ $ openstack resource provider list
 
 nova-cc 還會卡 `"Missing relations: compute"`，即使 `cloud-compute` relation 已接。
 
-## Root Cause
+## 根因
 
 在 `/var/log/nova/nova-compute.log` 可以看到 **nova-compute daemon 實際一直 crash 重啟**（systemd restart loop）：
 
@@ -50,7 +50,7 @@ CRITICAL nova [...] Unhandled error:
 
 charm 沒有在缺 `cloud-credentials` 時 self-block，只是靜默 crash + hook 認為一切 OK。
 
-## Solution
+## 解法
 
 加上 `cloud-credentials` relation：
 
@@ -76,7 +76,7 @@ openstack resource provider list
 # 1 個 resource provider（對應 compute node）
 ```
 
-## Complete Deploy Recipe（Caracal）
+## 完整部署流程(Caracal)
 
 ```bash
 juju deploy nova-compute --channel=2024.1/stable \
@@ -91,7 +91,7 @@ juju integrate nova-compute:cloud-credentials   keystone:identity-credentials  #
 juju wait-for application nova-compute --timeout=25m
 ```
 
-## Quick Diagnostic
+## 快速診斷
 
 若看到 charm 說 active 但 CLI 找不到 compute：
 
@@ -100,7 +100,7 @@ juju ssh nova-compute/0 -- sudo tail -30 /var/log/nova/nova-compute.log | grep -
 ```
 若看到 `MissingAuthPlugin` → 缺 `cloud-credentials`。
 
-## Prevention
+## 預防
 
 部署 Nova 前檢查 charm 的 `requires` relations：
 ```bash
@@ -110,7 +110,7 @@ juju info nova-compute | grep -A 15 relations
 
 自動化腳本一律接足 4 條，避開驚喜。
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-3-nova-compute.md`
 - Caracal release notes: placement service full independence

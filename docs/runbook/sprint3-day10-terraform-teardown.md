@@ -59,7 +59,7 @@ resource "openstack_networking_router_interface_v2" "tf_ri" {
 }
 resource "openstack_compute_instance_v2" "tf_vm" {
   name        = "tf-vm"
-  depends_on  = [openstack_networking_router_interface_v2.tf_ri]   # ← 見踩坑#1
+  depends_on  = [openstack_networking_router_interface_v2.tf_ri]   # ← 見踩雷#1
   image_name  = "cirros"; flavor_name = "m1.tiny"; key_pair = "k8s-admin"
   network { uuid = openstack_networking_network_v2.tf_net.id }
 }
@@ -93,9 +93,9 @@ terraform destroy -auto-approve    # 一鍵拆 7 資源(含 amphora)
 | outputs | VM/LB IP 取得 | ✅ tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234 |
 | **teardown** | `terraform destroy` 清乾淨、OpenStack 端 0 殘留 | ✅ 7 destroyed |
 
-## 踩坑
+## 踩雷
 
-### 1. instance vs subnet 的 ordering(terraform-provider-openstack 經典坑)
+### 1. instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
 
 `openstack_compute_instance_v2` 只用 `network { uuid = ... }` 引用 network、**沒引用 subnet**,TF 會並行建、VM 送到 Nova 時 subnet 還沒掛上 → `Network ... requires a subnet in order to boot instances on` (HTTP 400)。修:給 instance 加 `depends_on = [openstack_networking_router_interface_v2.tf_ri]`(或 subnet),強制順序。這是 provider 的 dependency graph 抓不到隱性依賴的典型情況。
 
@@ -132,4 +132,6 @@ kolla-ansible deploy -i ~/all-in-one              # core + octavia + barbican + 
 
 ## Sprint 3 完結
 
-十天走完:Azure lab → Kolla AIO → OpenStack 全資源流 → Cinder/Octavia/Barbican/Heat → Magnum CAPI driver → E2E workload cluster(雪恥三項)→ Day-2 ops → Terraform。回顧與產業對照見 **`docs/sprint3-reflection.md`**。
+十天走完:Azure lab → Kolla AIO → OpenStack 全資源流 → Cinder/Octavia/Barbican/Heat → Magnum CAPI driver → E2E workload cluster(Sprint 1 三個未完成項全數補完)→ Day-2 ops → Terraform。
+
+還有一篇不用動手的[後日談:OpenStack 服務全景圖](sprint3-day11-openstack-service-map.md),把這次用過與沒用過的服務一次盤點;回顧與產業對照見 [Sprint 3 回顧](../sprint3-reflection.md)。

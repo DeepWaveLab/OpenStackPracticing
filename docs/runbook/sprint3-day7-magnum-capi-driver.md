@@ -1,7 +1,51 @@
-# Sprint 3 / Day 7: Magnum + Cluster API driver 整合(雪恥 #3)
+# Sprint 3 / Day 7: Magnum + Cluster API driver 整合(Sprint 1 未完成項 #3)
 
 > 課程定位:把 Day 6 立好的 CAPI management cluster 接上 Magnum。**關鍵發現:Kolla Epoxy 的官方 magnum image 已內建 vexxhost `magnum-cluster-api` driver**,不用自建 image、不用 `docker exec pip install` —— 整個整合收斂成「開 magnum + 放一份 kubeconfig」。
-> Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day-6/day-7 紀錄)。CAPI driver 的 node image 由 CAPI 生態(capo-image-elements)持續維護,雪恥的根本解。
+> Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day-6/day-7 紀錄)。CAPI driver 的 node image 由 CAPI 生態(capo-image-elements)持續維護,從根本解掉這個問題。
+
+!!! abstract "你在課程的哪裡"
+    - **昨天(Day 6)**:「造 K8s 的工廠」(CAPI management cluster)蓋好了,但空轉中——沒有人下單。
+    - **今天**:部署 **Magnum**(OpenStack 的 K8s 服務),並把它接上工廠。做完後,`openstack coe cluster create` 這行指令就「接得上線」了。
+    - **明天(Day 8)**:正式下單,開出第一座 workload cluster。
+
+## 第一次接觸 Magnum?先讀這段
+
+### Magnum 是什麼
+
+**Magnum 是 OpenStack 版的「managed Kubernetes 服務」**——就像 AWS 的 EKS、GCP 的 GKE:使用者不用懂怎麼裝 K8s,對雲說「給我一座 3 節點的 cluster」,雲就生一座給你。
+
+### 常見疑問:昨天的 CAPI 不是已經會蓋 cluster 了嗎?Magnum 還有什麼用?
+
+這是本課程最值得搞懂的架構問題。答案:**CAPI 和 Magnum 各管一半,缺一不可**——
+
+CAPI 很會「蓋」,但它的世界裡**沒有「租戶」的概念**:誰拿到工廠(management cluster)的鑰匙,誰就能蓋任何叢集、看所有叢集、砍別人的叢集。自己一個團隊用沒問題;但要做成**開放給多租戶的雲服務**,總不能把工廠萬能鑰匙發給每個客戶。
+
+Magnum 補的正是這一半:
+
+| | **Magnum(前台)** | **CAPI/CAPO(引擎)** |
+|---|---|---|
+| 管什麼 | **誰**能建、能建**多少**、用什麼**範本** | 怎麼**真的把 cluster 蓋出來**、升版、自癒 |
+| 認證 | Keystone(租戶用自己的 OpenStack 帳號) | 無租戶概念(kubeconfig = 萬能鑰匙) |
+| 使用介面 | `openstack coe cluster create` 一行 | 手寫一疊 CRD YAML,還得懂 CAPI |
+| 配額/隔離 | 每租戶 quota、A 看不到 B 的 cluster | 無 |
+| 比喻 | **店面櫃台 + POS**:認客戶、管訂單、擺目錄 | **工業級 3D 印表機**:給藍圖就印,不問你是誰 |
+
+所以:**只是自己團隊要用 K8s → 直接用 CAPI 就好,不需要 Magnum;要做成雲上的多租戶服務(本課程的目標)→ 兩層都要。** 這種「前台 API + 造叢集引擎」的分層不是 Magnum 獨有,Rancher、Gardener 等產品都是同一個結構。
+
+### 今天的整合,說穿了就是「給櫃台一把工廠鑰匙」
+
+Magnum 收到訂單後,由它內建的 **CAPI driver(翻譯官)**把 OpenStack 風格的請求翻成 CAPI 藍圖、丟進 Day 6 的工廠。而「怎麼丟進去」的答案樸素得驚人——**給 Magnum 一份工廠的 kubeconfig(= 地址 + 鑰匙)**:
+
+```mermaid
+flowchart LR
+    U["使用者<br/>openstack coe cluster create"] --> M["Magnum API<br/>(驗 Keystone、查配額)"]
+    M --> D["magnum-conductor 裡的<br/>CAPI driver(翻譯官)"]
+    D -->|"憑 kubeconfig 寫入藍圖"| K["kind 工廠<br/>(Day 6)"]
+    K -->|"CAPO 呼叫 OpenStack"| O["Nova / Octavia / Cinder"]
+    O --> W["workload cluster<br/>(Day 8 誕生)"]
+```
+
+更妙的是 Kolla 的設計:**「有沒有放 kubeconfig」本身就是 driver 的開關**——放了,CAPI driver 自動啟用;沒放,維持關閉。這是今天步驟裡最關鍵的一手,原理見下節。
 
 ## 原理與架構
 
@@ -47,7 +91,7 @@ magnum_conductor 容器內 /var/lib/magnum/.kube/config
 
 `enable_cluster_user_trust: "yes"` → `magnum.conf` 的 `cluster_user_trust = yes`。CAPI cluster 內的元件(OpenStack CCM、Cinder CSI、cluster-autoscaler)要**回呼 OpenStack API**(建 LB、掛 volume、擴縮節點),靠 Magnum 建的 trust 拿 credential。Day 8 這些才會用到,但屬 magnum 部署期設定,Day 7 一起開好免得重 deploy。安全上這是「較寬的信任」,生產環境要斟酌;lab 直接開。
 
-### 5. node image 來源:capo-image-elements(雪恥的根本)
+### 5. node image 來源:capo-image-elements(Sprint 1 失敗根因的解法)
 
 Sprint 1 的 heat driver 內嵌 FCOS/flannel 的舊 image URL,失效即死。CAPI 路線的 node image 由 **`vexxhost/capo-image-elements`** 持續發布(release `2026.05-7`,對應 k8s v1.33.12/v1.34.8/v1.35.5/v1.36.1),本課選 **v1.34.8**。image 是預裝好 kubelet/kubeadm/containerd 的 Ubuntu 24.04,CAPO 開機後 kubeadm join 即成節點。
 
@@ -63,7 +107,7 @@ enable_cluster_user_trust: "yes"
 # 2. 放 management cluster 的 kubeconfig(Day 6 kind 的 ~/.kube/config)
 sudo mkdir -p /etc/kolla/config/magnum
 sudo cp ~/.kube/config /etc/kolla/config/magnum/kubeconfig
-sudo chown azureuser:azureuser /etc/kolla/config/magnum/kubeconfig   # ← 見踩坑#1
+sudo chown azureuser:azureuser /etc/kolla/config/magnum/kubeconfig   # ← 見踩雷#1
 
 # 3. deploy(magnum 建 DB/keystone/trustee、掛 kubeconfig、省略 disabled_drivers)
 kolla-ansible deploy -i ~/all-in-one --tags magnum,loadbalancer,horizon
@@ -114,7 +158,7 @@ openstack coe cluster template create k8s-v1.34.8 \
 | node image | active,os_distro=ubuntu | ✅ v1.34.8(825M) |
 | **ClusterTemplate** | `coe cluster template create` 成功 | ✅ k8s-v1.34.8,cluster_distro=ubuntu |
 
-## 踩坑
+## 踩雷
 
 ### 1. `sudo cp` 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
 
@@ -130,4 +174,4 @@ driver(image 內建)、CAPI/CAPO(mgmt cluster)、node image 三者版本要相�
 
 ## 下一步(Day 8)
 
-E2E:`openstack coe cluster create` 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 `kubectl get nodes` 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = 雪恥完成。**開工前注意**:若 VM 隔夜重開,先確認 kind cluster 回穩(Day 6 §踩坑4)且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 `/etc/kolla/config/magnum/kubeconfig` 並 `kolla-ansible deploy --tags magnum`。
+E2E:`openstack coe cluster create` 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 `kubectl get nodes` 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。**開工前注意**:若 VM 隔夜重開,先確認 kind cluster 回穩(Day 6 §踩雷4)且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 `/etc/kolla/config/magnum/kubeconfig` 並 `kolla-ansible deploy --tags magnum`。

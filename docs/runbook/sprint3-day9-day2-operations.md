@@ -24,7 +24,7 @@ MachineDeployment(worker)升版:
 
 ### 3. node group ↔ MachineDeployment ↔ ClusterClass topology
 
-magnum-cluster-api 用 **ClusterClass(managed topology)**:cluster 的 `spec.topology.workers.machineDeployments[]` 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。`openstack coe nodegroup create` = 在 topology 陣列多加一格。**踩坑**:driver 對新 MD 若沒帶 `availability_zone` label,`failureDomain` 會是 `null`,被 CAPI v1.13 topology schema 拒(見踩坑#2)。
+magnum-cluster-api 用 **ClusterClass(managed topology)**:cluster 的 `spec.topology.workers.machineDeployments[]` 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。`openstack coe nodegroup create` = 在 topology 陣列多加一格。**踩雷**:driver 對新 MD 若沒帶 `availability_zone` label,`failureDomain` 會是 `null`,被 CAPI v1.13 topology schema 拒(見踩雷#2)。
 
 ### 4. cluster-autoscaler 在 CAPI 上怎麼運作
 
@@ -69,7 +69,7 @@ watch 'KUBECONFIG=~/.kube/config kubectl -n magnum-system get machine -o custom-
 ### C. node group
 
 ```bash
-# ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(踩坑#2)
+# ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(踩雷#2)
 openstack coe nodegroup create k8s-lab ng-app --node-count 1 --role app \
   --labels availability_zone=nova
 openstack coe nodegroup list k8s-lab           # ng-app CREATE_COMPLETE
@@ -85,7 +85,7 @@ MD=$(kubectl -n magnum-system get machinedeployment -o name | grep ng-app)
 kubectl -n magnum-system annotate $MD \
   cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size=1 \
   cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size=3 --overwrite
-# 2. topology 交出 replicas 擁有權(關鍵,見踩坑#3)
+# 2. topology 交出 replicas 擁有權(關鍵,見踩雷#3)
 kubectl -n magnum-system patch cluster kube-plpuz --type=json -p \
  '[{"op":"remove","path":"/spec/topology/workers/machineDeployments/1/replicas"},
    {"op":"add","path":"/spec/topology/workers/machineDeployments/1/metadata/annotations",
@@ -109,7 +109,7 @@ kubectl -n magnum-system patch cluster kube-plpuz --type=json -p \
 | **autoscaler 觸發** | pending pod → ng-app 自動 1→3、pods 全排上 | ✅ 3/3 Running,2 新節點自動 join |
 | scale-down | 移除負載後回 min | ✅ 刪 scale-test 後 autoscaler 縮回 |
 
-## 踩坑
+## 踩雷
 
 ### 1. 升版 surge 撞 Nova `No valid host`
 

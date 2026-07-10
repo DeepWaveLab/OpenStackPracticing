@@ -29,7 +29,7 @@ Azure VNet **沒有 L2 廣播、擋 MAC/IP spoofing**。後果:
 
 ### 3. Security type:為什麼堅持 Standard
 
-Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與 nested virt 的相容性有版本地雷,lab 沒必要冒險 —— 直接用 `--security-type Standard`。**坑**:新訂閱要先註冊 feature `Microsoft.Compute/UseStandardSecurityType` 才准用 Standard(見下方踩坑)。
+Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與 nested virt 的相容性有版本地雷,lab 沒必要冒險 —— 直接用 `--security-type Standard`。**地雷**:新訂閱要先註冊 feature `Microsoft.Compute/UseStandardSecurityType` 才准用 Standard(見下方踩雷)。
 
 ### 4. 成本 guardrails 三件套
 
@@ -145,7 +145,7 @@ lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
 | SSH | `ssh -i ~/.ssh/juju_id_rsa azureuser@203.0.113.10` |
 | 每日操作 | 早上 `az vm start -g souch-openstack-sprint3 -n openstack-lab`;晚上 22:00 自動關機 |
 
-## 踩坑
+## 踩雷
 
 ### UseStandardSecurityType feature gate(新)
 

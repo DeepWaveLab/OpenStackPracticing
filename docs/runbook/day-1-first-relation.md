@@ -12,7 +12,7 @@
 
 原本計畫用 `mediawiki + mysql`，但 **`mediawiki` charm 只支援 Ubuntu 11.10-14.04**，跟我們的 jammy (22.04) 不相容。
 
-其他候選也踩了坑（詳見 §Gotchas）。最後找到的組合：
+其他候選也踩了雷（詳見 §Gotchas）。最後找到的組合：
 
 | Charm | 角色 | Base | 提供/需要 的 relation |
 |---|---|---|---|

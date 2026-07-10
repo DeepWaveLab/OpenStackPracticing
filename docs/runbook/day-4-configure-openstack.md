@@ -15,13 +15,13 @@
 | tenant_net + tenant_subnet 192.168.21.0/24 | ✅ |
 | lab_router（ext_gateway + tenant subnet） | ✅ |
 | keypair `lab_key` + security group `lab_sg` | ✅ |
-| VM `vm1` ACTIVE | ✅（經歷 3 個坑：見 solutions） |
+| VM `vm1` ACTIVE | ✅（經歷 3 個雷：見 solutions） |
 | Floating IP 172.16.200.163 綁定 | ✅ |
 | Azure VM → VM 路由 + ping | ✅ |
 | **SSH 進 cirros VM (vm1)** | ❌ cirros 0.6 sshd race |
 | **SSH 進 Ubuntu VM (vm2)** | ✅ Ubuntu jammy + `--config-drive True` 成功 |
 
-## 踩到的 3 個坑（都有 solution doc）
+## 踩到的 3 個雷（都有 solution doc）
 
 1. [neutron-security-groups 預設關](../solutions/integration-issues/neutron-security-groups-disabled-default.md) — `/v2.0/security-groups` 回 404
 2. [nova.conf 少 `[neutron]` section](../solutions/integration-issues/nova-compute-missing-neutron-auth.md) — `Unknown auth type: None`

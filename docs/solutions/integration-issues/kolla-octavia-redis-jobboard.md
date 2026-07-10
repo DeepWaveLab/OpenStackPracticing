@@ -16,7 +16,7 @@ ConnectionError('Error 111 connecting to 127.0.0.1:6379. Connection refused.')
 
 ## 根因
 
-Epoxy 的 amphora provider 用 **taskflow jobboard(Redis sentinel)** 做任務佇列與斷點續跑。kolla 的 octavia.conf 已寫好 sentinel 設定,**但 `enable_redis` 預設 "no",octavia 也不會宣告依賴把它拉起來** —— worker 啟動正常、健檢通過,直到第一個 LB job 才爆。
+Epoxy 的 amphora provider 用 **taskflow jobboard(Redis sentinel)** 做任務佇列與斷點續跑。kolla 的 octavia.conf 已寫好 sentinel 設定,**但 `enable_redis` 預設 "no",octavia 也不會宣告依賴幫你啟動它** —— worker 啟動正常、健檢通過,直到第一個 LB job 才爆。
 
 ## 解法
 

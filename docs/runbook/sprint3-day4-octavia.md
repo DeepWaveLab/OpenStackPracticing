@@ -1,7 +1,44 @@
-# Sprint 3 / Day 4: Octavia LBaaS(Sprint 1 雪恥項 #2)
+# Sprint 3 / Day 4: Octavia LBaaS(Sprint 1 未完成項 #2)
 
 > 課程定位:部署 Octavia 並手動走完 LB 全流程(LB → listener → pool → member → health monitor → VIP FIP)。
 > Sprint 1 這一步死於 Canonical charm 在 amd64 的 2024.1 斷代(solutions #21)—— 根本沒得裝。Kolla 這邊 Octavia 是一等公民。
+
+!!! abstract "你在課程的哪裡"
+    - **前兩天**:你已能開 VM(Day 2)、掛硬碟(Day 3)。
+    - **今天**:開兩台 web VM,在前面放一台**負載平衡器(Load Balancer)**,讓流量自動分給兩台。
+    - **今天之後**:Day 8 在 Kubernetes 裡宣告 `Service type=LoadBalancer` 時,自動生出來的 LB 就是今天這套 Octavia。
+
+## 第一次接觸負載平衡?先讀這段
+
+**負載平衡器(LB)就是餐廳門口的帶位員**:客人(請求)一律先到門口,帶位員看哪桌有空就帶去哪桌(後端伺服器),某桌收掉了(伺服器掛了)就不再帶人過去。好處:後端可以隨時加桌/收桌,客人永遠只需要記得門口在哪(一個固定的 IP)。AWS 對應:**ELB/ALB**。
+
+### Octavia 的特別之處:LB 是「一台幫你養的 VM」
+
+多數人以為 LB 是什麼神祕硬體——在 Octavia 的預設模式裡,**LB 就是一台自動幫你開好、裡面跑著 haproxy 的小 VM**,叫 **amphora**(雙耳瓶,取「承載流量的容器」之意)。Octavia 負責:自動開這台 VM、把 haproxy 設定推進去、監控它的心跳、掛了就自動砍掉重開一台。
+
+### LB 的物件模型:四層積木
+
+建一個能用的 LB 要疊四塊積木,每塊都有明確分工:
+
+```mermaid
+flowchart LR
+    C["client(請求)"] --> FIP["floating IP"]
+    FIP --> LB["loadbalancer(VIP:LB 的固定門牌)"]
+    LB --> LIS["listener(聽哪個 port?例:HTTP :80)"]
+    LIS --> P["pool(後端伺服器群 + 分配演算法)"]
+    P --> M1["member: vm-web1"]
+    P --> M2["member: vm-web2"]
+    HM["health monitor(定期戳後端,活著才派流量)"] -.監控.-> P
+```
+
+| 積木 | 白話 |
+|---|---|
+| loadbalancer | 帶位員本人,持有一個固定的 VIP(虛擬 IP) |
+| listener | 「我聽 80 port 的 HTTP」——一個 LB 可以有多個 listener |
+| pool + member | 後端名單 + 分法(round-robin = 輪流帶位) |
+| health monitor | 每 5 秒戳一次後端,沒回應的踢出名單 |
+
+今天的驗收很直觀:對 LB 的 IP `curl` 六次,回應在 web1/web2 之間**完美交替**,就證明整條鏈通了。
 
 ## 原理與架構
 
@@ -61,7 +98,7 @@ enable_octavia: "yes"
 octavia_network_type: "tenant"
 octavia_auto_configure: yes     # kolla 自建 lb-mgmt-net/router/flavor/SG/keypair
 
-# 憑證(注意:這個子指令也要 -i,否則找預設 inventory 路徑報錯)
+# 憑證(注意:這個子指令也要 -i,否則找預設 inventory 路徑會出錯)
 kolla-ansible octavia-certificates -i ~/all-in-one
 ```
 
@@ -123,10 +160,10 @@ openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 
 | amphora | ALLOCATED / STANDALONE,mgmt IP 可達 | ✅ 10.1.0.85 |
 | lb2(amphora provider) | ACTIVE/ONLINE,members 全 ONLINE | ✅ |
 | **round robin** | curl FIP 交替回 web1/web2 | ✅ 6/6 完美交替 |
-| lb-ovn(ovn provider) | ACTIVE/ONLINE,tenant 內可打通 | ✅ 無 amphora,零額外 VM |
-| **雪恥驗證** | Sprint 1 solutions #21(charm 斷代)不存在於 Kolla 路線 | ✅ |
+| lb-ovn(ovn provider) | ACTIVE/ONLINE,tenant 內可連通 | ✅ 無 amphora,零額外 VM |
+| **對照 Sprint 1** | Sprint 1 solutions #21(charm 斷代)不存在於 Kolla 路線 | ✅ |
 
-## 踩坑
+## 踩雷
 
 ### 1. `octavia-certificates` 不吃預設 inventory
 
@@ -138,7 +175,7 @@ deploy 死在 `Restart octavia-interface.service`,`systemctl status` 顯示 `dhc
 
 ### 3. amphora driver 需要 Redis jobboard,kolla 不會自動開(solutions 級)
 
-LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundError: No master found for 'kolla'` + `Error 111 connecting to 127.0.0.1:6379`。**Epoxy 的 amphora provider 走 taskflow jobboard(Redis sentinel),但 `enable_redis` 預設 no 且 octavia 不會幫你拉起來**。修:`enable_redis: "yes"` → `deploy --tags redis,octavia`。詳見 `solutions/integration-issues/kolla-octavia-redis-jobboard.md`。
+LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundError: No master found for 'kolla'` + `Error 111 connecting to 127.0.0.1:6379`。**Epoxy 的 amphora provider 走 taskflow jobboard(Redis sentinel),但 `enable_redis` 預設 no 且 octavia 不會幫你啟動**。修:`enable_redis: "yes"` → `deploy --tags redis,octavia`。詳見 `solutions/integration-issues/kolla-octavia-redis-jobboard.md`。
 
 ### 4. octavia-openrc.sh 沒有生成
 

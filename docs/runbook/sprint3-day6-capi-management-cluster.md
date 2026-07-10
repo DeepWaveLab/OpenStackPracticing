@@ -1,7 +1,63 @@
 # Sprint 3 / Day 6: Cluster API 管理叢集(kind + CAPO)
 
 > 課程定位:立起 Magnum CAPI driver 的底層 —— 一個 **Cluster API management cluster**(跑在 kind 上),裝好 CAPI core + kubeadm bootstrap/control-plane + **CAPO**(OpenStack infrastructure provider)。Day 7 才把 Magnum 的 driver 接上來。
-> 本日踩到一個重大整合坑:**Kolla 把 docker 的 iptables 關掉,直接斷了 kind 的對外網路**,另立 solutions 詳記。
+> 本日踩到一個重大整合地雷:**Kolla 把 docker 的 iptables 關掉,直接斷了 kind 的對外網路**,另立 solutions 詳記。
+
+!!! abstract "你在課程的哪裡"
+    - **Day 1–5**:OpenStack 提供的是「原料」——VM、網路、硬碟、LB。
+    - **Day 6–8 的大目標**:讓 OpenStack 能像公有雲一樣,**一個指令開出一整座 Kubernetes cluster**。分三步:**今天蓋「造 K8s 的工廠」**(Cluster API),明天把 OpenStack 的接單櫃台(Magnum)接上工廠,後天正式下單開出第一座 cluster。
+    - 今天結束時工廠是空轉的——**這是正常的**,還沒有人下單。
+
+## 第一次接觸 Cluster API?先讀這段
+
+### 問題:誰來「蓋」K8s cluster?
+
+手動裝一座 K8s(開 VM、裝 kubeadm、join 節點、配網路)又煩又難維護。業界的答案是 **Cluster API(CAPI)**:把「一座 K8s cluster」本身變成一種宣告式資源——你宣告「我要 1 台 control plane + 2 台 worker、版本 v1.34」,一組 controller(常駐程式)就自動把它蓋出來、壞了修好、要升版就滾動換新。
+
+**CAPI 有個先天限制,決定了今天要做的一切**:CAPI 的 controller 是「K8s 的原生程式」,**必須住在某座 K8s 裡才能跑**。所以要先有一座小 K8s 專門給它們住——這座就叫 **management cluster(管理叢集)**,它不跑你的應用程式,只跑「造叢集的機器人」。
+
+比喻:**management cluster 是工廠**,裡面的 CAPI/CAPO controller 是生產機器人;丟一份藍圖(CAPI 的 YAML)進工廠,機器人就去呼叫 OpenStack 把真正的 cluster(**workload cluster**)蓋出來。
+
+### 全景:此後你的機器上同時存在「三座」東西,別搞混
+
+```mermaid
+flowchart TB
+    subgraph HOST["Azure VM(host)"]
+        subgraph KOLLA["OpenStack(Kolla 容器群)—— 不是 K8s!"]
+            MAG["Magnum(Day 7 才部)"]
+            NOVA["Nova / Neutron / Octavia / Cinder"]
+        end
+        subgraph KIND["kind management cluster(今天蓋)= 工廠"]
+            CAPI["CAPI controllers(讀藍圖)"]
+            CAPO["CAPO(會說 OpenStack 話的機器人)"]
+        end
+        subgraph WL["workload cluster(Day 8 才誕生)"]
+            APP["你的應用程式跑這裡"]
+        end
+    end
+    CAPI --> CAPO
+    CAPO -->|"呼叫 OpenStack API<br/>開 VM / LB / volume"| NOVA
+    NOVA -->|"生出節點"| WL
+```
+
+| | 是什麼 | 跑什麼 | 誰蓋的 |
+|---|---|---|---|
+| **OpenStack(Kolla)** | host 上的一群 Docker 容器(**不是 K8s**) | Nova/Neutron/Magnum 等雲服務 | Day 1–5 |
+| **kind management cluster** | host Docker 裡的一座迷你 K8s | 只跑 CAPI/CAPO controller | **今天** |
+| **workload cluster** | 由巢狀 Nova VM 組成的真 K8s | 你的應用程式 | Day 8 |
+
+常見疑問:「為什麼不把 CAPI 直接裝進 OpenStack?」——因為 OpenStack(Kolla)不是 K8s,CAPI controller 沒地方住;所以才用 **kind**(K8s-in-Docker,一個容器就是一座 K8s)開一座最小的給它住。
+
+### 今天要裝進工廠的四個 provider
+
+`clusterctl init` 一次裝四件,各司其職:
+
+| Provider | 白話職責 |
+|---|---|
+| **core**(cluster-api) | 看懂「Cluster / Machine」這些藍圖的主控 |
+| **bootstrap**(kubeadm) | 產生每台節點開機後「怎麼加入 cluster」的腳本 |
+| **control-plane**(kubeadm) | 專管 control-plane 節點的生命週期(擴縮、升版) |
+| **infrastructure**(**CAPO**) | 唯一「會說 OpenStack 話」的:把 Machine 翻成 Nova VM、把 LB 翻成 Octavia |
 
 ## 原理與架構
 
@@ -51,7 +107,7 @@ CAPO v0.12 起把「OpenStack 資源的實際 CRUD」拆給獨立的 **ORC(opens
 
 **定案:vexxhost magnum-cluster-api v0.37.0。** 版本 pin **不抓 latest,抓 driver 測過的組合** —— 直接讀 driver repo 的 `hack/setup-capo.sh`(其 CI bootstrap):`CAPI=v1.13.2 / CAPO=v0.14.4 / ORC=v2.2.0`。latest 是 v1.13.3 / v0.14.6,只差 patch,但用 pin 版最保險。
 
-### 5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大坑)
+### 5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
 
 Kolla-Ansible 設定 `/etc/docker/daemon.json` 為 **`iptables:false`、`ip-forward:false`、`bridge:none`** —— 因為 Kolla 容器全走 host network,網路由 neutron/OVN 自管,不讓 docker 碰 iptables。**但 kind 是正常 bridge 容器**,靠 docker 的 MASQUERADE 才能 SNAT 出去。`iptables:false` = docker 不建 NAT = kind node 封包帶著 `172.17.x` private source 出 eth0、被 Azure 丟掉,表現成**所有 image pull `i/o timeout`**。修法:比照 Kolla 既有那條,手動加一條只針對 kind 網段的 MASQUERADE(**不動 daemon.json、不全域開 docker iptables**,以免弄壞正在跑的 OpenStack)。詳見 `solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md`。
 
@@ -132,11 +188,11 @@ kubectl get providers -A
 | **4 controller** | capi / bootstrap / control-plane / capo 全 1/1 Running | ✅ |
 | providers | core/bootstrap/control-plane v1.13.2 + openstack v0.14.4 | ✅ `kubectl get providers` 四筆到位 |
 
-## 踩坑
+## 踩雷
 
-### 1. Kolla `iptables:false` 斷 kind egress(solutions 級,本日主坑)
+### 1. Kolla `iptables:false` 斷 kind egress(solutions 級,本日最大地雷)
 
-見上「原理 §5」與 `solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md`。症狀是所有 image `ImagePullBackOff` / `i/o timeout`,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。**排查關鍵順序**:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json `iptables:false`。
+見上「原理 §5」與 `solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md`。症狀是所有 image `ImagePullBackOff` / `i/o timeout`,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。**診斷關鍵順序**:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json `iptables:false`。
 
 ### 2. `clusterctl init` 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
 
@@ -153,4 +209,4 @@ kind 的 docker network 帶 IPv6 ULA(`fc00::/64`)且有 v6 default route,`getent
 
 ## 下一步(Day 7)
 
-Magnum + CAPI driver 整合(雪恥 #3):把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。
+Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。

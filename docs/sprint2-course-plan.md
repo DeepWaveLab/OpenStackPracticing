@@ -122,9 +122,9 @@
 
 ### （選配）Teardown 演練
 
-## 預期會踩的坑（預防接種）
+## 預期會踩的雷（預防接種）
 
-跟 Sprint 1 比 Sprint 2 會不同坑：
+跟 Sprint 1 比 Sprint 2 會踩到不同的雷：
 
 ### 1. **MetalLB L2 跟 Azure 網路衝突**
 Azure VM 的 private subnet 不讓你隨便宣告 IP。MetalLB L2 mode 要選 VM 內部 lo 或 dummy interface 的 IP 範圍，不能佔 Azure subnet IP。

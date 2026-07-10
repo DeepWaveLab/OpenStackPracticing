@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # cirros sshd race / Ubuntu metadata race（OVN lab 常見）
 
-## Symptom
+## 症狀
 
 ### cirros 0.6 image
 ```
@@ -34,7 +34,7 @@ Used fallback datasource
 ci-info: no authorized SSH keys fingerprints found for user ubuntu.
 ```
 
-## Root Cause
+## 根因
 
 OpenStack + OVN 啟 VM 時，logical_flow 程式化要 ~10-30 秒。期間：
 - VM 已 boot、kernel up
@@ -55,7 +55,7 @@ cloud-init 啟動時會試 multiple datasources，包括 OpenStack 的 `http://1
 - 就不 inject SSH keypair
 - sshd 雖啟，但 authorized_keys 空 → Permission denied
 
-## Solution
+## 解法
 
 ### 最佳解：使用 Ubuntu image + `--config-drive True`
 
@@ -81,7 +81,7 @@ cirros 沒支援 cloud-init，拿 key 是用舊版 `curl metadata` 模式。即�
 | jammy | False（預設） | SSH Permission denied（cloud-init fallback） |
 | jammy | True | ✅ SSH 成功 |
 
-## 檢查自己踩到哪個坑
+## 檢查自己踩到哪個雷
 
 ```bash
 # 確認 VM 網路本身通
@@ -97,7 +97,7 @@ openstack console log show <vm> | grep -iE 'cloud-init|datasource|authorized'
 # "DataSourceNone" / "no authorized SSH keys" → metadata race（Ubuntu 無 config-drive）
 ```
 
-## Prevention
+## 預防
 
 **部署 script 最後一步一定加 `--config-drive True` 給 Ubuntu image**。任何 cloud-init 為基礎的 image（Ubuntu / CentOS / Rocky / Debian）都適用。
 
@@ -111,7 +111,7 @@ openstack image set jammy --property img_config_drive=mandatory
 
 官方文件針對的是 MaaS 實體部署，bare metal 的網卡 carrier 穩定、OVN flow 先啟再 boot VM，race window 很小。我們在 Azure VM 裡跑 LXD VM 套 nested KVM，每層都慢一點，race window 大很多，所以一定中。
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-4-configure-openstack.md`
 - cirros upstream issue: https://github.com/cirros-dev/cirros

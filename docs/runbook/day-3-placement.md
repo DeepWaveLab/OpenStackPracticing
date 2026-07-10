@@ -110,7 +110,7 @@ openstack resource provider allocation list <provider-uuid>
 
 ## Gotchas
 
-### 🔴 charm 沒自動跑 DB schema migration（**確定有這坑**）
+### 🔴 charm 沒自動跑 DB schema migration（**確定有這雷**）
 
 **症狀**：
 - placement unit active（`juju status placement` 看起來沒事）

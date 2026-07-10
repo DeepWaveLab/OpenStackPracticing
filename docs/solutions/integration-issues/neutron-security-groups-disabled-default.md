@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # Neutron Security Groups 預設關掉（charm quirk）
 
-## Symptom
+## 症狀
 
 ```bash
 $ openstack security group create lab_sg
@@ -26,7 +26,7 @@ security-groups-default-rules
 # ↑ 只有 default-rules extension，沒有 core 的 security-group！
 ```
 
-## Root Cause
+## 根因
 
 charm 的 config option `neutron-security-groups` **預設 false**，導致：
 
@@ -37,7 +37,7 @@ enable_security_group = False
 
 Neutron server 啟動時跳過 core security-group extension。API 路由 `/v2.0/security-groups` 根本沒註冊 → 404。
 
-## Solution
+## 解法
 
 ```bash
 juju config neutron-api neutron-security-groups=True
@@ -54,9 +54,9 @@ openstack security group create test_sg && openstack security group delete test_
 
 ## 為什麼 charm 預設關
 
-歷史包袱。OpenStack Charms 原本配 `neutron-openvswitch` + 傳統 iptables firewall，部分用戶不要 firewall（用外部 fw），就預設關。OVN 時代 security group 透過 OVN ACL 實作，其實**應該**預設開才對，但 charm 沒跟著改。
+歷史包袱。OpenStack Charms 原本配 `neutron-openvswitch` + 傳統 iptables firewall，部分使用者不要 firewall（用外部 fw），就預設關。OVN 時代 security group 透過 OVN ACL 實作，其實**應該**預設開才對，但 charm 沒跟著改。
 
-## Prevention
+## 預防
 
 每次部署 OpenStack，跟著 mysql/keystone 一起把這條加進去：
 
@@ -66,7 +66,7 @@ juju deploy neutron-api --channel=2024.1/stable --config neutron-security-groups
 juju config neutron-api neutron-security-groups=True
 ```
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-4-configure-openstack.md`
 - Upstream neutron-api charm: https://opendev.org/openstack/charm-neutron-api

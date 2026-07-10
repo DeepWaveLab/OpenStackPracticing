@@ -37,6 +37,6 @@ kolla-ansible deploy -i ~/all-in-one --tags octavia   # 補跑剩餘任務
 
 ## 教訓
 
-1. host OS 大版升級(22.04→24.04)時,**部署工具對 host 工具鏈的隱含依賴**是坑源(對照 Day 1 的 dbus-python、docker SDK —— 同一類)。
+1. host OS 大版升級(22.04→24.04)時,**部署工具對 host 工具鏈的隱含依賴**是地雷來源(對照 Day 1 的 dbus-python、docker SDK —— 同一類)。
 2. `status=203/EXEC` 直接讀成「binary 不在」,不用進 journalctl 挖。
 3. `--tags <role>` 補跑比整包 deploy 快 5-10 倍,修單一 role 的錯就用它。

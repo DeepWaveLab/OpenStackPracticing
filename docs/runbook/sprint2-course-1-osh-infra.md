@@ -168,7 +168,7 @@ kubectl exec -n openstack mariadb-server-0 -c mariadb -- \
 # sys
 ```
 
-## 踩到的 5 個坑
+## 踩到的 5 個雷
 
 ### #1 openstack-helm-infra 已 retire
 

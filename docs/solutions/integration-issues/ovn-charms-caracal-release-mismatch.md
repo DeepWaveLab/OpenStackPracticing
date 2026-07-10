@@ -9,9 +9,9 @@ severity: critical
 date: 2026-04-19
 ---
 
-# OVN Charms + Caracal OpenStack 整合雙坑
+# OVN Charms + Caracal OpenStack 整合雙雷
 
-## Symptoms
+## 症狀
 
 ### Pattern A：charm install hook crash
 ```
@@ -27,14 +27,14 @@ ovn-central/*  waiting  idle  "'ovsdb-peer' incomplete, 'certificates' awaiting 
 ```
 `self-signed-certificates/0` 收到 CSR，但 application-data 永遠空，不回簽。
 
-## Environment When This Happens
+## 發生環境
 
 - OpenStack charms on `2024.1/stable` (Caracal) 或 `2023.2/stable` (Bobcat)
 - OVN charms on `22.03/stable` (only amd64 channel available, rev ~304/324)
 - `self-signed-certificates` `1/stable` rev 588 as cert provider
 - Ubuntu 22.04 (jammy)
 
-## Root Cause
+## 根因
 
 ### Problem 1: Hardcoded release list
 
@@ -67,7 +67,7 @@ charm 2024-11 以後才發布的 rev 還在用這份 pre-zed 的 library，完�
 
 SSC 收到 OVN 送的 CSR（legacy 格式），不識別 → 無聲忽略，永不回簽。
 
-## Working Solution
+## 有效解法
 
 ### Fix 1: Patch charmhelpers release list
 
@@ -136,7 +136,7 @@ juju run vault/leader generate-root-ca
 
 等 30-60 秒，OVN 全部 active。
 
-## Investigation Steps That Failed
+## 走過的冤枉路
 
 ### ❌ 嘗試用 `openstack-origin=cloud:jammy-bobcat` override release
 OVN 22.03 charm（`ovn-chassis`, `ovn-central`）**沒有** `openstack-origin` config 選項。只有 `source` 或 `ovn-source`，不用於 release detection。
@@ -150,7 +150,7 @@ OVN 22.03 charm（`ovn-chassis`, `ovn-central`）**沒有** `openstack-origin` c
 ### ❌ Vault 1.16/stable
 Vault 1.15+ 是 HashiCorp 新 operator，用 v3 interface → 跟 OVN 一樣不相容。
 
-## Prevention / Future Behaviour
+## 預防與未來行為
 
 ### 部署前檢查 charm 的 charmhelpers release list
 
@@ -170,7 +170,7 @@ grep -A 30 "OPENSTACK_RELEASES =" /tmp/charm-check/venv/*/charmhelpers/fetch/ubu
 ### 部署 Vault 的 manual step 記得備份
 `~/vault-secrets` 丟失 → Vault 整套重來。`scp` 備份到本機。
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-3-vault-tls.md` — 完整 replay 指令
 - 本專案 `docs/runbook/day-3-network-stack.md` — OVN 部署順序

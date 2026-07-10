@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # `mysql` charm 不是 OpenStack 的 `mysql`
 
-## Symptom
+## 症狀
 
 ```bash
 juju deploy mysql
@@ -28,7 +28,7 @@ Unit         Workload  Message
 keystone/0*  error     hook failed: "shared-db-relation-changed" for mysql:shared-db
 ```
 
-## Root Cause
+## 根因
 
 兩個不同 publisher 的 charm 都宣稱提供 `mysql-shared` interface：
 
@@ -45,7 +45,7 @@ juju show-unit mysql/0 --format=yaml | grep -A 10 "endpoint: shared-db"
 # 會看到 application-data: {} 而不是包含 credentials
 ```
 
-## Solution
+## 解法
 
 用 `mysql-innodb-cluster`（OpenStack Charmers 出品）：
 
@@ -66,7 +66,7 @@ juju deploy keystone --channel=2024.1/stable
 juju integrate keystone:shared-db mysql-innodb-cluster:shared-db
 ```
 
-## Key Signals
+## 關鍵訊號
 
 **`mysql-innodb-cluster` 特徵（正確 charm）**：
 - Publisher: OpenStack Charmers
@@ -87,7 +87,7 @@ juju integrate keystone:shared-db mysql-innodb-cluster:shared-db
 - `juju info mysql` 雖然列出 `shared-db` 但實際不 work
 - 單 unit 也能跑
 
-## Prevention
+## 預防
 
 部署 OpenStack 前永遠**確認 publisher**：
 
@@ -108,7 +108,7 @@ juju deploy self-signed-certificates --channel=1/stable
 # 等全 active 後再部署 OpenStack 核心服務
 ```
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-3-mysql-innodb-cluster.md`
 - OpenStack Charms Deployment Guide: https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/install-openstack.html

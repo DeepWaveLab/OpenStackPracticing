@@ -1,0 +1,4 @@
+# MkDocs
+/site/
+.venv/
+__pycache__/

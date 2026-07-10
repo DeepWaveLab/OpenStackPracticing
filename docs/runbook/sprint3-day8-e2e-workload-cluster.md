@@ -1,7 +1,7 @@
-# Sprint 3 / Day 8: E2E — 開 workload cluster 跑起來(雪恥 #3 收尾)
+# Sprint 3 / Day 8: E2E — 開 workload cluster 跑起來(Sprint 1 未完成項 #3 收尾)
 
-> 課程定位:用 Day 7 的 ClusterTemplate 真的 `openstack coe cluster create` 開一座 K8s workload cluster,驗證三層互動並完成雪恥三項:**① `kubectl get nodes` 全 Ready ② `Service type=LoadBalancer` 拿到 Octavia LB ③ PVC 由 Cinder CSI 供裝**。
-> 本日踩了四個坑(microversion、CIDR 撞號、LB provider、Nova disk),全部記錄——這才是雪恥的真正價值:Sprint 1 死在無法診斷的 charm/image 斷代,本次每個坑都能定位、能修。
+> 課程定位:用 Day 7 的 ClusterTemplate 真的 `openstack coe cluster create` 開一座 K8s workload cluster,驗證三層互動並完成三項最終驗收:**① `kubectl get nodes` 全 Ready ② `Service type=LoadBalancer` 拿到 Octavia LB ③ PVC 由 Cinder CSI 供裝**。
+> 本日踩了四個雷(microversion、CIDR 撞號、LB provider、Nova disk),全部記錄——這正是本次路線的價值:Sprint 1 死在無法診斷的 charm/image 斷代,本次每個地雷都能定位、能修。
 
 ## 原理與架構
 
@@ -26,11 +26,11 @@ openstack coe cluster create
 
 三層 = **Magnum(API/driver)→ CAPI/CAPO(kind,宣告式 reconcile)→ OpenStack(Nova/Octavia/Cinder 出實體資源)**。
 
-### 2. external cloud provider:providerID 與 CCM 的關鍵角色(本日兩個坑的核心)
+### 2. external cloud provider:providerID 與 CCM 的關鍵角色(本日兩個地雷的核心)
 
 現代 CAPO 走 **external cloud provider**:kubelet 起來時**不知道自己是哪台 OpenStack VM**,以 `node.cloudprovider.kubernetes.io/uninitialized:NoSchedule` taint 註冊。**OpenStack CCM** 才去 Nova 問出這台 VM 的 UUID、寫進 `Node.spec.providerID=openstack:///<uuid>`、移除 taint。
 
-連鎖後果:**CCM 一旦掛掉,整座 cluster 卡死** —— 沒 providerID → CAPI 永遠「Waiting for a Node with providerID X to exist」;沒移除 taint → coredns/CSI-controller 排不進節點 → 一路 Pending。本日坑#2 就是 CCM 連不到 Keystone 而 crash。
+連鎖後果:**CCM 一旦掛掉,整座 cluster 卡死** —— 沒 providerID → CAPI 永遠「Waiting for a Node with providerID X to exist」;沒移除 taint → coredns/CSI-controller 排不進節點 → 一路 Pending。本日雷 #2 就是 CCM 連不到 Keystone 而 crash。
 
 ### 3. LoadBalancer / PVC 怎麼落到 OpenStack
 
@@ -52,7 +52,7 @@ sudo systemctl reset-failed octavia-interface && sudo systemctl start octavia-in
 ip -br addr show o-hm0     # 應 UP + 10.1.0.x
 ```
 
-### 1. 修 magnum.conf(坑#1,建 cluster 前)
+### 1. 修 magnum.conf(雷 #1,建 cluster 前)
 
 ```ini
 # /etc/kolla/config/magnum.conf  (Kolla merge)
@@ -65,7 +65,7 @@ kolla-ansible deploy -i ~/all-in-one --tags magnum   # regen conf + 重啟容器
 
 ### 2. 用「Azure-correct」template 開 cluster
 
-Template 必帶三個 lab 專屬 label(見坑#2/#3):
+Template 必帶三個 lab 專屬 label(見雷 #2/#3):
 
 ```bash
 openstack coe cluster template create k8s-v1.34.8-azure \
@@ -73,8 +73,8 @@ openstack coe cluster template create k8s-v1.34.8-azure \
   --master-lb-enabled --master-flavor m1.medium --flavor m1.medium \
   --network-driver calico --docker-storage-driver overlay2 --coe kubernetes \
   --label kube_tag=v1.34.8 \
-  --label fixed_subnet_cidr=10.6.0.0/24 \   # 坑#2:不可與 API 的 10.0.0.4 同段
-  --label octavia_provider=amphora          # 坑#3:我們 Octavia 沒啟用 amphorav2
+  --label fixed_subnet_cidr=10.6.0.0/24 \   # 雷 #2:不可與 API 的 10.0.0.4 同段
+  --label octavia_provider=amphora          # 雷 #3:我們 Octavia 沒啟用 amphorav2
 
 openstack coe cluster create k8s-lab --cluster-template k8s-v1.34.8-azure \
   --keypair k8s-admin --master-count 1 --node-count 1
@@ -90,7 +90,7 @@ kubectl -n magnum-system get $SEC -o jsonpath='{.data.value}' | base64 -d > /tmp
 KUBECONFIG=/tmp/wl.kubeconfig kubectl get nodes -o jsonpath='{..providerID}'
 ```
 
-### 4. 雪恥三項驗收
+### 4. 三項最終驗收
 
 ```bash
 export KUBECONFIG=/tmp/wl.kubeconfig
@@ -118,19 +118,19 @@ curl http://<EXTERNAL-IP>/        # host 內可打(Azure FIP 僅 host 內有效)
 | 驗證 | 判準 | 實測 |
 |---|---|---|
 | cluster | CREATE_COMPLETE / HEALTHY | ✅ |
-| **雪恥① nodes** | control-plane + worker 全 Ready、有 providerID | ✅ v1.34.8,`openstack:///...` |
+| **驗收① nodes** | control-plane + worker 全 Ready、有 providerID | ✅ v1.34.8,`openstack:///...` |
 | CCM / CSI / calico | 全 Running(providerID 設好、taint 移除) | ✅ CCM 0 重啟 |
-| **雪恥② LoadBalancer** | Octavia amphora LB ACTIVE/ONLINE、EXTERNAL-IP、curl 200 | ✅ `172.24.4.183`,curl ×6 = 200 |
-| **雪恥③ PVC** | Bound、Cinder volume in-use、資料持久化 | ✅ `pvc-f99513ec` in-use,`cat` 回 `deepwave-day8` |
-| **雪恥總驗** | Sprint 1 三大未竟(Octavia/Cinder/Magnum)在 Kolla+CAPI 路線全數打通 | ✅ |
+| **驗收② LoadBalancer** | Octavia amphora LB ACTIVE/ONLINE、EXTERNAL-IP、curl 200 | ✅ `172.24.4.183`,curl ×6 = 200 |
+| **驗收③ PVC** | Bound、Cinder volume in-use、資料持久化 | ✅ `pvc-f99513ec` in-use,`cat` 回 `deepwave-day8` |
+| **總驗收** | Sprint 1 三大未竟(Octavia/Cinder/Magnum)在 Kolla+CAPI 路線全數走通 | ✅ |
 
-## 踩坑(本日四連)
+## 踩雷(本日四連)
 
 ### 1. `nova_client api_version=2` 太舊 → server group `soft-anti-affinity` 被拒(CREATE_FAILED 秒失敗)
 
 cluster create 8 秒就 CREATE_FAILED,magnum-system 無任何 CAPI CR。conductor log:`nova.server_groups.create(policies=['soft-anti-affinity'])` → Nova 400 `'soft-anti-affinity' is not one of ['anti-affinity','affinity']`。driver 用 `magnum.common.clients` 建 nova client,Magnum `[nova_client] api_version` 預設 `2`(=2.1),而 `soft-anti-affinity` 需 **microversion ≥ 2.15**。修:magnum.conf 設 `api_version = 2.15`(**別設 ≥2.64**,那之後 server_group API 從 `policies` list 改成 `policy`,driver 還用 list)。
 
-### 2. `fixed_subnet_cidr` 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日主坑)
+### 2. `fixed_subnet_cidr` 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷)
 
 cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned。根因:driver 的 `fixed_subnet_cidr` 預設 **`10.0.0.0/24`**,與 OpenStack API endpoint **`10.0.0.4`**(host)同段 → 節點把 10.0.0.4 當 on-link、ARP 不到真 Keystone → CCM crash → 無 providerID → 卡死。修:label **`fixed_subnet_cidr=10.6.0.0/24`**(避開 10.0.0.4,也避開 pod 10.100/svc 10.254/lb-mgmt 10.1/ext-net 172.24)。詳見 `solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md`。
 
@@ -142,9 +142,9 @@ cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned
 
 改用 amphora 後 LB 仍失敗,Octavia amphora build 報 Nova `No valid host was found`。hypervisor `free_disk_gb=1`、`local_gb_used=121/122`:**Day 2-4 遺留的 SHUTOFF VM(vm-cirros/ubuntu/web1/web2)+ 舊 LB 的 amphora 仍佔用 Nova 的 flavor-disk 配額**(SHUTOFF 不佔 RAM/CPU 但佔 disk 帳)。修:刪掉 leftover(`openstack server delete` demo VM、`loadbalancer delete --cascade` 舊 lb2/lb-ovn)→ 釋放 36GB → amphora 排得進。**教訓:單機 lab 要定期清 leftover,Nova disk 用 flavor 總和計帳、SHUTOFF 也算。**
 
-## 雪恥收尾
+## Sprint 1 未完成項:全數補完
 
-Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部翻案:
+Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部解決:
 
 | Sprint 1 敗因 | 本 Sprint 結果 |
 |---|---|

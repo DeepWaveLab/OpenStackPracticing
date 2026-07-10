@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # nova-compute [neutron] section 沒寫出來
 
-## Symptom
+## 症狀
 
 ```bash
 $ openstack server show vm1 -c fault
@@ -28,7 +28,7 @@ An auth plugin is required to determine endpoint URL
 
 位置在 `allocate_for_instance` 試圖跟 Neutron API 講話。
 
-## Root Cause
+## 根因
 
 檢查 nova.conf：
 
@@ -64,7 +64,7 @@ placement 在 Caracal 靠 `cloud-credentials` relation 拿到 keystone service a
 
 結論：**nova-compute 2024.1/stable 是 charm bug**。缺了 [neutron] 注入，或者需要 neutron-api 的新 relation。
 
-## Solution（workaround）
+## 解法(workaround)
 
 直接複製 `[placement]` 的同一組 service account 當 `[neutron]`。Nova 會從 keystone catalog 找 `network` service endpoint。
 
@@ -111,18 +111,18 @@ keystone charm 透過 `cloud-credentials`（原本給 placement）建的 `nova_c
 - charm 下次跑 config-changed / upgrade-charm hook 會**重寫 nova.conf** → 這個 patch 被吃掉。需重跑。
 - 可以把 patch 放成 systemd override 或 cron 確保 idempotent。
 
-## Diagnostic
+## 診斷
 
 ```bash
 juju ssh nova-compute/2 -- 'grep -A 1 "^\[neutron\]" /etc/nova/nova.conf'
 # 若空 → 被 charm 重寫，重跑 patch
 ```
 
-## Prevention
+## 預防
 
 Upstream 修好前無解。建議在 deploy script 最後一步固定跑一次 patch，並把 patch 放到 `/root/fix-nova-neutron.sh` 供日後用。
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-3-nova-compute.md`
 - 本專案 `docs/runbook/day-4-configure-openstack.md`

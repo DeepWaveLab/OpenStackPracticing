@@ -3,6 +3,40 @@
 > 課程定位:補齊 Magnum 的前置依賴 **Barbican**(secret/cert 倉庫),並複習 **Heat**(HOT 宣告式編排,Day 1 kolla 預設已部,白撿)。
 > 這兩個服務本身都不難,重點在「為什麼 Magnum 需要 Barbican」與「Heat 的依賴排序模型」,兩者都會在 Day 6-8 的 CAPI cluster 出現。
 
+!!! abstract "你在課程的哪裡"
+    - **前四天**:IaaS 的四大件已齊——運算(Nova)、網路(Neutron)、儲存(Cinder)、負載平衡(Octavia)。
+    - **今天**:補兩個配角:**Barbican**(保險箱)和 **Heat**(藍圖引擎)。個別都不難,一天雙拼。
+    - **今天之後**:Day 7 的 Magnum 會把 K8s cluster 的憑證存進 Barbican;Heat 則是理解「宣告式基礎設施」的入門,這個思想 Day 6 的 Cluster API 和 Day 10 的 Terraform 都會再出現。
+
+## 第一次接觸這兩個服務?先讀這段
+
+### Barbican:雲的保險箱
+
+寫過應用程式的人都遇過:資料庫密碼、API 金鑰要放哪?寫死在程式碼裡會跟著進 git,放設定檔會被翻到。**Barbican 就是雲平台的保險箱**:秘密加密後集中存放,誰能開保險箱由 Keystone 權限控制。AWS 對應:**Secrets Manager / KMS**。
+
+本課程部它的真正理由:**Day 7 的 Magnum 開 K8s cluster 時,cluster 的 CA 憑證(等於 cluster 的萬能鑰匙)必須有個安全的家**——那個家就是 Barbican。
+
+### Heat:照藍圖蓋房子
+
+Day 2 你手打了十幾條指令才開出一台 VM:建網路、建 router、開 SG、開機、掛 FIP……順序還不能錯。**Heat 讓你把這整組資源寫成一份 YAML 藍圖(叫 HOT template),一個指令蓋好、一個指令全拆。** AWS 對應:**CloudFormation**;思想上就是 Terraform 的 OpenStack 原生版。
+
+關鍵思想叫**宣告式(declarative)**:你不寫「怎麼做」的步驟,只寫「我要什麼」的最終狀態,順序由引擎自己推導:
+
+```mermaid
+flowchart LR
+    subgraph HOT["HOT 藍圖(你只宣告要這四樣)"]
+        SG["security group"]
+        PORT["port(網卡)"]
+        SRV["server(VM)"]
+        FIP["floating IP"]
+    end
+    SG -->|"port 引用了 sg<br/>→ Heat 推導出先建 sg"| PORT
+    PORT --> SRV
+    PORT --> FIP
+```
+
+Heat 看到「port 引用了 sg」就知道 sg 要先建;server 和 fip 都只依賴 port,所以**兩者自動並行**。這個「引用即依賴、依賴決定順序」的推導,正是之後 Cluster API 和 Terraform 的共同底層邏輯——今天先在最簡單的場景把它看懂。
+
 ## 原理與架構
 
 ### 1. Barbican:OpenStack 的 secret/cert 倉庫
@@ -10,7 +44,7 @@
 Barbican 是 key-manager 服務,把 secret(密碼、API key)、對稱金鑰、X.509 憑證/私鑰**加密後存 DB**,用 keystone 做存取控制。三個容器:
 
 ```
-openstack secret ... ─► barbican-api(:9311)─► MariaDB(payload 用 KEK 加密後落地)
+openstack secret ... ─► barbican-api(:9311)─► MariaDB(payload 用 KEK 加密後寫入)
                               │
         barbican-worker ◄─────┘   非同步任務:憑證簽發(CA plugin)、順序產金鑰
         barbican-keystone-listener   收 keystone notification:project 刪除時清該 project 的 secret
@@ -33,7 +67,7 @@ Magnum 開 K8s cluster 時要管一堆憑證(K8s CA、etcd CA、front-proxy CA�
 
 ### 3. crypto plugin:simple_crypto vs PKCS#11/HSM
 
-Barbican 落地前會用 **KEK(Key Encryption Key)**再加密一層。plugin 決定 KEK 放哪:
+Barbican 寫入 DB 前會用 **KEK(Key Encryption Key)**再加密一層。plugin 決定 KEK 放哪:
 
 | plugin | KEK 位置 | 適用 |
 |---|---|---|
@@ -156,13 +190,13 @@ openstack stack delete --yes --wait day5-stack                        # 一條�
 | stack outputs | internal_ip / floating_ip / server_id 取得 | ✅ 10.10.10.194 / 172.24.4.149 |
 | stack delete | 一條拆掉全部 4 資源,無殘留 | ✅ stack/server/sg 全清空 |
 
-## 踩坑
+## 踩雷
 
 ### 1. openstack CLI 沒有 `stack` / `secret` 子命令(必踩)
 
 `openstack stack ...` 與 `openstack secret ...` 不隨 `python-openstackclient` 內建 —— 它們是各自 client 的 **osc plugin**。乾淨 venv 只會回 `is not an openstack command`。修:`pip install python-heatclient python-barbicanclient`。同 Day 4 的 `python-octaviaclient`,這是 kolla venv 的通則:**每個非 core 服務的 CLI 都要各自 pip 裝 plugin**。
 
-### 2. `--tags barbican` 是否自帶 haproxy?(查證,非坑)
+### 2. `--tags barbican` 是否自帶 haproxy?(查證,非地雷)
 
 擔心 targeted deploy 漏掉 barbican 的 haproxy frontend 導致 endpoint 打不通。動手前讀 `~/kolla-venv/share/kolla-ansible/ansible/site.yml`:loadbalancer play 內對每個服務有 `include_role: loadbalancer, tasks_from: loadbalancer` 的子任務,barbican 那筆明確 `tags: barbican`(L129-131)。**結論:`--tags barbican` 本身就會配 barbican 的 haproxy frontend**;本 lab 仍加 `loadbalancer` 求穩(保證 haproxy reload),實測 `changed=18 failed=0` 一次過。教訓同 Day 4:tag 行為以 `site.yml` 原始碼為準,別猜。
 

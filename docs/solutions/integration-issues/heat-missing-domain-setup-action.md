@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # Heat charm 忘了告訴你要跑 `domain-setup` action
 
-## Symptom
+## 症狀
 
 ```bash
 $ openstack stack create demo -t demo.yaml --wait
@@ -27,7 +27,7 @@ ERROR heat.engine.clients.os.keystone.heat_keystoneclient
   The request you have made requires authentication. (HTTP 401)
 ```
 
-## Root Cause
+## 根因
 
 Heat 用 Keystone **trust** 機制讓 stack owner 授權給 Heat 代做事。需要一個專用的：
 - Domain `heat`（stack user / trust 放在這個獨立 domain）
@@ -61,7 +61,7 @@ $ openstack user list --domain heat 2>&1
 No domain with a name or ID of 'heat' exists.
 ```
 
-## Solution
+## 解法
 
 跑 charm action：
 
@@ -97,7 +97,7 @@ openstack stack create demo -t demo.yaml --wait
 
 都屬於「charm 佈署 → 最後要手動觸發的初始化 action」。
 
-## Prevention
+## 預防
 
 部署 script 最後一步固定跑：
 
@@ -106,7 +106,7 @@ juju wait-for application heat --timeout=15m
 juju run heat/leader domain-setup
 ```
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-5-heat.md`
 - Heat deferred auth docs: https://docs.openstack.org/heat/latest/admin/auth-model.html

@@ -11,7 +11,7 @@ date: 2026-04-19
 
 # OVN Controller 拒絕跟舊 northd 講話
 
-## Symptom
+## 症狀
 
 Nova build log：
 ```
@@ -32,7 +32,7 @@ WARN|controller version - 24.03.2-20.33.0-72.6 mismatch with
      northd version - 22.03.3-20.21.0-62.4
 ```
 
-## Root Cause
+## 根因
 
 兩個因素疊加：
 
@@ -53,7 +53,7 @@ $ ovs-vsctl get open . external_ids:ovn-match-northd-version
 - Neutron 建 port 時，要指派 chassis → list chassis 找有 `ovn-bridge-mappings` 包含該 network 的 → 空 → binding 失敗
 - VM 永遠不能 schedule 到任何 host
 
-## Solution（lab 用）
+## 解法(lab 用)
 
 關掉 version matching：
 
@@ -102,7 +102,7 @@ juju ssh ovn-central/0 -- 'sudo ovn-nbctl list logical_switch_port | grep up'
 # 預期：up : true
 ```
 
-## Diagnostic Cheatsheet
+## 診斷速查
 
 | 症狀 | 查哪 | 意義 |
 |---|---|---|
@@ -111,7 +111,7 @@ juju ssh ovn-central/0 -- 'sudo ovn-nbctl list logical_switch_port | grep up'
 | chassis 有但 port 還是 bind fail | `ovn-sbctl list chassis | grep bridge-mappings` | 應有 `physnet1:br-ex` |
 | 有 chassis + mapping 還是 fail | `ovn-nbctl list logical_switch_port` | `up` 應是 true |
 
-## Prevention
+## 預防
 
 部署 OpenStack + OVN 之前確認兩邊 OVN 大版本一致。混版是 lab 常見，生產要避免。
 
@@ -122,7 +122,7 @@ juju ssh nova-compute/<N> -- 'sudo systemctl restart ovn-controller'
 juju ssh nova-compute/<N> -- 'sudo ovs-vsctl set open . external_ids:ovn-bridge-mappings=physnet1:br-ex'
 ```
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-4-configure-openstack.md`
 - 相關前例：[ovn-charms-caracal-release-mismatch.md](./ovn-charms-caracal-release-mismatch.md)（charm 層級的 version 問題）

@@ -113,7 +113,7 @@ juju ssh glance/leader 'sudo ls -la /var/lib/glance/images/'
 
 ### ⚠️ glance 跟 keystone 的 identity-service relation 順序
 
-如果 glance 的 `identity-service` relation 在 keystone 還沒 fully active 時建立，glance 會卡在 `waiting`。解法：先確保 keystone active 再建 glance。（我們是這麼做的，沒遇到這坑。）
+如果 glance 的 `identity-service` relation 在 keystone 還沒 fully active 時建立，glance 會卡在 `waiting`。解法：先確保 keystone active 再建 glance。（我們是這麼做的，沒遇到這雷。）
 
 ### ⚠️ file backend 不支援多 glance unit
 

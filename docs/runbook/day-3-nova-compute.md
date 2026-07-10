@@ -217,7 +217,7 @@ openstack resource provider list    # 應該看到 1 個 provider
 
 ---
 
-## 第二次部署：Caracal 升級（2026-04-19）
+## 第二次部署：Caracal 升級（2026-04-19） {#nova-caracal-redeploy}
 
 ### 為什麼重做
 

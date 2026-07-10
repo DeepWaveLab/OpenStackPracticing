@@ -26,7 +26,7 @@
 4. [Day 1: 第一次觀察 Juju Relation](./day-1-first-relation.md) ✅（用 mysql + self-signed-certificates）
 5. [Day 2: OpenStack Charm 架構地圖](./day-2-openstack-charm-map.md) ✅（18 charm + 部署順序）
 6. [Day 3: RabbitMQ 部署](./day-3-rabbitmq.md) ✅（amqp broker + TLS）
-7. [Day 3: MySQL InnoDB Cluster](./day-3-mysql-innodb-cluster.md) ✅（⚠️ 含 mysql charm 不相容 OpenStack 的踩坑紀錄）
+7. [Day 3: MySQL InnoDB Cluster](./day-3-mysql-innodb-cluster.md) ✅（⚠️ 含 mysql charm 不相容 OpenStack 的踩雷紀錄）
 8. [Day 3: Keystone](./day-3-keystone.md) ✅（第一個 OpenStack 服務 + openrc 設定，注意 port 5000 是 HTTP）
 9. [Day 3: Glance](./day-3-glance.md) ✅（Image Registry，file backend，cirros upload 成功）
 10. [Day 3: Placement](./day-3-placement.md) ✅（Resource Inventory；⚠️ charm 有 db sync bug，手動補）
@@ -47,7 +47,7 @@
 - `nova-compute` 從 2023.2/stable 升級到 2024.1/stable（Caracal 一致）
 - v66/v67 版本錯位問題解決，`openstack compute service list` 看到 daemon up
 - QEMU hypervisor up，resource provider 有 4 VCPU / 7956 MB / 48 GB
-- 詳見 [day-3-nova-compute.md §第二次部署](./day-3-nova-compute.md#第二次部署caracal-升級2026-04-19)
+- 詳見 [day-3-nova-compute.md §第二次部署](./day-3-nova-compute.md#nova-caracal-redeploy)
 
 ## 尚未完成
 

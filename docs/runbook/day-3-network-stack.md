@@ -16,7 +16,7 @@
 
 ---
 
-## ⚠️ Channel / Base 相容性坑
+## ⚠️ Channel / Base 相容性地雷
 
 2026-04 當下實測：
 
@@ -159,7 +159,7 @@ openstack network create --external --share \
 # 或用 vxlan/geneve 封裝 - 之後 VM 之間 L2
 ```
 
-**這裡會有 LXD bridge ↔ OVN physnet 對接的坑**，等真的動手才詳細記。
+**這裡會有 LXD bridge ↔ OVN physnet 對接的地雷**，等真的動手才詳細記。
 
 ---
 

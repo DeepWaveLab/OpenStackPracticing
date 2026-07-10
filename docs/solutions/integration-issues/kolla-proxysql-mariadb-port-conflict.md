@@ -34,5 +34,5 @@ kolla-ansible deploy -i ~/all-in-one   # 重跑,冪等
 ## 通則教訓
 
 1. AIO 關 LB 時,`enable_haproxy` 和 `enable_proxysql` **要成對關**。
-2. kolla 升版要重讀 release notes 的「預設值變更」——這類 default 翻轉是升版最大坑源(同型:Sprint 1 的 22 條有一半是 charm default 變更)。
+2. kolla 升版要重讀 release notes 的「預設值變更」——這類 default 翻轉是升版最大地雷來源(同型:Sprint 1 的 22 條有一半是 charm default 變更)。
 3. debug 套路:`docker ps -a` 看誰死了 → `docker logs` 看它自己怎麼說 → `ss -tlnp` 看資源被誰佔走。三步內定位,不用翻 ansible log。

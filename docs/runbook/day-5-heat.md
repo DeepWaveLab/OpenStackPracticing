@@ -48,7 +48,7 @@ juju run heat/leader domain-setup
 ```
 
 會建：
-- Domain `heat`（給 stack 用戶獨立放）
+- Domain `heat`（給 stack 使用者獨立放）
 - User `heat_domain_admin`（Heat 代操作的「domain 超級使用者」）
 - Role `heat_stack_user`
 
@@ -104,7 +104,7 @@ openstack network show heat_demo_net   # Neutron 真的有這個
 openstack stack delete demo-stack --yes --wait
 ```
 
-## ⚠️ 坑：snap openstackclient 看不到 /tmp
+## ⚠️ 地雷：snap openstackclient 看不到 /tmp
 
 本 lab 的 `openstackclients` snap 是 strict confinement，`/tmp` 看得見但在私有 namespace — `cat > /tmp/x.yaml` 寫到 host `/tmp`，snap 讀不到。
 

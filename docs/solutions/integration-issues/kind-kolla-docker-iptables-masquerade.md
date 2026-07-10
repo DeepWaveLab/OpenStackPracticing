@@ -15,7 +15,7 @@ Failed to pull image "quay.io/jetstack/cert-manager-webhook:v1.20.2":
 - 連帶 `clusterctl init` 死在 `Waiting for cert-manager to be available... context deadline exceeded`
 - **關鍵對比**:host 自己 `curl -sI https://quay.io/v2/` 秒回 401(通),Kolla 的 45 個容器也都是從 quay.io 拉的 —— 所以 host 對外沒問題,問題只在 kind 這層
 
-## 排查(逐步排除,別跳結論)
+## 診斷過程(逐步排除,別跳結論)
 
 1. **host 連 quay OK** → 問題在 kind node → internet 這條路
 2. kind node 連**任意外部 IP**(`/dev/tcp/1.1.1.1/443`)也 FAIL → **非 quay 專屬**,是整條 egress 斷
@@ -73,5 +73,5 @@ sudo systemctl daemon-reload && sudo systemctl enable --now kind-masquerade.serv
 ## 教訓
 
 - **在 OpenStack/Kolla host 上跑任何「正常 bridge」的 docker 工作負載(kind、compose)都會撞這顆** —— Kolla 的 `iptables:false` 是全域前提,不是 kind 的錯。
-- 排查網路「連不上」先分層:host 通不通 → 容器通不通 → 任意 IP 還是特定 IP → handshake 斷還是傳輸斷(分辨 firewall/NAT vs MTU)。一路排除比猜快。
+- 診斷網路「連不上」先分層:host 通不通 → 容器通不通 → 任意 IP 還是特定 IP → handshake 斷還是傳輸斷(分辨 firewall/NAT vs MTU)。一路排除比猜快。
 - `172.17.0.0/16` 是本機 docker 給 `kind` network 配到的網段;若 docker 配到別的(如 172.18.x),MASQUERADE 的 `-s` 要對應改。用 `docker network inspect kind -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'` 確認。

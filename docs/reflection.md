@@ -31,7 +31,7 @@
 - **Magnum**：cluster template vs cluster、driver 模型（Heat template + bash 腳本）、keystone trust domain
 - **Horizon**：純 Django web，catalog 都從 keystone 拿
 
-### 業界真實坑（非文件層級）
+### 業界真實地雷（非文件層級）
 1. `mysql` charm vs `mysql-innodb-cluster` — 同名不同貨
 2. SSC v3 vs OVN legacy tls-certificates interface 不相容
 3. Placement charm 不跑 db sync
@@ -81,7 +81,7 @@ amd64 上**最後一個 charm 完整的 OpenStack release = Yoga (2022.1)**，�
 - bash 腳本假設 FCOS 有 Docker（但 FCOS 40+ 只有 cri-o）
 - k8s-keystone-auth webhook image 拉不到 → apiserver webhook fail → SA token 發不出 → workload 卡
 
-## 產業現實（綜合 7 天踩坑後的 bird's eye view）
+## 產業現實（綜合 7 天踩雷後的 bird's eye view）
 
 ### 部署工具市佔（2026 約估）
 | 工具 | 市佔 | 適合 |
@@ -147,7 +147,7 @@ amd64 上**最後一個 charm 完整的 OpenStack release = Yoga (2022.1)**，�
 | 檔案 | 內容 |
 |---|---|
 | `docs/runbook/day-0..day-7-*.md` | 每一步實跑過的指令 |
-| `docs/solutions/` | 22 個 integration / runtime 坑的詳細 doc |
+| `docs/solutions/` | 22 個 integration / runtime 地雷的詳細 doc |
 | `docs/plans/` | 原始計畫書 |
 | `/Users/souch_hsu/Downloads/configure-openstack-lxd-lab.html` | 完整的 HTML 教學文件 |
 | 本檔 `docs/reflection.md` | 回顧 + 下一步 |
@@ -164,4 +164,4 @@ amd64 上**最後一個 charm 完整的 OpenStack release = Yoga (2022.1)**，�
 
 ---
 
-_Sprint 實跑 9 天，踩 22 個坑，部了 15 個服務，3 個 VM，2 個 K8s node。這段路沒白走。_
+_Sprint 實跑 9 天，踩 22 個雷，部了 15 個服務，3 個 VM，2 個 K8s node。這段路沒白走。_

@@ -11,7 +11,7 @@ date: 2026-04-20
 
 # Magnum charm：bind / haproxy mismatch
 
-## Symptom
+## 症狀
 
 ```bash
 $ openstack coe cluster template list
@@ -24,7 +24,7 @@ curl: (52) Empty reply from server
 
 但 Keystone catalog 顯示 endpoint 正確 (`http://<ip>:9511/v1`)，服務看起來 active。
 
-## Root Cause
+## 根因
 
 Magnum 在 LXD container 裡的兩個程序：
 
@@ -44,7 +44,7 @@ backend magnum-api_admin_10.254.154.240
 
 這是 **charm 的內部配置 bug**：charm 應該讓 magnum-api bind `0.0.0.0` 或改 haproxy backend 指 `127.0.0.1:9501`，兩者選一，但現在兩邊都沒有。
 
-## Solution
+## 解法
 
 編輯 magnum.conf 加 `[api] host = 0.0.0.0`：
 
@@ -68,7 +68,7 @@ curl http://<magnum-ip>:9511/
 # {"name": "OpenStack Magnum API", "versions": [{"id": "v1", ...}]}
 ```
 
-## Diagnostic Cheatsheet
+## 診斷速查
 
 ```bash
 # magnum-api 有跑？
@@ -91,13 +91,13 @@ juju ssh magnum/0 -- "curl -sI http://127.0.0.1:9511/"
 # 若 empty → haproxy 連不到 backend
 ```
 
-## 副作用 & Prevention
+## 副作用與預防
 
 - charm 下次跑 `config-changed` / `certificates-changed` hook 會<strong>覆寫 magnum.conf</strong>，patch 被吃掉
 - 每次 config 改動後要手動重跑 sed + restart
 - 長期解：systemd override 加 pre-exec 跑 sed；或提 charm bug 給 OpenStack Charmers
 
-## Related
+## 相關文件
 
 - 本專案 `docs/runbook/day-6-magnum.md`
 - 類似 pattern：Magnum 跟 Heat 一樣有 `domain-setup` action 不自動跑（另一個 charm quirk）

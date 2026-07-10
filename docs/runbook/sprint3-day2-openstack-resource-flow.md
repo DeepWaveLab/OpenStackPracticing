@@ -2,6 +2,88 @@
 
 > 課程定位:不碰 Horizon,純 CLI 把「租戶 → image → 網路 → VM → 對外連線」整條流程走一遍,並對照 OVN 的邏輯模型理解每一步在底層發生什麼。
 
+!!! abstract "你在課程的哪裡"
+    - **昨天(Day 1)**:OpenStack 已經部署起來了——但它現在是一朵「空的雲」:有服務、沒半個使用者資源。
+    - **今天**:分別扮演**雲管理員**(建租戶、上傳 image、開對外網路)和**租戶**(建自己的網路、開 VM、掛對外 IP),把一台 VM 從無到有開出來並 SSH 進去。
+    - **今天之後**:Day 3~9 的所有東西(volume、LB、K8s cluster)全都建在今天建立的 demo 租戶與網路之上。
+
+## 第一次接觸 OpenStack?先讀這段
+
+OpenStack 就是**自己架的 AWS**:一組開源服務,把你的實體機器變成可以「開 VM、切網路、掛硬碟」的雲。每個功能由一個獨立服務負責,名字都很怪,但對照公有雲就秒懂:
+
+| OpenStack 服務 | 它管什麼 | AWS 對應 |
+|---|---|---|
+| **Keystone** | 帳號、專案(租戶)、權限、發 token | IAM |
+| **Glance** | VM 開機用的作業系統映像檔 | AMI |
+| **Nova** | 開 VM、排程到哪台實體機 | EC2 |
+| **Neutron** | 虛擬網路、路由器、防火牆規則 | VPC |
+| **Horizon** | 網頁儀表板(本課程刻意不用) | AWS Console |
+
+### 開一台 VM 需要哪些「零件」?
+
+這是今天最重要的觀念。在雲上開 VM 不是按一顆鈕,而是**先備齊一堆互相依賴的資源**——就像組電腦要先有零件、辦網路要先牽線:
+
+```mermaid
+flowchart TB
+    subgraph admin["管理員先準備(全租戶共用)"]
+        IMG["image(作業系統光碟)"]
+        FLV["flavor(機器規格單:幾核/多少RAM)"]
+        EXT["ext-net(對外網路)"]
+    end
+    subgraph tenant["租戶自己建(互相隔離)"]
+        NET["network + subnet(自己的內網)"]
+        RTR["router(內網 ↔ 對外網路的閘道)"]
+        SG["security group(防火牆規則)"]
+        KEY["keypair(SSH 公鑰)"]
+    end
+    VM["server create → VM"]
+    FIP["floating IP(對外 IP,貼在 VM 上)"]
+    IMG --> VM
+    FLV --> VM
+    NET --> VM
+    KEY --> VM
+    SG --> VM
+    EXT --> RTR
+    NET --> RTR
+    EXT --> FIP
+    RTR --> FIP
+    FIP --> VM
+```
+
+| 名詞 | 白話解釋 | AWS 對應 |
+|---|---|---|
+| image | 作業系統安裝光碟(cirros 是測試用的迷你 Linux,10 秒開機) | AMI |
+| flavor | 規格菜單:1 vCPU + 512MB 叫 m1.tiny | instance type |
+| network / subnet | 租戶自己的私有內網(例:10.10.10.0/24),別的租戶看不到 | VPC subnet |
+| router | 把私有內網接到對外網路的虛擬路由器,順便做 NAT | NAT gateway |
+| security group | 掛在 VM 網卡上的防火牆;**預設擋掉所有進站**,連 ping 都要明確開 | Security Group |
+| keypair | 你的 SSH 公鑰,開機時自動塞進 VM(所以雲 VM 都不用密碼登入) | Key pair |
+| floating IP(FIP) | 可拆可貼的對外 IP:VM 換了,IP 可以帶走貼到新 VM | Elastic IP |
+
+### `server create` 按下去的那一刻,背後發生什麼
+
+```mermaid
+sequenceDiagram
+    participant U as openstack CLI
+    participant K as Keystone
+    participant N as nova-api
+    participant S as nova-scheduler
+    participant C as nova-compute
+    participant Q as Neutron
+    participant G as Glance
+    U->>K: 帳密換 token
+    U->>N: server create(帶 token)
+    N->>S: 這台 VM 該放哪台實體機?
+    S-->>N: 選定 host(依 CPU/RAM/disk 餘量過濾)
+    N->>C: 在選定的 host 上開機
+    C->>Q: 幫我建一張虛擬網卡(port)
+    C->>G: 把 image 抓下來當開機碟
+    C->>C: 叫 libvirt/qemu 啟動 VM
+    C-->>U: 狀態 BUILD → ACTIVE
+```
+
+看懂這張圖,之後除錯就知道去哪找log:卡在排程 → scheduler;網卡拿不到 → neutron;image 抓不到 → glance。
+
 ## 原理與架構
 
 ### 1. 每個 CLI 動作在 OVN 裡對應什麼
@@ -112,10 +194,10 @@ ssh -i ~/.ssh/oslab_ed25519 ubuntu@$UFIP "ping -c2 8.8.8.8"
 | OVN 資料面 | Geneve(東西向)+ flat(南北向)+ NAT | ✅ 整條驗證 |
 | 重開機存活 | ext-net-fixup.service enabled | ✅(明早 az vm start 後驗收) |
 
-## 踩坑
+## 踩雷
 
-**今天零踩坑。** 非運氣——三個 Sprint 1 的地雷是被預防掉的:Ubuntu 用 config-drive(#13)、flat provider 在 kolla 預設就開(#7 的 charm 限制不存在)、security group rule 明確加(#9)。課程結論:**坑的複利在這裡兌現**。
+**今天零踩雷。** 非運氣——三個 Sprint 1 的地雷是被預防掉的:Ubuntu 用 config-drive(#13)、flat provider 在 kolla 預設就開(#7 的 charm 限制不存在)、security group rule 明確加(#9)。課程結論:**教訓的複利在這裡兌現**。
 
 ## 下一步(Day 3)
 
-Cinder LVM:data disk(sdb 256G)做 `cinder-volumes` VG → globals 開 cinder → `kolla-ansible reconfigure/deploy` 增量上服務 → volume attach/boot-from-volume。Sprint 1 雪恥項 #1。
+Cinder LVM:data disk(sdb 256G)做 `cinder-volumes` VG → globals 開 cinder → `kolla-ansible reconfigure/deploy` 增量上服務 → volume attach/boot-from-volume。Sprint 1 未完成項 #1,本次重做。

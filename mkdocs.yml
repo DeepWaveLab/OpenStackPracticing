@@ -1,0 +1,152 @@
+site_name: OpenStack Lab Course
+site_description: OpenStack 實作課程 —— runbook、踩雷解法與反思
+# site_url 部署時設為 https://<user>.github.io/OpenStackPracticing/
+
+theme:
+  name: material
+  language: zh-TW
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切換深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切換淺色模式
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.code.select
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - search.share
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+validation:
+  links:
+    absolute_links: warn
+    unrecognized_links: warn
+    anchors: warn
+
+exclude_docs: |
+  plans/
+
+not_in_nav: |
+  /runbook/README.md
+
+nav:
+  - 首頁: index.md
+
+  - 課程主線(Day 0–10):
+      - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
+      - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
+      - "Day 2 · OpenStack 資源全流程": runbook/sprint3-day2-openstack-resource-flow.md
+      - "Day 3 · Cinder LVM": runbook/sprint3-day3-cinder-lvm.md
+      - "Day 4 · Octavia LB": runbook/sprint3-day4-octavia.md
+      - "Day 5 · Barbican + Heat": runbook/sprint3-day5-barbican-heat.md
+      - "Day 6 · CAPI 管理叢集": runbook/sprint3-day6-capi-management-cluster.md
+      - "Day 7 · Magnum CAPI driver": runbook/sprint3-day7-magnum-capi-driver.md
+      - "Day 8 · E2E workload cluster": runbook/sprint3-day8-e2e-workload-cluster.md
+      - "Day 9 · Day-2 operations": runbook/sprint3-day9-day2-operations.md
+      - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
+      - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
+
+  - 排錯手冊:
+      - solutions/README.md
+      - "本課程(Kolla / Magnum CAPI)":
+          - "Kolla ProxySQL vs MariaDB port": solutions/integration-issues/kolla-proxysql-mariadb-port-conflict.md
+          - "Octavia dhclient (Noble)": solutions/integration-issues/kolla-octavia-dhclient-noble.md
+          - "Octavia amphora Redis jobboard": solutions/integration-issues/kolla-octavia-redis-jobboard.md
+          - "kind × Kolla docker iptables": solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md
+          - "CAPI 子網撞 API IP": solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md
+          - "nodegroup failureDomain null": solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null.md
+      - "歷史路線(Juju / Charms)":
+          - "MySQL charm 不相容": solutions/integration-issues/mysql-charm-not-compatible-with-openstack.md
+          - "OVN charm Caracal 版差": solutions/integration-issues/ovn-charms-caracal-release-mismatch.md
+          - "OVN chassis 未註冊": solutions/integration-issues/ovn-version-mismatch-chassis-not-registering.md
+          - "nova-compute Caracal 憑證": solutions/integration-issues/nova-compute-caracal-cloud-credentials.md
+          - "nova-compute 缺 neutron auth": solutions/integration-issues/nova-compute-missing-neutron-auth.md
+          - "neutron SG 預設關閉": solutions/integration-issues/neutron-security-groups-disabled-default.md
+          - "magnum-api bind vs haproxy": solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy.md
+          - "heat 缺 domain setup": solutions/integration-issues/heat-missing-domain-setup-action.md
+      - "Runtime errors":
+          - "cirros sshd race vs config-drive": solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive.md
+
+  - 歷史 · 前兩次嘗試:
+      - previous-attempts.md
+      - "Sprint 1 · Juju + Charms(9 天)":
+          - "Day 0 · Azure VM": runbook/day-0-azure-vm.md
+          - "Day 1 · LXD + Juju install": runbook/day-1-lxd-juju-install.md
+          - "Day 1 · Juju bootstrap": runbook/day-1-juju-bootstrap.md
+          - "Day 1 · First relation": runbook/day-1-first-relation.md
+          - "Day 2 · Charm map": runbook/day-2-openstack-charm-map.md
+          - "Day 3 · Keystone": runbook/day-3-keystone.md
+          - "Day 3 · MySQL InnoDB cluster": runbook/day-3-mysql-innodb-cluster.md
+          - "Day 3 · RabbitMQ": runbook/day-3-rabbitmq.md
+          - "Day 3 · Vault TLS": runbook/day-3-vault-tls.md
+          - "Day 3 · Glance": runbook/day-3-glance.md
+          - "Day 3 · Placement": runbook/day-3-placement.md
+          - "Day 3 · Nova cloud controller": runbook/day-3-nova-cloud-controller.md
+          - "Day 3 · Nova compute": runbook/day-3-nova-compute.md
+          - "Day 3 · Network stack": runbook/day-3-network-stack.md
+          - "Day 3 · Horizon": runbook/day-3-horizon.md
+          - "Day 4 · Configure OpenStack": runbook/day-4-configure-openstack.md
+          - "Day 5 · Heat": runbook/day-5-heat.md
+          - "Day 6 · Magnum": runbook/day-6-magnum.md
+          - "Day 7 · Magnum k8s cluster": runbook/day-7-magnum-k8s-cluster.md
+          - "Day 8 · Storage attempts": runbook/day-8-storage-attempts.md
+      - "Sprint 2 · OpenStack-Helm(2 天)":
+          - "Day 0 · Azure VM": runbook/sprint2-day-0-azure-vm.md
+          - "Day 0 · k8s bootstrap": runbook/sprint2-day-0-k8s-bootstrap.md
+          - "Day 1 · Ansible + Kolla install": runbook/sprint2-day-1-ansible-kolla-install.md
+          - "OSH infra": runbook/sprint2-course-1-osh-infra.md
+      - "Sprint 2 課程計畫(後來被推翻)": sprint2-course-plan.md
+
+  - 回顧與教訓:
+      - "Sprint 3 回顧(本課程)": sprint3-reflection.md
+      - "Sprint 2 回顧(OSH,2 天喊停)": sprint2-reflection.md
+      - "Sprint 1 回顧(Juju,9 天)": reflection.md
