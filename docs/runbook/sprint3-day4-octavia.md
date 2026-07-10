@@ -1,7 +1,7 @@
 # Sprint 3 / Day 4: Octavia LBaaS(Sprint 1 未完成項 #2)
 
 > 課程定位:部署 Octavia 並手動走完 LB 全流程(LB → listener → pool → member → health monitor → VIP FIP)。
-> Sprint 1 這一步死於 Canonical charm 在 amd64 的 2024.1 斷代(solutions #21)—— 根本沒得裝。Kolla 這邊 Octavia 是一等公民。
+> 前一次嘗試在這一步直接出局:官方 charm 當時在主流架構上根本沒有發佈可用版本,想裝都裝不了。Kolla 這邊 Octavia 是一等公民,今天把它完整部起來。
 
 !!! abstract "你在課程的哪裡"
     - **前兩天**:你已能開 VM(Day 2)、掛硬碟(Day 3)。
@@ -46,12 +46,20 @@ flowchart LR
 
 ### 1. Amphora 模型:LB 是「一台幫你養的 VM」
 
-```
-openstack CLI ─► octavia-api ─► octavia-worker ──(nova boot)──► amphora VM
-                                                                 │ 裡面跑 haproxy
-     octavia-health-manager ◄──(UDP 5555 心跳)── amphora-agent ──┤
-     octavia-housekeeping(清孤兒、輪替憑證)                       │
-                     tenant traffic:VIP port ─► haproxy ─► members
+```mermaid
+flowchart TB
+    subgraph control["控制面(Octavia 的服務)"]
+        direction LR
+        CLI["openstack CLI"] --> API["octavia-api"] --> W["octavia-worker"]
+        HM["health-manager<br/>(失聯就砍掉重建)"] ~~~ HK["housekeeping<br/>(清孤兒、輪替憑證)"]
+    end
+    W ==>|"請 Nova 開一台 VM"| AMP["amphora VM(LB 本體,裡面跑 haproxy)"]
+    AMP -.->|"UDP 5555 心跳回報"| HM
+    subgraph data["資料面(租戶流量,流過 amphora 內的 haproxy)"]
+        direction LR
+        T["使用者流量"] --> VIP["VIP"] --> HAP["haproxy"] --> MB["你的後端 members"]
+    end
+    AMP --- data
 ```
 
 - **worker**:收到 LB 需求 → 叫 Nova 開 amphora VM、叫 Neutron 插 VIP port、把 haproxy 設定推進去
@@ -152,38 +160,40 @@ openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 
 # 特徵:L4 only、SOURCE_IP_PORT、無 amphora VM、規則直接進 OVN 流表
 ```
 
-## Checkpoint(全數通過 2026-07-08)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| octavia 容器 | api/worker/health-manager/housekeeping/driver-agent 全 Up | ✅ |
-| o-hm0 | 從 lb-mgmt-subnet 拿到 DHCP IP | ✅ 10.1.0.29/24(OVN 原生 DHCP) |
-| auto-configure | lb-mgmt-net/router/flavor/SG 自動建立,octavia.conf 填好 id | ✅ |
-| amphora | ALLOCATED / STANDALONE,mgmt IP 可達 | ✅ 10.1.0.85 |
-| lb2(amphora provider) | ACTIVE/ONLINE,members 全 ONLINE | ✅ |
-| **round robin** | curl FIP 交替回 web1/web2 | ✅ 6/6 完美交替 |
-| lb-ovn(ovn provider) | ACTIVE/ONLINE,tenant 內可連通 | ✅ 無 amphora,零額外 VM |
-| **對照 Sprint 1** | Sprint 1 solutions #21(charm 斷代)不存在於 Kolla 路線 | ✅ |
+| octavia 容器 | api/worker/health-manager/housekeeping/driver-agent 全 Up | 符合 |
+| o-hm0 | 從 lb-mgmt-subnet 拿到 DHCP IP | 10.1.0.29/24(OVN 原生 DHCP) |
+| auto-configure | lb-mgmt-net/router/flavor/SG 自動建立,octavia.conf 填好 id | 符合 |
+| amphora | ALLOCATED / STANDALONE,mgmt IP 可達 | 10.1.0.85 |
+| lb2(amphora provider) | ACTIVE/ONLINE,members 全 ONLINE | 符合 |
+| **round robin** | curl FIP 交替回 web1/web2 | 6/6 完美交替 |
+| lb-ovn(ovn provider) | ACTIVE/ONLINE,tenant 內可連通 | 無 amphora,零額外 VM |
+| **對照前一次嘗試** | Sprint 1 卡死這一步的 charm 斷代問題,Kolla 路線不存在 | 順利部署(當時的細節見[前兩次嘗試](../previous-attempts.md)) |
 
-## 踩雷
+## 地雷記錄
 
-### 1. `octavia-certificates` 不吃預設 inventory
+### 地雷 1:`octavia-certificates` 不吃預設 inventory {#mine-1}
 
 `kolla-ansible octavia-certificates` 單獨跑會找 `/etc/kolla/ansible/inventory/all-in-one` 報 Path does not exist —— 跟 deploy 一樣要 `-i ~/all-in-one`。
 
-### 2. Ubuntu 24.04 沒有 dhclient → octavia-interface.service 起不來(solutions 級)
+### 地雷 2:Ubuntu 24.04 沒有 dhclient → octavia-interface.service 起不來(solutions 級) {#mine-2}
 
-deploy 死在 `Restart octavia-interface.service`,`systemctl status` 顯示 `dhclient ... status=203/EXEC`(執行檔不存在)。**Noble cloud image 已移除 isc-dhcp-client**(上游棄案),kolla 的 unit 還寫死 `/sbin/dhclient`。修:`apt install isc-dhcp-client` → `systemctl reset-failed && systemctl start octavia-interface` → 補跑 `deploy --tags octavia`。詳見 `solutions/integration-issues/kolla-octavia-dhclient-noble.md`。
+deploy 死在 `Restart octavia-interface.service`,`systemctl status` 顯示 `dhclient ... status=203/EXEC`(執行檔不存在)。**Noble cloud image 已移除 isc-dhcp-client**(上游棄案),kolla 的 unit 還寫死 `/sbin/dhclient`。修:`apt install isc-dhcp-client` → `systemctl reset-failed && systemctl start octavia-interface` → 補跑 `deploy --tags octavia`。完整記錄見排錯手冊:[octavia-interface 的 dhclient 問題](../solutions/integration-issues/kolla-octavia-dhclient-noble.md)。
 
-### 3. amphora driver 需要 Redis jobboard,kolla 不會自動開(solutions 級)
+### 地雷 3:amphora driver 需要 Redis jobboard,kolla 不會自動開(solutions 級) {#mine-3}
 
-LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundError: No master found for 'kolla'` + `Error 111 connecting to 127.0.0.1:6379`。**Epoxy 的 amphora provider 走 taskflow jobboard(Redis sentinel),但 `enable_redis` 預設 no 且 octavia 不會幫你啟動**。修:`enable_redis: "yes"` → `deploy --tags redis,octavia`。詳見 `solutions/integration-issues/kolla-octavia-redis-jobboard.md`。
+LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundError: No master found for 'kolla'` + `Error 111 connecting to 127.0.0.1:6379`。**Epoxy 的 amphora provider 走 taskflow jobboard(Redis sentinel),但 `enable_redis` 預設 no 且 octavia 不會幫你啟動**。修:`enable_redis: "yes"` → `deploy --tags redis,octavia`。完整記錄見排錯手冊:[amphora 的 Redis jobboard 問題](../solutions/integration-issues/kolla-octavia-redis-jobboard.md)。
 
-### 4. octavia-openrc.sh 沒有生成
+### 地雷 4:octavia-openrc.sh 沒有生成 {#mine-4}
 
 文件說會有 `/etc/kolla/octavia-openrc.sh`,實際沒出現。不影響:image 上傳改用 admin + `--project <amp_image_owner_id>`(從 octavia.conf 讀,auto-configure 已填好)。
 
-### 5. 卡在 PENDING_* 的 LB 無法刪除(擴展知識)
+### 地雷 5:卡在 PENDING_* 的 LB 無法刪除(擴展知識) {#mine-5}
 
 Redis 壞掉期間建立的 lb1 永遠停在 `PENDING_CREATE`,delete 回 409(PENDING 狀態 immutable,而 job 從未進 queue,永遠不會有人來改狀態)。社群公認處置(**lab 限定,生產環境先開 ticket**):DB 把 `provisioning_status` 改 `ERROR` → `loadbalancer delete --cascade`。這是本 lab 唯一一次手改 DB,原因:Octavia 沒有提供 stuck-PENDING 的官方重置工具。
 

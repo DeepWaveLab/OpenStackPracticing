@@ -61,7 +61,7 @@ resource "openstack_networking_router_interface_v2" "tf_ri" {
 }
 resource "openstack_compute_instance_v2" "tf_vm" {
   name        = "tf-vm"
-  depends_on  = [openstack_networking_router_interface_v2.tf_ri]   # ← 見踩雷#1
+  depends_on  = [openstack_networking_router_interface_v2.tf_ri]   # ← 原因見下方地雷 1
   image_name  = "cirros"; flavor_name = "m1.tiny"; key_pair = "k8s-admin"
   network { uuid = openstack_networking_network_v2.tf_net.id }
 }
@@ -86,22 +86,24 @@ terraform output        # tf_vm_ip / tf_lb_vip
 terraform destroy -auto-approve    # 一鍵拆 7 資源(含 amphora)
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| provider auth | OS_* env 認證成功 | ✅ |
-| apply | network/subnet/router/VM/LB/listener 全建 | ✅ 7 資源;LB amphora ACTIVE |
-| outputs | VM/LB IP 取得 | ✅ tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234 |
-| **teardown** | `terraform destroy` 清乾淨、OpenStack 端 0 殘留 | ✅ 7 destroyed |
+| provider auth | OS_* env 認證成功 | 符合 |
+| apply | network/subnet/router/VM/LB/listener 全建 | 7 資源;LB amphora ACTIVE |
+| outputs | VM/LB IP 取得 | tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234 |
+| **teardown** | `terraform destroy` 清乾淨、OpenStack 端 0 殘留 | 7 destroyed |
 
-## 踩雷
+## 地雷記錄
 
-### 1. instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
+### 地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷) {#mine-1}
 
 `openstack_compute_instance_v2` 只用 `network { uuid = ... }` 引用 network、**沒引用 subnet**,TF 會並行建、VM 送到 Nova 時 subnet 還沒掛上 → `Network ... requires a subnet in order to boot instances on` (HTTP 400)。修:給 instance 加 `depends_on = [openstack_networking_router_interface_v2.tf_ri]`(或 subnet),強制順序。這是 provider 的 dependency graph 抓不到隱性依賴的典型情況。
 
-### 2. provider 認證
+### 地雷 2:provider 認證 {#mine-2}
 
 不必在 HCL 寫死帳密 —— `provider "openstack" {}` 空 block 直接吃 `OS_AUTH_URL`/`OS_USERNAME`/`OS_PASSWORD`/`OS_PROJECT_NAME`/`OS_*_DOMAIN_NAME` env(`source admin-openrc.sh`)。生產環境用 `clouds.yaml` + `cloud = "..."` 或 application credential 更佳。
 

@@ -39,12 +39,16 @@ Magnum 補的正是這一半:
 Magnum 收到訂單後,由它內建的 **CAPI driver(翻譯官)**把 OpenStack 風格的請求翻成 CAPI 藍圖、丟進 Day 6 的工廠。而「怎麼丟進去」的答案樸素得驚人——**給 Magnum 一份工廠的 kubeconfig(= 地址 + 鑰匙)**:
 
 ```mermaid
-flowchart LR
-    U["使用者<br/>openstack coe cluster create"] --> M["Magnum API<br/>(驗 Keystone、查配額)"]
-    M --> D["magnum-conductor 裡的<br/>CAPI driver(翻譯官)"]
-    D -->|"憑 kubeconfig 寫入藍圖"| K["kind 工廠<br/>(Day 6)"]
-    K -->|"CAPO 呼叫 OpenStack"| O["Nova / Octavia / Cinder"]
-    O --> W["workload cluster<br/>(Day 8 誕生)"]
+flowchart TB
+    subgraph front["店面:接單(OpenStack 這側)"]
+        direction LR
+        U["使用者:openstack<br/>coe cluster create"] --> M["Magnum API<br/>(驗身分、查配額)"] --> D["CAPI driver(翻譯官,<br/>在 magnum-conductor 裡)"]
+    end
+    subgraph fac["工廠:造 K8s(K8s 生態這側)"]
+        direction LR
+        K["kind 工廠<br/>(Day 6 蓋的)"] --> O["CAPO 呼叫 OpenStack:<br/>Nova / Octavia / Cinder"] --> W["workload cluster<br/>(Day 8 誕生)"]
+    end
+    D ==>|"憑 kubeconfig 把藍圖寫進工廠"| K
 ```
 
 更妙的是 Kolla 的設計:**「有沒有放 kubeconfig」本身就是 driver 的開關**——放了,CAPI driver 自動啟用;沒放,維持關閉。這是今天步驟裡最關鍵的一手,原理見下節。
@@ -70,17 +74,11 @@ disabled_drivers = k8s_cluster_api_flatcar,k8s_cluster_api_rockylinux,k8s_cluste
 
 Kolla 的 magnum role(`tasks/config.yml`)+ 容器 `config.json`:
 
-```
-/etc/kolla/config/magnum/kubeconfig   (你放的,host 上)
-        │ role: Copying over kubeconfig file
-        ▼
-容器 config.json:{ source: .../kubeconfig, dest: /var/lib/magnum/.kube/config }
-        ▼
-magnum_conductor 容器內 /var/lib/magnum/.kube/config
-        │ driver clients.py: pykube.HTTPClient(pykube.KubeConfig.from_env())
-        │   from_env() → 讀 ~/.kube/config(容器內 HOME=/var/lib/magnum)→ 完全對上
-        ▼
-連 kind API(kubeconfig 內 server=https://127.0.0.1:33689)
+```mermaid
+flowchart TB
+    A["host 上:/etc/kolla/config/magnum/kubeconfig<br/>(你在步驟 2 放的那把鑰匙)"]
+    A -->|"kolla 部署時自動複製進容器"| B["magnum_conductor 容器內:<br/>/var/lib/magnum/.kube/config"]
+    B -->|"driver 啟動時讀 ~/.kube/config<br/>(容器內 HOME 恰好是 /var/lib/magnum,路徑對上)"| C["連上 kind 的 API<br/>(kubeconfig 裡指向 https://127.0.0.1:33689)"]
 ```
 
 **能連通的前提**:Kolla 的 magnum 容器走 **host network**(與 barbican/heat 同),所以容器內 `127.0.0.1:33689` = host 的 kind API port。若 magnum 不是 host-net(別的部署工具),就要改用 kind 容器的 docker IP 或 `--internal` kubeconfig。
@@ -109,7 +107,7 @@ enable_cluster_user_trust: "yes"
 # 2. 放 management cluster 的 kubeconfig(Day 6 kind 的 ~/.kube/config)
 sudo mkdir -p /etc/kolla/config/magnum
 sudo cp ~/.kube/config /etc/kolla/config/magnum/kubeconfig
-sudo chown azureuser:azureuser /etc/kolla/config/magnum/kubeconfig   # ← 見踩雷#1
+sudo chown azureuser:azureuser /etc/kolla/config/magnum/kubeconfig   # ← 原因見下方地雷 1
 
 # 3. deploy(magnum 建 DB/keystone/trustee、掛 kubeconfig、省略 disabled_drivers)
 kolla-ansible deploy -i ~/all-in-one --tags magnum,loadbalancer,horizon
@@ -148,32 +146,34 @@ openstack coe cluster template create k8s-v1.34.8 \
   --coe kubernetes --label kube_tag=v1.34.8
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| magnum 容器 | api + conductor healthy | ✅ |
-| **driver 啟用** | 生成的 magnum.conf 無 `disabled_drivers` 行 | ✅ 0 行 |
-| kubeconfig 掛載 | 容器內 `/var/lib/magnum/.kube/config` 存在 | ✅ magnum:magnum 600 |
-| **conductor → mgmt cluster** | pykube 列得出 kind node / capo pod | ✅ `['capi-mgmt-control-plane']` |
-| conductor service | `openstack coe service list` state=up | ✅ |
-| node image | active,os_distro=ubuntu | ✅ v1.34.8(825M) |
-| **ClusterTemplate** | `coe cluster template create` 成功 | ✅ k8s-v1.34.8,cluster_distro=ubuntu |
+| magnum 容器 | api + conductor healthy | 符合 |
+| **driver 啟用** | 生成的 magnum.conf 無 `disabled_drivers` 行 | 0 行 |
+| kubeconfig 掛載 | 容器內 `/var/lib/magnum/.kube/config` 存在 | magnum:magnum 600 |
+| **conductor → mgmt cluster** | pykube 列得出 kind node / capo pod | `['capi-mgmt-control-plane']` |
+| conductor service | `openstack coe service list` state=up | 符合 |
+| node image | active,os_distro=ubuntu | v1.34.8(825M) |
+| **ClusterTemplate** | `coe cluster template create` 成功 | k8s-v1.34.8,cluster_distro=ubuntu |
 
-## 踩雷
+## 地雷記錄
 
-### 1. `sudo cp` 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
+### 地雷 1:`sudo cp` 讓 kubeconfig 變 root:root → deploy 讀不到(必踩) {#mine-1}
 
 `sudo cp ~/.kube/config /etc/kolla/config/magnum/kubeconfig` 產生的檔是 `root:root 0600`。但 kolla-ansible 以 **azureuser** 身分讀這個 src(`copy` module 從 control node 讀),撞 `Permission denied: /etc/kolla/config/magnum/kubeconfig`,deploy `failed=1` 死在 "Copying over kubeconfig file"。修:`sudo chown azureuser:azureuser` 該檔(保持 600 即可),再重跑 deploy(冪等)。教訓:放進 `/etc/kolla/config/` 的自訂檔要讓跑 ansible 的使用者讀得到。
 
-### 2. 沒有 m1.medium flavor
+### 地雷 2:沒有 m1.medium flavor {#mine-2}
 
 環境原本只有 m1.tiny / m1.small(Day 2 建的)。getting-started 用 m1.medium,得先 `openstack flavor create`。ClusterTemplate 只存 flavor 名稱,template create 時不驗證 flavor-vs-image 磁碟大小(那是 Day 8 nova boot 才驗),所以就算 flavor 偏小 template 仍會建成功 —— 但 Day 8 要確保 flavor 磁碟 ≥ image 虛擬大小。
 
-### 3. 版本一致性(承 Day 6)
+### 地雷 3:版本一致性(承 Day 6) {#mine-3}
 
 driver(image 內建)、CAPI/CAPO(mgmt cluster)、node image 三者版本要相容。本課全部對齊 vexxhost 測過的組合:driver = Kolla Epoxy 內建版、CAPI v1.13.2 / CAPO v0.14.4(Day 6)、node image k8s v1.34.8(capo-image-elements 2026.05-7)。
 
 ## 下一步(Day 8)
 
-E2E:`openstack coe cluster create` 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 `kubectl get nodes` 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。**開工前注意**:若 VM 隔夜重開,先確認 kind cluster 回穩(Day 6 §踩雷4)且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 `/etc/kolla/config/magnum/kubeconfig` 並 `kolla-ansible deploy --tags magnum`。
+E2E:`openstack coe cluster create` 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 `kubectl get nodes` 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。**開工前注意**:若 VM 隔夜重開,先確認 kind cluster 回穩([Day 6 的地雷 4](sprint3-day6-capi-management-cluster.md#mine-4))且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 `/etc/kolla/config/magnum/kubeconfig` 並 `kolla-ansible deploy --tags magnum`。

@@ -1,7 +1,7 @@
 # Sprint 3 / Day 6: Cluster API 管理叢集(kind + CAPO)
 
 > 課程定位:立起 Magnum CAPI driver 的底層 —— 一個 **Cluster API management cluster**(跑在 kind 上),裝好 CAPI core + kubeadm bootstrap/control-plane + **CAPO**(OpenStack infrastructure provider)。Day 7 才把 Magnum 的 driver 接上來。
-> 本日踩到一個重大整合地雷:**Kolla 把 docker 的 iptables 關掉,直接斷了 kind 的對外網路**,另立 solutions 詳記。
+> 今天有一個必須先知道的整合陷阱:**Kolla 為了 OpenStack,關掉了 Docker 的防火牆管理——這會直接斷掉 kind 的對外網路**。原理章會解釋為什麼,步驟 3 會處理它。
 
 !!! abstract "你在課程的哪裡"
     - **Day 1–5**:OpenStack 提供的是「原料」——VM、網路、硬碟、LB。
@@ -24,23 +24,22 @@
 
 ```mermaid
 flowchart TB
-    subgraph HOST["Azure VM(host)"]
-        subgraph KOLLA["OpenStack(Kolla 容器群)—— 不是 K8s!"]
-            MAG["Magnum(Day 7 才部)"]
-            NOVA["Nova / Neutron / Octavia / Cinder"]
-        end
-        subgraph KIND["kind management cluster(今天蓋)= 工廠"]
-            CAPI["CAPI controllers(讀藍圖)"]
-            CAPO["CAPO(會說 OpenStack 話的機器人)"]
-        end
-        subgraph WL["workload cluster(Day 8 才誕生)"]
-            APP["你的應用程式跑這裡"]
-        end
+    subgraph KIND["① kind management cluster(今天蓋)= 工廠"]
+        direction LR
+        CAPI["CAPI controllers<br/>(讀藍圖)"] --> CAPO["CAPO<br/>(會說 OpenStack 話的機器人)"]
     end
-    CAPI --> CAPO
-    CAPO -->|"呼叫 OpenStack API<br/>開 VM / LB / volume"| NOVA
-    NOVA -->|"生出節點"| WL
+    subgraph KOLLA["② OpenStack(Kolla 容器群)—— 不是 K8s!"]
+        direction LR
+        NOVA["Nova / Neutron /<br/>Octavia / Cinder"] ~~~ MAG["Magnum<br/>(Day 7 才部)"]
+    end
+    subgraph WL["③ workload cluster(Day 8 才誕生)"]
+        APP["你的應用程式跑這裡"]
+    end
+    CAPO ==>|"呼叫 OpenStack API:開 VM / LB / volume"| NOVA
+    NOVA ==>|"生出節點"| WL
 ```
+
+三座全部住在同一台 Azure VM 上——這正是容易搞混的原因。
 
 | | 是什麼 | 跑什麼 | 誰蓋的 |
 |---|---|---|---|
@@ -67,19 +66,21 @@ flowchart TB
 
 CAPI 把「建一座 K8s cluster」變成宣告式的 K8s 資源。有兩種 cluster:
 
+```mermaid
+flowchart TB
+    subgraph MGMT["management cluster(今天蓋,kind)—— CAPI controllers 住在這裡"]
+        CL["Cluster"] --> CP["KubeadmControlPlane<br/>(control-plane 節點群)"]
+        CL --> MD["MachineDeployment<br/>(worker 節點群)"]
+        MD --> MS["MachineSet"] --> M["Machine(一台節點)"]
+        OSC["OpenStackCluster / OpenStackMachine<br/>(CAPO 負責的基礎設施資源)"]
+    end
+    MGMT ==>|"CAPO 呼叫 OpenStack API<br/>(Nova / Neutron / Octavia / Cinder)"| WL
+    subgraph WL["workload cluster(Day 8 誕生)"]
+        APP["真正跑應用程式的 K8s<br/>節點是 Nova 開出來的 VM"]
+    end
 ```
-┌ management cluster(本日建,kind)────────────────────────┐
-│  CAPI controllers 在這裡跑,watch 下列 CRD 並 reconcile:  │
-│   Cluster ─► ControlPlane(KubeadmControlPlane)            │
-│           └► MachineDeployment ─► MachineSet ─► Machine    │
-│   OpenStackCluster / OpenStackMachine(CAPO 的 infra CRD)  │
-└────────────────────────────────────────────────────────────┘
-        │ CAPO 呼叫 OpenStack API(Nova/Neutron/Octavia/Cinder)
-        ▼
-┌ workload cluster(Day 8 才生)──────────────────────────────┐
-│  真正跑 app 的 K8s,節點是 Nova VM                          │
-└────────────────────────────────────────────────────────────┘
-```
+
+controllers 監看上半部這些宣告式資源,持續「把現實校正成宣告的樣子」——這就是 reconcile。
 
 **四種 provider**(clusterctl 的四個 `--` 旗標):
 
@@ -113,9 +114,18 @@ CAPO v0.12 起把「OpenStack 資源的實際 CRUD」拆給獨立的 **ORC(opens
 
 **定案:vexxhost magnum-cluster-api v0.37.0。** 版本 pin **不抓 latest,抓 driver 測過的組合** —— 直接讀 driver repo 的 `hack/setup-capo.sh`(其 CI bootstrap):`CAPI=v1.13.2 / CAPO=v0.14.4 / ORC=v2.2.0`。latest 是 v1.13.3 / v0.14.6,只差 patch,但用 pin 版最保險。
 
-### 5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
+### 5. 注意:Kolla 與 kind 對 Docker 網路的假設互相衝突
 
-Kolla-Ansible 設定 `/etc/docker/daemon.json` 為 **`iptables:false`、`ip-forward:false`、`bridge:none`** —— 因為 Kolla 容器全走 host network,網路由 neutron/OVN 自管,不讓 docker 碰 iptables。**但 kind 是正常 bridge 容器**,靠 docker 的 MASQUERADE 才能 SNAT 出去。`iptables:false` = docker 不建 NAT = kind node 封包帶著 `172.17.x` private source 出 eth0、被 Azure 丟掉,表現成**所有 image pull `i/o timeout`**。修法:比照 Kolla 既有那條,手動加一條只針對 kind 網段的 MASQUERADE(**不動 daemon.json、不全域開 docker iptables**,以免弄壞正在跑的 OpenStack)。詳見 `solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md`。
+這是今天最重要的注意事項——不先理解,待會 `clusterctl init` 會莫名其妙失敗。
+
+兩套工具對同一個 Docker 有完全相反的期待:
+
+- **Kolla 在 Day 1 部署時,改掉了 Docker 的全域設定**(`/etc/docker/daemon.json` 裡的 `iptables: false` 等):OpenStack 容器全部走主機網路、網路交給 Neutron/OVN 自己管,所以 Kolla 刻意禁止 Docker 去碰防火牆規則。對 OpenStack 來說,這是正確的設定。
+- **kind 是一般的 bridge 容器**:它的對外連線,依賴 Docker 自動建立的 NAT 轉換規則才出得去。
+
+在這台主機上,兩者相遇的結果:Docker 不會替 kind 建 NAT,kind 節點的封包帶著內部位址直接送出網卡,Azure 網路一律丟棄。**你會看到的症狀是 kind 叢集裡所有 image 拉取一律 `i/o timeout`**——看起來像網路故障,其實是設定衝突。
+
+正確的解法是**只替 kind 的網段手動補一條 NAT 規則**(步驟 3 會做),而不是把 Docker 的 `iptables` 改回 `true`——改全域設定會波及正在運作的 OpenStack。完整的診斷過程與開機自動生效的設定,見排錯手冊:[kind × Kolla 的 docker iptables 衝突](../solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md)。
 
 ## 步驟
 
@@ -140,7 +150,7 @@ kind create cluster --name capi-mgmt --wait 120s     # kindest/node v1.36.1
 kubectl get nodes                                    # control-plane Ready
 ```
 
-### 3. 修 kind egress(關鍵,否則下一步必死)
+### 3. 補上 kind 的對外 NAT(關鍵:不做的話,下一步的 `clusterctl init` 必定失敗)
 
 ```bash
 # 比照 Kolla 既有的 172.24.4.0/24 那條,只 SNAT kind 網段
@@ -182,33 +192,35 @@ done
 kubectl get providers -A
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| kind cluster | control-plane Ready | ✅ kindest/node v1.36.1,18s Ready |
-| kind egress | node 可連外部 443 | ✅ 加 MASQUERADE 後 1.1.1.1 / quay 皆 OK |
-| MASQUERADE 持久化 | systemd unit enabled+active,規則不重複 | ✅ count=1 |
-| ORC | orc-controller-manager Running | ✅ v2.2.0 |
-| cert-manager | 3 deploy available | ✅ v1.20.2(clusterctl 自動裝) |
-| **4 controller** | capi / bootstrap / control-plane / capo 全 1/1 Running | ✅ |
-| providers | core/bootstrap/control-plane v1.13.2 + openstack v0.14.4 | ✅ `kubectl get providers` 四筆到位 |
+| kind cluster | control-plane Ready | kindest/node v1.36.1,18s Ready |
+| kind egress | node 可連外部 443 | 加 MASQUERADE 後 1.1.1.1 / quay 皆 OK |
+| MASQUERADE 持久化 | systemd unit enabled+active,規則不重複 | count=1 |
+| ORC | orc-controller-manager Running | v2.2.0 |
+| cert-manager | 3 deploy available | v1.20.2(clusterctl 自動裝) |
+| **4 controller** | capi / bootstrap / control-plane / capo 全 1/1 Running | 符合 |
+| providers | core/bootstrap/control-plane v1.13.2 + openstack v0.14.4 | `kubectl get providers` 四筆到位 |
 
-## 踩雷
+## 地雷記錄
 
-### 1. Kolla `iptables:false` 斷 kind egress(solutions 級,本日最大地雷)
+### 地雷 1:Kolla `iptables:false` 斷 kind egress(solutions 級,本日最大地雷) {#mine-1}
 
-見上「原理 §5」與 `solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md`。症狀是所有 image `ImagePullBackOff` / `i/o timeout`,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。**診斷關鍵順序**:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json `iptables:false`。
+背景見上方原理第 5 節,完整解法見排錯手冊:[kind × Kolla 的 docker iptables 衝突](../solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md)。症狀是所有 image `ImagePullBackOff` / `i/o timeout`,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。**診斷關鍵順序**:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json `iptables:false`。
 
-### 2. `clusterctl init` 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
+### 地雷 2:`clusterctl init` 卡 "cert-manager context deadline exceeded"(§1 的下游症狀) {#mine-2}
 
 第一次 init 死在 `Waiting for cert-manager to be available...` → `context deadline exceeded`。**這不是 cert-manager 的錯,是 §1 egress 沒通導致它 ImagePullBackOff**。修好 MASQUERADE、刪掉卡住的 pod 讓它重拉、cert-manager available 後**重跑同一條 `clusterctl init` 即可續裝**(它偵測 cert-manager 已在會跳過,直接裝 CAPI/CAPO)。教訓:`clusterctl init` 可安全重跑。
 
-### 3. kind node 偏好 IPv6 但無 egress(次要)
+### 地雷 3:kind node 偏好 IPv6 但無 egress(次要) {#mine-3}
 
 kind 的 docker network 帶 IPv6 ULA(`fc00::/64`)且有 v6 default route,`getent hosts quay.io` 會回 AAAA,但 Azure 無 IPv6 對外 → 更拖慢 pull。修好 IPv4 MASQUERADE 後 Happy Eyeballs 會走 v4,不再是問題;要根治可在 kind config 關 IPv6,本 lab 未做(非必要)。
 
-### 4. VM reboot 後的復原(操作提醒,非 bug)
+### 地雷 4:VM reboot 後的復原(操作提醒,非 bug) {#mine-4}
 
 - **MASQUERADE**:已由 `kind-masquerade.service` 開機自動補,免手動。
 - **kind cluster 本身**:kind node 容器預設不隨 VM reboot 自動健康復原。早上開機後若要用 management cluster,先 `docker start capi-mgmt-control-plane` 等它回穩(或重建 cluster + 重跑 clusterctl init)。Day 7 開工前確認 `kubectl get providers -A` 四筆都在。

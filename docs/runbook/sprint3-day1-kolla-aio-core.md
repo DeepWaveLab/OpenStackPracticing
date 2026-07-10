@@ -59,7 +59,7 @@ flowchart LR
 裝之前先建立正確的心智模型,之後除錯會輕鬆很多:
 
 1. **每個服務一個容器**:`docker ps` 會看到 `nova_api`、`keystone`、`mariadb`……一個容器出問題,看那個容器的 log 就好,邊界非常清楚。
-2. **所有容器共用主機網路**(host network mode):容器不做網路隔離,服務就像直接跑在主機上一樣佔用 port。好處是網路路徑單純;代價是 port 衝突要自己留意(今天的地雷 #4 就是這個)。
+2. **所有容器共用主機網路**(host network mode):容器不做網路隔離,服務就像直接跑在主機上一樣佔用 port。好處是網路路徑單純;代價是 port 衝突要自己留意——我們部署時就撞過一次([地雷 4:port 3306 被佔走](#mine-4))。
 3. **設定在部署當下生成、寫死**:服務之間互連需要的資訊(資料庫帳密、訊息佇列位址、認證端點)全部由 kolla-ansible 在執行 `deploy` 的當下計算好、寫進每個服務的設定檔。**之後想改任何設定,就改 `globals.yml` 再重跑部署指令**——工具是冪等的(重跑只會套用差異),這是它可靠的來源。
 
 !!! note "與前一次嘗試的對照(選讀)"
@@ -102,7 +102,7 @@ source ~/kolla-venv/bin/activate
 ```
 
 !!! warning "之後每次操作都要先進 venv"
-    今天以及未來每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`。忘記的話會出現各種靈異錯誤(見地雷 #1)。提示符看到 `(kolla-venv)` 前綴才算進來了。
+    今天以及未來每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`,提示符出現 `(kolla-venv)` 前綴才算進來了。忘記的話,指令會拿系統的 Python 環境執行,冒出來的錯誤訊息會跟真正的原因毫無關聯、極難聯想——我們就吃過一次虧,過程記錄在[地雷 1:沒進 venv 的靈異錯誤](#mine-1)。
 
 接著在 venv 內安裝 kolla-ansible 本體(從 stable 分支)與它需要的 Ansible:
 
@@ -128,7 +128,7 @@ kolla-ansible 還需要一批 Ansible collection(可以想成它的外掛),用�
 kolla-ansible install-deps
 ```
 
-最後補三個 Python 模組——這是實測踩過的雷:後面的檢查步驟需要 Docker 的 Python SDK 和 dbus 模組,而 dbus-python 需要先裝系統標頭檔才編得起來(見地雷 #2、#3):
+最後補裝兩個 Python 模組。這一步官方文件沒寫,但不做的話,稍後的 prechecks 會分別因為缺 Docker SDK 和缺 dbus 模組而失敗(我們就是這樣發現的,詳見[地雷 2](#mine-2) 與[地雷 3](#mine-3));其中 dbus-python 是原始碼編譯套件,要先裝系統標頭檔:
 
 ```bash
 sudo apt-get install -y pkg-config libdbus-1-dev libdbus-glib-1-dev
@@ -248,7 +248,7 @@ PLAY RECAP *********************************************************
 localhost : ok=45   changed=8    unreachable=0    failed=0    ...
 ```
 
-prechecks 沒過就不要繼續——它抓到的每個問題到 deploy 階段都會變成更難查的失敗。常見錯誤對照本章地雷 #2、#3。
+prechecks 沒過就不要繼續——它抓到的每個問題,到 deploy 階段都會變成更難查的失敗。如果你看到 `No module named 'docker'` 或 `No module named 'dbus'`,回到步驟 1 最後補裝模組那段([地雷 2](#mine-2)、[地雷 3](#mine-3) 有完整說明)。
 
 ### 步驟 6:deploy(約 25 分鐘)
 
@@ -267,7 +267,7 @@ PLAY RECAP *********************************************************
 localhost : ok=367  changed=214  unreachable=0    failed=0    ...
 ```
 
-如果 deploy 中途失敗:先看 log 裡第一個紅色的 `fatal:`,對照本章地雷(實測第一輪就死在地雷 #4,修掉後重跑即過——deploy 是冪等的,直接重跑沒有副作用)。
+如果 deploy 中途失敗:先在 log 裡找第一個 `fatal:`,那才是真正的錯誤(後面的失敗多半是連鎖反應)。我們第一次跑就在這裡失敗——MariaDB 起不來,原因是 port 被佔([地雷 4](#mine-4) 有完整的診斷過程與解法);修正設定後**直接重跑同一個指令**就過了。deploy 是冪等的:重跑只會套用差異,沒有副作用,失敗後不需要砍掉重練。
 
 ### 步驟 7:拿到鑰匙,第一次使用你的雲
 
@@ -316,34 +316,38 @@ grep keystone_admin_password /etc/kolla/passwords.yml
 
 登入看到 Horizon 儀表板,今天就完成了。
 
-## Checkpoint(本課實測全數通過)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項執行,**全部符合才算完成今天**。「本課環境的結果」欄是我們實測的參考值,你的數字可以略有出入,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| deploy PLAY RECAP | `failed=0` | ✅ ok=367 changed=214(第一輪死於地雷 #4,修正後第二輪全綠) |
-| `openstack service list` | 核心服務全註冊 | ✅ 7 個服務(含白撿的 Heat) |
-| `openstack compute service list` | nova 的 scheduler/conductor/compute 全 `up` | ✅ |
-| `openstack network agent list` | OVN agent 全 Alive | ✅ |
-| `docker ps` | 全部 Up、無 Exited/Restarting | ✅ 33 個容器 |
-| Horizon | 登入頁打得開 | ✅ |
+| deploy 的 PLAY RECAP | `failed=0` | ok=367 / changed=214 |
+| `openstack service list` | 核心服務全部註冊 | 7 個服務(多出來的 Heat 是 Epoxy 預設附贈) |
+| `openstack compute service list` | nova 的 scheduler / conductor / compute 狀態全是 `up` | 3 個元件全 `up` |
+| `openstack network agent list` | OVN agent 全部 Alive | 全 Alive |
+| `docker ps` | 每個容器都是 `Up`,沒有 `Exited` 或 `Restarting` | 33 個容器 |
+| Horizon | 走 SSH tunnel 打得開登入頁、admin 登得進去 | 正常 |
 
-部署耗時參考:第一輪(含拉 image)約 12 分鐘死於 mariadb;修正後第二輪(image 已在本地)約 25 分鐘全綠。
+部署耗時參考:我們第一次跑到第 12 分鐘因 [地雷 4](#mine-4) 失敗;修正後重跑(此時 image 已在本地)約 25 分鐘完成。你如果一次順利通過,含拉 image 約 25–30 分鐘。
 
 ## 地雷記錄
 
-### 1. `install-deps` 靜默失敗:`No such file or directory: 'ansible-galaxy'`
+我們部署時實際撞到的四個問題,依出現順序排列。正文各步驟提到「地雷 N」時,指的就是這裡的對應條目。
+
+### 地雷 1:沒進 venv,`install-deps` 靜默失敗 {#mine-1}
 
 沒 activate venv、直接用完整路徑呼叫 `~/kolla-venv/bin/kolla-ansible install-deps` 會找不到 `ansible-galaxy`(它是靠 PATH 找的)。**教訓:kolla 指令一律在 `source ~/kolla-venv/bin/activate` 之後跑。** 後遺症狀很誤導:bootstrap-servers 報 `role openstack.kolla.baremetal` 解析錯誤——真因是 collection 根本沒裝進去。
 
-### 2. prechecks:`No module named 'docker'`
+### 地雷 2:prechecks 報 `No module named 'docker'` {#mine-2}
 
 bootstrap-servers 裝的是 Docker **engine**(主機上的服務),venv 裡的 Docker **Python SDK** 是另一回事,要自己 `pip install docker`。
 
-### 3. prechecks:`No module named 'dbus'`
+### 地雷 3:prechecks 報 `No module named 'dbus'` {#mine-3}
 
 `dbus-python` 是原始碼編譯套件,直接 pip 裝會編譯失敗——要先 `apt install pkg-config libdbus-1-dev libdbus-glib-1-dev` 再 `pip install dbus-python`。
 
-### 4. MariaDB 啟動失敗:proxysql 佔走 3306(Epoxy 預設值陷阱)
+### 地雷 4:MariaDB 起不來,port 3306 被 proxysql 佔走 {#mine-4}
 
 **症狀**:deploy 卡在 `Wait for first MariaDB service port liveness` 直到 timeout;`docker ps -a` 看到 `mariadb Exited (1)`;`ss -tlnp | grep 3306` 發現聽 3306 的是 **proxysql**。
 

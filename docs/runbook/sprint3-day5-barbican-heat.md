@@ -47,11 +47,13 @@ Heat 看到「port 引用了 sg」就知道 sg 要先建;server 和 fip 都只�
 
 Barbican 是 key-manager 服務,把 secret(密碼、API key)、對稱金鑰、X.509 憑證/私鑰**加密後存 DB**,用 keystone 做存取控制。三個容器:
 
-```
-openstack secret ... ─► barbican-api(:9311)─► MariaDB(payload 用 KEK 加密後寫入)
-                              │
-        barbican-worker ◄─────┘   非同步任務:憑證簽發(CA plugin)、順序產金鑰
-        barbican-keystone-listener   收 keystone notification:project 刪除時清該 project 的 secret
+```mermaid
+flowchart LR
+    CLI["openstack secret …"] --> API["barbican-api(:9311)"]
+    API -->|"payload 先用 KEK 加密"| DB[("MariaDB")]
+    API -.->|"丟非同步任務"| W["barbican-worker<br/>簽憑證、產金鑰"]
+    KS["Keystone 事件"] -.->|"project 被刪"| KL["barbican-keystone-listener<br/>連帶清掉該 project 的 secret"]
+    KL -.-> DB
 ```
 
 - **api**:REST 入口,走 haproxy VIP(本 lab `10.0.0.4:9311`)
@@ -84,12 +86,7 @@ Barbican 寫入 DB 前會用 **KEK(Key Encryption Key)**再加密一層。plugin
 
 Heat 吃 **HOT**(Heat Orchestration Template,YAML),把一組 OpenStack 資源當成一個 **stack** 一起生/滅。核心價值是**依賴排序**:
 
-```
-resources 之間用 get_resource / get_attr 互相引用
-   → Heat 自動推導出 DAG,決定建立順序、能並行的並行
-   sg ─► port ─► server
-              └─► fip        (server 與 fip 都只依賴 port,故並行建立)
-```
+resources 之間用 `get_resource` / `get_attr` 互相引用,Heat 據此自動推導出依賴圖、決定建立順序——能並行的就並行。這正是本章開頭那張圖畫的事:sg 先建,port 引用 sg 所以第二,server 和 fip 都只依賴 port,所以**兩者自動並行建立**。
 
 `stack delete` 反向拆一次全清,等同 Terraform 的 `apply` / `destroy`。差別:Heat 是 OpenStack 原生、狀態存在 heat DB;Terraform 是外部工具、狀態存 tfstate(Day 10 會用 terraform-provider-openstack 做對照)。
 
@@ -181,26 +178,28 @@ openstack stack resource list day5-stack                              # 4 個資
 openstack stack delete --yes --wait day5-stack                        # 一條全拆
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| barbican 容器 | api / worker / keystone-listener 全 Up (healthy) | ✅ 3/3 healthy |
-| key-manager endpoint | internal + public 註冊成功 | ✅ `http://10.0.0.4:9311` |
-| **secret 往返** | store 後 get --payload 原值取回 | ✅ `Sup3rS3cretDemo!` 完全一致 |
-| deploy 隔離性 | 不動到 Day 4 的 Octavia/Redis | ✅ octavia play 被 loadbalancer tag 掃到但 `changed=0`;`enable_redis: yes` 已在 globals |
-| heat template validate | 語法通過、參數解析正確 | ✅ |
-| **stack create** | CREATE_COMPLETE,依賴排序正確 | ✅ sg→port→(server‖fip),cirros ~14s ACTIVE |
-| stack outputs | internal_ip / floating_ip / server_id 取得 | ✅ 10.10.10.194 / 172.24.4.149 |
-| stack delete | 一條拆掉全部 4 資源,無殘留 | ✅ stack/server/sg 全清空 |
+| barbican 容器 | api / worker / keystone-listener 全 Up (healthy) | 3/3 healthy |
+| key-manager endpoint | internal + public 註冊成功 | `http://10.0.0.4:9311` |
+| **secret 往返** | store 後 get --payload 原值取回 | `Sup3rS3cretDemo!` 完全一致 |
+| deploy 隔離性 | 增量部署不動到 Day 4 部好的 Octavia | Octavia 相關 task 全部 `changed=0`,確認未被動到 |
+| heat template validate | 語法通過、參數解析正確 | 符合 |
+| **stack create** | CREATE_COMPLETE,依賴排序正確 | sg→port→(server‖fip),cirros ~14s ACTIVE |
+| stack outputs | internal_ip / floating_ip / server_id 取得 | 10.10.10.194 / 172.24.4.149 |
+| stack delete | 一條拆掉全部 4 資源,無殘留 | stack/server/sg 全清空 |
 
-## 踩雷
+## 地雷記錄
 
-### 1. openstack CLI 沒有 `stack` / `secret` 子命令(必踩)
+### 地雷 1:openstack CLI 沒有 `stack` / `secret` 子命令(必踩) {#mine-1}
 
 `openstack stack ...` 與 `openstack secret ...` 不隨 `python-openstackclient` 內建 —— 它們是各自 client 的 **osc plugin**。乾淨 venv 只會回 `is not an openstack command`。修:`pip install python-heatclient python-barbicanclient`。同 Day 4 的 `python-octaviaclient`,這是 kolla venv 的通則:**每個非 core 服務的 CLI 都要各自 pip 裝 plugin**。
 
-### 2. `--tags barbican` 是否自帶 haproxy?(查證,非地雷)
+### 地雷 2:`--tags barbican` 是否自帶 haproxy?(查證,非地雷) {#mine-2}
 
 擔心 targeted deploy 漏掉 barbican 的 haproxy frontend 導致 endpoint 打不通。動手前讀 `~/kolla-venv/share/kolla-ansible/ansible/site.yml`:loadbalancer play 內對每個服務有 `include_role: loadbalancer, tasks_from: loadbalancer` 的子任務,barbican 那筆明確 `tags: barbican`(L129-131)。**結論:`--tags barbican` 本身就會配 barbican 的 haproxy frontend**;本 lab 仍加 `loadbalancer` 求穩(保證 haproxy reload),實測 `changed=18 failed=0` 一次過。教訓同 Day 4:tag 行為以 `site.yml` 原始碼為準,別猜。
 

@@ -24,7 +24,7 @@ MachineDeployment(worker)升版:
 
 ### 3. node group ↔ MachineDeployment ↔ ClusterClass topology
 
-magnum-cluster-api 用 **ClusterClass(managed topology)**:cluster 的 `spec.topology.workers.machineDeployments[]` 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。`openstack coe nodegroup create` = 在 topology 陣列多加一格。**踩雷**:driver 對新 MD 若沒帶 `availability_zone` label,`failureDomain` 會是 `null`,被 CAPI v1.13 topology schema 拒(見踩雷#2)。
+magnum-cluster-api 用 **ClusterClass(managed topology)**:cluster 的 `spec.topology.workers.machineDeployments[]` 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。`openstack coe nodegroup create` = 在 topology 陣列多加一格。**踩雷**:driver 對新 MD 若沒帶 `availability_zone` label,`failureDomain` 會是 `null`,被 CAPI v1.13 topology schema 拒(見[地雷 2](#mine-2))。
 
 ### 4. cluster-autoscaler 在 CAPI 上怎麼運作
 
@@ -69,7 +69,7 @@ watch 'KUBECONFIG=~/.kube/config kubectl -n magnum-system get machine -o custom-
 ### C. node group
 
 ```bash
-# ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(踩雷#2)
+# ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(地雷 2)
 openstack coe nodegroup create k8s-lab ng-app --node-count 1 --role app \
   --labels availability_zone=nova
 openstack coe nodegroup list k8s-lab           # ng-app CREATE_COMPLETE
@@ -85,7 +85,7 @@ MD=$(kubectl -n magnum-system get machinedeployment -o name | grep ng-app)
 kubectl -n magnum-system annotate $MD \
   cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size=1 \
   cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size=3 --overwrite
-# 2. topology 交出 replicas 擁有權(關鍵,見踩雷#3)
+# 2. topology 交出 replicas 擁有權(關鍵,原因見地雷 3)
 kubectl -n magnum-system patch cluster kube-plpuz --type=json -p \
  '[{"op":"remove","path":"/spec/topology/workers/machineDeployments/1/replicas"},
    {"op":"add","path":"/spec/topology/workers/machineDeployments/1/metadata/annotations",
@@ -98,32 +98,34 @@ kubectl -n magnum-system patch cluster kube-plpuz --type=json -p \
 # 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| disk ratio | placement DISK_GB allocation_ratio=3.0 | ✅ surge master 排得進 |
-| **升版** | rolling 完成、nodes 全新版 | ✅ v1.34.8 → **v1.35.5**(surge→drain→replace,~5.5 分) |
-| **node group** | ng-app CREATE_COMPLETE、節點 role=app join | ✅ |
-| autoscaler 發現 | discovered MachineDeployment ng-app (min:1 max:3) | ✅ |
-| **autoscaler 觸發** | pending pod → ng-app 自動 1→3、pods 全排上 | ✅ 3/3 Running,2 新節點自動 join |
-| scale-down | 移除負載後回 min | ✅ 刪 scale-test 後 autoscaler 縮回 |
+| disk ratio | placement DISK_GB allocation_ratio=3.0 | surge master 排得進 |
+| **升版** | rolling 完成、nodes 全新版 | v1.34.8 → **v1.35.5**(surge→drain→replace,~5.5 分) |
+| **node group** | ng-app CREATE_COMPLETE、節點 role=app join | 符合 |
+| autoscaler 發現 | discovered MachineDeployment ng-app (min:1 max:3) | 符合 |
+| **autoscaler 觸發** | pending pod → ng-app 自動 1→3、pods 全排上 | 3/3 Running,2 新節點自動 join |
+| scale-down | 移除負載後回 min | 刪 scale-test 後 autoscaler 縮回 |
 
-## 踩雷
+## 地雷記錄
 
-### 1. 升版 surge 撞 Nova `No valid host`
+### 地雷 1:升版 surge 撞 Nova `No valid host` {#mine-1}
 
 見原理 §2。單機 compute disk 用 flavor 總和計帳,升版多開一台就爆。解:`disk_allocation_ratio=3.0`(thin qcow2 可安全超賣)。
 
-### 2. nodegroup `failureDomain: null` 被 CAPI 拒(solutions 級)
+### 地雷 2:nodegroup `failureDomain: null` 被 CAPI 拒(solutions 級) {#mine-2}
 
-`openstack coe nodegroup create` 直接 CREATE_FAILED:`spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string`。driver 對新 MD 設 `failureDomain = labels.get("availability_zone")`,沒這 label 就是 `None→null`,CAPI v1.13 topology schema 不收 null(第一個 default-worker 是 `""` 合法)。解:`--labels availability_zone=nova`。詳見 `solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null.md`。
+`openstack coe nodegroup create` 直接 CREATE_FAILED:`spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string`。driver 對新 MD 設 `failureDomain = labels.get("availability_zone")`,沒這 label 就是 `None→null`,CAPI v1.13 topology schema 不收 null(第一個 default-worker 是 `""` 合法)。解:`--labels availability_zone=nova`。完整記錄見排錯手冊:[nodegroup failureDomain null](../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null.md)。
 
-### 3. autoscaler 在 managed topology 上 replicas 被打回(flap)
+### 地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap) {#mine-3}
 
 autoscaler 正確偵測 pending、把 MD replicas 設 3,但 **topology controller 依 `spec.topology...replicas: 1` 一直打回 1**(監控看到 1↔3 來回)。managed topology 下 replicas 由 topology 擁有。解:把該 MD 在 topology 的 `replicas` **移除**(交給 autoscaler)。生產做法是建 cluster 時帶 `auto_scaling_enabled=true` + nodegroup min/max,driver 會自動配好 topology;本 lab cluster 未帶該 label,故手動 patch。
 
-### 4. autoscaler 拓樸選擇(kind vs workload)
+### 地雷 4:autoscaler 拓樸選擇(kind vs workload) {#mine-4}
 
 autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、`--kubeconfig` 指 workload(其 API FIP `172.24.4.x` 從 kind 可達)。若跑 workload 內,要餵 mgmt 的 kubeconfig,但 kind API 綁 `127.0.0.1:33689`(host loopback)workload pod 打不到,得額外 port-forward + skip-TLS,較麻煩。
 

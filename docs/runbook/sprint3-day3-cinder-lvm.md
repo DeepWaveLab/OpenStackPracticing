@@ -1,7 +1,7 @@
 # Sprint 3 / Day 3: Cinder LVM(Sprint 1 未完成項 #1)
 
 > 課程定位:把 data disk 變成 Cinder 的 LVM backend,學會「已上線的 Kolla 環境增量加服務」的工作流,並完成 volume 生命週期 + boot-from-volume。
-> Sprint 1 這一步死在 LXD:unprivileged container 拿不到 device-mapper ioctl 權限、udev event 進不了 namespace(solutions #22)。本次跑在真 VM,理應直通 —— 驗證這個假設。
+> 前一次嘗試在這一步卡死:整套跑在 LXD 容器裡,容器拿不到操作磁碟(device-mapper)所需的權限,先天做不到。本次跑在真 VM 上,理論上完全沒有這個限制——今天就來驗證這個假設。
 
 !!! abstract "你在課程的哪裡"
     - **昨天(Day 2)**:你已能開 VM,但 VM 的磁碟是跟著 VM 生滅的——VM 刪掉,資料就沒了。
@@ -29,20 +29,16 @@ VM 的磁碟分兩種,差別就像**機殼內建硬碟 vs 外接硬碟**:
 ### 一個 `volume create` + attach 的完整旅程
 
 ```mermaid
-sequenceDiagram
-    participant U as openstack CLI
-    participant A as cinder-api
-    participant S as cinder-scheduler
-    participant V as cinder-volume(LVM driver)
-    participant N as nova-compute
-    participant VM as VM
-    U->>A: volume create --size 5
-    A->>S: 這顆 volume 放哪個 backend?
-    S->>V: 交給 LVM backend
-    V->>V: lvcreate 切出 5G 邏輯碟
-    U->>N: server add volume(attach)
-    N->>V: 用 iSCSI 把邏輯碟接過來
-    N->>VM: qemu 掛進 VM → VM 內出現 /dev/vdb
+flowchart TB
+    subgraph p1["第一段:volume create --size 5"]
+        direction LR
+        C1["CLI 下單"] --> C2["cinder-api 收單"] --> C3["cinder-scheduler<br/>挑 backend"] --> C4["cinder-volume:<br/>lvcreate 切出 5G 邏輯碟"]
+    end
+    subgraph p2["第二段:server add volume(attach)"]
+        direction LR
+        A1["CLI 要求掛載"] --> A2["nova-compute 用 iSCSI<br/>把邏輯碟接過來"] --> A3["qemu 掛進 VM"] --> A4["VM 內出現<br/>/dev/vdb"]
+    end
+    C4 ~~~ A1
 ```
 
 關鍵理解:**控制流程(上半)是 OpenStack 的,資料流(LVM + iSCSI)是純 Linux 的**。OpenStack 沒有發明新儲存技術,它只是把 Linux 既有機制自動化、API 化——這也是為什麼 Sprint 1 跑在 LXD 容器裡會死:容器碰不到這些 kernel 層機制。
@@ -51,12 +47,17 @@ sequenceDiagram
 
 ### 1. Cinder 三元件與資料路徑
 
-```
-openstack CLI ──► cinder-api ──► cinder-scheduler ──► cinder-volume(LVM driver)
-                                                          │ lvcreate -L 5G cinder-volumes
-                                                          ▼
-   nova-compute ◄── iSCSI target(host 上的 LIO/tgt)◄── LV /dev/cinder-volumes/volume-<uuid>
-        │ 把 iSCSI LUN 接給 qemu,VM 內看到 /dev/vdb
+```mermaid
+flowchart TB
+    subgraph ctrl["控制路徑(OpenStack 的部分)"]
+        direction LR
+        CLI["openstack CLI"] --> API["cinder-api"] --> SCH["cinder-scheduler"] --> VOL["cinder-volume<br/>(LVM driver)"]
+    end
+    subgraph data["資料路徑(純 Linux 的部分)"]
+        direction LR
+        LV["邏輯磁碟區 LV<br/>volume-…"] --> ISCSI["包成 iSCSI target<br/>分享出去"] --> NC["nova-compute<br/>接上 LUN 交給 qemu"] --> VM["VM 內看到<br/>/dev/vdb"]
+    end
+    VOL ==>|"lvcreate 切一塊 5G"| LV
 ```
 
 關鍵理解:**control path 是 OpenStack 的,data path 是 Linux 的**(LVM + iSCSI)。AIO 下 iSCSI 是 loopback(initiator 和 target 同一台),生產 multinode 就是跨網路的同一套協定 —— 架構不變,只是距離變遠。
@@ -118,24 +119,26 @@ openstack server create --flavor m1.tiny --volume vol-boot \
   --network net1 --key-name oslab --wait vm-bfv            # 根碟在 Cinder,不在 hypervisor 本地
 ```
 
-## Checkpoint(全數通過 2026-07-08)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| `openstack volume service list` | scheduler + volume@lvm-1 up | ✅ |
-| attach → VM 內可用 | /dev/vdb 可 mkfs/mount/寫檔 | ✅ |
-| detach | volume 回 available、資料保留在 LV | ✅ |
-| boot-from-volume | vm-bfv ACTIVE | ✅ |
-| host 端 | LV 出現在 cinder-volumes VG | ✅ thin LV(見下) |
-| **對照 Sprint 1** | Sprint 1 solutions #22 的 LXD 限制在真 VM 上不存在 | ✅ 零阻力直通 |
+| `openstack volume service list` | scheduler + volume@lvm-1 up | 符合 |
+| attach → VM 內可用 | /dev/vdb 可 mkfs/mount/寫檔 | 符合 |
+| detach | volume 回 available、資料保留在 LV | 符合 |
+| boot-from-volume | vm-bfv ACTIVE | 符合 |
+| host 端 | LV 出現在 cinder-volumes VG | thin LV(為什麼是 thin,見下方觀察) |
+| **對照前一次嘗試** | Sprint 1 卡死這一步的 LXD 權限限制,在真 VM 上不存在 | 零阻力直通(當時的細節見[前兩次嘗試](../previous-attempts.md)) |
 
-## 踩雷 / 觀察
+## 地雷與觀察
 
-### 1. cinder-backup 預設被帶起來但必然 down
+### 地雷 1:cinder-backup 預設被帶起來但必然 down {#mine-1}
 
 `enable_cinder: "yes"` 會順帶部 cinder-backup,但它需要 backup backend(Swift/Ceph/NFS),本 lab 都沒有 → 服務 down。**這不是故障**;處理:`enable_cinder_backup: "no"` + `docker rm -f cinder_backup`。教訓:kolla 的服務開關有「父子連動」,開父服務前先看它會帶起哪些子服務。
 
-### 2. Epoxy 預設 LVM thin provisioning(觀察,非地雷)
+### 地雷 2:Epoxy 預設 LVM thin provisioning(觀察,非地雷) {#mine-2}
 
 `lvs` 看到的不是 5G 的 thick LV,而是 243G 的 `cinder-volumes-pool`(thin pool)+ 掛在裡面的 thin LV(實際只佔 1.33%)。代表 volume 超賣是預設行為 —— 生產環境要監控 pool 的 Data% 而不是 VG free。
 

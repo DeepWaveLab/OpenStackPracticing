@@ -28,28 +28,16 @@ OpenStack 就是**自己架的 AWS**:一組開源服務,把你的實體機器變
 ```mermaid
 flowchart TB
     subgraph admin["管理員先準備(全租戶共用)"]
-        IMG["image(作業系統光碟)"]
-        FLV["flavor(機器規格單:幾核/多少RAM)"]
-        EXT["ext-net(對外網路)"]
+        direction LR
+        IMG["image<br/>(作業系統光碟)"] ~~~ FLV["flavor<br/>(機器規格單)"] ~~~ EXT["ext-net<br/>(對外網路)"]
     end
     subgraph tenant["租戶自己建(互相隔離)"]
-        NET["network + subnet(自己的內網)"]
-        RTR["router(內網 ↔ 對外網路的閘道)"]
-        SG["security group(防火牆規則)"]
-        KEY["keypair(SSH 公鑰)"]
+        direction LR
+        NET["network + subnet<br/>(自己的內網)"] ~~~ RTR["router<br/>(內網↔外網的閘道)"] ~~~ SG["security group<br/>(防火牆規則)"] ~~~ KEY["keypair<br/>(SSH 公鑰)"]
     end
-    VM["server create → VM"]
-    FIP["floating IP(對外 IP,貼在 VM 上)"]
-    IMG --> VM
-    FLV --> VM
-    NET --> VM
-    KEY --> VM
-    SG --> VM
-    EXT --> RTR
-    NET --> RTR
-    EXT --> FIP
-    RTR --> FIP
-    FIP --> VM
+    admin ==> VM["server create → VM 誕生"]
+    tenant ==> VM
+    VM ==>|"最後貼上 floating IP,外界才連得到"| FIP["floating IP"]
 ```
 
 | 名詞 | 白話解釋 | AWS 對應 |
@@ -65,23 +53,15 @@ flowchart TB
 ### `server create` 按下去的那一刻,背後發生什麼
 
 ```mermaid
-sequenceDiagram
-    participant U as openstack CLI
-    participant K as Keystone
-    participant N as nova-api
-    participant S as nova-scheduler
-    participant C as nova-compute
-    participant Q as Neutron
-    participant G as Glance
-    U->>K: 帳密換 token
-    U->>N: server create(帶 token)
-    N->>S: 這台 VM 該放哪台實體機?
-    S-->>N: 選定 host(依 CPU/RAM/disk 餘量過濾)
-    N->>C: 在選定的 host 上開機
-    C->>Q: 幫我建一張虛擬網卡(port)
-    C->>G: 把 image 抓下來當開機碟
-    C->>C: 叫 libvirt/qemu 啟動 VM
-    C-->>U: 狀態 BUILD → ACTIVE
+flowchart TB
+    A["1、CLI 用帳密向 Keystone 換一張 token"]
+    A --> B["2、帶著 token 呼叫 nova-api:server create"]
+    B --> C["3、nova-scheduler 挑實體機<br/>(依 CPU / RAM / disk 餘量過濾)"]
+    C --> D["4、選定主機上的 nova-compute 接手"]
+    D --> E["5、向 Neutron 要一張<br/>虛擬網卡(port)"]
+    D --> F["6、向 Glance 抓 image<br/>當開機碟"]
+    E --> G["7、libvirt/qemu 啟動 VM:<br/>BUILD → ACTIVE"]
+    F --> G
 ```
 
 看懂這張圖,之後除錯就知道去哪找log:卡在排程 → scheduler;網卡拿不到 → neutron;image 抓不到 → glance。
@@ -186,19 +166,21 @@ openstack server add floating ip vm-ubuntu $UFIP
 ssh -i ~/.ssh/oslab_ed25519 ubuntu@$UFIP "ping -c2 8.8.8.8"
 ```
 
-## Checkpoint(全數通過 2026-07-08)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| vm-cirros | ACTIVE + FIP ping + SSH | ✅ 172.24.4.134,metadata 注入 keypair 成功 |
-| vm-ubuntu | ACTIVE + SSH(config-drive) | ✅ 172.24.4.111,開機 ~1 分內可連 |
-| 出網 | VM 內 ping 8.8.8.8 + DNS | ✅ avg 3.6ms;openstack.org 解析正常 |
-| OVN 資料面 | Geneve(東西向)+ flat(南北向)+ NAT | ✅ 整條驗證 |
-| 重開機存活 | ext-net-fixup.service enabled | ✅(明早 az vm start 後驗收) |
+| vm-cirros | ACTIVE + FIP ping + SSH | 172.24.4.134,metadata 注入 keypair 成功 |
+| vm-ubuntu | ACTIVE + SSH(config-drive) | 172.24.4.111,開機 ~1 分內可連 |
+| 出網 | VM 內 ping 8.8.8.8 + DNS | avg 3.6ms;openstack.org 解析正常 |
+| OVN 資料面 | Geneve(東西向)+ flat(南北向)+ NAT | 整條驗證 |
+| 重開機存活 | `ext-net-fixup.service` 為 enabled | enabled;這項要隔天重開機才能實測——我們隔天驗過,正常 |
 
-## 踩雷
+## 地雷記錄
 
-**今天零踩雷。** 非運氣——三個 Sprint 1 的地雷是被預防掉的:Ubuntu 用 config-drive(#13)、flat provider 在 kolla 預設就開(#7 的 charm 限制不存在)、security group rule 明確加(#9)。課程結論:**教訓的複利在這裡兌現**。
+**今天零地雷。**這不是運氣——前一次嘗試撞過的三個問題,這次在動手前就被預防掉了:Ubuntu VM 改用 config-drive 拿 metadata(Sprint 1 曾因此拿不到 SSH 金鑰)、flat provider 網路在 Kolla 預設就支援(charm 時代要另外開)、security group 規則明確加上(charm 預設把安全群組整個關掉的教訓)。**教訓的複利在這裡兌現**——完整故事見[前兩次嘗試](../previous-attempts.md)。
 
 ## 下一步(Day 3)
 

@@ -1,7 +1,10 @@
-# Sprint 3 / Day 0: Azure Lab 環境建置
+# Day 0:準備 Azure Lab 環境
 
-> 課程定位:本章目標是建出一台**能跑 nested virtualization 的乾淨 lab VM**,並把成本 guardrails 一次到位。
-> 完整計畫見 `docs/plans/2026-07-07-feat-sprint3-kolla-magnum-capi-azure-lab-course-plan.md`。
+> 今天還不碰 OpenStack——先把地基打好:在 Azure 開一台**支援巢狀虛擬化**的 VM 當實驗室,並且把成本控管(自動關機、預算警報)一次設好,確保這個 lab 不會變成月底的帳單驚喜。
+
+!!! abstract "你在課程的哪裡"
+    - **今天**:租一台夠大的 Azure VM。規格、安全類型、網路限制每一項都有理由,原理章會逐一解釋。
+    - **今天之後**:接下來十一天的所有東西——整朵 OpenStack 雲、裡面開的每台虛擬機——全部跑在這一台 VM 上。它每晚 22:00 會自動關機幫你省錢,早上記得自己開。
 
 ## 原理與架構
 
@@ -29,7 +32,7 @@ Azure VNet **沒有 L2 廣播、擋 MAC/IP spoofing**。後果:
 
 ### 3. Security type:為什麼堅持 Standard
 
-Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與 nested virt 的相容性有版本地雷,lab 沒必要冒險 —— 直接用 `--security-type Standard`。**地雷**:新訂閱要先註冊 feature `Microsoft.Compute/UseStandardSecurityType` 才准用 Standard(見下方踩雷)。
+Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與巢狀虛擬化的相容性有版本地雷,lab 沒必要冒險——直接用 `--security-type Standard`。但要注意:新訂閱必須先註冊 feature `Microsoft.Compute/UseStandardSecurityType` 才准用 Standard,忘了會在開 VM 時被拒絕(步驟 2 就是在做這件事;完整錯誤訊息見文末的地雷記錄)。
 
 ### 4. 成本 guardrails 三件套
 
@@ -45,10 +48,12 @@ Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與 nested virt 的相
 
 ### 0. 前置確認
 
+確認三件事:要用的訂閱存在、SSH 金鑰存在、目標區域的 vCPU 配額夠開 16 核:
+
 ```bash
-az account list -o table          # 確認 <subscription-id>(Azure AI Services)在列
-ls ~/.ssh/juju_id_rsa.pub         # SSH key 存在
-# quota 免申請:japaneast ESv5 family 50 vCPU、用量 0(az vm list-usage 確認過)
+az account list -o table          # 你要用的訂閱在清單裡
+ls ~/.ssh/juju_id_rsa.pub         # SSH 公鑰存在(沒有就先 ssh-keygen)
+az vm list-usage -l japaneast -o table | grep -i esv5   # ESv5 家族配額 ≥ 16(不足要先申請)
 ```
 
 ### 1. Resource group
@@ -121,15 +126,16 @@ sudo kvm-ok
 lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
 ```
 
-## Checkpoint(全數通過 2026-07-07)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
-|---|---|---|
-| `sudo kvm-ok` | `KVM acceleration can be used` | ✅ |
-| `nproc` / `free -h` | 16 / 125Gi | ✅ |
-| `lsblk` | sda 128G(/)、sdb 256G(未格式化,Day 3 做 cinder-volumes VG) | ✅ |
-| `lsb_release -d` | Ubuntu 24.04 LTS | ✅ 24.04.4 |
-| 既有 3 個 `*-deepwave-central-services` RG | 零接觸 | ✅ |
+在 VM 上逐項執行,**全部符合判準才算完成今天**;不符合就回對應步驟排查:
+
+| 驗證指令 | 你應該看到 |
+|---|---|
+| `sudo kvm-ok` | `KVM acceleration can be used`——巢狀虛擬化可用,這是整個 lab 的前提 |
+| `nproc` 與 `free -h` | 16 核心、約 125 GiB 記憶體 |
+| `lsblk` | sda 128G 掛在 `/`;sdb 256G **保持未格式化**(Day 3 會把它做成 Cinder 的儲存池) |
+| `lsb_release -d` | Ubuntu 24.04 LTS |
 
 ## 本次 lab 環境總表
 
@@ -145,12 +151,16 @@ lsblk -o NAME,SIZE,TYPE,MOUNTPOINT
 | SSH | `ssh -i ~/.ssh/juju_id_rsa azureuser@203.0.113.10` |
 | 每日操作 | 早上 `az vm start -g souch-openstack-sprint3 -n openstack-lab`;晚上 22:00 自動關機 |
 
-## 踩雷
+## 地雷記錄
 
-### UseStandardSecurityType feature gate(新)
+### 地雷 1:`--security-type Standard` 被 Azure 拒絕
 
-`az vm create --security-type Standard` 直接吃 `BadRequest: The value 'Standard' is not available for property 'securityType' until the feature Microsoft.Compute/UseStandardSecurityType is registered`。Azure 2024 起新訂閱預設鎖 TrustedLaunch,Standard 要 feature opt-in + provider 重註冊(步驟 2)。Sprint 2 當時用 TrustedLaunch + 關 secure boot 繞過,沒撞到這顆。
+**症狀**:`az vm create --security-type Standard` 直接失敗,錯誤訊息是 `BadRequest: The value 'Standard' is not available for property 'securityType' until the feature Microsoft.Compute/UseStandardSecurityType is registered`。
 
-## 下一步(Day 1)
+**根因**:Azure 從 2024 年起,新訂閱預設強制 TrustedLaunch;要用 Standard 必須先註冊 feature 並重新註冊 provider——也就是步驟 2 存在的原因。如果你跳過了步驟 2,回去補跑再重試 `az vm create` 即可。
 
-Kolla-Ansible 原理 + AIO 部署 core 服務 —— 見課程計畫 Day 1;開工前先重讀 Sprint 1 的 `docs/solutions/` 當先修教材。
+## 下一步
+
+一台乾淨的、支援巢狀虛擬化的 VM 已經就緒。[Day 1](sprint3-day1-kolla-aio-core.md) 我們安裝部署工具 Kolla-Ansible,把 OpenStack 的五個核心服務部上去——今天這台空白的主機,明天就會是一朵能登入的雲。
+
+如果你想先了解「為什麼選 Kolla-Ansible、之前兩條路線怎麼失敗的」,可以先讀[前兩次嘗試](../previous-attempts.md);想直接動手也完全沒問題,Day 1 開頭會給你需要的所有背景。

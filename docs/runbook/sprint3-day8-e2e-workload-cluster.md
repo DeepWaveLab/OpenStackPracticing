@@ -11,21 +11,18 @@
 
 今天的終點是一座**真正的 Kubernetes**——不是管理用的 kind,而是跑你工作負載的 workload cluster。整條生產線長這樣:
 
-```
-openstack coe cluster create
-    │
-    ▼ magnum-conductor(CAPI driver)在 kind 的 magnum-system namespace 建 CAPI CR
-  Cluster / OpenStackCluster / KubeadmControlPlane / MachineDeployment
-    │
-    ▼ CAPI/CAPO controllers(kind)reconcile
-  CAPO ──呼叫 OpenStack API──►  Neutron: 建 cluster 網路/router/SG
-                                Octavia: 建 K8s API 的 LB(master_lb)
-                                Nova:    開 control-plane / worker VM(node image)
-    │
-    ▼ VM 內 cloud-init 跑 kubeadm init/join → K8s control plane 起來
-    ▼ 節點以 --cloud-provider=external 註冊(帶 uninitialized taint,無 providerID)
-    ▼ workload 內的 OpenStack CCM 補上 providerID + 移除 taint
-    ▼ CAPI 看到帶 providerID 的 Node → Machine=Running → cluster=CREATE_COMPLETE
+```mermaid
+flowchart TB
+    A["openstack coe cluster create<br/>(你下的那一行指令)"]
+    A --> B["magnum-conductor(CAPI driver)<br/>在 kind 裡建立整組宣告:<br/>Cluster / OpenStackCluster /<br/>KubeadmControlPlane / MachineDeployment"]
+    B --> C["CAPI / CAPO controllers<br/>開始把宣告變成現實"]
+    C -->|"Neutron"| N["建 cluster 專用網路<br/>router、防火牆"]
+    C -->|"Octavia"| O["建 K8s API 的<br/>負載平衡器"]
+    C -->|"Nova"| V["開出 control-plane<br/>與 worker VM"]
+    V --> D["VM 開機後 cloud-init 執行 kubeadm<br/>→ K8s control plane 起來"]
+    D --> E["節點註冊時還「不知道自己是哪台 VM」<br/>(帶著 uninitialized 記號)"]
+    E --> F["OpenStack CCM 查出 VM 身分<br/>補上 providerID、拿掉記號"]
+    F --> G["CAPI 確認節點就緒<br/>→ cluster=CREATE_COMPLETE ✅"]
 ```
 
 三層 = **Magnum(API/driver)→ CAPI/CAPO(kind,宣告式 reconcile)→ OpenStack(Nova/Octavia/Cinder 出實體資源)**。
@@ -34,7 +31,7 @@ openstack coe cluster create
 
 現代 CAPO 走 **external cloud provider**:kubelet 起來時**不知道自己是哪台 OpenStack VM**,以 `node.cloudprovider.kubernetes.io/uninitialized:NoSchedule` taint 註冊。**OpenStack CCM** 才去 Nova 問出這台 VM 的 UUID、寫進 `Node.spec.providerID=openstack:///<uuid>`、移除 taint。
 
-連鎖後果:**CCM 一旦掛掉,整座 cluster 卡死** —— 沒 providerID → CAPI 永遠「Waiting for a Node with providerID X to exist」;沒移除 taint → coredns/CSI-controller 排不進節點 → 一路 Pending。本日雷 #2 就是 CCM 連不到 Keystone 而 crash。
+連鎖後果:**CCM 一旦掛掉,整座 cluster 卡死** —— 沒 providerID → CAPI 永遠「Waiting for a Node with providerID X to exist」;沒移除 taint → coredns/CSI-controller 排不進節點 → 一路 Pending。本日的[地雷 2](#mine-2) 正是 CCM 連不到 Keystone 而 crash 的實例。
 
 ### 3. LoadBalancer / PVC 怎麼落到 OpenStack
 
@@ -64,7 +61,7 @@ sudo systemctl reset-failed octavia-interface && sudo systemctl start octavia-in
 ip -br addr show o-hm0     # 應 UP + 10.1.0.x
 ```
 
-### 1. 修 magnum.conf(雷 #1,建 cluster 前)
+### 1. 修 magnum.conf(建 cluster 前必做,預防[地雷 1](#mine-1))
 
 ```ini
 # /etc/kolla/config/magnum.conf  (Kolla merge)
@@ -77,7 +74,7 @@ kolla-ansible deploy -i ~/all-in-one --tags magnum   # regen conf + 重啟容器
 
 ### 2. 用「Azure-correct」template 開 cluster
 
-Template 必帶三個 lab 專屬 label(見雷 #2/#3):
+Template 必帶三個 lab 專屬 label——每一個都是用地雷換來的([地雷 2](#mine-2)、[地雷 3](#mine-3)):
 
 ```bash
 openstack coe cluster template create k8s-v1.34.8-azure \
@@ -85,8 +82,8 @@ openstack coe cluster template create k8s-v1.34.8-azure \
   --master-lb-enabled --master-flavor m1.medium --flavor m1.medium \
   --network-driver calico --docker-storage-driver overlay2 --coe kubernetes \
   --label kube_tag=v1.34.8 \
-  --label fixed_subnet_cidr=10.6.0.0/24 \   # 雷 #2:不可與 API 的 10.0.0.4 同段
-  --label octavia_provider=amphora          # 雷 #3:我們 Octavia 沒啟用 amphorav2
+  --label fixed_subnet_cidr=10.6.0.0/24 \   # 地雷 2:不可與 API 的 10.0.0.4 同段
+  --label octavia_provider=amphora          # 地雷 3:我們 Octavia 沒啟用 amphorav2
 
 openstack coe cluster create k8s-lab --cluster-template k8s-v1.34.8-azure \
   --keypair k8s-admin --master-count 1 --node-count 1
@@ -125,32 +122,34 @@ kubectl get svc web-lb            # EXTERNAL-IP(ext-net FIP)
 curl http://<EXTERNAL-IP>/        # host 內可打(Azure FIP 僅 host 內有效)
 ```
 
-## Checkpoint(全數通過 2026-07-09)
+## 驗收 checkpoint
 
-| 驗證 | 判準 | 實測 |
+逐項驗證,**全部符合判準才算完成今天**。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:
+
+| 驗證 | 判準 | 本課環境的結果 |
 |---|---|---|
-| cluster | CREATE_COMPLETE / HEALTHY | ✅ |
-| **驗收① nodes** | control-plane + worker 全 Ready、有 providerID | ✅ v1.34.8,`openstack:///...` |
-| CCM / CSI / calico | 全 Running(providerID 設好、taint 移除) | ✅ CCM 0 重啟 |
-| **驗收② LoadBalancer** | Octavia amphora LB ACTIVE/ONLINE、EXTERNAL-IP、curl 200 | ✅ `172.24.4.183`,curl ×6 = 200 |
-| **驗收③ PVC** | Bound、Cinder volume in-use、資料持久化 | ✅ `pvc-f99513ec` in-use,`cat` 回 `deepwave-day8` |
-| **總驗收** | Sprint 1 三大未竟(Octavia/Cinder/Magnum)在 Kolla+CAPI 路線全數走通 | ✅ |
+| cluster | CREATE_COMPLETE / HEALTHY | 符合 |
+| **驗收① nodes** | control-plane + worker 全 Ready、有 providerID | v1.34.8,`openstack:///...` |
+| CCM / CSI / calico | 全 Running(providerID 設好、taint 移除) | CCM 0 重啟 |
+| **驗收② LoadBalancer** | Octavia amphora LB ACTIVE/ONLINE、EXTERNAL-IP、curl 200 | `172.24.4.183`,curl ×6 = 200 |
+| **驗收③ PVC** | Bound、Cinder volume in-use、資料持久化 | `pvc-f99513ec` in-use,`cat` 回 `deepwave-day8` |
+| **總驗收** | 前兩次嘗試卡死的三大項(Octavia/Cinder/Magnum)全數走通 | 三項全數通過 |
 
-## 踩雷(本日四連)
+## 地雷記錄(本日四連)
 
-### 1. `nova_client api_version=2` 太舊 → server group `soft-anti-affinity` 被拒(CREATE_FAILED 秒失敗)
+### 地雷 1:`nova_client api_version=2` 太舊 → server group `soft-anti-affinity` 被拒(CREATE_FAILED 秒失敗) {#mine-1}
 
 cluster create 8 秒就 CREATE_FAILED,magnum-system 無任何 CAPI CR。conductor log:`nova.server_groups.create(policies=['soft-anti-affinity'])` → Nova 400 `'soft-anti-affinity' is not one of ['anti-affinity','affinity']`。driver 用 `magnum.common.clients` 建 nova client,Magnum `[nova_client] api_version` 預設 `2`(=2.1),而 `soft-anti-affinity` 需 **microversion ≥ 2.15**。修:magnum.conf 設 `api_version = 2.15`(**別設 ≥2.64**,那之後 server_group API 從 `policies` list 改成 `policy`,driver 還用 list)。
 
-### 2. `fixed_subnet_cidr` 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷)
+### 地雷 2:`fixed_subnet_cidr` 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷) {#mine-2}
 
-cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned。根因:driver 的 `fixed_subnet_cidr` 預設 **`10.0.0.0/24`**,與 OpenStack API endpoint **`10.0.0.4`**(host)同段 → 節點把 10.0.0.4 當 on-link、ARP 不到真 Keystone → CCM crash → 無 providerID → 卡死。修:label **`fixed_subnet_cidr=10.6.0.0/24`**(避開 10.0.0.4,也避開 pod 10.100/svc 10.254/lb-mgmt 10.1/ext-net 172.24)。詳見 `solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md`。
+cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned。根因:driver 的 `fixed_subnet_cidr` 預設 **`10.0.0.0/24`**,與 OpenStack API endpoint **`10.0.0.4`**(host)同段 → 節點把 10.0.0.4 當 on-link、ARP 不到真 Keystone → CCM crash → 無 providerID → 卡死。修:label **`fixed_subnet_cidr=10.6.0.0/24`**(避開 10.0.0.4,也避開 pod 10.100/svc 10.254/lb-mgmt 10.1/ext-net 172.24)。完整記錄見排錯手冊:[CAPI 子網撞 API IP](../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md)。
 
-### 3. `octavia_provider` 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗
+### 地雷 3:`octavia_provider` 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗 {#mine-3}
 
 `Service type=LoadBalancer` 一直 pending,CCM 報 Octavia 400 `Provider 'amphorav2' is not enabled`。driver 的 CCM cloud.conf `lb-provider` 由 label `octavia_provider`(預設 `amphorav2`)決定,而本 Octavia `enabled_provider_drivers` 只有 `amphora,ovn`。修:label **`octavia_provider=amphora`**(現有 cluster 熱修:patch workload `cloud-config` secret 的 `lb-provider=amphora` + 重啟 CCM)。
 
-### 4. Nova disk 被 leftover VM 佔滿 → amphora `No valid host`
+### 地雷 4:Nova disk 被 leftover VM 佔滿 → amphora `No valid host` {#mine-4}
 
 改用 amphora 後 LB 仍失敗,Octavia amphora build 報 Nova `No valid host was found`。hypervisor `free_disk_gb=1`、`local_gb_used=121/122`:**Day 2-4 遺留的 SHUTOFF VM(vm-cirros/ubuntu/web1/web2)+ 舊 LB 的 amphora 仍佔用 Nova 的 flavor-disk 配額**(SHUTOFF 不佔 RAM/CPU 但佔 disk 帳)。修:刪掉 leftover(`openstack server delete` demo VM、`loadbalancer delete --cascade` 舊 lb2/lb-ovn)→ 釋放 36GB → amphora 排得進。**教訓:單機 lab 要定期清 leftover,Nova disk 用 flavor 總和計帳、SHUTOFF 也算。**
 

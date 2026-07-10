@@ -84,7 +84,7 @@ flowchart TB
 
 | 元件 | 角色 | 課程中的戲份 |
 |---|---|---|
-| MariaDB | 所有服務的資料庫 | Day 1 的地雷 #4(被 ProxySQL 撞 port)就是它 |
+| MariaDB | 所有服務的資料庫 | Day 1 撞過它一次:port 被 ProxySQL 佔走、整個部署卡住([Day 1 的地雷 4](sprint3-day1-kolla-aio-core.md#mine-4)) |
 | RabbitMQ | 服務內部的訊息佇列(API 收單 → worker 幹活) | 默默工作,沒出過事 |
 | Memcached | Keystone token 快取 | 默默工作 |
 | Redis | Octavia 的任務佇列(jobboard) | Day 4 的地雷:不開它 LB 永遠 PENDING |
