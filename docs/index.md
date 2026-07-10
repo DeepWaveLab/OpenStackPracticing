@@ -1,45 +1,149 @@
-# OpenStack 實作課程 —— 從一台雲端 VM 到 K8s-as-a-Service
+# 親手蓋一朵雲
 
-這是一門**十天的實作課程**:在 Azure 租一台 VM,用 **Kolla-Ansible** 把 OpenStack 私有雲從零部署起來,最後讓這朵雲能像公有雲一樣——使用者下一行指令,就自動開出一座能跑正式工作負載的 **Kubernetes cluster**(含 Load Balancer 與持久化儲存)。
+虛擬機、虛擬網路、雲端硬碟、負載平衡——公有雲的這些能力不是魔法,是一套叫 **OpenStack** 的開源軟體。AWS 那個層級的東西,**你可以自己蓋一朵**。
+
+這個網站帶你從 Azure 的一台空白 VM 開始,把一朵雲從零蓋起來。第二天,你就會對**自己的雲**下這個指令:
+
+```bash
+openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
+```
+
+**你的雲,開出它的第一台虛擬機。**之後每一天再給它一個新能力:雲端硬碟、負載平衡、秘密保險箱、資源藍圖……直到最後一天,這朵雲甚至能像 AWS 的 EKS 一樣,[一行指令長出一整座 Kubernetes](runbook/sprint3-day8-e2e-workload-cluster.md)——那是課程壓軸,也是我們**失敗過兩次**才做到的事。
+
+<div style="text-align: center;" markdown>
+
+![Keystone](assets/mascots/keystone.png){ width="52" }
+![Glance](assets/mascots/glance.png){ width="52" }
+![Nova](assets/mascots/nova.png){ width="52" }
+![Neutron](assets/mascots/neutron.png){ width="52" }
+![Cinder](assets/mascots/cinder.png){ width="52" }
+![Octavia](assets/mascots/octavia.png){ width="52" }
+![Barbican](assets/mascots/barbican.png){ width="52" }
+![Magnum](assets/mascots/magnum.png){ width="52" }
+
+*這些是你這趟旅程會認識的夥伴——OpenStack 每個服務都有官方吉祥物,**記臉比記名字快**。*
+
+</div>
+
+## 從這裡出發
+
+<div class="grid cards" markdown>
+
+-   :material-rocket-launch:{ .lg .middle } __課程主線__
+
+    ---
+
+    從空白 VM 到 K8s-as-a-Service 的完整路徑。每一步都有實測輸出、驗收標準與踩雷記錄。
+
+    [:octicons-arrow-right-24: Day 0 · 開始](runbook/sprint3-day0-azure-vm.md)
+
+-   :material-tools:{ .lg .middle } __排錯手冊__
+
+    ---
+
+    官方文件查不到、動手才會撞到的 15 條整合地雷與解法。拿錯誤訊息來搜就對了。
+
+    [:octicons-arrow-right-24: 查地雷](solutions/README.md)
+
+-   :material-history:{ .lg .middle } __前兩次嘗試__
+
+    ---
+
+    Juju 走了 9 天、OpenStack-Helm 走了 2 天,為什麼都沒走通?失敗史是這門課的地基。
+
+    [:octicons-arrow-right-24: 讀故事](previous-attempts.md)
+
+-   :material-map:{ .lg .middle } __服務全景圖__
+
+    ---
+
+    OpenStack 有幾十個服務,我們用了 11 個。官方 Landscape 一張圖看懂整個版圖。
+
+    [:octicons-arrow-right-24: 看地圖](runbook/sprint3-day11-openstack-service-map.md)
+
+</div>
+
+## 這朵雲的居民
+
+<div class="grid cards" markdown>
+
+-   ![Keystone](assets/mascots/keystone.png){ width="44" } __Keystone__
+
+    ---
+
+    帳號與權限的守門人——之後每一個指令都先過它這關。
+
+    [:octicons-arrow-right-24: Day 2 認識它](runbook/sprint3-day2-openstack-resource-flow.md)
+
+-   ![Nova](assets/mascots/nova.png){ width="44" } __Nova__
+
+    ---
+
+    開虛擬機的引擎。這朵雲上每一台 VM(連 K8s 節點)都是它開的。
+
+    [:octicons-arrow-right-24: Day 2 開第一台 VM](runbook/sprint3-day2-openstack-resource-flow.md)
+
+-   ![Neutron](assets/mascots/neutron.png){ width="44" } __Neutron__
+
+    ---
+
+    一切網路的織網者——虛擬網路、路由器、防火牆全是它。
+
+    [:octicons-arrow-right-24: Day 2 建網路](runbook/sprint3-day2-openstack-resource-flow.md)
+
+-   ![Cinder](assets/mascots/cinder.png){ width="44" } __Cinder__
+
+    ---
+
+    拔得下來的硬碟:VM 刪了資料還在,還能掛給下一台。
+
+    [:octicons-arrow-right-24: Day 3 掛硬碟](runbook/sprint3-day3-cinder-lvm.md)
+
+-   ![Octavia](assets/mascots/octavia.png){ width="44" } __Octavia__
+
+    ---
+
+    流量的帶位員。負載平衡器其實是一台幫你養的小 VM。
+
+    [:octicons-arrow-right-24: Day 4 建 LB](runbook/sprint3-day4-octavia.md)
+
+-   ![Barbican](assets/mascots/barbican.png){ width="44" } __Barbican__
+
+    ---
+
+    秘密的保險箱:密碼、金鑰、憑證加密集中存放。
+
+    [:octicons-arrow-right-24: Day 5 存秘密](runbook/sprint3-day5-barbican-heat.md)
+
+-   ![Heat](assets/mascots/heat.png){ width="44" } __Heat__
+
+    ---
+
+    照藍圖蓋房子:一份 YAML,一個指令蓋好一組資源、一個指令全拆。
+
+    [:octicons-arrow-right-24: Day 5 寫藍圖](runbook/sprint3-day5-barbican-heat.md)
+
+-   ![Magnum](assets/mascots/magnum.png){ width="44" } __Magnum__
+
+    ---
+
+    一鍵長出 K8s——課程壓軸的那行指令,就是對它下的。
+
+    [:octicons-arrow-right-24: Day 7 接上它](runbook/sprint3-day7-magnum-capi-driver.md)
+
+</div>
+
+## 這裡之前發生過什麼
+
+- **嘗試一 · Juju + Charms**:9 天。核心能動,但三項關鍵功能被生態系卡死,放棄。
+- **嘗試二 · OpenStack-Helm**:2 天。每個問題都要跨 K8s 與 OpenStack 兩層除錯,主動喊停。
+- **嘗試三 · Kolla-Ansible + Magnum CAPI(本課程)**:走完。前兩次卡死的項目,全部完成。
+
+完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
+
+## 課程路徑(Day 0 → 11)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
-
-!!! tip "這站怎麼用"
-    - **想照著做** → 從 [Day 0](runbook/sprint3-day0-azure-vm.md) 開始,依序走到 Day 10。
-    - **卡在某個錯誤** → 去 [排錯手冊](solutions/README.md) 搜關鍵字,收錄的都是官方文件查不到的整合地雷。
-    - **想懂技術選型的來龍去脈** → 看下面的摘要、完整版在[前兩次嘗試](previous-attempts.md)與[回顧與教訓](sprint3-reflection.md)。
-
-## 這門課之前發生了什麼(為什麼是這條路線)
-
-同一個目標,前後試了三條路線。**你現在看到的課程是第三次嘗試——前兩次的失敗決定了這次的每一個技術選擇**,所以值得花兩分鐘了解:
-
-### 嘗試一:Juju + Charms(Sprint 1)——核心能動,關鍵三項卡死
-
-第一次用 Canonical 的 **Juju/Charm** 工具鏈部署 OpenStack(charm 是 Canonical 打包的服務安裝單元,整套跑在 LXD 容器裡)。核心服務(Keystone、Nova、Neutron 等)成功部起來、也能開 VM,但接下來三個關鍵項目**全數卡死**,而且卡的原因大多不是操作錯誤,是**生態系本身的問題**:
-
-| 卡死項目 | 它是做什麼的 | 死因 |
-|---|---|---|
-| **Octavia** | 負載平衡服務(之後 K8s 要靠它拿 LoadBalancer) | 官方 charm 在 amd64 架構上**沒有發佈可用版本**——想裝也裝不了 |
-| **Cinder LVM** | 區塊儲存(VM 的外掛硬碟、K8s 的 PVC) | 整套跑在 LXD 容器內,容器拿不到 device-mapper 權限,**先天做不到** |
-| **Magnum** | 讓 OpenStack 能一鍵開 K8s cluster 的服務 | 當時的舊 driver 內建 2019–2021 年的 image 下載連結,**全部失效**,一座 cluster 都開不出來 |
-
-共同教訓:這條路線的失敗**無從修起**——不是設定錯,是上游沒維護。詳見 [Sprint 1 回顧](reflection.md)。
-
-### 嘗試二:OpenStack-Helm(Sprint 2)——兩天後主動喊停
-
-第二次改走 **OpenStack-Helm**:先架一座 Kubernetes,再把 OpenStack 當應用程式部署在上面。走了兩天就發現代價:任何問題都要**同時跨 K8s 和 OpenStack 兩層除錯**,對單機學習環境來說成本完全划不來,主動停掉。(完整故事見[前兩次嘗試](previous-attempts.md)與 [Sprint 2 回顧](sprint2-reflection.md)。)
-
-### 嘗試三:Kolla-Ansible + Magnum CAPI driver(本課程)——十天走完
-
-第三次換成 **Kolla-Ansible**(用 Ansible 部署,每個 OpenStack 服務跑一個 Docker 容器——社群主流、透明好除錯),Magnum 則改用新一代 **Cluster API(CAPI)driver**(K8s 官方生態維護的建叢集框架,node image 有人持續更新)。結果:
-
-| Sprint 1 卡死的項目 | 本課程的結果 |
-|---|---|
-| Octavia 裝不了 | ✅ Day 4 手動建 LB 走完全流程;Day 8 K8s `type=LoadBalancer` 自動拿到 Octavia LB |
-| Cinder LVM 做不到 | ✅ Day 3 完成 volume 生命週期;Day 8 K8s PVC 由 Cinder 動態供裝 |
-| Magnum 開不出 cluster | ✅ Day 8 cluster 一鍵開出、Day 9 還能滾動升版與自動擴縮 |
-
-## 課程路徑(Day 0 → 10)
 
 | Day | 主題 | 里程碑 |
 |---|---|---|
@@ -56,9 +160,7 @@
 | [10](runbook/sprint3-day10-terraform-teardown.md) | Terraform 接管 + 拆除演練 | HCL 管 network/VM/LB |
 | [11](runbook/sprint3-day11-openstack-service-map.md) | 後日談:服務全景圖 | 用過的 11 個服務盤點 + 沒用到的版圖 |
 
-## 最終架構:一個指令背後的三層互動
-
-課程終點是讓 `openstack coe cluster create` 這一行指令,自動完成下面整條鏈:
+## 課程壓軸:一鍵 K8s 背後發生什麼
 
 ```mermaid
 flowchart LR
@@ -72,11 +174,17 @@ flowchart LR
     F --> G
 ```
 
-## 這門課留下什麼
+Day 6–8 會把這條生產線一站一站蓋出來。
 
-- **11 篇** 課程 runbook——可照抄重現整套環境的完整路徑
-- **17 篇** 排錯記錄——官方文件查不到、動手才會撞到的整合地雷與解法
-- **1 篇** [完整回顧](sprint3-reflection.md)——技術選型對照、通用教訓、產業觀察
+## 鎮館之寶
+
+![Cluster API 官方標誌](assets/logos/cluster-api.svg){ align=right width="110" }
+
+Cluster API 的官方標誌:**大龜馱小龜馱更小的龜**,殼上都是 Kubernetes 的舵輪。官方副標一句話講完整個架構哲學——
+
+> *"It's Kubernetes all the way down."*(一路往下,全是 Kubernetes)
+
+為什麼用 K8s 管 K8s?哪隻龜是哪座叢集? → [Day 6 · Cluster API 管理叢集](runbook/sprint3-day6-capi-management-cluster.md)
 
 ---
 
