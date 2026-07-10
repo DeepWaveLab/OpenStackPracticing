@@ -34,6 +34,14 @@
 | [magnum API `Connection reset`](integration-issues/magnum-api-bind-mismatch-with-haproxy.md) | magnum-api 綁 127.0.0.1 但 haproxy backend 指 container IP | 🟡 |
 | [cirros SSH 連線被拒 / Ubuntu 拿不到 SSH key](runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive.md) | cirros sshd 啟動 race;Ubuntu 要用 `--config-drive True` | 🟡 |
 
+## 維護這個網站本身的地雷
+
+> 這批不是 OpenStack 的問題,是把這個 repo 做成公開教學網站的過程中撞到的。留給任何想把內部 repo 轉公開、或架同款 docs 站的人。
+
+| 症狀 | 根因一句話 | 出處 |
+|---|---|---|
+| [repo 要轉公開,但歷史 commit 裡有真實 IP / 訂閱 ID / 密碼](security-issues/git-history-scrub-sensitive-data-filter-repo.md) | 改 HEAD 不夠,敏感資料活在歷史;需 filter-repo 全歷史抹除,且有四個非顯而易見的地雷 | 轉公開前 |
+
 ## 跨越三次嘗試的共同教訓
 
 1. **地雷幾乎都在元件邊界**(網路 NAT、版本相容、資源計帳),不在單一元件內部——除錯先想「這兩個東西的交界」。

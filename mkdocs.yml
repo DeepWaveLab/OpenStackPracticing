@@ -115,6 +115,8 @@ nav:
           - "heat 缺 domain setup": solutions/integration-issues/heat-missing-domain-setup-action.md
       - "Runtime errors":
           - "cirros sshd race vs config-drive": solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive.md
+      - "維護網站本身":
+          - "git 歷史清洗敏感資料": solutions/security-issues/git-history-scrub-sensitive-data-filter-repo.md
 
   - 歷史 · 前兩次嘗試:
       - previous-attempts.md
