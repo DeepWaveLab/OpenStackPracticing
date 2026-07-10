@@ -1,6 +1,6 @@
 site_name: OpenStack Lab Course
 site_description: OpenStack 實作課程 —— runbook、踩雷解法與反思
-# site_url 部署時設為 https://<user>.github.io/OpenStackPracticing/
+site_url: https://deepwavelab.github.io/OpenStackPracticing/
 
 theme:
   name: material
