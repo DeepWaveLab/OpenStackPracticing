@@ -825,6 +825,8 @@
       
         
       
+        
+      
     
     
     
@@ -1506,6 +1508,101 @@
     
   
     cirros sshd race vs config-drive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    維護網站本身
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    維護網站本身
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    git 歷史清洗敏感資料
   
 
     
@@ -2736,6 +2833,17 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
+        維護這個網站本身的地雷
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         跨越三次嘗試的共同教訓
       
     </span>
@@ -2872,7 +2980,27 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">跨越三次嘗試的共同教訓<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_2">維護這個網站本身的地雷<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>這批不是 OpenStack 的問題,是把這個 repo 做成公開教學網站的過程中撞到的。留給任何想把內部 repo 轉公開、或架同款 docs 站的人。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>症狀</th>
+<th>根因一句話</th>
+<th>出處</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="security-issues/git-history-scrub-sensitive-data-filter-repo/">repo 要轉公開,但歷史 commit 裡有真實 IP / 訂閱 ID / 密碼</a></td>
+<td>改 HEAD 不夠,敏感資料活在歷史;需 filter-repo 全歷史抹除,且有四個非顯而易見的地雷</td>
+<td>轉公開前</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">跨越三次嘗試的共同教訓<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>地雷幾乎都在元件邊界</strong>(網路 NAT、版本相容、資源計帳),不在單一元件內部——除錯先想「這兩個東西的交界」。</li>
 <li><strong>以裝好的原始碼與實際錯誤為準</strong>,不要信部落格文章(常是舊版做法)。</li>

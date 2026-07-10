@@ -10,29 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/">
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/">
       
       
+        <link rel="prev" href="../../runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/">
       
-        <link rel="next" href="runbook/sprint3-day0-azure-vm/">
+      
+        <link rel="next" href="../../../previous-attempts/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>OpenStack Lab Course</title>
+        <title>git 歷史清洗敏感資料 - OpenStack Lab Course</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#repo-git-filter-repo" class="md-skip">
           跳轉到
         </a>
       
@@ -92,7 +94,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+    <a href="../../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              首頁
+              git 歷史清洗敏感資料
             
           </span>
         </div>
@@ -210,11 +212,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="." class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -235,7 +235,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="runbook/sprint3-day0-azure-vm/" class="md-tabs__link">
+        <a href="../../../runbook/sprint3-day0-azure-vm/" class="md-tabs__link">
           
   
   
@@ -253,11 +253,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="solutions/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
           
   
   
@@ -279,7 +281,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="previous-attempts/" class="md-tabs__link">
+        <a href="../../../previous-attempts/" class="md-tabs__link">
           
   
   
@@ -301,7 +303,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="sprint3-reflection/" class="md-tabs__link">
+        <a href="../../../sprint3-reflection/" class="md-tabs__link">
           
   
   
@@ -343,7 +345,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+    <a href="../../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -358,37 +360,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    首頁
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -404,109 +379,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        這朵雲能做成什麼
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="這朵雲能做成什麼">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        還沒拼上的積木
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        從這裡出發
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        這裡之前發生過什麼
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#day-0-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        課程路徑(Day 0 → 11)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#k8s" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        課程壓軸:一鍵 K8s 背後發生什麼
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        鎮館之寶
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -596,7 +468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day0-azure-vm/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day0-azure-vm/" class="md-nav__link">
         
   
   
@@ -624,7 +496,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day1-kolla-aio-core/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day1-kolla-aio-core/" class="md-nav__link">
         
   
   
@@ -652,7 +524,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day2-openstack-resource-flow/" class="md-nav__link">
         
   
   
@@ -680,7 +552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day3-cinder-lvm/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day3-cinder-lvm/" class="md-nav__link">
         
   
   
@@ -708,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day4-octavia/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day4-octavia/" class="md-nav__link">
         
   
   
@@ -736,7 +608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day5-barbican-heat/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day5-barbican-heat/" class="md-nav__link">
         
   
   
@@ -764,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day6-capi-management-cluster/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day6-capi-management-cluster/" class="md-nav__link">
         
   
   
@@ -792,7 +664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day7-magnum-capi-driver/" class="md-nav__link">
         
   
   
@@ -820,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
         
   
   
@@ -848,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day9-day2-operations/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day9-day2-operations/" class="md-nav__link">
         
   
   
@@ -876,7 +748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day10-terraform-teardown/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day10-terraform-teardown/" class="md-nav__link">
         
   
   
@@ -904,7 +776,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint3-day11-openstack-service-map/" class="md-nav__link">
+      <a href="../../../runbook/sprint3-day11-openstack-service-map/" class="md-nav__link">
         
   
   
@@ -936,6 +808,8 @@
       
   
   
+    
+  
   
   
     
@@ -957,20 +831,23 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="solutions/" class="md-nav__link ">
+            <a href="../../" class="md-nav__link ">
               
   
   
@@ -988,13 +865,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1034,17 +911,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
         
           
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
             
   
   
@@ -1080,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+      <a href="../../integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
         
   
   
@@ -1108,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
+      <a href="../../integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
         
   
   
@@ -1136,7 +1016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
+      <a href="../../integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
         
   
   
@@ -1164,7 +1044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+      <a href="../../integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
         
   
   
@@ -1192,7 +1072,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+      <a href="../../integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
         
   
   
@@ -1220,7 +1100,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+      <a href="../../integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
         
   
   
@@ -1280,17 +1160,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
             
   
   
@@ -1326,7 +1209,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+      <a href="../../integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
         
   
   
@@ -1354,7 +1237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+      <a href="../../integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
         
   
   
@@ -1382,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+      <a href="../../integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
         
   
   
@@ -1410,7 +1293,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+      <a href="../../integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
         
   
   
@@ -1438,7 +1321,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
+      <a href="../../integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
         
   
   
@@ -1466,7 +1349,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
+      <a href="../../integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
         
   
   
@@ -1494,7 +1377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+      <a href="../../integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
         
   
   
@@ -1522,7 +1405,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
+      <a href="../../integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
         
   
   
@@ -1568,17 +1451,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
             
   
   
@@ -1614,7 +1500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+      <a href="../../runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
         
   
   
@@ -1647,8 +1533,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1659,18 +1547,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
         
           
-          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="">
             
   
   
@@ -1688,7 +1579,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1703,10 +1594,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    git 歷史清洗敏感資料
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1722,6 +1640,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        情境與需求
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        解法(完整流程)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證清單(每一項都要跑,不能只看 working tree)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        踩雷記錄(實戰四連,每條都真的撞過)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="踩雷記錄(實戰四連,每條都真的撞過)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 完整字串替換抓不到「部分引用」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 更早時期的「第二把身分」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-filter-repo-origin-remote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. filter-repo 會移除 origin remote
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-force-push-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. force push 後,GitHub 仍可能殘留「不可達物件」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-scrub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 別把敏感字串寫回 scrub 紀錄本身
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        預防(讓下次不用清)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1813,7 +1867,7 @@
   
   
     <li class="md-nav__item">
-      <a href="previous-attempts/" class="md-nav__link">
+      <a href="../../../previous-attempts/" class="md-nav__link">
         
   
   
@@ -1841,7 +1895,7 @@
   
   
     <li class="md-nav__item">
-      <a href="deployment-tools/" class="md-nav__link">
+      <a href="../../../deployment-tools/" class="md-nav__link">
         
   
   
@@ -1963,7 +2017,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-0-azure-vm/" class="md-nav__link">
+      <a href="../../../runbook/day-0-azure-vm/" class="md-nav__link">
         
   
   
@@ -1991,7 +2045,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-1-lxd-juju-install/" class="md-nav__link">
+      <a href="../../../runbook/day-1-lxd-juju-install/" class="md-nav__link">
         
   
   
@@ -2019,7 +2073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-1-juju-bootstrap/" class="md-nav__link">
+      <a href="../../../runbook/day-1-juju-bootstrap/" class="md-nav__link">
         
   
   
@@ -2047,7 +2101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-1-first-relation/" class="md-nav__link">
+      <a href="../../../runbook/day-1-first-relation/" class="md-nav__link">
         
   
   
@@ -2075,7 +2129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-2-openstack-charm-map/" class="md-nav__link">
+      <a href="../../../runbook/day-2-openstack-charm-map/" class="md-nav__link">
         
   
   
@@ -2103,7 +2157,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-keystone/" class="md-nav__link">
+      <a href="../../../runbook/day-3-keystone/" class="md-nav__link">
         
   
   
@@ -2131,7 +2185,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-mysql-innodb-cluster/" class="md-nav__link">
+      <a href="../../../runbook/day-3-mysql-innodb-cluster/" class="md-nav__link">
         
   
   
@@ -2159,7 +2213,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-rabbitmq/" class="md-nav__link">
+      <a href="../../../runbook/day-3-rabbitmq/" class="md-nav__link">
         
   
   
@@ -2187,7 +2241,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-vault-tls/" class="md-nav__link">
+      <a href="../../../runbook/day-3-vault-tls/" class="md-nav__link">
         
   
   
@@ -2215,7 +2269,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-glance/" class="md-nav__link">
+      <a href="../../../runbook/day-3-glance/" class="md-nav__link">
         
   
   
@@ -2243,7 +2297,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-placement/" class="md-nav__link">
+      <a href="../../../runbook/day-3-placement/" class="md-nav__link">
         
   
   
@@ -2271,7 +2325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-nova-cloud-controller/" class="md-nav__link">
+      <a href="../../../runbook/day-3-nova-cloud-controller/" class="md-nav__link">
         
   
   
@@ -2299,7 +2353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-nova-compute/" class="md-nav__link">
+      <a href="../../../runbook/day-3-nova-compute/" class="md-nav__link">
         
   
   
@@ -2327,7 +2381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-network-stack/" class="md-nav__link">
+      <a href="../../../runbook/day-3-network-stack/" class="md-nav__link">
         
   
   
@@ -2355,7 +2409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-3-horizon/" class="md-nav__link">
+      <a href="../../../runbook/day-3-horizon/" class="md-nav__link">
         
   
   
@@ -2383,7 +2437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-4-configure-openstack/" class="md-nav__link">
+      <a href="../../../runbook/day-4-configure-openstack/" class="md-nav__link">
         
   
   
@@ -2411,7 +2465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-5-heat/" class="md-nav__link">
+      <a href="../../../runbook/day-5-heat/" class="md-nav__link">
         
   
   
@@ -2439,7 +2493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-6-magnum/" class="md-nav__link">
+      <a href="../../../runbook/day-6-magnum/" class="md-nav__link">
         
   
   
@@ -2467,7 +2521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-7-magnum-k8s-cluster/" class="md-nav__link">
+      <a href="../../../runbook/day-7-magnum-k8s-cluster/" class="md-nav__link">
         
   
   
@@ -2495,7 +2549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/day-8-storage-attempts/" class="md-nav__link">
+      <a href="../../../runbook/day-8-storage-attempts/" class="md-nav__link">
         
   
   
@@ -2593,7 +2647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint2-day-0-azure-vm/" class="md-nav__link">
+      <a href="../../../runbook/sprint2-day-0-azure-vm/" class="md-nav__link">
         
   
   
@@ -2621,7 +2675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+      <a href="../../../runbook/sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
         
   
   
@@ -2649,7 +2703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+      <a href="../../../runbook/sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
         
   
   
@@ -2677,7 +2731,7 @@
   
   
     <li class="md-nav__item">
-      <a href="runbook/sprint2-course-1-osh-infra/" class="md-nav__link">
+      <a href="../../../runbook/sprint2-course-1-osh-infra/" class="md-nav__link">
         
   
   
@@ -2713,7 +2767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sprint2-course-plan/" class="md-nav__link">
+      <a href="../../../sprint2-course-plan/" class="md-nav__link">
         
   
   
@@ -2808,7 +2862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sprint3-reflection/" class="md-nav__link">
+      <a href="../../../sprint3-reflection/" class="md-nav__link">
         
   
   
@@ -2836,7 +2890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sprint2-reflection/" class="md-nav__link">
+      <a href="../../../sprint2-reflection/" class="md-nav__link">
         
   
   
@@ -2864,7 +2918,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reflection/" class="md-nav__link">
+      <a href="../../../reflection/" class="md-nav__link">
         
   
   
@@ -2919,22 +2973,99 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這朵雲能做成什麼
+        情境與需求
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="這朵雲能做成什麼">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        解法(完整流程)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#working-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證清單(每一項都要跑,不能只看 working tree)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        還沒拼上的積木
+        踩雷記錄(實戰四連,每條都真的撞過)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="踩雷記錄(實戰四連,每條都真的撞過)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 完整字串替換抓不到「部分引用」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 更早時期的「第二把身分」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-filter-repo-origin-remote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. filter-repo 會移除 origin remote
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-force-push-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. force push 後,GitHub 仍可能殘留「不可達物件」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-scrub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 別把敏感字串寫回 scrub 紀錄本身
       
     </span>
   </a>
@@ -2950,51 +3081,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從這裡出發
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        這裡之前發生過什麼
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#day-0-11" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        課程路徑(Day 0 → 11)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#k8s" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        課程壓軸:一鍵 K8s 背後發生什麼
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        鎮館之寶
+        預防(讓下次不用清)
       
     </span>
   </a>
@@ -3018,338 +3105,65 @@
 
 
 
-<h1 id="_1">親手蓋一朵雲<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<p>虛擬機、虛擬網路、雲端硬碟、負載平衡——公有雲的這些能力不是魔法,是一套叫 <strong>OpenStack</strong> 的開源軟體。AWS 那個層級的東西,<strong>你可以自己蓋一朵</strong>。</p>
-<p>這個網站帶你從 Azure 的一台空白 VM 開始,把一朵雲從零蓋起來。第二天,你就會對<strong>自己的雲</strong>下這個指令:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span>vm-cirros
+<h1 id="repo-git-filter-repo">Repo 轉公開前的 git 歷史清洗:filter-repo 全歷史抹除敏感資料<a class="headerlink" href="#repo-git-filter-repo" title="Permanent link">&para;</a></h1>
+<p><strong>2026-07-10 · git-filter-repo · 適用:任何要轉 public / 對外分享、但歷史含敏感字串或內部檔案的 repo</strong></p>
+<h2 id="_1">情境與需求<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>Repo 要開放(轉 public、開 GitHub Pages、給外部看),但<strong>歷史 commit</strong> 裡有:真實 IP、雲端訂閱 ID、email、示範密碼、不該公開的內部規劃檔。只改最新版(HEAD)沒用——<code>git log -p</code>、GitHub 的歷史瀏覽、任何 clone 都翻得到舊內容。需求:<strong>任何歷史版本都追不到</strong>。</p>
+<h2 id="_2">解法(完整流程)<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 0. 改寫歷史前必備份(整個 repo 目錄複製一份)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>cp<span class="w"> </span>-r<span class="w"> </span>&lt;repo&gt;<span class="w"> </span>/tmp/&lt;repo&gt;-backup-<span class="k">$(</span>date<span class="w"> </span>+%H%M%S<span class="k">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># 1. 要整檔抹除的,先把檔案本體移出 repo 保存(如果還需要它)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>mv<span class="w"> </span>docs/plans/internal-plan.md<span class="w"> </span>~/safe-place/
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># 2. 替換規則檔(舊==&gt;新;每行一條,literal 匹配)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>/tmp/replacements.txt<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="s">203.0.113.99==&gt;&lt;VM_PUBLIC_IP&gt;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="s">aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee==&gt;&lt;subscription-id&gt;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="s">someone@company.com==&gt;you@example.com</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="s">RealDemoPassword!==&gt;Sup3rS3cretDemo!</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="s">EOF</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># 3. 一次改寫全部歷史:抹檔案 + 換字串</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>git<span class="w"> </span>filter-repo<span class="w"> </span>--force<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span>--invert-paths<span class="w"> </span>--path<span class="w"> </span>docs/plans/internal-plan.md<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span>--replace-text<span class="w"> </span>/tmp/replacements.txt
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="c1"># 4. 驗證(關鍵,見下方清單)後 force push</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>origin<span class="w"> </span>git@github.com:org/repo.git<span class="w">   </span><span class="c1"># filter-repo 會拔掉 origin!</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>git<span class="w"> </span>push<span class="w"> </span>--force<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>main
 </span></code></pre></div>
-<p><strong>你的雲,開出它的第一台虛擬機。</strong>之後每一天再給它一個新能力:雲端硬碟、負載平衡、秘密保險箱、資源藍圖……直到最後一天,這朵雲甚至能像 AWS 的 EKS 一樣,<a href="runbook/sprint3-day8-e2e-workload-cluster/">一行指令長出一整座 Kubernetes</a>——那是課程壓軸,也是我們<strong>失敗過兩次</strong>才做到的事。</p>
-<div style="text-align: center;">
-<p><img alt="Keystone" src="assets/mascots/keystone.png" width="52" />
-<img alt="Glance" src="assets/mascots/glance.png" width="52" />
-<img alt="Nova" src="assets/mascots/nova.png" width="52" />
-<img alt="Neutron" src="assets/mascots/neutron.png" width="52" />
-<img alt="Cinder" src="assets/mascots/cinder.png" width="52" />
-<img alt="Octavia" src="assets/mascots/octavia.png" width="52" />
-<img alt="Barbican" src="assets/mascots/barbican.png" width="52" />
-<img alt="Magnum" src="assets/mascots/magnum.png" width="52" /></p>
-<p><em>這些是你這趟旅程會認識的夥伴——OpenStack 每個服務都有官方吉祥物,</em><em>記臉比記名字快</em><em>。</em></p>
-</div>
-<h2 id="_2">這朵雲能做成什麼<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>你在公有雲用過的東西,OpenStack 幾乎都有對應的積木——這門課會親手把它們一塊塊拼起來:</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>服務</th>
-<th>它給你什麼</th>
-<th>AWS</th>
-<th>GCP</th>
-<th>Azure</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img alt="Keystone" src="assets/mascots/keystone.png" width="32" /></td>
-<td><a href="runbook/sprint3-day2-openstack-resource-flow/">Keystone</a></td>
-<td>身分認證與存取控制</td>
-<td>IAM</td>
-<td>Cloud IAM</td>
-<td>Entra ID</td>
-</tr>
-<tr>
-<td><img alt="Glance" src="assets/mascots/glance.png" width="32" /></td>
-<td><a href="runbook/sprint3-day2-openstack-resource-flow/">Glance</a></td>
-<td>VM 映像檔管理</td>
-<td>AMI</td>
-<td>Images</td>
-<td>Compute Gallery</td>
-</tr>
-<tr>
-<td><img alt="Nova" src="assets/mascots/nova.png" width="32" /></td>
-<td><a href="runbook/sprint3-day2-openstack-resource-flow/">Nova</a></td>
-<td>虛擬機生命週期與運算調度</td>
-<td>EC2</td>
-<td>Compute Engine</td>
-<td>Virtual Machines</td>
-</tr>
-<tr>
-<td><img alt="Neutron" src="assets/mascots/neutron.png" width="32" /></td>
-<td><a href="runbook/sprint3-day2-openstack-resource-flow/">Neutron</a></td>
-<td>軟體定義網路:網段、路由、防火牆</td>
-<td>VPC</td>
-<td>VPC</td>
-<td>Virtual Network</td>
-</tr>
-<tr>
-<td><img alt="Cinder" src="assets/mascots/cinder.png" width="32" /></td>
-<td><a href="runbook/sprint3-day3-cinder-lvm/">Cinder</a></td>
-<td>區塊儲存:可掛載、可搬移的持久磁碟</td>
-<td>EBS</td>
-<td>Persistent Disk</td>
-<td>Managed Disks</td>
-</tr>
-<tr>
-<td><img alt="Octavia" src="assets/mascots/octavia.png" width="32" /></td>
-<td><a href="runbook/sprint3-day4-octavia/">Octavia</a></td>
-<td>負載平衡即服務(LBaaS)</td>
-<td>ELB</td>
-<td>Cloud Load Balancing</td>
-<td>Load Balancer</td>
-</tr>
-<tr>
-<td><img alt="Barbican" src="assets/mascots/barbican.png" width="32" /></td>
-<td><a href="runbook/sprint3-day5-barbican-heat/">Barbican</a></td>
-<td>金鑰、憑證與機密集中管理</td>
-<td>Secrets Manager</td>
-<td>Secret Manager</td>
-<td>Key Vault</td>
-</tr>
-<tr>
-<td><img alt="Heat" src="assets/mascots/heat.png" width="32" /></td>
-<td><a href="runbook/sprint3-day5-barbican-heat/">Heat</a></td>
-<td>宣告式資源編排(IaC)</td>
-<td>CloudFormation</td>
-<td>Infrastructure Manager</td>
-<td>Bicep / ARM</td>
-</tr>
-<tr>
-<td><img alt="Magnum" src="assets/mascots/magnum.png" width="32" /></td>
-<td><a href="runbook/sprint3-day7-magnum-capi-driver/">Magnum</a></td>
-<td>代管 Kubernetes 叢集</td>
-<td>EKS</td>
-<td>GKE</td>
-<td>AKS</td>
-</tr>
-<tr>
-<td><img alt="Horizon" src="assets/mascots/horizon.png" width="32" /></td>
-<td><a href="runbook/sprint3-day1-kolla-aio-core/">Horizon</a></td>
-<td>雲資源的網頁管理介面</td>
-<td>Console</td>
-<td>Cloud Console</td>
-<td>Portal</td>
-</tr>
-</tbody>
-</table>
-<p>點服務名稱可以直接跳到認識它的那一天。</p>
-<h3 id="_3">還沒拼上的積木<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<p>同一盒積木裡還有更多——這些本課程沒有部署,想擴充你的雲時就從這裡挑:</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>服務</th>
-<th>它給你什麼</th>
-<th>AWS</th>
-<th>GCP</th>
-<th>Azure</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img alt="Swift" src="assets/mascots/swift.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Swift</a></td>
-<td>物件儲存</td>
-<td>S3</td>
-<td>Cloud Storage</td>
-<td>Blob Storage</td>
-</tr>
-<tr>
-<td><img alt="Manila" src="assets/mascots/manila.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Manila</a></td>
-<td>共享檔案系統</td>
-<td>EFS</td>
-<td>Filestore</td>
-<td>Azure Files</td>
-</tr>
-<tr>
-<td><img alt="Designate" src="assets/mascots/designate.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Designate</a></td>
-<td>DNS 代管</td>
-<td>Route 53</td>
-<td>Cloud DNS</td>
-<td>Azure DNS</td>
-</tr>
-<tr>
-<td><img alt="Trove" src="assets/mascots/trove.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Trove</a></td>
-<td>資料庫即服務</td>
-<td>RDS</td>
-<td>Cloud SQL</td>
-<td>Azure Database</td>
-</tr>
-<tr>
-<td><img alt="Zun" src="assets/mascots/zun.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Zun</a></td>
-<td>容器即服務(不經 K8s)</td>
-<td>Fargate</td>
-<td>Cloud Run</td>
-<td>Container Instances</td>
-</tr>
-<tr>
-<td><img alt="Ironic" src="assets/mascots/ironic.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Ironic</a></td>
-<td>裸機佈建與生命週期管理</td>
-<td>EC2 Bare Metal</td>
-<td>Bare Metal Solution</td>
-<td>Azure BareMetal</td>
-</tr>
-<tr>
-<td><img alt="Telemetry" src="assets/mascots/telemetry.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Telemetry</a></td>
-<td>計量、監控與告警</td>
-<td>CloudWatch</td>
-<td>Cloud Monitoring</td>
-<td>Azure Monitor</td>
-</tr>
-<tr>
-<td><img alt="CloudKitty" src="assets/mascots/cloudkitty.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">CloudKitty</a></td>
-<td>用量計費與費率管理</td>
-<td>Cost Explorer</td>
-<td>Cloud Billing</td>
-<td>Cost Management</td>
-</tr>
-<tr>
-<td><img alt="Masakari" src="assets/mascots/masakari.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Masakari</a></td>
-<td>虛擬機高可用與自動復原</td>
-<td>(EC2 內建自動復原)</td>
-<td>(內建即時遷移)</td>
-<td>(內建服務修復)</td>
-</tr>
-</tbody>
-</table>
-<p>每一個的定位與「什麼時候會需要」,都整理在 <a href="runbook/sprint3-day11-openstack-service-map/">Day 11 · 服務全景圖</a>。</p>
-<h2 id="_4">從這裡出發<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<div class="grid cards">
+<p>替換值的慣例:IP 用 <strong>RFC 5737 文件保留網段</strong>(<code>203.0.113.x</code>、<code>198.51.100.x</code>、<code>192.0.2.x</code>——標準的「範例專用 IP」,永遠不會撞到真實主機);識別碼用 <code>&lt;subscription-id&gt;</code> 這類佔位符;email 用 <code>example.com</code>。</p>
+<h2 id="working-tree">驗證清單(每一項都要跑,不能只看 working tree)<a class="headerlink" href="#working-tree" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># 每個敏感字串:全歷史逐字搜,必須為 0</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>git<span class="w"> </span>log<span class="w"> </span>--all<span class="w"> </span>-S<span class="s2">&quot;&lt;敏感字串&gt;&quot;</span><span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># 被抹除的檔案:任何歷史 commit 都不得出現</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>git<span class="w"> </span>log<span class="w"> </span>--all<span class="w"> </span>--oneline<span class="w"> </span>--<span class="w"> </span>path/to/removed-file.md<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># 遠端抽驗:直接打 API 看 GitHub 上的實際內容</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/org/repo/contents/&lt;file&gt;<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.content&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;&lt;敏感字串&gt;&quot;</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># 內容沒被替換弄壞(有網站的話)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+</span></code></pre></div>
+<h2 id="_3">踩雷記錄(實戰四連,每條都真的撞過)<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="1">1. 完整字串替換抓不到「部分引用」<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<p>替換規則寫的是完整 UUID,但文件某處用了<strong>前 8 碼縮寫</strong>當註解(「確認 aaaaaaaa 在列」)——完整字串匹配不到,歷史裡存活。<strong>教訓:驗證時用足夠短的子字串掃</strong>(<code>git log --all -S"aaaaaaaa"</code>),掃到再補一輪替換。</p>
+<h3 id="2">2. 更早時期的「第二把身分」<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
+<p>清單是憑「現在在用的」記憶列的,結果更早時期的紀錄用的是<strong>另一顆訂閱、另一個 IP、另一套內部命名</strong>——第一輪全漏。<strong>教訓:scrub 清單必須從全 repo 盤點產生</strong>(掃 UUID 形態、公網 IP 形態、email 形態、內部網域字樣的 pattern),不是憑記憶列舉。順帶掃裸露的租戶名/組織縮寫這類「非機密但內部」的字樣。</p>
+<h3 id="3-filter-repo-origin-remote">3. filter-repo 會移除 origin remote<a class="headerlink" href="#3-filter-repo-origin-remote" title="Permanent link">&para;</a></h3>
+<p>這是它的安全設計(防止誤推)。改寫完 <code>git push</code> 會失敗,要先 <code>git remote add origin …</code> 再 force push。</p>
+<h3 id="4-force-push-github">4. force push 後,GitHub 仍可能殘留「不可達物件」<a class="headerlink" href="#4-force-push-github" title="Permanent link">&para;</a></h3>
+<p>舊 commit 變成 unreachable object,但<strong>知道舊 SHA 的人在 GitHub 執行 GC 前仍可能直接以 SHA 取得</strong>。剛建立、無 fork、無 PR、SHA 沒散佈過的 repo 風險趨近於零;要絕對保證就開 GitHub Support ticket 請他們立即清除。另外:repo 轉移(org A → org B)後舊網址有自動轉址,別以為換了 org 就斷了線索。</p>
+<h3 id="5-scrub">5. 別把敏感字串寫回 scrub 紀錄本身<a class="headerlink" href="#5-scrub" title="Permanent link">&para;</a></h3>
+<p>清完之後寫文件記錄「清了什麼」時,若把原始字串列出來就全部白做。紀錄一律用佔位符描述(「VM 公網 IP」「訂閱 ID 前 8 碼」),本文即示範。</p>
+<h2 id="_4">預防(讓下次不用清)<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27zM5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83s-2.05.78-2.83 0m-5.66 7.07-1.41-1.41zM6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22zM2 22h1.41l4.77-4.76-1.42-1.41L2 20.59zm0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76z"/></svg></span> <strong>課程主線</strong></p>
-<hr />
-<p>從空白 VM 到 K8s-as-a-Service 的完整路徑。每一步都有實測輸出、驗收標準與踩雷記錄。</p>
-<p><a href="runbook/sprint3-day0-azure-vm/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Day 0 · 開始</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m21.71 20.29-1.42 1.42a1 1 0 0 1-1.41 0L7 9.85A3.8 3.8 0 0 1 6 10a4 4 0 0 1-3.78-5.3l2.54 2.54.53-.53 1.42-1.42.53-.53L4.7 2.22A4 4 0 0 1 10 6a3.8 3.8 0 0 1-.15 1l11.86 11.88a1 1 0 0 1 0 1.41M2.29 18.88a1 1 0 0 0 0 1.41l1.42 1.42a1 1 0 0 0 1.41 0l5.47-5.46-2.83-2.83M20 2l-4 2v2l-2.17 2.17 2 2L18 8h2l2-4Z"/></svg></span> <strong>排錯手冊</strong></p>
-<hr />
-<p>官方文件查不到、動手才會撞到的 15 條整合地雷與解法。拿錯誤訊息來搜就對了。</p>
-<p><a href="solutions/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 查地雷</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.5 8H12v5l4.28 2.54.72-1.21-3.5-2.08zM13 3a9 9 0 0 0-9 9H1l3.96 4.03L9 12H6a7 7 0 0 1 7-7 7 7 0 0 1 7 7 7 7 0 0 1-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.9 8.9 0 0 0 13 21a9 9 0 0 0 9-9 9 9 0 0 0-9-9"/></svg></span> <strong>前兩次嘗試</strong></p>
-<hr />
-<p>Juju 走了 9 天、OpenStack-Helm 走了 2 天,為什麼都沒走通?失敗史是這門課的地基。</p>
-<p><a href="previous-attempts/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 讀故事</a></p>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15 19-6-2.11V5l6 2.11M20.5 3h-.16L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5a.5.5 0 0 0 .5.5c.05 0 .11 0 .16-.03L9 18.9l6 2.1 5.64-1.9c.21-.1.36-.25.36-.48V3.5a.5.5 0 0 0-.5-.5"/></svg></span> <strong>服務全景圖</strong></p>
-<hr />
-<p>OpenStack 有幾十個服務,我們用了 11 個。官方 Landscape 一張圖看懂整個版圖。</p>
-<p><a href="runbook/sprint3-day11-openstack-service-map/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 看地圖</a></p>
-</li>
+<li><strong>文件從第一天就用範例值</strong>:IP 用 RFC 5737 網段、識別碼用 <code>&lt;placeholder&gt;</code>、密碼用明顯的假值——教學文件本來就該可照抄而不暴露環境。</li>
+<li><strong>gitleaks(或同類掃描)進 CI</strong>,在 commit 階段就擋,而不是公開前大掃除。</li>
+<li>內部規劃文件與對外內容<strong>分 repo 或分目錄並排除發佈</strong>,降低「整包公開」時的清理面。</li>
 </ul>
-</div>
-<h2 id="_5">這裡之前發生過什麼<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>嘗試一 · Juju + Charms</strong>:9 天。核心能動,但三項關鍵功能被生態系卡死,放棄。</li>
-<li><strong>嘗試二 · OpenStack-Helm</strong>:2 天。每個問題都要跨 K8s 與 OpenStack 兩層除錯,主動喊停。</li>
-<li><strong>嘗試三 · Kolla-Ansible + Magnum CAPI(本課程)</strong>:走完。前兩次卡死的項目,全部完成。</li>
-</ul>
-<p>完整的決策與教訓 → <a href="previous-attempts/">前兩次嘗試:走過才知道的路</a></p>
-<h2 id="day-0-11">課程路徑(Day 0 → 11)<a class="headerlink" href="#day-0-11" title="Permanent link">&para;</a></h2>
-<p>每一天一份 runbook,固定格式:<strong>原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄</strong>。所有指令都在真實環境跑過。</p>
-<table>
-<thead>
-<tr>
-<th>Day</th>
-<th>主題</th>
-<th>里程碑</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="runbook/sprint3-day0-azure-vm/">0</a></td>
-<td>Azure lab 環境</td>
-<td>支援巢狀虛擬化的 VM + 成本控管</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day1-kolla-aio-core/">1</a></td>
-<td>Kolla-Ansible 部署核心服務</td>
-<td>Keystone/Glance/Nova/Neutron/Horizon</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day2-openstack-resource-flow/">2</a></td>
-<td>OpenStack 資源全流程</td>
-<td>純 CLI 開出可 SSH 的 VM</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day3-cinder-lvm/">3</a></td>
-<td>Cinder 區塊儲存</td>
-<td>volume 掛載、boot from volume</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day4-octavia/">4</a></td>
-<td>Octavia 負載平衡</td>
-<td>LB 建置全流程、round-robin 驗證</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day5-barbican-heat/">5</a></td>
-<td>Barbican 秘密管理 + Heat 編排</td>
-<td>secret 存取往返、HOT stack</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day6-capi-management-cluster/">6</a></td>
-<td>Cluster API 管理叢集</td>
-<td>kind + CAPI/CAPO controllers</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day7-magnum-capi-driver/">7</a></td>
-<td>Magnum + CAPI driver 整合</td>
-<td>ClusterTemplate 就緒</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day8-e2e-workload-cluster/">8</a></td>
-<td>端到端開出 workload cluster</td>
-<td>nodes Ready + LB + PVC 三項驗收</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day9-day2-operations/">9</a></td>
-<td>Day-2 維運</td>
-<td>滾動升版、node group、autoscaler</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day10-terraform-teardown/">10</a></td>
-<td>Terraform 接管 + 拆除演練</td>
-<td>HCL 管 network/VM/LB</td>
-</tr>
-<tr>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">11</a></td>
-<td>後日談:服務全景圖</td>
-<td>用過的 11 個服務盤點 + 沒用到的版圖</td>
-</tr>
-</tbody>
-</table>
-<h2 id="k8s">課程壓軸:一鍵 K8s 背後發生什麼<a class="headerlink" href="#k8s" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
-    A[openstack coe&lt;br/&gt;cluster create] --&gt; B[Magnum&lt;br/&gt;+ CAPI driver]
-    B --&gt; C[CAPI / CAPO&lt;br/&gt;管理叢集]
-    C --&gt;|Nova| D[節點 VM]
-    C --&gt;|Octavia| E[API LB]
-    C --&gt;|Cinder| F[PVC volume]
-    D --&gt; G[workload&lt;br/&gt;K8s cluster]
-    E --&gt; G
-    F --&gt; G</code></pre>
-<p>Day 6–8 會把這條生產線一站一站蓋出來。</p>
-<h2 id="_6">鎮館之寶<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p><img align="right" alt="Cluster API 官方標誌" src="assets/logos/cluster-api.svg" width="110" /></p>
-<p>Cluster API 的官方標誌:<strong>大龜馱小龜馱更小的龜</strong>,殼上都是 Kubernetes 的舵輪。官方副標一句話講完整個架構哲學——</p>
-<blockquote>
-<p><em>"It's Kubernetes all the way down."</em>(一路往下,全是 Kubernetes)</p>
-</blockquote>
-<p>為什麼用 K8s 管 K8s?哪隻龜是哪座叢集? → <a href="runbook/sprint3-day6-capi-management-cluster/">Day 6 · Cluster API 管理叢集</a></p>
-<hr />
-<p>準備好了嗎? → <strong><a href="runbook/sprint3-day0-azure-vm/">開始:Day 0 · Azure Lab 環境</a></strong></p>
 
 
 
@@ -3386,15 +3200,31 @@
       
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
+          
+          <a href="../../runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: cirros sshd race vs config-drive">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                cirros sshd race vs config-drive
+              </div>
+            </div>
+          </a>
+        
         
           
-          <a href="runbook/sprint3-day0-azure-vm/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 0 · Azure Lab 環境">
+          <a href="../../../previous-attempts/" class="md-footer__link md-footer__link--next" aria-label="下一頁: 前兩次嘗試:走過才知道的路">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 0 · Azure Lab 環境
+                前兩次嘗試:走過才知道的路
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -3433,10 +3263,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

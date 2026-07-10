@@ -240,4 +240,8 @@
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/</loc>
          <lastmod>2026-07-10</lastmod>
     </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/</loc>
+         <lastmod>2026-07-10</lastmod>
+    </url>
 </urlset>
