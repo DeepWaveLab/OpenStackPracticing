@@ -1,0 +1,3723 @@
+
+<!doctype html>
+<html lang="zh-TW" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+      
+      
+      
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day6-capi-management-cluster/">
+      
+      
+        <link rel="prev" href="../sprint3-day5-barbican-heat/">
+      
+      
+        <link rel="next" href="../sprint3-day7-magnum-capi-driver/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Day 6 · CAPI 管理叢集 - OpenStack Lab Course</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sprint-3-day-6-cluster-api-kind-capo" class="md-skip">
+          跳轉到
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="頁首">
+    <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OpenStack Lab Course
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Day 6 · CAPI 管理叢集
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切換深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換淺色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切換淺色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="標籤" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首頁
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  課程主線(Day 0–10)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../solutions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  排錯手冊
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../previous-attempts/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  歷史 · 前兩次嘗試
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sprint3-reflection/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  回顧與教訓
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    OpenStack Lab Course
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首頁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    課程主線(Day 0–10)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    課程主線(Day 0–10)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure Lab 環境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day1-kolla-aio-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Kolla AIO core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · OpenStack 資源全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day3-cinder-lvm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Cinder LVM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day4-octavia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Octavia LB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day5-barbican-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Barbican + Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · CAPI 管理叢集
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · CAPI 管理叢集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cluster-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Cluster API?先讀這段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一次接觸 Cluster API?先讀這段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#k8s-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        問題:誰來「蓋」K8s cluster?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        全景:此後你的機器上同時存在「三座」東西,別搞混
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        今天要裝進工廠的四個 provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cluster-api-k8s-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Cluster API 是什麼:用 K8s 管 K8s
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-management-cluster-kind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 為什麼 management cluster 用 kind
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-capo-v014-orc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. CAPO v0.14 的新依賴:ORC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-driver-30-spike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Driver 決策(計畫要求的 30 分鐘 spike)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-kolla-kind-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-clis-driver-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 裝 CLIs(版本對齊 driver pin)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-management-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 建 management cluster
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kind-egress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 修 kind egress(關鍵,否則下一步必死)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-orc-clusterctl-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ORC → clusterctl init
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 驗證
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint(全數通過 2026-07-09)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        踩雷
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="踩雷">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-iptablesfalse-kind-egresssolutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kind-node-ipv6-egress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. kind node 偏好 IPv6 但無 egress(次要)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-vm-reboot-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. VM reboot 後的復原(操作提醒,非 bug)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步(Day 7)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum CAPI driver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · E2E workload cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day9-day2-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 9 · Day-2 operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day10-terraform-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 10 · Terraform + teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day11-openstack-service-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 11 · 後日談:服務全景圖
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../solutions/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排錯手冊
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    排錯手冊
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kolla ProxySQL vs MariaDB port
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia dhclient (Noble)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia amphora Redis jobboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    kind × Kolla docker iptables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CAPI 子網撞 API IP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nodegroup failureDomain null
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史路線(Juju / Charms)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史路線(Juju / Charms)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL charm 不相容
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN charm Caracal 版差
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN chassis 未註冊
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute Caracal 憑證
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute 缺 neutron auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neutron SG 預設關閉
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    magnum-api bind vs haproxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    heat 缺 domain setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime errors
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runtime errors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cirros sshd race vs config-drive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史 · 前兩次嘗試
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史 · 前兩次嘗試
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../previous-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前兩次嘗試:走過才知道的路
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    部署工具圖鑑(矩陣與晶片支援)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-lxd-juju-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · LXD + Juju install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Juju bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-first-relation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · First relation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-2-openstack-charm-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · Charm map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-keystone/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Keystone
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-mysql-innodb-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · MySQL InnoDB cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-rabbitmq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · RabbitMQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-vault-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Vault TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-glance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Glance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Placement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-cloud-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova cloud controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-compute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova compute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-network-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Network stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-horizon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Horizon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-4-configure-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Configure OpenStack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-5-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-6-magnum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · Magnum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum k8s cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-8-storage-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · Storage attempts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · k8s bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Ansible + Kolla install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-course-1-osh-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSH infra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-course-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 課程計畫(後來被推翻)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    回顧與教訓
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    回顧與教訓
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint3-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 回顧(本課程)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 回顧(OSH,2 天喊停)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 回顧(Juju,9 天)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cluster-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Cluster API?先讀這段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一次接觸 Cluster API?先讀這段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#k8s-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        問題:誰來「蓋」K8s cluster?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        全景:此後你的機器上同時存在「三座」東西,別搞混
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        今天要裝進工廠的四個 provider
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cluster-api-k8s-k8s" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Cluster API 是什麼:用 K8s 管 K8s
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-management-cluster-kind" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 為什麼 management cluster 用 kind
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-capo-v014-orc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. CAPO v0.14 的新依賴:ORC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-driver-30-spike" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Driver 決策(計畫要求的 30 分鐘 spike)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-kolla-kind-host" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-clis-driver-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 裝 CLIs(版本對齊 driver pin)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-management-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 建 management cluster
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kind-egress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 修 kind egress(關鍵,否則下一步必死)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-orc-clusterctl-init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ORC → clusterctl init
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 驗證
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint(全數通過 2026-07-09)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        踩雷
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="踩雷">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-iptablesfalse-kind-egresssolutions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-kind-node-ipv6-egress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. kind node 偏好 IPv6 但無 egress(次要)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-vm-reboot-bug" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. VM reboot 後的復原(操作提醒,非 bug)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步(Day 7)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="sprint-3-day-6-cluster-api-kind-capo">Sprint 3 / Day 6: Cluster API 管理叢集(kind + CAPO)<a class="headerlink" href="#sprint-3-day-6-cluster-api-kind-capo" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>課程定位:立起 Magnum CAPI driver 的底層 —— 一個 <strong>Cluster API management cluster</strong>(跑在 kind 上),裝好 CAPI core + kubeadm bootstrap/control-plane + <strong>CAPO</strong>(OpenStack infrastructure provider)。Day 7 才把 Magnum 的 driver 接上來。
+本日踩到一個重大整合地雷:<strong>Kolla 把 docker 的 iptables 關掉,直接斷了 kind 的對外網路</strong>,另立 solutions 詳記。</p>
+</blockquote>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
+<ul>
+<li><strong>Day 1–5</strong>:OpenStack 提供的是「原料」——VM、網路、硬碟、LB。</li>
+<li><strong>Day 6–8 的大目標</strong>:讓 OpenStack 能像公有雲一樣,<strong>一個指令開出一整座 Kubernetes cluster</strong>。分三步:<strong>今天蓋「造 K8s 的工廠」</strong>(Cluster API),明天把 OpenStack 的接單櫃台(Magnum)接上工廠,後天正式下單開出第一座 cluster。</li>
+<li>今天結束時工廠是空轉的——<strong>這是正常的</strong>,還沒有人下單。</li>
+</ul>
+</div>
+<h2 id="cluster-api">第一次接觸 Cluster API?先讀這段<a class="headerlink" href="#cluster-api" title="Permanent link">&para;</a></h2>
+<h3 id="k8s-cluster">問題:誰來「蓋」K8s cluster?<a class="headerlink" href="#k8s-cluster" title="Permanent link">&para;</a></h3>
+<p><img align="right" alt="Cluster API 官方標誌" src="../../assets/logos/cluster-api.svg" width="130" /></p>
+<p>手動裝一座 K8s(開 VM、裝 kubeadm、join 節點、配網路)又煩又難維護。業界的答案是 <strong>Cluster API(CAPI)</strong>:把「一座 K8s cluster」本身變成一種宣告式資源——你宣告「我要 1 台 control plane + 2 台 worker、版本 v1.34」,一組 controller(常駐程式)就自動把它蓋出來、壞了修好、要升版就滾動換新。</p>
+<p><strong>CAPI 有個先天限制,決定了今天要做的一切</strong>:CAPI 的 controller 是「K8s 的原生程式」,<strong>必須住在某座 K8s 裡才能跑</strong>。所以要先有一座小 K8s 專門給它們住——這座就叫 <strong>management cluster(管理叢集)</strong>,它不跑你的應用程式,只跑「造叢集的機器人」。CAPI 官方標誌的副標把這個哲學講完了:<strong>"It's Kubernetes all the way down"</strong>(一路往下全是 Kubernetes)。</p>
+<p>比喻:<strong>management cluster 是工廠</strong>,裡面的 CAPI/CAPO controller 是生產機器人;丟一份藍圖(CAPI 的 YAML)進工廠,機器人就去呼叫 OpenStack 把真正的 cluster(<strong>workload cluster</strong>)蓋出來。</p>
+<h3 id="_1">全景:此後你的機器上同時存在「三座」東西,別搞混<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TB
+    subgraph HOST["Azure VM(host)"]
+        subgraph KOLLA["OpenStack(Kolla 容器群)—— 不是 K8s!"]
+            MAG["Magnum(Day 7 才部)"]
+            NOVA["Nova / Neutron / Octavia / Cinder"]
+        end
+        subgraph KIND["kind management cluster(今天蓋)= 工廠"]
+            CAPI["CAPI controllers(讀藍圖)"]
+            CAPO["CAPO(會說 OpenStack 話的機器人)"]
+        end
+        subgraph WL["workload cluster(Day 8 才誕生)"]
+            APP["你的應用程式跑這裡"]
+        end
+    end
+    CAPI --&gt; CAPO
+    CAPO --&gt;|"呼叫 OpenStack API&lt;br/&gt;開 VM / LB / volume"| NOVA
+    NOVA --&gt;|"生出節點"| WL</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>是什麼</th>
+<th>跑什麼</th>
+<th>誰蓋的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenStack(Kolla)</strong></td>
+<td>host 上的一群 Docker 容器(<strong>不是 K8s</strong>)</td>
+<td>Nova/Neutron/Magnum 等雲服務</td>
+<td>Day 1–5</td>
+</tr>
+<tr>
+<td><strong>kind management cluster</strong></td>
+<td>host Docker 裡的一座迷你 K8s</td>
+<td>只跑 CAPI/CAPO controller</td>
+<td><strong>今天</strong></td>
+</tr>
+<tr>
+<td><strong>workload cluster</strong></td>
+<td>由巢狀 Nova VM 組成的真 K8s</td>
+<td>你的應用程式</td>
+<td>Day 8</td>
+</tr>
+</tbody>
+</table>
+<p>常見疑問:「為什麼不把 CAPI 直接裝進 OpenStack?」——因為 OpenStack(Kolla)不是 K8s,CAPI controller 沒地方住;所以才用 <strong>kind</strong>(K8s-in-Docker,一個容器就是一座 K8s)開一座最小的給它住。</p>
+<h3 id="provider">今天要裝進工廠的四個 provider<a class="headerlink" href="#provider" title="Permanent link">&para;</a></h3>
+<p><code>clusterctl init</code> 一次裝四件,各司其職:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>白話職責</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>core</strong>(cluster-api)</td>
+<td>看懂「Cluster / Machine」這些藍圖的主控</td>
+</tr>
+<tr>
+<td><strong>bootstrap</strong>(kubeadm)</td>
+<td>產生每台節點開機後「怎麼加入 cluster」的腳本</td>
+</tr>
+<tr>
+<td><strong>control-plane</strong>(kubeadm)</td>
+<td>專管 control-plane 節點的生命週期(擴縮、升版)</td>
+</tr>
+<tr>
+<td><strong>infrastructure</strong>(<strong>CAPO</strong>)</td>
+<td>唯一「會說 OpenStack 話」的:把 Machine 翻成 Nova VM、把 LB 翻成 Octavia</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="1-cluster-api-k8s-k8s">1. Cluster API 是什麼:用 K8s 管 K8s<a class="headerlink" href="#1-cluster-api-k8s-k8s" title="Permanent link">&para;</a></h3>
+<p>CAPI 把「建一座 K8s cluster」變成宣告式的 K8s 資源。有兩種 cluster:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌ management cluster(本日建,kind)────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│  CAPI controllers 在這裡跑,watch 下列 CRD 並 reconcile:  │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   Cluster ─► ControlPlane(KubeadmControlPlane)            │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│           └► MachineDeployment ─► MachineSet ─► Machine    │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   OpenStackCluster / OpenStackMachine(CAPO 的 infra CRD)  │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└────────────────────────────────────────────────────────────┘
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        │ CAPO 呼叫 OpenStack API(Nova/Neutron/Octavia/Cinder)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        ▼
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>┌ workload cluster(Day 8 才生)──────────────────────────────┐
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  真正跑 app 的 K8s,節點是 Nova VM                          │
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└────────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<p><strong>四種 provider</strong>(clusterctl 的四個 <code>--</code> 旗標):</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>角色</th>
+<th>本 lab 版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>core</strong>(<code>cluster-api</code>)</td>
+<td>Cluster/Machine 等核心 CRD 與 reconcile</td>
+<td>v1.13.2</td>
+</tr>
+<tr>
+<td><strong>bootstrap</strong>(<code>kubeadm</code>)</td>
+<td>產生節點的 cloud-init(kubeadm join)</td>
+<td>v1.13.2</td>
+</tr>
+<tr>
+<td><strong>control-plane</strong>(<code>kubeadm</code>)</td>
+<td>管 control-plane 生命週期(擴縮、升版)</td>
+<td>v1.13.2</td>
+</tr>
+<tr>
+<td><strong>infrastructure</strong>(<code>openstack</code> = <strong>CAPO</strong>)</td>
+<td>把 Machine 翻成 Nova VM、把 LB 翻成 Octavia</td>
+<td>v0.14.4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="2-management-cluster-kind">2. 為什麼 management cluster 用 kind<a class="headerlink" href="#2-management-cluster-kind" title="Permanent link">&para;</a></h3>
+<p><img align="right" alt="kind 官方標誌:瓶中船" src="../../assets/logos/kind.png" width="160" /></p>
+<p>management cluster 只跑 controllers(記憶體帳 ~6 GB),不跑 workload。單機 lab 用 <strong>kind</strong>(K8s-in-Docker)最省事 —— 一個 docker 容器就是一整座 K8s。生產環境會用專用 HA cluster(controllers 掛了不能影響已生的 workload cluster 的 day-2 操作)。</p>
+<p>kind 的官方標誌就是一艘<strong>瓶中船</strong>——把 K8s 之船裝進(Docker 的)瓶子裡,看一眼就懂它在做什麼。</p>
+<h3 id="3-capo-v014-orc">3. CAPO v0.14 的新依賴:ORC<a class="headerlink" href="#3-capo-v014-orc" title="Permanent link">&para;</a></h3>
+<p>CAPO v0.12 起把「OpenStack 資源的實際 CRUD」拆給獨立的 <strong>ORC(openstack-resource-controller,<code>k-orc/openstack-resource-controller</code>)</strong>。CAPO 產生 ORC 的 CRD(如 <code>Image</code>、<code>Network</code>),ORC 去呼叫 OpenStack。<strong>所以 <code>clusterctl init</code> 裝 CAPO 前,必須先 <code>kubectl apply</code> ORC</strong>,漏了 CAPO 會因缺 CRD 起不來。這是 v0.14 世代最容易漏的一步。</p>
+<h3 id="4-driver-30-spike">4. Driver 決策(計畫要求的 30 分鐘 spike)<a class="headerlink" href="#4-driver-30-spike" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>vexxhost <code>magnum-cluster-api</code>(採用)</strong></th>
+<th>magnum-capi-helm(StackHPC,備案)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>management cluster</td>
+<td><strong>Model A:手動 <code>clusterctl init</code></strong>(driver 只在 Magnum 端建 CAPI CRs)</td>
+<td>走 Helm chart</td>
+</tr>
+<tr>
+<td>文件</td>
+<td>有 Kolla-Ansible 專屬整合教學(R0K5T4R、Satish Patel)</td>
+<td>較少 Kolla 實例</td>
+</tr>
+<tr>
+<td>node image</td>
+<td>自家 <code>capo-image-elements</code>,對應 k8s 1.33–1.36</td>
+<td>CAPI 生態通用</td>
+</tr>
+<tr>
+<td>現況</td>
+<td>v0.37.0(2026-06),active</td>
+<td>active</td>
+</tr>
+</tbody>
+</table>
+<p><strong>定案:vexxhost magnum-cluster-api v0.37.0。</strong> 版本 pin <strong>不抓 latest,抓 driver 測過的組合</strong> —— 直接讀 driver repo 的 <code>hack/setup-capo.sh</code>(其 CI bootstrap):<code>CAPI=v1.13.2 / CAPO=v0.14.4 / ORC=v2.2.0</code>。latest 是 v1.13.3 / v0.14.6,只差 patch,但用 pin 版最保險。</p>
+<h3 id="5-kolla-kind-host">5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)<a class="headerlink" href="#5-kolla-kind-host" title="Permanent link">&para;</a></h3>
+<p>Kolla-Ansible 設定 <code>/etc/docker/daemon.json</code> 為 <strong><code>iptables:false</code>、<code>ip-forward:false</code>、<code>bridge:none</code></strong> —— 因為 Kolla 容器全走 host network,網路由 neutron/OVN 自管,不讓 docker 碰 iptables。<strong>但 kind 是正常 bridge 容器</strong>,靠 docker 的 MASQUERADE 才能 SNAT 出去。<code>iptables:false</code> = docker 不建 NAT = kind node 封包帶著 <code>172.17.x</code> private source 出 eth0、被 Azure 丟掉,表現成<strong>所有 image pull <code>i/o timeout</code></strong>。修法:比照 Kolla 既有那條,手動加一條只針對 kind 網段的 MASQUERADE(<strong>不動 daemon.json、不全域開 docker iptables</strong>,以免弄壞正在跑的 OpenStack)。詳見 <code>solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md</code>。</p>
+<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="1-clis-driver-pin">1. 裝 CLIs(版本對齊 driver pin)<a class="headerlink" href="#1-clis-driver-pin" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># kubectl / kind / clusterctl(=CAPI 版) / helm</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kubectl<span class="w">    </span>https://dl.k8s.io/release/v1.36.2/bin/linux/amd64/kubectl
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kind<span class="w">       </span>https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/clusterctl<span class="w"> </span>https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.13.2/clusterctl-linux-amd64
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>sudo<span class="w"> </span>install<span class="w"> </span>-m0755<span class="w"> </span>/tmp/<span class="o">{</span>kubectl,kind,clusterctl<span class="o">}</span><span class="w"> </span>/usr/local/bin/
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>curl<span class="w"> </span>-sSfL<span class="w"> </span>https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># kind 需要「非 sudo」docker → 把使用者加進 docker group(需新 ssh session 生效)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span>azureuser
+</span></code></pre></div>
+<h3 id="2-management-cluster">2. 建 management cluster<a class="headerlink" href="#2-management-cluster" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="w"> </span>capi-mgmt<span class="w"> </span>--wait<span class="w"> </span>120s<span class="w">     </span><span class="c1"># kindest/node v1.36.1</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w">                                    </span><span class="c1"># control-plane Ready</span>
+</span></code></pre></div>
+<h3 id="3-kind-egress">3. 修 kind egress(關鍵,否則下一步必死)<a class="headerlink" href="#3-kind-egress" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 比照 Kolla 既有的 172.24.4.0/24 那條,只 SNAT kind 網段</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">172</span>.17.0.0/16<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># 驗證:kind node 應能連外</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>capi-mgmt-control-plane<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;cat &lt;/dev/null &gt;/dev/tcp/1.1.1.1/443 &amp;&amp; echo OK&#39;</span>
+</span></code></pre></div>
+<p>持久化(VM 每天 reboot 會掉,用獨立 systemd oneshot 冪等補上):<code>/etc/systemd/system/kind-masquerade.service</code>（見 solutions 檔內完整 unit),<code>systemctl enable --now kind-masquerade</code>。</p>
+<h3 id="4-orc-clusterctl-init">4. ORC → clusterctl init<a class="headerlink" href="#4-orc-clusterctl-init" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># 先裝 ORC(CAPO v0.14 依賴)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://github.com/k-orc/openstack-resource-controller/releases/download/v2.2.0/install.yaml
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># clusterctl init(EXP 旗標比照 setup-capo.sh)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_CLUSTER_RESOURCE_SET</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CLUSTER_TOPOLOGY</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>clusterctl<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--core<span class="w"> </span>cluster-api:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--bootstrap<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--control-plane<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>--infrastructure<span class="w"> </span>openstack:v0.14.4
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理</span>
+</span></code></pre></div>
+<h3 id="5">5. 驗證<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">for</span><span class="w"> </span>ns_dep<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>capi-system/capi-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>capi-kubeadm-bootstrap-system/capi-kubeadm-bootstrap-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>capi-kubeadm-control-plane-system/capi-kubeadm-control-plane-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>capo-system/capo-controller-manager<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>kubectl<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">ns_dep</span><span class="p">%/*</span><span class="si">}</span><span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deploy/<span class="si">${</span><span class="nv">ns_dep</span><span class="p">#*/</span><span class="si">}</span><span class="w"> </span>--timeout<span class="o">=</span>180s
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">done</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
+</span></code></pre></div>
+<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>驗證</th>
+<th>判準</th>
+<th>實測</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>kind cluster</td>
+<td>control-plane Ready</td>
+<td>✅ kindest/node v1.36.1,18s Ready</td>
+</tr>
+<tr>
+<td>kind egress</td>
+<td>node 可連外部 443</td>
+<td>✅ 加 MASQUERADE 後 1.1.1.1 / quay 皆 OK</td>
+</tr>
+<tr>
+<td>MASQUERADE 持久化</td>
+<td>systemd unit enabled+active,規則不重複</td>
+<td>✅ count=1</td>
+</tr>
+<tr>
+<td>ORC</td>
+<td>orc-controller-manager Running</td>
+<td>✅ v2.2.0</td>
+</tr>
+<tr>
+<td>cert-manager</td>
+<td>3 deploy available</td>
+<td>✅ v1.20.2(clusterctl 自動裝)</td>
+</tr>
+<tr>
+<td><strong>4 controller</strong></td>
+<td>capi / bootstrap / control-plane / capo 全 1/1 Running</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>providers</td>
+<td>core/bootstrap/control-plane v1.13.2 + openstack v0.14.4</td>
+<td>✅ <code>kubectl get providers</code> 四筆到位</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_4">踩雷<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="1-kolla-iptablesfalse-kind-egresssolutions">1. Kolla <code>iptables:false</code> 斷 kind egress(solutions 級,本日最大地雷)<a class="headerlink" href="#1-kolla-iptablesfalse-kind-egresssolutions" title="Permanent link">&para;</a></h3>
+<p>見上「原理 §5」與 <code>solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md</code>。症狀是所有 image <code>ImagePullBackOff</code> / <code>i/o timeout</code>,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。<strong>診斷關鍵順序</strong>:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json <code>iptables:false</code>。</p>
+<h3 id="2-clusterctl-init-cert-manager-context-deadline-exceeded1">2. <code>clusterctl init</code> 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)<a class="headerlink" href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" title="Permanent link">&para;</a></h3>
+<p>第一次 init 死在 <code>Waiting for cert-manager to be available...</code> → <code>context deadline exceeded</code>。<strong>這不是 cert-manager 的錯,是 §1 egress 沒通導致它 ImagePullBackOff</strong>。修好 MASQUERADE、刪掉卡住的 pod 讓它重拉、cert-manager available 後<strong>重跑同一條 <code>clusterctl init</code> 即可續裝</strong>(它偵測 cert-manager 已在會跳過,直接裝 CAPI/CAPO)。教訓:<code>clusterctl init</code> 可安全重跑。</p>
+<h3 id="3-kind-node-ipv6-egress">3. kind node 偏好 IPv6 但無 egress(次要)<a class="headerlink" href="#3-kind-node-ipv6-egress" title="Permanent link">&para;</a></h3>
+<p>kind 的 docker network 帶 IPv6 ULA(<code>fc00::/64</code>)且有 v6 default route,<code>getent hosts quay.io</code> 會回 AAAA,但 Azure 無 IPv6 對外 → 更拖慢 pull。修好 IPv4 MASQUERADE 後 Happy Eyeballs 會走 v4,不再是問題;要根治可在 kind config 關 IPv6,本 lab 未做(非必要)。</p>
+<h3 id="4-vm-reboot-bug">4. VM reboot 後的復原(操作提醒,非 bug)<a class="headerlink" href="#4-vm-reboot-bug" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>MASQUERADE</strong>:已由 <code>kind-masquerade.service</code> 開機自動補,免手動。</li>
+<li><strong>kind cluster 本身</strong>:kind node 容器預設不隨 VM reboot 自動健康復原。早上開機後若要用 management cluster,先 <code>docker start capi-mgmt-control-plane</code> 等它回穩(或重建 cluster + 重跑 clusterctl init)。Day 7 開工前確認 <code>kubectl get providers -A</code> 四筆都在。</li>
+</ul>
+<h2 id="day-7">下一步(Day 7)<a class="headerlink" href="#day-7" title="Permanent link">&para;</a></h2>
+<p>Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost <code>magnum-cluster-api</code> v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。</p>
+<hr />
+<p><em>Cluster API 與 kind 標誌為 CNCF(Linux Foundation)之商標與專案資產,此處作社群教學用途。</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到頂端
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="頁腳" >
+        
+          
+          <a href="../sprint3-day5-barbican-heat/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 5 · Barbican + Heat">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 5 · Barbican + Heat
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sprint3-day7-magnum-capi-driver/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 7 · Magnum CAPI driver">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 7 · Magnum CAPI driver
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

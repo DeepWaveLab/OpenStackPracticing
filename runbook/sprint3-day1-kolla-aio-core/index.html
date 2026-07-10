@@ -1,0 +1,3771 @@
+
+<!doctype html>
+<html lang="zh-TW" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+      
+      
+      
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day1-kolla-aio-core/">
+      
+      
+        <link rel="prev" href="../sprint3-day0-azure-vm/">
+      
+      
+        <link rel="next" href="../sprint3-day2-openstack-resource-flow/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Day 1 · Kolla AIO core - OpenStack Lab Course</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#day-1-kolla-ansible-openstack" class="md-skip">
+          跳轉到
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="頁首">
+    <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OpenStack Lab Course
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Day 1 · Kolla AIO core
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切換深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換淺色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切換淺色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="標籤" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首頁
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  課程主線(Day 0–10)
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../solutions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  排錯手冊
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../previous-attempts/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  歷史 · 前兩次嘗試
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sprint3-reflection/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  回顧與教訓
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    OpenStack Lab Course
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首頁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    課程主線(Day 0–10)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    課程主線(Day 0–10)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure Lab 環境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Kolla AIO core
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Kolla AIO core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Kolla-Ansible?先讀這段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一次接觸 Kolla-Ansible?先讀這段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        要解決的問題:OpenStack 很難「裝」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kolla-kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kolla 與 Kolla-Ansible 是什麼
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        今天會遇到的名詞
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Kolla-Ansible 的部署模型:三個特徵
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-openstack-20251epoxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 版本選擇:OpenStack 2025.1(Epoxy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 部署前的三個網路決定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-ansible_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:安裝 Kolla-Ansible
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:準備設定檔骨架
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-dummy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:造一張 dummy 網卡
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-globalsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:填 globals.yml、產生密碼
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5bootstrap-prechecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:bootstrap 與 prechecks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6deploy-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 6:deploy(約 25 分鐘)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 7:拿到鑰匙,第一次使用你的雲
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint(本課實測全數通過)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-install-deps-no-such-file-or-directory-ansible-galaxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. install-deps 靜默失敗:No such file or directory: 'ansible-galaxy'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-prechecksno-module-named-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. prechecks:No module named 'docker'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-prechecksno-module-named-dbus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. prechecks:No module named 'dbus'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-mariadb-proxysql-3306epoxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. MariaDB 啟動失敗:proxysql 佔走 3306(Epoxy 預設值陷阱)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · OpenStack 資源全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day3-cinder-lvm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Cinder LVM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day4-octavia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Octavia LB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day5-barbican-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Barbican + Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day6-capi-management-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · CAPI 管理叢集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum CAPI driver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · E2E workload cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day9-day2-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 9 · Day-2 operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day10-terraform-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 10 · Terraform + teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day11-openstack-service-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 11 · 後日談:服務全景圖
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../solutions/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排錯手冊
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    排錯手冊
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kolla ProxySQL vs MariaDB port
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia dhclient (Noble)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia amphora Redis jobboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    kind × Kolla docker iptables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CAPI 子網撞 API IP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nodegroup failureDomain null
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史路線(Juju / Charms)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史路線(Juju / Charms)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL charm 不相容
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN charm Caracal 版差
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN chassis 未註冊
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute Caracal 憑證
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute 缺 neutron auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neutron SG 預設關閉
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    magnum-api bind vs haproxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    heat 缺 domain setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime errors
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runtime errors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cirros sshd race vs config-drive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史 · 前兩次嘗試
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史 · 前兩次嘗試
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../previous-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前兩次嘗試:走過才知道的路
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    部署工具圖鑑(矩陣與晶片支援)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-lxd-juju-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · LXD + Juju install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Juju bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-first-relation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · First relation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-2-openstack-charm-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · Charm map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-keystone/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Keystone
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-mysql-innodb-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · MySQL InnoDB cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-rabbitmq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · RabbitMQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-vault-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Vault TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-glance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Glance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Placement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-cloud-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova cloud controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-compute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova compute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-network-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Network stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-horizon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Horizon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-4-configure-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Configure OpenStack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-5-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-6-magnum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · Magnum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum k8s cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-8-storage-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · Storage attempts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · k8s bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Ansible + Kolla install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-course-1-osh-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSH infra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-course-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 課程計畫(後來被推翻)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    回顧與教訓
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    回顧與教訓
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint3-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 回顧(本課程)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 回顧(OSH,2 天喊停)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 回顧(Juju,9 天)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Kolla-Ansible?先讀這段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一次接觸 Kolla-Ansible?先讀這段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        要解決的問題:OpenStack 很難「裝」
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kolla-kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kolla 與 Kolla-Ansible 是什麼
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        今天會遇到的名詞
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-ansible" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Kolla-Ansible 的部署模型:三個特徵
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-openstack-20251epoxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 版本選擇:OpenStack 2025.1(Epoxy)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 部署前的三個網路決定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-kolla-ansible_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:安裝 Kolla-Ansible
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:準備設定檔骨架
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-dummy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:造一張 dummy 網卡
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-globalsyml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:填 globals.yml、產生密碼
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5bootstrap-prechecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:bootstrap 與 prechecks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6deploy-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 6:deploy(約 25 分鐘)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 7:拿到鑰匙,第一次使用你的雲
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint(本課實測全數通過)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-install-deps-no-such-file-or-directory-ansible-galaxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. install-deps 靜默失敗:No such file or directory: 'ansible-galaxy'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-prechecksno-module-named-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. prechecks:No module named 'docker'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-prechecksno-module-named-dbus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. prechecks:No module named 'dbus'
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-mariadb-proxysql-3306epoxy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. MariaDB 啟動失敗:proxysql 佔走 3306(Epoxy 預設值陷阱)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="day-1-kolla-ansible-openstack">Day 1:用 Kolla-Ansible 部署 OpenStack 核心服務<a class="headerlink" href="#day-1-kolla-ansible-openstack" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>今天結束時,你會擁有一朵<strong>能登入、能用的 OpenStack 雲</strong>:五個核心服務跑在 33 個容器裡,網頁儀表板打得開,CLI 查得到服務清單。</p>
+</blockquote>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
+<ul>
+<li><strong>昨天(Day 0)</strong>:準備好一台支援巢狀虛擬化的 Azure VM,目前是一台乾淨的 Ubuntu 24.04。</li>
+<li><strong>今天</strong>:安裝部署工具 Kolla-Ansible,用它部出 OpenStack 核心(Keystone / Glance / Nova / Neutron / Horizon)。</li>
+<li><strong>今天之後</strong>:Day 2 開始「使用」這朵雲(開 VM);之後每天增量加一個服務上去。</li>
+<li>今天<strong>刻意不裝</strong> Cinder(儲存服務)——留到 Day 3,順便學「對已上線的環境增量加服務」這個重要工作流。</li>
+</ul>
+</div>
+<h2 id="kolla-ansible">第一次接觸 Kolla-Ansible?先讀這段<a class="headerlink" href="#kolla-ansible" title="Permanent link">&para;</a></h2>
+<p><img align="right" alt="Kolla-Ansible 的官方吉祥物:無尾熊" src="../../assets/mascots/kolla-ansible.png" width="110" /></p>
+<h3 id="openstack">要解決的問題:OpenStack 很難「裝」<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h3>
+<p>OpenStack 不是一個程式,是<strong>十幾個服務的集合</strong>——每個服務要自己的設定檔、資料庫、訊息佇列連線,彼此還要知道對方的位址和密碼。全部手動裝,光把設定串對就要好幾天,而且無法重現。所以實務上<strong>沒有人手動裝 OpenStack</strong>,一定用部署工具。</p>
+<h3 id="kolla-kolla-ansible">Kolla 與 Kolla-Ansible 是什麼<a class="headerlink" href="#kolla-kolla-ansible" title="Permanent link">&para;</a></h3>
+<p>兩個名字很像,分工不同:</p>
+<ul>
+<li><strong>Kolla</strong>:把每個 OpenStack 服務預先打包成 <strong>Docker image</strong>(放在 <code>quay.io/openstack.kolla/</code>)。你不用自己編譯或安裝任何 OpenStack 軟體。</li>
+<li><strong>Kolla-Ansible</strong>:一組 <strong>Ansible 劇本</strong>(自動化腳本),負責把這些 image 拉到主機、生成每個服務的設定檔、按正確順序啟動、把它們串成一朵雲。</li>
+</ul>
+<p>你要做的事只有三件:<strong>填一份設定檔(<code>globals.yml</code>)→ 產生密碼 → 執行部署指令</strong>。剩下的交給工具。</p>
+<pre class="mermaid"><code>flowchart LR
+    subgraph you["你提供的(今天的主要工作)"]
+        G["globals.yml&lt;br/&gt;(這朵雲長什麼樣)"]
+        P["passwords.yml&lt;br/&gt;(所有服務的密碼)"]
+        I["inventory&lt;br/&gt;(部到哪些主機)"]
+    end
+    KA["kolla-ansible deploy"]
+    subgraph result["部署結果"]
+        C["33 個 Docker 容器&lt;br/&gt;keystone / glance / nova /&lt;br/&gt;neutron / horizon / mariadb / rabbitmq …"]
+    end
+    G --&gt; KA
+    P --&gt; KA
+    I --&gt; KA
+    KA --&gt;|"拉 image、生成設定、依序啟動"| C</code></pre>
+<h3 id="_1">今天會遇到的名詞<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>名詞</th>
+<th>白話解釋</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AIO</strong>(all-in-one)</td>
+<td>所有服務裝在同一台主機。學習用標準做法;生產環境會拆多台</td>
+</tr>
+<tr>
+<td><strong>inventory</strong></td>
+<td>Ansible 的「主機名單」。AIO 情境就是一份現成的單機名單檔</td>
+</tr>
+<tr>
+<td><strong>globals.yml</strong></td>
+<td>Kolla-Ansible 唯一的主設定檔。預設全部是註解,你只需要加上自己要改的幾行</td>
+</tr>
+<tr>
+<td><strong>VIP</strong>(virtual IP)</td>
+<td>多主機部署時,一個「飄在多台主機之間」的服務入口 IP。單機部署沒有 HA,VIP 直接填主機自己的 IP</td>
+</tr>
+<tr>
+<td><strong>venv</strong></td>
+<td>Python 虛擬環境。把 kolla-ansible 和它的依賴隔離在一個資料夾裡,不污染系統 Python</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="1-kolla-ansible">1. Kolla-Ansible 的部署模型:三個特徵<a class="headerlink" href="#1-kolla-ansible" title="Permanent link">&para;</a></h3>
+<p>裝之前先建立正確的心智模型,之後除錯會輕鬆很多:</p>
+<ol>
+<li><strong>每個服務一個容器</strong>:<code>docker ps</code> 會看到 <code>nova_api</code>、<code>keystone</code>、<code>mariadb</code>……一個容器出問題,看那個容器的 log 就好,邊界非常清楚。</li>
+<li><strong>所有容器共用主機網路</strong>(host network mode):容器不做網路隔離,服務就像直接跑在主機上一樣佔用 port。好處是網路路徑單純;代價是 port 衝突要自己留意(今天的地雷 #4 就是這個)。</li>
+<li><strong>設定在部署當下生成、寫死</strong>:服務之間互連需要的資訊(資料庫帳密、訊息佇列位址、認證端點)全部由 kolla-ansible 在執行 <code>deploy</code> 的當下計算好、寫進每個服務的設定檔。<strong>之後想改任何設定,就改 <code>globals.yml</code> 再重跑部署指令</strong>——工具是冪等的(重跑只會套用差異),這是它可靠的來源。</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">與前一次嘗試的對照(選讀)</p>
+<p><a href="../../previous-attempts/">前兩次嘗試</a>中的 Juju/Charm 走的是相反哲學:服務之間靠「relation」在<strong>執行期動態協商</strong>連線資訊,理論優雅,但協商過程是黑箱、出錯難查。Kolla 的「部署期一次算好」土法但透明——設定檔就在那裡,打開看就知道服務拿到了什麼。</p>
+</div>
+<h3 id="2-openstack-20251epoxy">2. 版本選擇:OpenStack 2025.1(Epoxy)<a class="headerlink" href="#2-openstack-20251epoxy" title="Permanent link">&para;</a></h3>
+<p>OpenStack 每半年發布一版,版名按字母排序(……Dalmatian、<strong>Epoxy</strong>、Flamingo……)。本課選 <strong>2025.1 Epoxy</strong>:發布滿一年、文件與社群經驗最豐富的近期穩定版。對應關係:kolla-ansible <strong>20.x</strong> ↔ OpenStack <strong>2025.1</strong>,而我們直接從 git 的 <code>stable/2025.1</code> 分支安裝,不用去猜 pip 版號區間。Ubuntu 24.04 主機在官方支援矩陣內。</p>
+<h3 id="3">3. 部署前的三個網路決定<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<p><code>globals.yml</code> 裡真正需要思考的其實只有網路。這三個決定每個都跟「我們跑在 Azure 上」有關:</p>
+<table>
+<thead>
+<tr>
+<th>設定</th>
+<th>本課的值</th>
+<th>為什麼</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>network_interface</code></td>
+<td><code>eth0</code></td>
+<td>管理流量、API、隧道流量走哪張網卡。單機單網卡,就是 <code>eth0</code>。(VM 上另一張 <code>enP*</code> 是 Azure 加速網路的配件,不要碰)</td>
+</tr>
+<tr>
+<td><code>neutron_external_interface</code></td>
+<td><code>dummy0</code></td>
+<td>Kolla 要求給「對外網路」一張<strong>沒有 IP 的專用網卡</strong>。Azure VM 只有一張真網卡,標準解法是造一張<strong>虛擬的 dummy 網卡</strong>充當。代價:對外網路只在主機內部有效(Azure 網路不允許 L2 廣播,Day 0 已解釋)——所以之後從 Mac 看任何東西都走 SSH tunnel</td>
+</tr>
+<tr>
+<td><code>kolla_internal_vip_address</code> + <code>enable_haproxy: "no"</code></td>
+<td><code>10.0.0.4</code>(主機自己的 IP)</td>
+<td>單機沒有高可用需求,關掉負載平衡層(haproxy),VIP 直接填主機 IP。生產多節點時這裡會是真的浮動 VIP</td>
+</tr>
+</tbody>
+</table>
+<p>另外兩行:<code>neutron_plugin_agent: "ovn"</code> 選 OVN 當網路後端(現代預設,Day 2 會深入它),<code>nova_compute_virt_type: "kvm"</code> 用硬體虛擬化加速(Day 0 已用 <code>kvm-ok</code> 驗證過,不寫也是預設值,寫出來是課程用意)。</p>
+<h2 id="_3">開始之前<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>確認你有:</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Day 0 建好的 Azure VM(Ubuntu 24.04、16 vCPU / 128 GB、<code>kvm-ok</code> 通過),且能 SSH 進去</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> VM 能連外網(要從 quay.io 拉約 30 個 image)</li>
+<li>以下<strong>所有指令都在 VM 上執行</strong>(SSH 進去後),除非特別註明「在 Mac 上」</li>
+</ul>
+<h2 id="_4">步驟<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="1-kolla-ansible_1">步驟 1:安裝 Kolla-Ansible<a class="headerlink" href="#1-kolla-ansible_1" title="Permanent link">&para;</a></h3>
+<p>Kolla-Ansible 是 Python 套件,我們把它裝進獨立的 venv,避免跟系統 Python 打架。先裝系統層的編譯依賴,再建 venv:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>git<span class="w"> </span>python3-venv<span class="w"> </span>python3-dev<span class="w"> </span>libffi-dev<span class="w"> </span>gcc<span class="w"> </span>libssl-dev
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>~/kolla-venv
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">之後每次操作都要先進 venv</p>
+<p>今天以及未來每一天,執行任何 <code>kolla-ansible</code> 指令之前都要先 <code>source ~/kolla-venv/bin/activate</code>。忘記的話會出現各種靈異錯誤(見地雷 #1)。提示符看到 <code>(kolla-venv)</code> 前綴才算進來了。</p>
+</div>
+<p>接著在 venv 內安裝 kolla-ansible 本體(從 stable 分支)與它需要的 Ansible:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>pip
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;ansible-core&gt;=2.16,&lt;2.18&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>pip<span class="w"> </span>install<span class="w"> </span>git+https://opendev.org/openstack/kolla-ansible@stable/2025.1
+</span></code></pre></div>
+<p>裝完先驗證版本,確認拿到的是 20.x(對應 OpenStack 2025.1):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kolla-ansible<span class="w"> </span>--version
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kolla-ansible 20.4.0
+</span></code></pre></div>
+<p>kolla-ansible 還需要一批 Ansible collection(可以想成它的外掛),用內建指令安裝:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kolla-ansible<span class="w"> </span>install-deps
+</span></code></pre></div>
+<p>最後補三個 Python 模組——這是實測踩過的雷:後面的檢查步驟需要 Docker 的 Python SDK 和 dbus 模組,而 dbus-python 需要先裝系統標頭檔才編得起來(見地雷 #2、#3):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>pkg-config<span class="w"> </span>libdbus-1-dev<span class="w"> </span>libdbus-glib-1-dev
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>pip<span class="w"> </span>install<span class="w"> </span>docker<span class="w"> </span>dbus-python
+</span></code></pre></div>
+<p>工具裝好了,下一步準備它要吃的設定檔。</p>
+<h3 id="2">步驟 2:準備設定檔骨架<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
+<p>Kolla-Ansible 約定所有設定放在 <code>/etc/kolla/</code>。把官方範例複製過去,並把單機用的 inventory(主機名單)複製到家目錄:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>chown<span class="w"> </span><span class="nv">$USER</span>:<span class="nv">$USER</span><span class="w"> </span>/etc/kolla
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cp<span class="w"> </span>-r<span class="w"> </span>~/kolla-venv/share/kolla-ansible/etc_examples/kolla/*<span class="w"> </span>/etc/kolla/
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>cp<span class="w"> </span>~/kolla-venv/share/kolla-ansible/ansible/inventory/all-in-one<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>確認骨架就位:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ls<span class="w"> </span>/etc/kolla/
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>globals.yml  passwords.yml
+</span></code></pre></div>
+<p><code>globals.yml</code> 現在幾乎全是註解(這是特色:只寫你要改的),<code>passwords.yml</code> 全是空值(下一步生成)。</p>
+<h3 id="3-dummy">步驟 3:造一張 dummy 網卡<a class="headerlink" href="#3-dummy" title="Permanent link">&para;</a></h3>
+<p>原理章說過:Kolla 需要一張<strong>沒有 IP 的網卡</strong>給對外網路,而 Azure VM 只有一張真網卡。解法是造一張虛擬的 dummy 網卡。先立即生效:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>dummy0<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dummy0<span class="w"> </span>up
+</span></code></pre></div>
+<p>但 <code>ip link</code> 的效果重開機就消失,所以同時寫成 systemd-networkd 設定讓它<strong>開機自動重建</strong>(這台 VM 每晚會自動關機,這步不做明天就壞):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/network/10-dummy0.netdev<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="s">[NetDev]</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="s">Name=dummy0</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="s">Kind=dummy</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s">EOF</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/network/10-dummy0.network<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="s">[Match]</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s">Name=dummy0</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="s">[Network]</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="s">LinkLocalAddressing=no</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="s">ConfigureWithoutCarrier=yes</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="s">EOF</span>
+</span></code></pre></div>
+<p>驗證網卡存在且是 UP:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ip<span class="w"> </span>-br<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span>dummy0
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>dummy0           UNKNOWN        aa:bb:cc:dd:ee:ff &lt;BROADCAST,NOARP,UP,LOWER_UP&gt;
+</span></code></pre></div>
+<h3 id="4-globalsyml">步驟 4:填 globals.yml、產生密碼<a class="headerlink" href="#4-globalsyml" title="Permanent link">&para;</a></h3>
+<p>把我們在原理章決定好的七行設定<strong>附加到 <code>globals.yml</code> 檔尾</strong>。原檔全部是註解所以不會衝突,而且之後 <code>git diff</code> 或肉眼一看就知道自己改了什麼:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="s">kolla_base_distro: &quot;ubuntu&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="s">kolla_internal_vip_address: &quot;10.0.0.4&quot;</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="s">enable_haproxy: &quot;no&quot;</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="s">network_interface: &quot;eth0&quot;</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="s">neutron_external_interface: &quot;dummy0&quot;</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="s">neutron_plugin_agent: &quot;ovn&quot;</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="s">nova_compute_virt_type: &quot;kvm&quot;</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="s">EOF</span>
+</span></code></pre></div>
+<blockquote>
+<p><code>kolla_internal_vip_address</code> 請填<strong>你的 VM 的私有 IP</strong>(<code>ip -4 addr show eth0</code> 可查);本課環境是 <code>10.0.0.4</code>。</p>
+</blockquote>
+<p>接著一個指令生成所有服務的隨機密碼(填滿 <code>passwords.yml</code>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kolla-genpwd
+</span></code></pre></div>
+<p>驗證密碼真的生出來了(隨便抽查一個,應該看到隨機字串而不是空白):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>grep<span class="w"> </span>keystone_admin_password<span class="w"> </span>/etc/kolla/passwords.yml
+</span></code></pre></div>
+<p>設定齊了:雲長什麼樣(globals)、密碼(passwords)、部到哪(inventory)。可以開始部署。</p>
+<h3 id="5bootstrap-prechecks">步驟 5:bootstrap 與 prechecks<a class="headerlink" href="#5bootstrap-prechecks" title="Permanent link">&para;</a></h3>
+<p>部署分三段跑,不要一次到位——每段都有明確的驗證點。第一段 <code>bootstrap-servers</code> 幫主機裝好 Docker engine 等基礎(約 3 分鐘):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>kolla-ansible<span class="w"> </span>bootstrap-servers<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>第二段 <code>prechecks</code> 做部署前健檢(port 有沒有被佔、設定有沒有矛盾):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>kolla-ansible<span class="w"> </span>prechecks<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>兩段結尾都會印 Ansible 的 <code>PLAY RECAP</code>,<strong>判準只有一個:<code>failed=0</code></strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>PLAY RECAP *********************************************************
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>localhost : ok=45   changed=8    unreachable=0    failed=0    ...
+</span></code></pre></div>
+<p>prechecks 沒過就不要繼續——它抓到的每個問題到 deploy 階段都會變成更難查的失敗。常見錯誤對照本章地雷 #2、#3。</p>
+<h3 id="6deploy-25">步驟 6:deploy(約 25 分鐘)<a class="headerlink" href="#6deploy-25" title="Permanent link">&para;</a></h3>
+<p>正式部署。這一步要拉 30 個 image 並依序啟動所有服務,第一次跑約 25 分鐘——<strong>用 <code>nohup</code> 放到背景跑</strong>,SSH 斷線也不會中斷(25 分鐘內斷線機率不低,別賭):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>nohup<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;source ~/kolla-venv/bin/activate &amp;&amp; kolla-ansible deploy -i ~/all-in-one&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">  </span>&gt;<span class="w"> </span>~/kolla-deploy.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">&amp;</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>tail<span class="w"> </span>-f<span class="w"> </span>~/kolla-deploy.log
+</span></code></pre></div>
+<p><code>tail -f</code> 讓你即時看進度(<code>Ctrl+C</code> 只會停止觀看,不影響背景部署)。結尾一樣看 <code>PLAY RECAP</code> 的 <code>failed=0</code>。本課實測:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>PLAY RECAP *********************************************************
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>localhost : ok=367  changed=214  unreachable=0    failed=0    ...
+</span></code></pre></div>
+<p>如果 deploy 中途失敗:先看 log 裡第一個紅色的 <code>fatal:</code>,對照本章地雷(實測第一輪就死在地雷 #4,修掉後重跑即過——deploy 是冪等的,直接重跑沒有副作用)。</p>
+<h3 id="7">步驟 7:拿到鑰匙,第一次使用你的雲<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
+<p>部署完成後,產生管理員的登入憑證檔:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>kolla-ansible<span class="w"> </span>post-deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>這會生出 <code>/etc/kolla/admin-openrc.sh</code>——內容是一組環境變數(帳號、密碼、API 位址),OpenStack CLI 靠它知道要連哪朵雲、用什麼身分。裝 CLI、載入憑證、下第一個指令:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-openstackclient
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>openstack<span class="w"> </span>service<span class="w"> </span>list
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>+----------------------------------+-----------+----------------+
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>| ID                               | Name      | Type           |
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>+----------------------------------+-----------+----------------+
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>| ...                              | keystone  | identity       |
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>| ...                              | glance    | image          |
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>| ...                              | placement | placement      |
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>| ...                              | nova      | compute        |
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>| ...                              | neutron   | network        |
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>| ...                              | heat      | orchestration  |
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>| ...                              | heat-cfn  | cloudformation |
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>+----------------------------------+-----------+----------------+
+</span></code></pre></div>
+<p>看到服務清單 = 你的雲活著。(眼尖的話:Heat 也在——Epoxy 預設啟用,我們沒特別裝,Day 5 直接用。)</p>
+<p>最後開網頁儀表板 Horizon。因為對外網路出不了主機(Azure 限制),<strong>在 Mac 上</strong>開一條 SSH tunnel:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># 在 Mac 上執行;&lt;VM公網IP&gt; 換成你 Day 0 拿到的</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">8080</span>:&lt;VM私有IP&gt;:80<span class="w"> </span>azureuser@&lt;VM公網IP&gt;
+</span></code></pre></div>
+<p>瀏覽器開 <code>http://localhost:8080</code>,帳號 <code>admin</code>,密碼在 VM 上查:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>grep<span class="w"> </span>keystone_admin_password<span class="w"> </span>/etc/kolla/passwords.yml
+</span></code></pre></div>
+<p>登入看到 Horizon 儀表板,今天就完成了。</p>
+<h2 id="checkpoint">Checkpoint(本課實測全數通過)<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>驗證</th>
+<th>判準</th>
+<th>實測</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>deploy PLAY RECAP</td>
+<td><code>failed=0</code></td>
+<td>✅ ok=367 changed=214(第一輪死於地雷 #4,修正後第二輪全綠)</td>
+</tr>
+<tr>
+<td><code>openstack service list</code></td>
+<td>核心服務全註冊</td>
+<td>✅ 7 個服務(含白撿的 Heat)</td>
+</tr>
+<tr>
+<td><code>openstack compute service list</code></td>
+<td>nova 的 scheduler/conductor/compute 全 <code>up</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>openstack network agent list</code></td>
+<td>OVN agent 全 Alive</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>docker ps</code></td>
+<td>全部 Up、無 Exited/Restarting</td>
+<td>✅ 33 個容器</td>
+</tr>
+<tr>
+<td>Horizon</td>
+<td>登入頁打得開</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p>部署耗時參考:第一輪(含拉 image)約 12 分鐘死於 mariadb;修正後第二輪(image 已在本地)約 25 分鐘全綠。</p>
+<h2 id="_5">地雷記錄<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h3 id="1-install-deps-no-such-file-or-directory-ansible-galaxy">1. <code>install-deps</code> 靜默失敗:<code>No such file or directory: 'ansible-galaxy'</code><a class="headerlink" href="#1-install-deps-no-such-file-or-directory-ansible-galaxy" title="Permanent link">&para;</a></h3>
+<p>沒 activate venv、直接用完整路徑呼叫 <code>~/kolla-venv/bin/kolla-ansible install-deps</code> 會找不到 <code>ansible-galaxy</code>(它是靠 PATH 找的)。<strong>教訓:kolla 指令一律在 <code>source ~/kolla-venv/bin/activate</code> 之後跑。</strong> 後遺症狀很誤導:bootstrap-servers 報 <code>role openstack.kolla.baremetal</code> 解析錯誤——真因是 collection 根本沒裝進去。</p>
+<h3 id="2-prechecksno-module-named-docker">2. prechecks:<code>No module named 'docker'</code><a class="headerlink" href="#2-prechecksno-module-named-docker" title="Permanent link">&para;</a></h3>
+<p>bootstrap-servers 裝的是 Docker <strong>engine</strong>(主機上的服務),venv 裡的 Docker <strong>Python SDK</strong> 是另一回事,要自己 <code>pip install docker</code>。</p>
+<h3 id="3-prechecksno-module-named-dbus">3. prechecks:<code>No module named 'dbus'</code><a class="headerlink" href="#3-prechecksno-module-named-dbus" title="Permanent link">&para;</a></h3>
+<p><code>dbus-python</code> 是原始碼編譯套件,直接 pip 裝會編譯失敗——要先 <code>apt install pkg-config libdbus-1-dev libdbus-glib-1-dev</code> 再 <code>pip install dbus-python</code>。</p>
+<h3 id="4-mariadb-proxysql-3306epoxy">4. MariaDB 啟動失敗:proxysql 佔走 3306(Epoxy 預設值陷阱)<a class="headerlink" href="#4-mariadb-proxysql-3306epoxy" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:deploy 卡在 <code>Wait for first MariaDB service port liveness</code> 直到 timeout;<code>docker ps -a</code> 看到 <code>mariadb Exited (1)</code>;<code>ss -tlnp | grep 3306</code> 發現聽 3306 的是 <strong>proxysql</strong>。</p>
+<p><strong>根因</strong>:Epoxy 把 <code>enable_proxysql</code> 預設為 <code>yes</code>(MariaDB 的前端負載平衡),而且它跟 <code>enable_haproxy</code> 是<strong>獨立開關</strong>。我們關了 haproxy 並把 VIP 設成主機 IP 之後,proxysql 綁 VIP:3306、mariadb 綁主機:3306——同一個 IP:port,相撞。</p>
+<p><strong>解法</strong>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_proxysql: &quot;no&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span>proxysql<span class="w"> </span>haproxy<span class="w"> </span>mariadb
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>volume<span class="w"> </span>rm<span class="w"> </span>mariadb<span class="w">     </span><span class="c1"># DB 還沒資料,砍掉讓它重新初始化最乾淨</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w">   </span><span class="c1"># 冪等,直接重跑</span>
+</span></code></pre></div>
+<p><strong>教訓</strong>:單機部署關 haproxy 時,<strong>proxysql 要一起關</strong>。詳細分析見排錯手冊:<a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/">Kolla ProxySQL vs MariaDB port</a>。</p>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>雲部好了,但現在是「空的」——沒有租戶、沒有 image、沒有網路。<a href="../sprint3-day2-openstack-resource-flow/">Day 2</a> 我們扮演管理員和租戶,把開出第一台 VM 需要的所有資源從零建立起來。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到頂端
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="頁腳" >
+        
+          
+          <a href="../sprint3-day0-azure-vm/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 0 · Azure Lab 環境">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 0 · Azure Lab 環境
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sprint3-day2-openstack-resource-flow/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 2 · OpenStack 資源全流程">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 2 · OpenStack 資源全流程
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
