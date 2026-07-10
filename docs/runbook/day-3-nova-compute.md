@@ -1,5 +1,7 @@
 # Day 3: Nova Compute 部署
 
+![Nova 官方吉祥物](../assets/mascots/nova.png){ align=right width="110" }
+
 ## 目的
 
 部署 Nova 的**運算節點**：libvirt + KVM 跑在這，**實際開 VM 的地方**。這也是**第一個必須跑在 LXD VM（不是 container）的 charm**，因為需要 KVM 硬體虛擬化權限。

@@ -1,5 +1,7 @@
 # Sprint 2 / Pre-req: K8s bootstrap（Day 0 環境準備）
 
+![Kubernetes 官方標誌](../assets/logos/kubernetes.png){ align=right width="90" }
+
 ## 目的
 
 Sprint 2 走 OpenStack-Helm，需要一個可用的 K8s cluster。本步驟在 Azure VM 上建 single-node K8s + 必要周邊（CNI / Helm / MetalLB / local-path-provisioner）。

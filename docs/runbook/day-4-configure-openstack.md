@@ -1,5 +1,7 @@
 # Day 4: Configure OpenStack — 開第一台 VM
 
+![Nova 官方吉祥物](../assets/mascots/nova.png){ align=right width="110" }
+
 ## 目的
 
 官方 [Configure OpenStack](https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/configure-openstack.html) 章節：建 flavor、external network、tenant network、router、keypair、security group，最後 `openstack server create` 開第一台 VM，綁 floating IP，從 Azure VM 用 SSH 進去。

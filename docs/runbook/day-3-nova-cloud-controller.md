@@ -1,5 +1,7 @@
 # Day 3: Nova Cloud Controller 部署
 
+![Nova 官方吉祥物](../assets/mascots/nova.png){ align=right width="110" }
+
 ## 目的
 
 部署 Nova 的**控制面**：API server + scheduler + conductor + novncproxy。這是 OpenStack VM 管理的指揮中心。

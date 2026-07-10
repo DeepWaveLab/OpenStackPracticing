@@ -1,5 +1,7 @@
 # Day 3: Vault TLS 供應（OVN 專用路徑）
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 用 **Vault 1.8/stable**（舊版 OpenStack-charmers Vault）給 **OVN stack** 提供 TLS 憑證，繞過 `self-signed-certificates` 與 OVN charm 的 **tls-certificates interface 版本不相容** 問題。

@@ -1,5 +1,7 @@
 # Day 3: RabbitMQ 部署
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 部署 `rabbitmq-server`（AMQP broker），讓後面的 OpenStack 服務可以透過 `amqp` relation 拿 broker credentials。並整合 TLS（`certificates` relation）。

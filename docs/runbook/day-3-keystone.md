@@ -1,5 +1,7 @@
 # Day 3: Keystone 部署
 
+![Keystone 官方吉祥物](../assets/mascots/keystone.png){ align=right width="110" }
+
 ## 目的
 
 部署 OpenStack 的**第一個真正服務** — Keystone（Identity Service）。它會整合進我們的 mysql-innodb-cluster + self-signed-certificates，之後所有其他 OpenStack 服務都要跟 keystone integrate 註冊自己。

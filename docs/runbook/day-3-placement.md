@@ -1,5 +1,7 @@
 # Day 3: Placement 部署
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 部署 Placement — OpenStack 的 Resource Inventory 服務。記錄每台 compute node 的資源容量（vCPU/RAM/disk），Nova scheduler 排程時查它。

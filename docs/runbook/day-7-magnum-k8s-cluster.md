@@ -1,5 +1,7 @@
 # Day 7: Magnum K8s Cluster 實建
 
+![Magnum 官方吉祥物](../assets/mascots/magnum.png){ align=right width="110" }
+
 ## 目的
 
 用 Magnum 從零 provision 一個 K8s cluster：FCOS VM → kubeadm → 2 nodes Ready → `kubectl run`。驗證 Magnum+Heat+Nova+Neutron+OVN 整條鏈。

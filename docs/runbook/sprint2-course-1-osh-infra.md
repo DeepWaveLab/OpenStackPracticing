@@ -1,5 +1,7 @@
 # Sprint 2 / Course (1): openstack-helm-infra 部署
 
+![OpenStack-Helm 官方吉祥物](../assets/mascots/openstack-helm.png){ align=right width="100" }
+
 ## 目的
 
 部 OpenStack 的「依賴基礎設施」到 K8s：DB / MQ / cache / SDN data plane。

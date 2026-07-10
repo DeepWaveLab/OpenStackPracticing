@@ -1,5 +1,7 @@
 # Day 1: LXD + Juju 安裝
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 在 Azure VM 上裝 LXD（作為 Juju 的 cloud）+ Juju（deployment engine），並用 `/dev/sdb` 建 ZFS pool。

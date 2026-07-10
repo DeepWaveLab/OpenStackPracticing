@@ -1,5 +1,7 @@
 # Sprint 2 / Day 1: Ansible 概念 + Kolla-Ansible 安裝
 
+![Kolla-Ansible 官方吉祥物](../assets/mascots/kolla-ansible.png){ align=right width="100" }
+
 ## 目的
 
 Sprint 2 的 paradigm 是 Ansible-based deployment。本日：

@@ -1,5 +1,7 @@
 # Day 0: Azure VM 建置
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 在 Azure 上開一台 `Standard_E16s_v5` VM，作為整個 OpenStack 學習的實驗環境。

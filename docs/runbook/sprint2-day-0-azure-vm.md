@@ -1,5 +1,7 @@
 # Sprint 2 / Day 0: Azure VM 重建
 
+![OpenStack-Helm 官方吉祥物](../assets/mascots/openstack-helm.png){ align=right width="100" }
+
 ## 目的
 
 Sprint 1 teardown 之後重開一台 VM，準備給 Kolla-Ansible + Terraform 跑 Sprint 2 用。

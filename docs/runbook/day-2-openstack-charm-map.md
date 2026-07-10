@@ -1,5 +1,7 @@
 # Day 2: OpenStack Charm 架構地圖
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 在開始部署前，先把 **18 個 OpenStack charm 誰連誰** 看清楚，之後部署每個 charm 時知道它在大圖哪個位置。

@@ -1,5 +1,7 @@
 # Day 6: Magnum (Container Infrastructure) 部署
 
+![Magnum 官方吉祥物](../assets/mascots/magnum.png){ align=right width="110" }
+
 ## 目的
 
 部署 Magnum — K8s/Swarm cluster as a service。本 lab 最終目標：從 OpenStack 一條指令得到一個 K8s cluster。

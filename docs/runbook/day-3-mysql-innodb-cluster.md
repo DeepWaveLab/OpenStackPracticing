@@ -1,5 +1,7 @@
 # Day 3: MySQL InnoDB Cluster 部署（取代 Day 1 的 `mysql`）
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 部署 OpenStack 專用的 `mysql-innodb-cluster` charm，取代 Day 1 用於學習 relation 概念的 `mysql` charm。

@@ -1,5 +1,7 @@
 # Day 8: Storage 嘗試與 LXD 限制
 
+![Cinder 官方吉祥物](../assets/mascots/cinder.png){ align=right width="110" }
+
 ## 目的
 
 本 sprint 最後想補上 block storage（Cinder + Ceph 或 LVM backend）。這裡記**踩的限制**，不是成功步驟。結論：**LXD unprivileged container 不適合跑 storage service**。

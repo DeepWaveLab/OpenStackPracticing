@@ -1,5 +1,7 @@
 # Day 3: Network Stack（OVN + Neutron）部署
 
+![Neutron 官方吉祥物](../assets/mascots/neutron.png){ align=right width="110" }
+
 ## 目的
 
 部署 OpenStack 網路層 — 4 個 charm、13 條 relation 最複雜的一段。完成後可以建 virtual network / router / floating IP / security group。

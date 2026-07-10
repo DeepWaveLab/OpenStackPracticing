@@ -118,6 +118,7 @@ nav:
 
   - 歷史 · 前兩次嘗試:
       - previous-attempts.md
+      - "部署工具圖鑑(矩陣與晶片支援)": deployment-tools.md
       - "Sprint 1 · Juju + Charms(9 天)":
           - "Day 0 · Azure VM": runbook/day-0-azure-vm.md
           - "Day 1 · LXD + Juju install": runbook/day-1-lxd-juju-install.md

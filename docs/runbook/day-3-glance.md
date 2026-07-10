@@ -1,5 +1,7 @@
 # Day 3: Glance 部署
 
+![Glance 官方吉祥物](../assets/mascots/glance.png){ align=right width="110" }
+
 ## 目的
 
 部署 Glance — OpenStack 的 Image Registry。存 VM image（Ubuntu/CirrOS/...），Nova 開 VM 時從這裡拉。

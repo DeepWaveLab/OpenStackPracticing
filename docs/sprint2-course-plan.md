@@ -1,5 +1,7 @@
 # Sprint 2 課程規劃：OpenStack-Helm on K8s
 
+![OpenStack-Helm 官方吉祥物](assets/mascots/openstack-helm.png){ align=right width="100" }
+
 ## 決定
 
 **Sprint 2 直接走 OpenStack-Helm**，不走 Kolla-Ansible。

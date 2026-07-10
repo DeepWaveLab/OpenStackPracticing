@@ -1,5 +1,7 @@
 # Day 3: Horizon (openstack-dashboard) 部署
 
+![Horizon 官方吉祥物](../assets/mascots/horizon.png){ align=right width="110" }
+
 ## 目的
 
 補完 Install OpenStack 章第 10 個應用：**OpenStack 的 Web UI**。

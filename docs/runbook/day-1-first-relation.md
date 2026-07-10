@@ -1,5 +1,7 @@
 # Day 1: 第一次觀察 Juju Relation（mysql + self-signed-certificates）
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 用 CLI 指令親眼觀察 `juju integrate` 做了什麼 — 兩個不認識彼此的 charm 之間如何透過 relation data bag 自動交換資料。

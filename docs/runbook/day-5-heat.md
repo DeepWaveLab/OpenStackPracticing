@@ -1,5 +1,7 @@
 # Day 5: Heat (Orchestration) 部署
 
+![Heat 官方吉祥物](../assets/mascots/heat.png){ align=right width="110" }
+
 ## 目的
 
 部署 Heat，讓你能用 YAML 模板（HOT）一次建一整批 OpenStack 資源。

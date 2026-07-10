@@ -1,5 +1,7 @@
 # Day 1: Juju Bootstrap + 建立 openstack Model
 
+![OpenStack Charms 官方吉祥物](../assets/mascots/openstack-charms.png){ align=right width="90" }
+
 ## 目的
 
 Bootstrap 一個 Juju controller 到 LXD（取代 MaaS），並建立之後部署 OpenStack 用的 `openstack` model。
