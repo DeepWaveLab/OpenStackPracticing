@@ -148,7 +148,7 @@ flowchart LR
 
 ## 下一步
 
-- 想擴充這朵雲 → 從 **Manila** 或 **Prometheus/Grafana** 開始(上表第一梯隊)。
+- 想擴充這朵雲 → 這正是下一段課程的主題:[Day 12 · Sprint 4 預告](sprint3-day12-sprint4-preview.md)。
 - 想回顧整趟旅程的決策與教訓 → [Sprint 3 回顧](../sprint3-reflection.md)。
 - 想知道這條路線是怎麼從兩次失敗裡長出來的 → [前兩次嘗試](../previous-attempts.md)。
 

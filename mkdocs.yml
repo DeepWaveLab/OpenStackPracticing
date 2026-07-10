@@ -81,7 +81,7 @@ not_in_nav: |
 nav:
   - 首頁: index.md
 
-  - 課程主線(Day 0–10):
+  - 課程主線(Day 0–12):
       - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
       - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
       - "Day 2 · OpenStack 資源全流程": runbook/sprint3-day2-openstack-resource-flow.md
@@ -94,6 +94,7 @@ nav:
       - "Day 9 · Day-2 operations": runbook/sprint3-day9-day2-operations.md
       - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
       - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
+      - "Day 12 · 下一步的地圖:Sprint 4 預告": runbook/sprint3-day12-sprint4-preview.md
 
   - 排錯手冊:
       - solutions/README.md

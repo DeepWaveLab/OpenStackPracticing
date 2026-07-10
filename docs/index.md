@@ -60,7 +60,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | ![CloudKitty](assets/mascots/cloudkitty.png){ width="32" } | [CloudKitty](runbook/sprint3-day11-openstack-service-map.md) | 用量計費與費率管理 | Cost Explorer | Cloud Billing | Cost Management |
 | ![Masakari](assets/mascots/masakari.png){ width="32" } | [Masakari](runbook/sprint3-day11-openstack-service-map.md) | 虛擬機高可用與自動復原 | (EC2 內建自動復原) | (內建即時遷移) | (內建服務修復) |
 
-每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。
+每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。其中 **Swift(以 RGW 形式)、Manila、Designate、Zun、Trove 已排入 [Sprint 4 預告](runbook/sprint3-day12-sprint4-preview.md)**——下一段課程就拼這些。
 
 
 ## 從這裡出發
@@ -109,7 +109,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
 
-## 課程路徑(Day 0 → 11)
+## 課程路徑(Day 0 → 12)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
 
@@ -127,6 +127,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | [9](runbook/sprint3-day9-day2-operations.md) | Day-2 維運 | 滾動升版、node group、autoscaler |
 | [10](runbook/sprint3-day10-terraform-teardown.md) | Terraform 接管 + 拆除演練 | HCL 管 network/VM/LB |
 | [11](runbook/sprint3-day11-openstack-service-map.md) | 後日談:服務全景圖 | 用過的 11 個服務盤點 + 沒用到的版圖 |
+| [12](runbook/sprint3-day12-sprint4-preview.md) | 下一步的地圖:Sprint 4 預告 | 服務擴充、內部原理、維運實務、水平擴展 |
 
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 
