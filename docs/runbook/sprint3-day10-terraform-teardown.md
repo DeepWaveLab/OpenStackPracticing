@@ -6,6 +6,8 @@
 
 ### 1. Terraform vs Heat:兩種 IaC 的定位
 
+![Terraform 官方標誌](../assets/logos/terraform.png){ align=right width="90" }
+
 | | Heat(Day 5)| **Terraform(本日)** |
 |---|---|---|
 | 狀態 | 存在 heat DB(OpenStack 內) | 外部 tfstate(檔案/後端)|
@@ -135,3 +137,7 @@ kolla-ansible deploy -i ~/all-in-one              # core + octavia + barbican + 
 十天走完:Azure lab → Kolla AIO → OpenStack 全資源流 → Cinder/Octavia/Barbican/Heat → Magnum CAPI driver → E2E workload cluster(Sprint 1 三個未完成項全數補完)→ Day-2 ops → Terraform。
 
 還有一篇不用動手的[後日談:OpenStack 服務全景圖](sprint3-day11-openstack-service-map.md),把這次用過與沒用過的服務一次盤點;回顧與產業對照見 [Sprint 3 回顧](../sprint3-reflection.md)。
+
+---
+
+*Terraform 標誌為 HashiCorp 之商標,此處作社群教學用途。*

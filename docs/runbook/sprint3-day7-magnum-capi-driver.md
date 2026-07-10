@@ -10,6 +10,8 @@
 
 ## 第一次接觸 Magnum?先讀這段
 
+![Magnum 的官方吉祥物](../assets/mascots/magnum.png){ align=right width="110" }
+
 ### Magnum 是什麼
 
 **Magnum 是 OpenStack 版的「managed Kubernetes 服務」**——就像 AWS 的 EKS、GCP 的 GKE:使用者不用懂怎麼裝 K8s,對雲說「給我一座 3 節點的 cluster」,雲就生一座給你。

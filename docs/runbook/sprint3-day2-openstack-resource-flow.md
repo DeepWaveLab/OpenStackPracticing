@@ -11,13 +11,15 @@
 
 OpenStack 就是**自己架的 AWS**:一組開源服務,把你的實體機器變成可以「開 VM、切網路、掛硬碟」的雲。每個功能由一個獨立服務負責,名字都很怪,但對照公有雲就秒懂:
 
-| OpenStack 服務 | 它管什麼 | AWS 對應 |
-|---|---|---|
-| **Keystone** | 帳號、專案(租戶)、權限、發 token | IAM |
-| **Glance** | VM 開機用的作業系統映像檔 | AMI |
-| **Nova** | 開 VM、排程到哪台實體機 | EC2 |
-| **Neutron** | 虛擬網路、路由器、防火牆規則 | VPC |
-| **Horizon** | 網頁儀表板(本課程刻意不用) | AWS Console |
+| | OpenStack 服務 | 它管什麼 | AWS 對應 |
+|---|---|---|---|
+| ![Keystone](../assets/mascots/keystone.png){ width="56" } | **Keystone** | 帳號、專案(租戶)、權限、發 token | IAM |
+| ![Glance](../assets/mascots/glance.png){ width="56" } | **Glance** | VM 開機用的作業系統映像檔 | AMI |
+| ![Nova](../assets/mascots/nova.png){ width="56" } | **Nova** | 開 VM、排程到哪台實體機 | EC2 |
+| ![Neutron](../assets/mascots/neutron.png){ width="56" } | **Neutron** | 虛擬網路、路由器、防火牆規則 | VPC |
+| ![Horizon](../assets/mascots/horizon.png){ width="56" } | **Horizon** | 網頁儀表板(本課程刻意不用) | AWS Console |
+
+> 服務旁的小圖是各專案的**官方吉祥物**——OpenStack 社群給每個專案都畫了一隻。之後每天的主角出場都會帶著臉,記臉比記名字快。
 
 ### 開一台 VM 需要哪些「零件」?
 

@@ -7,6 +7,10 @@
 
 ### 1. 三層互動:一個 `cluster create` 背後發生什麼
 
+![Kubernetes 官方標誌](../assets/logos/kubernetes.png){ align=right width="90" }
+
+今天的終點是一座**真正的 Kubernetes**——不是管理用的 kind,而是跑你工作負載的 workload cluster。整條生產線長這樣:
+
 ```
 openstack coe cluster create
     │
@@ -36,6 +40,14 @@ openstack coe cluster create
 
 - **`Service type=LoadBalancer`**:CCM 監到後呼叫 **Octavia** 建 LB(amphora),VIP 掛 ext-net FIP → `EXTERNAL-IP`。node 是 LB 的 member(NodePort)。
 - **PVC**:`openstack-cinder-csi` 動態供裝 → 建 **Cinder volume** → attach 到 pod 所在 node → mount。
+
+今天的三項驗收,每一項背後都是一個你前幾天親手部署過的服務在動工:
+
+| 你在 K8s 宣告的 | 幕後動工的 | 你在哪天認識它 |
+|---|---|---|
+| 節點(`kubectl get nodes`) | ![Nova](../assets/mascots/nova.png){ width="48" } **Nova** 開 VM | Day 1–2 |
+| `Service type=LoadBalancer` | ![Octavia](../assets/mascots/octavia.png){ width="48" } **Octavia** 建 LB | Day 4 |
+| `PVC` | ![Cinder](../assets/mascots/cinder.png){ width="48" } **Cinder** 建 volume | Day 3 |
 
 ## 步驟
 
@@ -155,3 +167,7 @@ Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部解決:
 ## 下一步(Day 9)
 
 Day-2 operations:用 `k8s-v1.34.8-azure` template 驗 cluster 升版(CAPI rolling,如 v1.34→v1.35,需先上傳對應 node image)、node group、cluster-autoscaler。開工前照 Pre-flight §0 確認 kind/magnum/octavia o-hm0 就緒。
+
+---
+
+*Kubernetes 標誌為 CNCF(Linux Foundation)之商標;OpenStack 吉祥物為 OpenInfra Foundation 官方資產。此處均作社群教學用途。*

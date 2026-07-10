@@ -12,9 +12,11 @@
 
 ### 問題:誰來「蓋」K8s cluster?
 
+![Cluster API 官方標誌](../assets/logos/cluster-api.svg){ align=right width="130" }
+
 手動裝一座 K8s(開 VM、裝 kubeadm、join 節點、配網路)又煩又難維護。業界的答案是 **Cluster API(CAPI)**:把「一座 K8s cluster」本身變成一種宣告式資源——你宣告「我要 1 台 control plane + 2 台 worker、版本 v1.34」,一組 controller(常駐程式)就自動把它蓋出來、壞了修好、要升版就滾動換新。
 
-**CAPI 有個先天限制,決定了今天要做的一切**:CAPI 的 controller 是「K8s 的原生程式」,**必須住在某座 K8s 裡才能跑**。所以要先有一座小 K8s 專門給它們住——這座就叫 **management cluster(管理叢集)**,它不跑你的應用程式,只跑「造叢集的機器人」。
+**CAPI 有個先天限制,決定了今天要做的一切**:CAPI 的 controller 是「K8s 的原生程式」,**必須住在某座 K8s 裡才能跑**。所以要先有一座小 K8s 專門給它們住——這座就叫 **management cluster(管理叢集)**,它不跑你的應用程式,只跑「造叢集的機器人」。CAPI 官方標誌的副標把這個哲學講完了:**"It's Kubernetes all the way down"**(一路往下全是 Kubernetes)。
 
 比喻:**management cluster 是工廠**,裡面的 CAPI/CAPO controller 是生產機器人;丟一份藍圖(CAPI 的 YAML)進工廠,機器人就去呼叫 OpenStack 把真正的 cluster(**workload cluster**)蓋出來。
 
@@ -90,7 +92,11 @@ CAPI 把「建一座 K8s cluster」變成宣告式的 K8s 資源。有兩種 clu
 
 ### 2. 為什麼 management cluster 用 kind
 
+![kind 官方標誌:瓶中船](../assets/logos/kind.png){ align=right width="160" }
+
 management cluster 只跑 controllers(記憶體帳 ~6 GB),不跑 workload。單機 lab 用 **kind**(K8s-in-Docker)最省事 —— 一個 docker 容器就是一整座 K8s。生產環境會用專用 HA cluster(controllers 掛了不能影響已生的 workload cluster 的 day-2 操作)。
+
+kind 的官方標誌就是一艘**瓶中船**——把 K8s 之船裝進(Docker 的)瓶子裡,看一眼就懂它在做什麼。
 
 ### 3. CAPO v0.14 的新依賴:ORC
 
@@ -210,3 +216,7 @@ kind 的 docker network 帶 IPv6 ULA(`fc00::/64`)且有 v6 default route,`getent
 ## 下一步(Day 7)
 
 Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。
+
+---
+
+*Cluster API 與 kind 標誌為 CNCF(Linux Foundation)之商標與專案資產,此處作社群教學用途。*

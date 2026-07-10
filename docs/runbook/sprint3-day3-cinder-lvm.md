@@ -10,6 +10,8 @@
 
 ## 第一次接觸區塊儲存?先讀這段
 
+![Cinder 的官方吉祥物](../assets/mascots/cinder.png){ align=right width="110" }
+
 VM 的磁碟分兩種,差別就像**機殼內建硬碟 vs 外接硬碟**:
 
 | | ephemeral disk(Day 2 開的 VM 用這種) | **volume(今天的主角)** |

@@ -12,11 +12,15 @@
 
 ### Barbican:雲的保險箱
 
+![Barbican 的官方吉祥物](../assets/mascots/barbican.png){ align=right width="100" }
+
 寫過應用程式的人都遇過:資料庫密碼、API 金鑰要放哪?寫死在程式碼裡會跟著進 git,放設定檔會被翻到。**Barbican 就是雲平台的保險箱**:秘密加密後集中存放,誰能開保險箱由 Keystone 權限控制。AWS 對應:**Secrets Manager / KMS**。
 
 本課程部它的真正理由:**Day 7 的 Magnum 開 K8s cluster 時,cluster 的 CA 憑證(等於 cluster 的萬能鑰匙)必須有個安全的家**——那個家就是 Barbican。
 
 ### Heat:照藍圖蓋房子
+
+![Heat 的官方吉祥物](../assets/mascots/heat.png){ align=right width="100" }
 
 Day 2 你手打了十幾條指令才開出一台 VM:建網路、建 router、開 SG、開機、掛 FIP……順序還不能錯。**Heat 讓你把這整組資源寫成一份 YAML 藍圖(叫 HOT template),一個指令蓋好、一個指令全拆。** AWS 對應:**CloudFormation**;思想上就是 Terraform 的 OpenStack 原生版。
 

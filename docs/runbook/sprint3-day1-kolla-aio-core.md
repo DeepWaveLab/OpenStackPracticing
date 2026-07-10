@@ -10,6 +10,8 @@
 
 ## 第一次接觸 Kolla-Ansible?先讀這段
 
+![Kolla-Ansible 的官方吉祥物:無尾熊](../assets/mascots/kolla-ansible.png){ align=right width="110" }
+
 ### 要解決的問題:OpenStack 很難「裝」
 
 OpenStack 不是一個程式,是**十幾個服務的集合**——每個服務要自己的設定檔、資料庫、訊息佇列連線,彼此還要知道對方的位址和密碼。全部手動裝,光把設定串對就要好幾天,而且無法重現。所以實務上**沒有人手動裝 OpenStack**,一定用部署工具。

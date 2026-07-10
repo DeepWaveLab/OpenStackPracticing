@@ -13,7 +13,7 @@
 
 這也是為什麼 Kolla-Ansible 的 `globals.yml` 裡全是 `enable_xxx` 開關:你在 Day 3(Cinder)、Day 4(Octavia)、Day 5(Barbican)、Day 7(Magnum)做的事,本質上就是「從積木盒裡再拿一塊出來拼上去」。
 
-![Kolla-Ansible](../assets/mascots/kolla-ansible.png){ width="88", align=right }
+![Kolla-Ansible](../assets/mascots/kolla-ansible.png){ align=right width="88" }
 
 順帶一提:OpenStack 社群給每個專案都畫了**官方吉祥物**,連我們用了十天的部署工具 Kolla-Ansible 都有——一隻無尾熊(Kolla 的名字就是從 koala 來的)。這一篇會讓每個服務的吉祥物跟著登場,**記臉比記名字快**。
 
@@ -43,6 +43,20 @@ flowchart TB
     core --> used
     core -.->|"隨時可以 enable_* 加上"| unused
 ```
+
+## 官方全景圖:OpenStack Map
+
+上面是本課程視角的簡圖;OpenInfra Foundation 其實有維護一張**官方版全景圖**(類似 CNCF Landscape 的角色),每半年左右更新一次:
+
+[![OpenStack Map(官方,版本 2026.04.01)](../assets/openstack-map.png)](https://www.openstack.org/software/)
+
+*(點圖可到 openstack.org/software 看互動版)*
+
+這張圖值得多看三十秒:
+
+- **中間主體**就是本篇要盤點的服務版圖——你用過的 11 個全在裡面(Shared Services 那排:Keystone/Placement/Glance/Barbican,一天內就能對出來)。
+- **下方「Lifecycle Management」格子藏著本課程的彩蛋**:Kolla-Ansible、OpenStack-Charms、OpenStack-Helm 三個部署工具並排站在一起——正好就是[三次嘗試](../previous-attempts.md)各自走過的路線。官方把它們畫在同一格,我們用三個 Sprint 親身比完了。
+- **右側「Operations Tooling」**(Ceilometer/Watcher/CloudKitty/Tempest)是本課完全沒碰的維運面,對照下面第二梯隊的表。
 
 ## 這門課用過的服務(11 個)
 
@@ -140,4 +154,4 @@ flowchart LR
 
 ---
 
-*本頁吉祥物圖像為 OpenInfra Foundation 的官方 [OpenStack Project Mascots](https://www.openstack.org/project-mascots/),版權屬原基金會,此處作社群教學用途。*
+*本頁吉祥物圖像與 OpenStack Map 為 OpenInfra Foundation 官方資產([Project Mascots](https://www.openstack.org/project-mascots/)、[OpenStack Map](https://www.openstack.org/software/)),版權屬原基金會,此處作社群教學用途。*
