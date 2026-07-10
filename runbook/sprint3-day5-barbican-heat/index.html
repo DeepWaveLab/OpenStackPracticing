@@ -812,10 +812,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -826,19 +826,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-openstack-cli-stack-secret" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. openstack CLI 沒有 stack / secret 子命令(必踩)
+        地雷 1:openstack CLI 沒有 stack / secret 子命令(必踩)
       
     </span>
   </a>
@@ -846,10 +846,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-tags-barbican-haproxy" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. --tags barbican 是否自帶 haproxy?(查證,非地雷)
+        地雷 2:--tags barbican 是否自帶 haproxy?(查證,非地雷)
       
     </span>
   </a>
@@ -3182,10 +3182,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3196,19 +3196,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-openstack-cli-stack-secret" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. openstack CLI 沒有 stack / secret 子命令(必踩)
+        地雷 1:openstack CLI 沒有 stack / secret 子命令(必踩)
       
     </span>
   </a>
@@ -3216,10 +3216,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-tags-barbican-haproxy" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. --tags barbican 是否自帶 haproxy?(查證,非地雷)
+        地雷 2:--tags barbican 是否自帶 haproxy?(查證,非地雷)
       
     </span>
   </a>
@@ -3295,11 +3295,12 @@
 <h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-barbicanopenstack-secretcert">1. Barbican:OpenStack 的 secret/cert 倉庫<a class="headerlink" href="#1-barbicanopenstack-secretcert" title="Permanent link">&para;</a></h3>
 <p>Barbican 是 key-manager 服務,把 secret(密碼、API key)、對稱金鑰、X.509 憑證/私鑰<strong>加密後存 DB</strong>,用 keystone 做存取控制。三個容器:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openstack secret ... ─► barbican-api(:9311)─► MariaDB(payload 用 KEK 加密後寫入)
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                              │
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        barbican-worker ◄─────┘   非同步任務:憑證簽發(CA plugin)、順序產金鑰
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>        barbican-keystone-listener   收 keystone notification:project 刪除時清該 project 的 secret
-</span></code></pre></div>
+<pre class="mermaid"><code>flowchart LR
+    CLI["openstack secret …"] --&gt; API["barbican-api(:9311)"]
+    API --&gt;|"payload 先用 KEK 加密"| DB[("MariaDB")]
+    API -.-&gt;|"丟非同步任務"| W["barbican-worker&lt;br/&gt;簽憑證、產金鑰"]
+    KS["Keystone 事件"] -.-&gt;|"project 被刪"| KL["barbican-keystone-listener&lt;br/&gt;連帶清掉該 project 的 secret"]
+    KL -.-&gt; DB</code></pre>
 <ul>
 <li><strong>api</strong>:REST 入口,走 haproxy VIP(本 lab <code>10.0.0.4:9311</code>)</li>
 <li><strong>worker</strong>:非同步作業(order 產金鑰、CA 簽憑證)</li>
@@ -3355,143 +3356,140 @@
 <p>本 lab 不改,直接吃 <code>simple_crypto</code>,零額外設定。</p>
 <h3 id="4-heat-dag-terraform">4. Heat:宣告式編排 + 依賴 DAG(對照 Terraform)<a class="headerlink" href="#4-heat-dag-terraform" title="Permanent link">&para;</a></h3>
 <p>Heat 吃 <strong>HOT</strong>(Heat Orchestration Template,YAML),把一組 OpenStack 資源當成一個 <strong>stack</strong> 一起生/滅。核心價值是<strong>依賴排序</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>resources 之間用 get_resource / get_attr 互相引用
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>   → Heat 自動推導出 DAG,決定建立順序、能並行的並行
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>   sg ─► port ─► server
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>              └─► fip        (server 與 fip 都只依賴 port,故並行建立)
-</span></code></pre></div>
+<p>resources 之間用 <code>get_resource</code> / <code>get_attr</code> 互相引用,Heat 據此自動推導出依賴圖、決定建立順序——能並行的就並行。這正是本章開頭那張圖畫的事:sg 先建,port 引用 sg 所以第二,server 和 fip 都只依賴 port,所以<strong>兩者自動並行建立</strong>。</p>
 <p><code>stack delete</code> 反向拆一次全清,等同 Terraform 的 <code>apply</code> / <code>destroy</code>。差別:Heat 是 OpenStack 原生、狀態存在 heat DB;Terraform 是外部工具、狀態存 tfstate(Day 10 會用 terraform-provider-openstack 做對照)。</p>
 <p><strong>與 Magnum 的關係</strong>:Magnum 舊的 heat driver 底層就是拿 HOT 開 cluster(Sprint 1 卡點正是那些內嵌 HOT 的 image URL 失效)。本 Sprint 改走 CAPI driver 不再用 Heat 開 cluster,但 Heat 本身是 IaC 教學必修,故獨立複習。</p>
 <h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="part-a-barbican">Part A — Barbican<a class="headerlink" href="#part-a-barbican" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 1. globals.yml 開 barbican(預設 #enable_barbican: &quot;no&quot;)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;\n# Day 5: enable Barbican (secret/cert store for Magnum)\nenable_barbican: &quot;yes&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># 2. targeted deploy(--tags barbican 已自帶:建 DB(bootstrap.yml)、註冊 keystone</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1">#    endpoint(register.yml)、barbican 的 haproxy frontend(site.yml 內 barbican 的</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">#    loadbalancer 子任務掛在 barbican tag);加 loadbalancer 確保 haproxy reload)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>barbican,loadbalancer
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="c1"># 3. 驗證 + secret 存取往返</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>key-manager<span class="w">          </span><span class="c1"># 出現 barbican / key-manager</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>pip<span class="w"> </span>install<span class="w"> </span>python-barbicanclient<span class="w">                  </span><span class="c1"># osc plugin 不隨 openstackclient</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="nv">SREF</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>secret<span class="w"> </span>store<span class="w"> </span>--name<span class="w"> </span>day5-demo<span class="w"> </span>--payload<span class="w"> </span><span class="s1">&#39;Sup3rS3cretDemo!&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">         </span>-c<span class="w"> </span><span class="s1">&#39;Secret href&#39;</span><span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
-</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>openstack<span class="w"> </span>secret<span class="w"> </span>list
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>openstack<span class="w"> </span>secret<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SREF</span><span class="s2">&quot;</span><span class="w"> </span>--payload<span class="w"> </span>-f<span class="w"> </span>value<span class="w">     </span><span class="c1"># 應原值取回 Sup3rS3cretDemo!</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 1. globals.yml 開 barbican(預設 #enable_barbican: &quot;no&quot;)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">echo</span><span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;\n# Day 5: enable Barbican (secret/cert store for Magnum)\nenable_barbican: &quot;yes&quot;&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># 2. targeted deploy(--tags barbican 已自帶:建 DB(bootstrap.yml)、註冊 keystone</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1">#    endpoint(register.yml)、barbican 的 haproxy frontend(site.yml 內 barbican 的</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1">#    loadbalancer 子任務掛在 barbican tag);加 loadbalancer 確保 haproxy reload)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>barbican,loadbalancer
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># 3. 驗證 + secret 存取往返</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>key-manager<span class="w">          </span><span class="c1"># 出現 barbican / key-manager</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>pip<span class="w"> </span>install<span class="w"> </span>python-barbicanclient<span class="w">                  </span><span class="c1"># osc plugin 不隨 openstackclient</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nv">SREF</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>secret<span class="w"> </span>store<span class="w"> </span>--name<span class="w"> </span>day5-demo<span class="w"> </span>--payload<span class="w"> </span><span class="s1">&#39;Sup3rS3cretDemo!&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">         </span>-c<span class="w"> </span><span class="s1">&#39;Secret href&#39;</span><span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>openstack<span class="w"> </span>secret<span class="w"> </span>list
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>openstack<span class="w"> </span>secret<span class="w"> </span>get<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SREF</span><span class="s2">&quot;</span><span class="w"> </span>--payload<span class="w"> </span>-f<span class="w"> </span>value<span class="w">     </span><span class="c1"># 應原值取回 Sup3rS3cretDemo!</span>
 </span></code></pre></div>
 <h3 id="part-b-heat">Part B — Heat（已部署，只做實戰）<a class="headerlink" href="#part-b-heat" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-heatclient<span class="w">                        </span><span class="c1"># 同樣要裝 osc plugin</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh<span class="w">                               </span><span class="c1"># 資源在 demo project</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-heatclient<span class="w">                        </span><span class="c1"># 同樣要裝 osc plugin</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh<span class="w">                               </span><span class="c1"># 資源在 demo project</span>
 </span></code></pre></div>
 <p>HOT template <code>~/day5-heat-demo.yaml</code>:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">heat_template_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2021-04-16</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sprint3 Day5 Heat demo — SG + Port + cirros Server + FloatingIP on net1.</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">parameters</span><span class="p">:</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">cirros</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">flavor</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">m1.tiny</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">net</span><span class="p">:</span><span class="w">     </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">net1</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">ext_net</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">ext-net</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w">     </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">oslab</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nt">resources</span><span class="p">:</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="nt">sg</span><span class="p">:</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::SecurityGroup</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day5-heat-sg</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">      </span><span class="nt">rules</span><span class="p">:</span>
-</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">icmp</span>
-</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> protocol</span><span class="p">:</span><span class="w"> </span><span class="nv">tcp</span><span class="p p-Indicator">,</span><span class="nt"> port_range_min</span><span class="p">:</span><span class="w"> </span><span class="nv">22</span><span class="p p-Indicator">,</span><span class="nt"> port_range_max</span><span class="p">:</span><span class="w"> </span><span class="nv">22</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span>
-</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::Port</span>
-</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">      </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">net</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a><span class="w">      </span><span class="nt">security_groups</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">sg</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="w">  </span><span class="nt">server</span><span class="p">:</span>
-</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Nova::Server</span>
-</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day5-heat-vm</span>
-</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">      </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">      </span><span class="nt">flavor</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">flavor</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="w">      </span><span class="nt">key_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="w">      </span><span class="nt">networks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> port</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">port</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">]</span>
-</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">  </span><span class="nt">fip</span><span class="p">:</span>
-</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::FloatingIP</span>
-</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
-</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="w">      </span><span class="nt">floating_network</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">ext_net</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="w">      </span><span class="nt">port_id</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">port</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a>
-</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="nt">outputs</span><span class="p">:</span>
-</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="w">  </span><span class="nt">server_id</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">server</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="w">  </span><span class="nt">internal_ip</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">server</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">first_address</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
-</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="w">  </span><span class="nt">floating_ip</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fip</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">floating_ip_address</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">heat_template_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2021-04-16</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sprint3 Day5 Heat demo — SG + Port + cirros Server + FloatingIP on net1.</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">parameters</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">cirros</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">flavor</span><span class="p">:</span><span class="w">  </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">m1.tiny</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">net</span><span class="p">:</span><span class="w">     </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">net1</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">ext_net</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">ext-net</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">key</span><span class="p">:</span><span class="w">     </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="p p-Indicator">,</span><span class="nt"> default</span><span class="p">:</span><span class="w"> </span><span class="nv">oslab</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">sg</span><span class="p">:</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::SecurityGroup</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day5-heat-sg</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">      </span><span class="nt">rules</span><span class="p">:</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">icmp</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> protocol</span><span class="p">:</span><span class="w"> </span><span class="nv">tcp</span><span class="p p-Indicator">,</span><span class="nt"> port_range_min</span><span class="p">:</span><span class="w"> </span><span class="nv">22</span><span class="p p-Indicator">,</span><span class="nt"> port_range_max</span><span class="p">:</span><span class="w"> </span><span class="nv">22</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">  </span><span class="nt">port</span><span class="p">:</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::Port</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">      </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">net</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">      </span><span class="nt">security_groups</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">sg</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">  </span><span class="nt">server</span><span class="p">:</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Nova::Server</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">day5-heat-vm</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">      </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">      </span><span class="nt">flavor</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">flavor</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">      </span><span class="nt">key_name</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">      </span><span class="nt">networks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> port</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">port</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">  </span><span class="nt">fip</span><span class="p">:</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Neutron::FloatingIP</span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">      </span><span class="nt">floating_network</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">ext_net</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">      </span><span class="nt">port_id</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">port</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="nt">outputs</span><span class="p">:</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">  </span><span class="nt">server_id</span><span class="p">:</span><span class="w">   </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">server</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">  </span><span class="nt">internal_ip</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">server</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">first_address</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">  </span><span class="nt">floating_ip</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fip</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">floating_ip_address</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </span></code></pre></div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>orchestration<span class="w"> </span>template<span class="w"> </span>validate<span class="w"> </span>-t<span class="w"> </span>~/day5-heat-demo.yaml<span class="w">   </span><span class="c1"># 語法檢查</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>openstack<span class="w"> </span>stack<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>~/day5-heat-demo.yaml<span class="w"> </span>--wait<span class="w"> </span>day5-stack<span class="w">     </span><span class="c1"># DAG:sg→port→server+fip</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>openstack<span class="w"> </span>stack<span class="w"> </span>output<span class="w"> </span>show<span class="w"> </span>day5-stack<span class="w"> </span>--all<span class="w">                          </span><span class="c1"># 看 outputs</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>openstack<span class="w"> </span>stack<span class="w"> </span>resource<span class="w"> </span>list<span class="w"> </span>day5-stack<span class="w">                              </span><span class="c1"># 4 個資源</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>openstack<span class="w"> </span>stack<span class="w"> </span>delete<span class="w"> </span>--yes<span class="w"> </span>--wait<span class="w"> </span>day5-stack<span class="w">                        </span><span class="c1"># 一條全拆</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>orchestration<span class="w"> </span>template<span class="w"> </span>validate<span class="w"> </span>-t<span class="w"> </span>~/day5-heat-demo.yaml<span class="w">   </span><span class="c1"># 語法檢查</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>stack<span class="w"> </span>create<span class="w"> </span>-t<span class="w"> </span>~/day5-heat-demo.yaml<span class="w"> </span>--wait<span class="w"> </span>day5-stack<span class="w">     </span><span class="c1"># DAG:sg→port→server+fip</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>openstack<span class="w"> </span>stack<span class="w"> </span>output<span class="w"> </span>show<span class="w"> </span>day5-stack<span class="w"> </span>--all<span class="w">                          </span><span class="c1"># 看 outputs</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>openstack<span class="w"> </span>stack<span class="w"> </span>resource<span class="w"> </span>list<span class="w"> </span>day5-stack<span class="w">                              </span><span class="c1"># 4 個資源</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openstack<span class="w"> </span>stack<span class="w"> </span>delete<span class="w"> </span>--yes<span class="w"> </span>--wait<span class="w"> </span>day5-stack<span class="w">                        </span><span class="c1"># 一條全拆</span>
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>barbican 容器</td>
 <td>api / worker / keystone-listener 全 Up (healthy)</td>
-<td>✅ 3/3 healthy</td>
+<td>3/3 healthy</td>
 </tr>
 <tr>
 <td>key-manager endpoint</td>
 <td>internal + public 註冊成功</td>
-<td>✅ <code>http://10.0.0.4:9311</code></td>
+<td><code>http://10.0.0.4:9311</code></td>
 </tr>
 <tr>
 <td><strong>secret 往返</strong></td>
 <td>store 後 get --payload 原值取回</td>
-<td>✅ <code>Sup3rS3cretDemo!</code> 完全一致</td>
+<td><code>Sup3rS3cretDemo!</code> 完全一致</td>
 </tr>
 <tr>
 <td>deploy 隔離性</td>
-<td>不動到 Day 4 的 Octavia/Redis</td>
-<td>✅ octavia play 被 loadbalancer tag 掃到但 <code>changed=0</code>;<code>enable_redis: yes</code> 已在 globals</td>
+<td>增量部署不動到 Day 4 部好的 Octavia</td>
+<td>Octavia 相關 task 全部 <code>changed=0</code>,確認未被動到</td>
 </tr>
 <tr>
 <td>heat template validate</td>
 <td>語法通過、參數解析正確</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td><strong>stack create</strong></td>
 <td>CREATE_COMPLETE,依賴排序正確</td>
-<td>✅ sg→port→(server‖fip),cirros ~14s ACTIVE</td>
+<td>sg→port→(server‖fip),cirros ~14s ACTIVE</td>
 </tr>
 <tr>
 <td>stack outputs</td>
 <td>internal_ip / floating_ip / server_id 取得</td>
-<td>✅ 10.10.10.194 / 172.24.4.149</td>
+<td>10.10.10.194 / 172.24.4.149</td>
 </tr>
 <tr>
 <td>stack delete</td>
 <td>一條拆掉全部 4 資源,無殘留</td>
-<td>✅ stack/server/sg 全清空</td>
+<td>stack/server/sg 全清空</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_4">踩雷<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="1-openstack-cli-stack-secret">1. openstack CLI 沒有 <code>stack</code> / <code>secret</code> 子命令(必踩)<a class="headerlink" href="#1-openstack-cli-stack-secret" title="Permanent link">&para;</a></h3>
+<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:openstack CLI 沒有 <code>stack</code> / <code>secret</code> 子命令(必踩)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p><code>openstack stack ...</code> 與 <code>openstack secret ...</code> 不隨 <code>python-openstackclient</code> 內建 —— 它們是各自 client 的 <strong>osc plugin</strong>。乾淨 venv 只會回 <code>is not an openstack command</code>。修:<code>pip install python-heatclient python-barbicanclient</code>。同 Day 4 的 <code>python-octaviaclient</code>,這是 kolla venv 的通則:<strong>每個非 core 服務的 CLI 都要各自 pip 裝 plugin</strong>。</p>
-<h3 id="2-tags-barbican-haproxy">2. <code>--tags barbican</code> 是否自帶 haproxy?(查證,非地雷)<a class="headerlink" href="#2-tags-barbican-haproxy" title="Permanent link">&para;</a></h3>
+<h3 id="mine-2">地雷 2:<code>--tags barbican</code> 是否自帶 haproxy?(查證,非地雷)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p>擔心 targeted deploy 漏掉 barbican 的 haproxy frontend 導致 endpoint 打不通。動手前讀 <code>~/kolla-venv/share/kolla-ansible/ansible/site.yml</code>:loadbalancer play 內對每個服務有 <code>include_role: loadbalancer, tasks_from: loadbalancer</code> 的子任務,barbican 那筆明確 <code>tags: barbican</code>(L129-131)。<strong>結論:<code>--tags barbican</code> 本身就會配 barbican 的 haproxy frontend</strong>;本 lab 仍加 <code>loadbalancer</code> 求穩(保證 haproxy reload),實測 <code>changed=18 failed=0</code> 一次過。教訓同 Day 4:tag 行為以 <code>site.yml</code> 原始碼為準,別猜。</p>
 <h2 id="day-6">下一步(Day 6)<a class="headerlink" href="#day-6" title="Permanent link">&para;</a></h2>
 <p>Cluster API 原理 + management cluster:kind 起 CAPI mgmt cluster、<code>clusterctl init</code> 裝 CAPO,為 Day 7 的 Magnum CAPI driver 整合鋪路。Barbican(本日)+ Heat 複習到此,Magnum 的兩塊前置依賴(憑證倉庫 + 編排概念)都就緒。</p>

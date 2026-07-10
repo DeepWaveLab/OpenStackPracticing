@@ -902,10 +902,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -916,19 +916,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-instance-vs-subnet-orderingterraform-provider-openstack" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
+        地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
       
     </span>
   </a>
@@ -936,10 +936,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-provider" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. provider 認證
+        地雷 2:provider 認證
       
     </span>
   </a>
@@ -3093,10 +3093,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3107,19 +3107,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-instance-vs-subnet-orderingterraform-provider-openstack" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
+        地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
       
     </span>
   </a>
@@ -3127,10 +3127,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-provider" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. provider 認證
+        地雷 2:provider 認證
       
     </span>
   </a>
@@ -3256,7 +3256,7 @@
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="p">}</span>
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;openstack_compute_instance_v2&quot;</span><span class="w"> </span><span class="nv">&quot;tf_vm&quot;</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">  </span><span class="na">name</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tf-vm&quot;</span>
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">  </span><span class="na">depends_on</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">openstack_networking_router_interface_v2.tf_ri</span><span class="p">]</span><span class="c1">   # ← 見踩雷#1</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">  </span><span class="na">depends_on</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">openstack_networking_router_interface_v2.tf_ri</span><span class="p">]</span><span class="c1">   # ← 原因見下方地雷 1</span>
 </span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">  </span><span class="na">image_name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cirros&quot;; flavor_name = &quot;m1.tiny&quot;; key_pair = &quot;k8s-admin&quot;</span>
 </span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">  </span><span class="nb">network</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="na">uuid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_networking_network_v2.tf_net.id</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="p">}</span>
@@ -3277,42 +3277,43 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>terraform<span class="w"> </span>output<span class="w">        </span><span class="c1"># tf_vm_ip / tf_lb_vip</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>terraform<span class="w"> </span>destroy<span class="w"> </span>-auto-approve<span class="w">    </span><span class="c1"># 一鍵拆 7 資源(含 amphora)</span>
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>provider auth</td>
 <td>OS_* env 認證成功</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>apply</td>
 <td>network/subnet/router/VM/LB/listener 全建</td>
-<td>✅ 7 資源;LB amphora ACTIVE</td>
+<td>7 資源;LB amphora ACTIVE</td>
 </tr>
 <tr>
 <td>outputs</td>
 <td>VM/LB IP 取得</td>
-<td>✅ tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234</td>
+<td>tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234</td>
 </tr>
 <tr>
 <td><strong>teardown</strong></td>
 <td><code>terraform destroy</code> 清乾淨、OpenStack 端 0 殘留</td>
-<td>✅ 7 destroyed</td>
+<td>7 destroyed</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_2">踩雷<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="1-instance-vs-subnet-orderingterraform-provider-openstack">1. instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)<a class="headerlink" href="#1-instance-vs-subnet-orderingterraform-provider-openstack" title="Permanent link">&para;</a></h3>
+<h2 id="_2">地雷記錄<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p><code>openstack_compute_instance_v2</code> 只用 <code>network { uuid = ... }</code> 引用 network、<strong>沒引用 subnet</strong>,TF 會並行建、VM 送到 Nova 時 subnet 還沒掛上 → <code>Network ... requires a subnet in order to boot instances on</code> (HTTP 400)。修:給 instance 加 <code>depends_on = [openstack_networking_router_interface_v2.tf_ri]</code>(或 subnet),強制順序。這是 provider 的 dependency graph 抓不到隱性依賴的典型情況。</p>
-<h3 id="2-provider">2. provider 認證<a class="headerlink" href="#2-provider" title="Permanent link">&para;</a></h3>
+<h3 id="mine-2">地雷 2:provider 認證<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p>不必在 HCL 寫死帳密 —— <code>provider "openstack" {}</code> 空 block 直接吃 <code>OS_AUTH_URL</code>/<code>OS_USERNAME</code>/<code>OS_PASSWORD</code>/<code>OS_PROJECT_NAME</code>/<code>OS_*_DOMAIN_NAME</code> env(<code>source admin-openrc.sh</code>)。生產環境用 <code>clouds.yaml</code> + <code>cloud = "..."</code> 或 application credential 更佳。</p>
 <h2 id="teardown">Teardown 程序(僅記錄,本次未執行)<a class="headerlink" href="#teardown" title="Permanent link">&para;</a></h2>
 <blockquote>

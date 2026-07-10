@@ -807,10 +807,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-kolla-kind-host" class="md-nav__link">
+  <a href="#5-kolla-kind-docker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
+        5. 注意:Kolla 與 kind 對 Docker 網路的假設互相衝突
       
     </span>
   </a>
@@ -857,10 +857,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-kind-egress" class="md-nav__link">
+  <a href="#3-kind-nat-clusterctl-init" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. 修 kind egress(關鍵,否則下一步必死)
+        3. 補上 kind 的對外 NAT(關鍵:不做的話,下一步的 clusterctl init 必定失敗)
       
     </span>
   </a>
@@ -895,10 +895,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -909,19 +909,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-kolla-iptablesfalse-kind-egresssolutions" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
+        地雷 1:Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
       
     </span>
   </a>
@@ -929,10 +929,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
+        地雷 2:clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
       
     </span>
   </a>
@@ -940,10 +940,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-kind-node-ipv6-egress" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. kind node 偏好 IPv6 但無 egress(次要)
+        地雷 3:kind node 偏好 IPv6 但無 egress(次要)
       
     </span>
   </a>
@@ -951,10 +951,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-vm-reboot-bug" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. VM reboot 後的復原(操作提醒,非 bug)
+        地雷 4:VM reboot 後的復原(操作提醒,非 bug)
       
     </span>
   </a>
@@ -3226,10 +3226,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-kolla-kind-host" class="md-nav__link">
+  <a href="#5-kolla-kind-docker" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)
+        5. 注意:Kolla 與 kind 對 Docker 網路的假設互相衝突
       
     </span>
   </a>
@@ -3276,10 +3276,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-kind-egress" class="md-nav__link">
+  <a href="#3-kind-nat-clusterctl-init" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. 修 kind egress(關鍵,否則下一步必死)
+        3. 補上 kind 的對外 NAT(關鍵:不做的話,下一步的 clusterctl init 必定失敗)
       
     </span>
   </a>
@@ -3314,10 +3314,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3328,19 +3328,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-kolla-iptablesfalse-kind-egresssolutions" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
+        地雷 1:Kolla iptables:false 斷 kind egress(solutions 級,本日最大地雷)
       
     </span>
   </a>
@@ -3348,10 +3348,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
+        地雷 2:clusterctl init 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)
       
     </span>
   </a>
@@ -3359,10 +3359,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-kind-node-ipv6-egress" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. kind node 偏好 IPv6 但無 egress(次要)
+        地雷 3:kind node 偏好 IPv6 但無 egress(次要)
       
     </span>
   </a>
@@ -3370,10 +3370,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-vm-reboot-bug" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. VM reboot 後的復原(操作提醒,非 bug)
+        地雷 4:VM reboot 後的復原(操作提醒,非 bug)
       
     </span>
   </a>
@@ -3416,7 +3416,7 @@
 <h1 id="sprint-3-day-6-cluster-api-kind-capo">Sprint 3 / Day 6: Cluster API 管理叢集(kind + CAPO)<a class="headerlink" href="#sprint-3-day-6-cluster-api-kind-capo" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>課程定位:立起 Magnum CAPI driver 的底層 —— 一個 <strong>Cluster API management cluster</strong>(跑在 kind 上),裝好 CAPI core + kubeadm bootstrap/control-plane + <strong>CAPO</strong>(OpenStack infrastructure provider)。Day 7 才把 Magnum 的 driver 接上來。
-本日踩到一個重大整合地雷:<strong>Kolla 把 docker 的 iptables 關掉,直接斷了 kind 的對外網路</strong>,另立 solutions 詳記。</p>
+今天有一個必須先知道的整合陷阱:<strong>Kolla 為了 OpenStack,關掉了 Docker 的防火牆管理——這會直接斷掉 kind 的對外網路</strong>。原理章會解釋為什麼,步驟 3 會處理它。</p>
 </blockquote>
 <div class="admonition abstract">
 <p class="admonition-title">你在課程的哪裡</p>
@@ -3434,22 +3434,20 @@
 <p>比喻:<strong>management cluster 是工廠</strong>,裡面的 CAPI/CAPO controller 是生產機器人;丟一份藍圖(CAPI 的 YAML)進工廠,機器人就去呼叫 OpenStack 把真正的 cluster(<strong>workload cluster</strong>)蓋出來。</p>
 <h3 id="_1">全景:此後你的機器上同時存在「三座」東西,別搞混<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <pre class="mermaid"><code>flowchart TB
-    subgraph HOST["Azure VM(host)"]
-        subgraph KOLLA["OpenStack(Kolla 容器群)—— 不是 K8s!"]
-            MAG["Magnum(Day 7 才部)"]
-            NOVA["Nova / Neutron / Octavia / Cinder"]
-        end
-        subgraph KIND["kind management cluster(今天蓋)= 工廠"]
-            CAPI["CAPI controllers(讀藍圖)"]
-            CAPO["CAPO(會說 OpenStack 話的機器人)"]
-        end
-        subgraph WL["workload cluster(Day 8 才誕生)"]
-            APP["你的應用程式跑這裡"]
-        end
+    subgraph KIND["① kind management cluster(今天蓋)= 工廠"]
+        direction LR
+        CAPI["CAPI controllers&lt;br/&gt;(讀藍圖)"] --&gt; CAPO["CAPO&lt;br/&gt;(會說 OpenStack 話的機器人)"]
     end
-    CAPI --&gt; CAPO
-    CAPO --&gt;|"呼叫 OpenStack API&lt;br/&gt;開 VM / LB / volume"| NOVA
-    NOVA --&gt;|"生出節點"| WL</code></pre>
+    subgraph KOLLA["② OpenStack(Kolla 容器群)—— 不是 K8s!"]
+        direction LR
+        NOVA["Nova / Neutron /&lt;br/&gt;Octavia / Cinder"] ~~~ MAG["Magnum&lt;br/&gt;(Day 7 才部)"]
+    end
+    subgraph WL["③ workload cluster(Day 8 才誕生)"]
+        APP["你的應用程式跑這裡"]
+    end
+    CAPO ==&gt;|"呼叫 OpenStack API:開 VM / LB / volume"| NOVA
+    NOVA ==&gt;|"生出節點"| WL</code></pre>
+<p>三座全部住在同一台 Azure VM 上——這正是容易搞混的原因。</p>
 <table>
 <thead>
 <tr>
@@ -3512,18 +3510,18 @@
 <h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-cluster-api-k8s-k8s">1. Cluster API 是什麼:用 K8s 管 K8s<a class="headerlink" href="#1-cluster-api-k8s-k8s" title="Permanent link">&para;</a></h3>
 <p>CAPI 把「建一座 K8s cluster」變成宣告式的 K8s 資源。有兩種 cluster:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌ management cluster(本日建,kind)────────────────────────┐
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│  CAPI controllers 在這裡跑,watch 下列 CRD 並 reconcile:  │
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   Cluster ─► ControlPlane(KubeadmControlPlane)            │
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│           └► MachineDeployment ─► MachineSet ─► Machine    │
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   OpenStackCluster / OpenStackMachine(CAPO 的 infra CRD)  │
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>└────────────────────────────────────────────────────────────┘
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        │ CAPO 呼叫 OpenStack API(Nova/Neutron/Octavia/Cinder)
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        ▼
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>┌ workload cluster(Day 8 才生)──────────────────────────────┐
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│  真正跑 app 的 K8s,節點是 Nova VM                          │
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>└────────────────────────────────────────────────────────────┘
-</span></code></pre></div>
+<pre class="mermaid"><code>flowchart TB
+    subgraph MGMT["management cluster(今天蓋,kind)—— CAPI controllers 住在這裡"]
+        CL["Cluster"] --&gt; CP["KubeadmControlPlane&lt;br/&gt;(control-plane 節點群)"]
+        CL --&gt; MD["MachineDeployment&lt;br/&gt;(worker 節點群)"]
+        MD --&gt; MS["MachineSet"] --&gt; M["Machine(一台節點)"]
+        OSC["OpenStackCluster / OpenStackMachine&lt;br/&gt;(CAPO 負責的基礎設施資源)"]
+    end
+    MGMT ==&gt;|"CAPO 呼叫 OpenStack API&lt;br/&gt;(Nova / Neutron / Octavia / Cinder)"| WL
+    subgraph WL["workload cluster(Day 8 誕生)"]
+        APP["真正跑應用程式的 K8s&lt;br/&gt;節點是 Nova 開出來的 VM"]
+    end</code></pre>
+<p>controllers 監看上半部這些宣告式資源,持續「把現實校正成宣告的樣子」——這就是 reconcile。</p>
 <p><strong>四種 provider</strong>(clusterctl 的四個 <code>--</code> 旗標):</p>
 <table>
 <thead>
@@ -3595,111 +3593,119 @@
 </tbody>
 </table>
 <p><strong>定案:vexxhost magnum-cluster-api v0.37.0。</strong> 版本 pin <strong>不抓 latest,抓 driver 測過的組合</strong> —— 直接讀 driver repo 的 <code>hack/setup-capo.sh</code>(其 CI bootstrap):<code>CAPI=v1.13.2 / CAPO=v0.14.4 / ORC=v2.2.0</code>。latest 是 v1.13.3 / v0.14.6,只差 patch,但用 pin 版最保險。</p>
-<h3 id="5-kolla-kind-host">5. ⚠️ Kolla 與 kind 在同一台 host 的網路衝突(本日最大地雷)<a class="headerlink" href="#5-kolla-kind-host" title="Permanent link">&para;</a></h3>
-<p>Kolla-Ansible 設定 <code>/etc/docker/daemon.json</code> 為 <strong><code>iptables:false</code>、<code>ip-forward:false</code>、<code>bridge:none</code></strong> —— 因為 Kolla 容器全走 host network,網路由 neutron/OVN 自管,不讓 docker 碰 iptables。<strong>但 kind 是正常 bridge 容器</strong>,靠 docker 的 MASQUERADE 才能 SNAT 出去。<code>iptables:false</code> = docker 不建 NAT = kind node 封包帶著 <code>172.17.x</code> private source 出 eth0、被 Azure 丟掉,表現成<strong>所有 image pull <code>i/o timeout</code></strong>。修法:比照 Kolla 既有那條,手動加一條只針對 kind 網段的 MASQUERADE(<strong>不動 daemon.json、不全域開 docker iptables</strong>,以免弄壞正在跑的 OpenStack)。詳見 <code>solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md</code>。</p>
+<h3 id="5-kolla-kind-docker">5. 注意:Kolla 與 kind 對 Docker 網路的假設互相衝突<a class="headerlink" href="#5-kolla-kind-docker" title="Permanent link">&para;</a></h3>
+<p>這是今天最重要的注意事項——不先理解,待會 <code>clusterctl init</code> 會莫名其妙失敗。</p>
+<p>兩套工具對同一個 Docker 有完全相反的期待:</p>
+<ul>
+<li><strong>Kolla 在 Day 1 部署時,改掉了 Docker 的全域設定</strong>(<code>/etc/docker/daemon.json</code> 裡的 <code>iptables: false</code> 等):OpenStack 容器全部走主機網路、網路交給 Neutron/OVN 自己管,所以 Kolla 刻意禁止 Docker 去碰防火牆規則。對 OpenStack 來說,這是正確的設定。</li>
+<li><strong>kind 是一般的 bridge 容器</strong>:它的對外連線,依賴 Docker 自動建立的 NAT 轉換規則才出得去。</li>
+</ul>
+<p>在這台主機上,兩者相遇的結果:Docker 不會替 kind 建 NAT,kind 節點的封包帶著內部位址直接送出網卡,Azure 網路一律丟棄。<strong>你會看到的症狀是 kind 叢集裡所有 image 拉取一律 <code>i/o timeout</code></strong>——看起來像網路故障,其實是設定衝突。</p>
+<p>正確的解法是<strong>只替 kind 的網段手動補一條 NAT 規則</strong>(步驟 3 會做),而不是把 Docker 的 <code>iptables</code> 改回 <code>true</code>——改全域設定會波及正在運作的 OpenStack。完整的診斷過程與開機自動生效的設定,見排錯手冊:<a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/">kind × Kolla 的 docker iptables 衝突</a>。</p>
 <h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="1-clis-driver-pin">1. 裝 CLIs(版本對齊 driver pin)<a class="headerlink" href="#1-clis-driver-pin" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># kubectl / kind / clusterctl(=CAPI 版) / helm</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kubectl<span class="w">    </span>https://dl.k8s.io/release/v1.36.2/bin/linux/amd64/kubectl
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kind<span class="w">       </span>https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/clusterctl<span class="w"> </span>https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.13.2/clusterctl-linux-amd64
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>sudo<span class="w"> </span>install<span class="w"> </span>-m0755<span class="w"> </span>/tmp/<span class="o">{</span>kubectl,kind,clusterctl<span class="o">}</span><span class="w"> </span>/usr/local/bin/
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>curl<span class="w"> </span>-sSfL<span class="w"> </span>https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="c1"># kind 需要「非 sudo」docker → 把使用者加進 docker group(需新 ssh session 生效)</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span>azureuser
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># kubectl / kind / clusterctl(=CAPI 版) / helm</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kubectl<span class="w">    </span>https://dl.k8s.io/release/v1.36.2/bin/linux/amd64/kubectl
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/kind<span class="w">       </span>https://kind.sigs.k8s.io/dl/v0.32.0/kind-linux-amd64
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>curl<span class="w"> </span>-sLo<span class="w"> </span>/tmp/clusterctl<span class="w"> </span>https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.13.2/clusterctl-linux-amd64
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>sudo<span class="w"> </span>install<span class="w"> </span>-m0755<span class="w"> </span>/tmp/<span class="o">{</span>kubectl,kind,clusterctl<span class="o">}</span><span class="w"> </span>/usr/local/bin/
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>curl<span class="w"> </span>-sSfL<span class="w"> </span>https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># kind 需要「非 sudo」docker → 把使用者加進 docker group(需新 ssh session 生效)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>docker<span class="w"> </span>azureuser
 </span></code></pre></div>
 <h3 id="2-management-cluster">2. 建 management cluster<a class="headerlink" href="#2-management-cluster" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="w"> </span>capi-mgmt<span class="w"> </span>--wait<span class="w"> </span>120s<span class="w">     </span><span class="c1"># kindest/node v1.36.1</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w">                                    </span><span class="c1"># control-plane Ready</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kind<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>--name<span class="w"> </span>capi-mgmt<span class="w"> </span>--wait<span class="w"> </span>120s<span class="w">     </span><span class="c1"># kindest/node v1.36.1</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w">                                    </span><span class="c1"># control-plane Ready</span>
 </span></code></pre></div>
-<h3 id="3-kind-egress">3. 修 kind egress(關鍵,否則下一步必死)<a class="headerlink" href="#3-kind-egress" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 比照 Kolla 既有的 172.24.4.0/24 那條,只 SNAT kind 網段</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">172</span>.17.0.0/16<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># 驗證:kind node 應能連外</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>capi-mgmt-control-plane<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;cat &lt;/dev/null &gt;/dev/tcp/1.1.1.1/443 &amp;&amp; echo OK&#39;</span>
+<h3 id="3-kind-nat-clusterctl-init">3. 補上 kind 的對外 NAT(關鍵:不做的話,下一步的 <code>clusterctl init</code> 必定失敗)<a class="headerlink" href="#3-kind-nat-clusterctl-init" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 比照 Kolla 既有的 172.24.4.0/24 那條,只 SNAT kind 網段</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">172</span>.17.0.0/16<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># 驗證:kind node 應能連外</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>capi-mgmt-control-plane<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;cat &lt;/dev/null &gt;/dev/tcp/1.1.1.1/443 &amp;&amp; echo OK&#39;</span>
 </span></code></pre></div>
 <p>持久化(VM 每天 reboot 會掉,用獨立 systemd oneshot 冪等補上):<code>/etc/systemd/system/kind-masquerade.service</code>（見 solutions 檔內完整 unit),<code>systemctl enable --now kind-masquerade</code>。</p>
 <h3 id="4-orc-clusterctl-init">4. ORC → clusterctl init<a class="headerlink" href="#4-orc-clusterctl-init" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># 先裝 ORC(CAPO v0.14 依賴)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://github.com/k-orc/openstack-resource-controller/releases/download/v2.2.0/install.yaml
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># clusterctl init(EXP 旗標比照 setup-capo.sh)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_CLUSTER_RESOURCE_SET</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CLUSTER_TOPOLOGY</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>clusterctl<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--core<span class="w"> </span>cluster-api:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--bootstrap<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--control-plane<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>--infrastructure<span class="w"> </span>openstack:v0.14.4
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 先裝 ORC(CAPO v0.14 依賴)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://github.com/k-orc/openstack-resource-controller/releases/download/v2.2.0/install.yaml
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># clusterctl init(EXP 旗標比照 setup-capo.sh)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_CLUSTER_RESOURCE_SET</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CLUSTER_TOPOLOGY</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>clusterctl<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--core<span class="w"> </span>cluster-api:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span>--bootstrap<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span>--control-plane<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span>--infrastructure<span class="w"> </span>openstack:v0.14.4
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理</span>
 </span></code></pre></div>
 <h3 id="5">5. 驗證<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">for</span><span class="w"> </span>ns_dep<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>capi-system/capi-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>capi-kubeadm-bootstrap-system/capi-kubeadm-bootstrap-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>capi-kubeadm-control-plane-system/capi-kubeadm-control-plane-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>capo-system/capo-controller-manager<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>kubectl<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">ns_dep</span><span class="p">%/*</span><span class="si">}</span><span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deploy/<span class="si">${</span><span class="nv">ns_dep</span><span class="p">#*/</span><span class="si">}</span><span class="w"> </span>--timeout<span class="o">=</span>180s
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">done</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">for</span><span class="w"> </span>ns_dep<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>capi-system/capi-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>capi-kubeadm-bootstrap-system/capi-kubeadm-bootstrap-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>capi-kubeadm-control-plane-system/capi-kubeadm-control-plane-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>capo-system/capo-controller-manager<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>kubectl<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">ns_dep</span><span class="p">%/*</span><span class="si">}</span><span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deploy/<span class="si">${</span><span class="nv">ns_dep</span><span class="p">#*/</span><span class="si">}</span><span class="w"> </span>--timeout<span class="o">=</span>180s
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">done</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>kind cluster</td>
 <td>control-plane Ready</td>
-<td>✅ kindest/node v1.36.1,18s Ready</td>
+<td>kindest/node v1.36.1,18s Ready</td>
 </tr>
 <tr>
 <td>kind egress</td>
 <td>node 可連外部 443</td>
-<td>✅ 加 MASQUERADE 後 1.1.1.1 / quay 皆 OK</td>
+<td>加 MASQUERADE 後 1.1.1.1 / quay 皆 OK</td>
 </tr>
 <tr>
 <td>MASQUERADE 持久化</td>
 <td>systemd unit enabled+active,規則不重複</td>
-<td>✅ count=1</td>
+<td>count=1</td>
 </tr>
 <tr>
 <td>ORC</td>
 <td>orc-controller-manager Running</td>
-<td>✅ v2.2.0</td>
+<td>v2.2.0</td>
 </tr>
 <tr>
 <td>cert-manager</td>
 <td>3 deploy available</td>
-<td>✅ v1.20.2(clusterctl 自動裝)</td>
+<td>v1.20.2(clusterctl 自動裝)</td>
 </tr>
 <tr>
 <td><strong>4 controller</strong></td>
 <td>capi / bootstrap / control-plane / capo 全 1/1 Running</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>providers</td>
 <td>core/bootstrap/control-plane v1.13.2 + openstack v0.14.4</td>
-<td>✅ <code>kubectl get providers</code> 四筆到位</td>
+<td><code>kubectl get providers</code> 四筆到位</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_4">踩雷<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="1-kolla-iptablesfalse-kind-egresssolutions">1. Kolla <code>iptables:false</code> 斷 kind egress(solutions 級,本日最大地雷)<a class="headerlink" href="#1-kolla-iptablesfalse-kind-egresssolutions" title="Permanent link">&para;</a></h3>
-<p>見上「原理 §5」與 <code>solutions/integration-issues/kind-kolla-docker-iptables-masquerade.md</code>。症狀是所有 image <code>ImagePullBackOff</code> / <code>i/o timeout</code>,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。<strong>診斷關鍵順序</strong>:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json <code>iptables:false</code>。</p>
-<h3 id="2-clusterctl-init-cert-manager-context-deadline-exceeded1">2. <code>clusterctl init</code> 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)<a class="headerlink" href="#2-clusterctl-init-cert-manager-context-deadline-exceeded1" title="Permanent link">&para;</a></h3>
+<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:Kolla <code>iptables:false</code> 斷 kind egress(solutions 級,本日最大地雷)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>背景見上方原理第 5 節,完整解法見排錯手冊:<a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/">kind × Kolla 的 docker iptables 衝突</a>。症狀是所有 image <code>ImagePullBackOff</code> / <code>i/o timeout</code>,根因不在 kind 也不在 quay,而在 host 的 docker daemon.json。<strong>診斷關鍵順序</strong>:確認 host 自己連 quay OK → 才知道問題在 kind 這層 → 測 kind node 連「任意外部 IP」都失敗(排除 quay 專屬)→ TCP handshake 就失敗(排除 MTU,MTU 只斷大封包)→ 查 NAT 發現沒有 kind 網段的 MASQUERADE → daemon.json <code>iptables:false</code>。</p>
+<h3 id="mine-2">地雷 2:<code>clusterctl init</code> 卡 "cert-manager context deadline exceeded"(§1 的下游症狀)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p>第一次 init 死在 <code>Waiting for cert-manager to be available...</code> → <code>context deadline exceeded</code>。<strong>這不是 cert-manager 的錯,是 §1 egress 沒通導致它 ImagePullBackOff</strong>。修好 MASQUERADE、刪掉卡住的 pod 讓它重拉、cert-manager available 後<strong>重跑同一條 <code>clusterctl init</code> 即可續裝</strong>(它偵測 cert-manager 已在會跳過,直接裝 CAPI/CAPO)。教訓:<code>clusterctl init</code> 可安全重跑。</p>
-<h3 id="3-kind-node-ipv6-egress">3. kind node 偏好 IPv6 但無 egress(次要)<a class="headerlink" href="#3-kind-node-ipv6-egress" title="Permanent link">&para;</a></h3>
+<h3 id="mine-3">地雷 3:kind node 偏好 IPv6 但無 egress(次要)<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p>kind 的 docker network 帶 IPv6 ULA(<code>fc00::/64</code>)且有 v6 default route,<code>getent hosts quay.io</code> 會回 AAAA,但 Azure 無 IPv6 對外 → 更拖慢 pull。修好 IPv4 MASQUERADE 後 Happy Eyeballs 會走 v4,不再是問題;要根治可在 kind config 關 IPv6,本 lab 未做(非必要)。</p>
-<h3 id="4-vm-reboot-bug">4. VM reboot 後的復原(操作提醒,非 bug)<a class="headerlink" href="#4-vm-reboot-bug" title="Permanent link">&para;</a></h3>
+<h3 id="mine-4">地雷 4:VM reboot 後的復原(操作提醒,非 bug)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>MASQUERADE</strong>:已由 <code>kind-masquerade.service</code> 開機自動補,免手動。</li>
 <li><strong>kind cluster 本身</strong>:kind node 容器預設不隨 VM reboot 自動健康復原。早上開機後若要用 management cluster,先 <code>docker start capi-mgmt-control-plane</code> 等它回穩(或重建 cluster + 重跑 clusterctl init)。Day 7 開工前確認 <code>kubectl get providers -A</code> 四筆都在。</li>

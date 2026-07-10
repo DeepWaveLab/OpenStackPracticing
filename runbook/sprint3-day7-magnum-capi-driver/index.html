@@ -901,10 +901,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -915,19 +915,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-sudo-cp-kubeconfig-rootroot-deploy" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. sudo cp 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
+        地雷 1:sudo cp 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
       
     </span>
   </a>
@@ -935,10 +935,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-m1medium-flavor" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 沒有 m1.medium flavor
+        地雷 2:沒有 m1.medium flavor
       
     </span>
   </a>
@@ -946,10 +946,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-day-6" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. 版本一致性(承 Day 6)
+        地雷 3:版本一致性(承 Day 6)
       
     </span>
   </a>
@@ -3259,10 +3259,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3273,19 +3273,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-sudo-cp-kubeconfig-rootroot-deploy" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. sudo cp 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
+        地雷 1:sudo cp 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)
       
     </span>
   </a>
@@ -3293,10 +3293,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-m1medium-flavor" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 沒有 m1.medium flavor
+        地雷 2:沒有 m1.medium flavor
       
     </span>
   </a>
@@ -3304,10 +3304,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-day-6" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. 版本一致性(承 Day 6)
+        地雷 3:版本一致性(承 Day 6)
       
     </span>
   </a>
@@ -3407,12 +3407,16 @@ Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day
 <p>所以:<strong>只是自己團隊要用 K8s → 直接用 CAPI 就好,不需要 Magnum;要做成雲上的多租戶服務(本課程的目標)→ 兩層都要。</strong> 這種「前台 API + 造叢集引擎」的分層不是 Magnum 獨有,Rancher、Gardener 等產品都是同一個結構。</p>
 <h3 id="_1">今天的整合,說穿了就是「給櫃台一把工廠鑰匙」<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
 <p>Magnum 收到訂單後,由它內建的 <strong>CAPI driver(翻譯官)</strong>把 OpenStack 風格的請求翻成 CAPI 藍圖、丟進 Day 6 的工廠。而「怎麼丟進去」的答案樸素得驚人——<strong>給 Magnum 一份工廠的 kubeconfig(= 地址 + 鑰匙)</strong>:</p>
-<pre class="mermaid"><code>flowchart LR
-    U["使用者&lt;br/&gt;openstack coe cluster create"] --&gt; M["Magnum API&lt;br/&gt;(驗 Keystone、查配額)"]
-    M --&gt; D["magnum-conductor 裡的&lt;br/&gt;CAPI driver(翻譯官)"]
-    D --&gt;|"憑 kubeconfig 寫入藍圖"| K["kind 工廠&lt;br/&gt;(Day 6)"]
-    K --&gt;|"CAPO 呼叫 OpenStack"| O["Nova / Octavia / Cinder"]
-    O --&gt; W["workload cluster&lt;br/&gt;(Day 8 誕生)"]</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    subgraph front["店面:接單(OpenStack 這側)"]
+        direction LR
+        U["使用者:openstack&lt;br/&gt;coe cluster create"] --&gt; M["Magnum API&lt;br/&gt;(驗身分、查配額)"] --&gt; D["CAPI driver(翻譯官,&lt;br/&gt;在 magnum-conductor 裡)"]
+    end
+    subgraph fac["工廠:造 K8s(K8s 生態這側)"]
+        direction LR
+        K["kind 工廠&lt;br/&gt;(Day 6 蓋的)"] --&gt; O["CAPO 呼叫 OpenStack:&lt;br/&gt;Nova / Octavia / Cinder"] --&gt; W["workload cluster&lt;br/&gt;(Day 8 誕生)"]
+    end
+    D ==&gt;|"憑 kubeconfig 把藍圖寫進工廠"| K</code></pre>
 <p>更妙的是 Kolla 的設計:<strong>「有沒有放 kubeconfig」本身就是 driver 的開關</strong>——放了,CAPI driver 自動啟用;沒放,維持關閉。這是今天步驟裡最關鍵的一手,原理見下節。</p>
 <h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-kolla-capi-driver-kubeconfig">1. Kolla 原生 CAPI driver 機制:用 kubeconfig 的「存在與否」當開關<a class="headerlink" href="#1-kolla-capi-driver-kubeconfig" title="Permanent link">&para;</a></h3>
@@ -3428,17 +3432,10 @@ Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day
 <p>也就是:<strong>「有沒有 management cluster 的 kubeconfig」直接等於「要不要啟用 CAPI driver」</strong>,設計得很自洽。</p>
 <h3 id="2-kubeconfig-magnum_conductor">2. kubeconfig 怎麼進到 magnum_conductor<a class="headerlink" href="#2-kubeconfig-magnum_conductor" title="Permanent link">&para;</a></h3>
 <p>Kolla 的 magnum role(<code>tasks/config.yml</code>)+ 容器 <code>config.json</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>/etc/kolla/config/magnum/kubeconfig   (你放的,host 上)
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>        │ role: Copying over kubeconfig file
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>        ▼
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>容器 config.json:{ source: .../kubeconfig, dest: /var/lib/magnum/.kube/config }
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        ▼
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>magnum_conductor 容器內 /var/lib/magnum/.kube/config
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>        │ driver clients.py: pykube.HTTPClient(pykube.KubeConfig.from_env())
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        │   from_env() → 讀 ~/.kube/config(容器內 HOME=/var/lib/magnum)→ 完全對上
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        ▼
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>連 kind API(kubeconfig 內 server=https://127.0.0.1:33689)
-</span></code></pre></div>
+<pre class="mermaid"><code>flowchart TB
+    A["host 上:/etc/kolla/config/magnum/kubeconfig&lt;br/&gt;(你在步驟 2 放的那把鑰匙)"]
+    A --&gt;|"kolla 部署時自動複製進容器"| B["magnum_conductor 容器內:&lt;br/&gt;/var/lib/magnum/.kube/config"]
+    B --&gt;|"driver 啟動時讀 ~/.kube/config&lt;br/&gt;(容器內 HOME 恰好是 /var/lib/magnum,路徑對上)"| C["連上 kind 的 API&lt;br/&gt;(kubeconfig 裡指向 https://127.0.0.1:33689)"]</code></pre>
 <p><strong>能連通的前提</strong>:Kolla 的 magnum 容器走 <strong>host network</strong>(與 barbican/heat 同),所以容器內 <code>127.0.0.1:33689</code> = host 的 kind API port。若 magnum 不是 host-net(別的部署工具),就要改用 kind 容器的 docker IP 或 <code>--internal</code> kubeconfig。</p>
 <h3 id="3-driver-image-os_distro">3. driver 怎麼被選中:image 的 <code>os_distro</code><a class="headerlink" href="#3-driver-image-os_distro" title="Permanent link">&para;</a></h3>
 <p><code>disabled_drivers</code> 拿掉後四個 CAPI driver 都在(flatcar / rockylinux / ubuntu / ubuntu_focal)。實際建 cluster 時,Magnum 依 <strong>ClusterTemplate 的 image 的 <code>os_distro</code> property</strong> 選:node image 標 <code>os_distro=ubuntu</code> → 選 <code>k8s_cluster_api_ubuntu</code>。所以 image 上傳時 <code>--property os_distro=ubuntu</code> 是關鍵,<code>coe cluster template show</code> 的 <code>cluster_distro=ubuntu</code> 就是它認出來的證據。</p>
@@ -3448,101 +3445,102 @@ Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day
 <p>Sprint 1 的 heat driver 內嵌 FCOS/flannel 的舊 image URL,失效即死。CAPI 路線的 node image 由 <strong><code>vexxhost/capo-image-elements</code></strong> 持續發布(release <code>2026.05-7</code>,對應 k8s v1.33.12/v1.34.8/v1.35.5/v1.36.1),本課選 <strong>v1.34.8</strong>。image 是預裝好 kubelet/kubeadm/containerd 的 Ubuntu 24.04,CAPO 開機後 kubeadm join 即成節點。</p>
 <h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="a-magnum-driver">A. 開 Magnum + 啟用 driver<a class="headerlink" href="#a-magnum-driver" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 1. globals</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>enable_magnum:<span class="w"> </span><span class="s2">&quot;yes&quot;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>enable_cluster_user_trust:<span class="w"> </span><span class="s2">&quot;yes&quot;</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># 2. 放 management cluster 的 kubeconfig(Day 6 kind 的 ~/.kube/config)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/magnum
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>sudo<span class="w"> </span>cp<span class="w"> </span>~/.kube/config<span class="w"> </span>/etc/kolla/config/magnum/kubeconfig
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>sudo<span class="w"> </span>chown<span class="w"> </span>azureuser:azureuser<span class="w"> </span>/etc/kolla/config/magnum/kubeconfig<span class="w">   </span><span class="c1"># ← 見踩雷#1</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># 3. deploy(magnum 建 DB/keystone/trustee、掛 kubeconfig、省略 disabled_drivers)</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>magnum,loadbalancer,horizon
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># 1. globals</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>enable_magnum:<span class="w"> </span><span class="s2">&quot;yes&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>enable_cluster_user_trust:<span class="w"> </span><span class="s2">&quot;yes&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># 2. 放 management cluster 的 kubeconfig(Day 6 kind 的 ~/.kube/config)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/magnum
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>sudo<span class="w"> </span>cp<span class="w"> </span>~/.kube/config<span class="w"> </span>/etc/kolla/config/magnum/kubeconfig
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>sudo<span class="w"> </span>chown<span class="w"> </span>azureuser:azureuser<span class="w"> </span>/etc/kolla/config/magnum/kubeconfig<span class="w">   </span><span class="c1"># ← 原因見下方地雷 1</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="c1"># 3. deploy(magnum 建 DB/keystone/trustee、掛 kubeconfig、省略 disabled_drivers)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>magnum,loadbalancer,horizon
 </span></code></pre></div>
 <h3 id="b-driver">B. 驗證 driver 載入 + 連通<a class="headerlink" href="#b-driver" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># disabled_drivers 應「不存在」= driver 啟用</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>sudo<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;^disabled_drivers&#39;</span><span class="w"> </span>/etc/kolla/magnum-conductor/magnum.conf<span class="w">   </span><span class="c1"># → 0</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># conductor 用 driver 的方式實連 kind</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>magnum_conductor<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="s2">&quot;import pykube; a=pykube.HTTPClient(pykube.KubeConfig.from_env()); print([n.name for n in pykube.Node.objects(a)])&quot;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># → [&#39;capi-mgmt-control-plane&#39;]</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>pip<span class="w"> </span>install<span class="w"> </span>python-magnumclient
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>openstack<span class="w"> </span>coe<span class="w"> </span>service<span class="w"> </span>list<span class="w">        </span><span class="c1"># magnum-conductor state=up</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># disabled_drivers 應「不存在」= driver 啟用</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>sudo<span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;^disabled_drivers&#39;</span><span class="w"> </span>/etc/kolla/magnum-conductor/magnum.conf<span class="w">   </span><span class="c1"># → 0</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># conductor 用 driver 的方式實連 kind</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>magnum_conductor<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="s2">&quot;import pykube; a=pykube.HTTPClient(pykube.KubeConfig.from_env()); print([n.name for n in pykube.Node.objects(a)])&quot;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># → [&#39;capi-mgmt-control-plane&#39;]</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>pip<span class="w"> </span>install<span class="w"> </span>python-magnumclient
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>openstack<span class="w"> </span>coe<span class="w"> </span>service<span class="w"> </span>list<span class="w">        </span><span class="c1"># magnum-conductor state=up</span>
 </span></code></pre></div>
 <h3 id="c-node-image-clustertemplate">C. Node image + ClusterTemplate<a class="headerlink" href="#c-node-image-clustertemplate" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># image(os_distro=ubuntu 是 driver 選型關鍵)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>curl<span class="w"> </span>-fLO<span class="w"> </span>https://github.com/vexxhost/capo-image-elements/releases/download/2026.05-7/ubuntu-24.04-v1.34.8.qcow2
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--file<span class="w"> </span>ubuntu-24.04-v1.34.8.qcow2<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>ubuntu<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_version</span><span class="o">=</span><span class="m">24</span>.04
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># flavor(k8s 節點,原本只有 m1.tiny/small)</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>openstack<span class="w"> </span>flavor<span class="w"> </span>create<span class="w"> </span>m1.medium<span class="w"> </span>--vcpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--ram<span class="w"> </span><span class="m">4096</span><span class="w"> </span>--disk<span class="w"> </span><span class="m">40</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># ClusterTemplate(master-lb-enabled 必需;kube_tag 對應 image 版本)</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.34.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">  </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.34.8
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># image(os_distro=ubuntu 是 driver 選型關鍵)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>curl<span class="w"> </span>-fLO<span class="w"> </span>https://github.com/vexxhost/capo-image-elements/releases/download/2026.05-7/ubuntu-24.04-v1.34.8.qcow2
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--file<span class="w"> </span>ubuntu-24.04-v1.34.8.qcow2<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>ubuntu<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_version</span><span class="o">=</span><span class="m">24</span>.04
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># flavor(k8s 節點,原本只有 m1.tiny/small)</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>openstack<span class="w"> </span>flavor<span class="w"> </span>create<span class="w"> </span>m1.medium<span class="w"> </span>--vcpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--ram<span class="w"> </span><span class="m">4096</span><span class="w"> </span>--disk<span class="w"> </span><span class="m">40</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># ClusterTemplate(master-lb-enabled 必需;kube_tag 對應 image 版本)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.34.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.34.8
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>magnum 容器</td>
 <td>api + conductor healthy</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td><strong>driver 啟用</strong></td>
 <td>生成的 magnum.conf 無 <code>disabled_drivers</code> 行</td>
-<td>✅ 0 行</td>
+<td>0 行</td>
 </tr>
 <tr>
 <td>kubeconfig 掛載</td>
 <td>容器內 <code>/var/lib/magnum/.kube/config</code> 存在</td>
-<td>✅ magnum:magnum 600</td>
+<td>magnum:magnum 600</td>
 </tr>
 <tr>
 <td><strong>conductor → mgmt cluster</strong></td>
 <td>pykube 列得出 kind node / capo pod</td>
-<td>✅ <code>['capi-mgmt-control-plane']</code></td>
+<td><code>['capi-mgmt-control-plane']</code></td>
 </tr>
 <tr>
 <td>conductor service</td>
 <td><code>openstack coe service list</code> state=up</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>node image</td>
 <td>active,os_distro=ubuntu</td>
-<td>✅ v1.34.8(825M)</td>
+<td>v1.34.8(825M)</td>
 </tr>
 <tr>
 <td><strong>ClusterTemplate</strong></td>
 <td><code>coe cluster template create</code> 成功</td>
-<td>✅ k8s-v1.34.8,cluster_distro=ubuntu</td>
+<td>k8s-v1.34.8,cluster_distro=ubuntu</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_4">踩雷<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="1-sudo-cp-kubeconfig-rootroot-deploy">1. <code>sudo cp</code> 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)<a class="headerlink" href="#1-sudo-cp-kubeconfig-rootroot-deploy" title="Permanent link">&para;</a></h3>
+<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:<code>sudo cp</code> 讓 kubeconfig 變 root:root → deploy 讀不到(必踩)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p><code>sudo cp ~/.kube/config /etc/kolla/config/magnum/kubeconfig</code> 產生的檔是 <code>root:root 0600</code>。但 kolla-ansible 以 <strong>azureuser</strong> 身分讀這個 src(<code>copy</code> module 從 control node 讀),撞 <code>Permission denied: /etc/kolla/config/magnum/kubeconfig</code>,deploy <code>failed=1</code> 死在 "Copying over kubeconfig file"。修:<code>sudo chown azureuser:azureuser</code> 該檔(保持 600 即可),再重跑 deploy(冪等)。教訓:放進 <code>/etc/kolla/config/</code> 的自訂檔要讓跑 ansible 的使用者讀得到。</p>
-<h3 id="2-m1medium-flavor">2. 沒有 m1.medium flavor<a class="headerlink" href="#2-m1medium-flavor" title="Permanent link">&para;</a></h3>
+<h3 id="mine-2">地雷 2:沒有 m1.medium flavor<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p>環境原本只有 m1.tiny / m1.small(Day 2 建的)。getting-started 用 m1.medium,得先 <code>openstack flavor create</code>。ClusterTemplate 只存 flavor 名稱,template create 時不驗證 flavor-vs-image 磁碟大小(那是 Day 8 nova boot 才驗),所以就算 flavor 偏小 template 仍會建成功 —— 但 Day 8 要確保 flavor 磁碟 ≥ image 虛擬大小。</p>
-<h3 id="3-day-6">3. 版本一致性(承 Day 6)<a class="headerlink" href="#3-day-6" title="Permanent link">&para;</a></h3>
+<h3 id="mine-3">地雷 3:版本一致性(承 Day 6)<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p>driver(image 內建)、CAPI/CAPO(mgmt cluster)、node image 三者版本要相容。本課全部對齊 vexxhost 測過的組合:driver = Kolla Epoxy 內建版、CAPI v1.13.2 / CAPO v0.14.4(Day 6)、node image k8s v1.34.8(capo-image-elements 2026.05-7)。</p>
 <h2 id="day-8">下一步(Day 8)<a class="headerlink" href="#day-8" title="Permanent link">&para;</a></h2>
-<p>E2E:<code>openstack coe cluster create</code> 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 <code>kubectl get nodes</code> 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。<strong>開工前注意</strong>:若 VM 隔夜重開,先確認 kind cluster 回穩(Day 6 §踩雷4)且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 <code>/etc/kolla/config/magnum/kubeconfig</code> 並 <code>kolla-ansible deploy --tags magnum</code>。</p>
+<p>E2E:<code>openstack coe cluster create</code> 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 <code>kubectl get nodes</code> 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。<strong>開工前注意</strong>:若 VM 隔夜重開,先確認 kind cluster 回穩(<a href="../sprint3-day6-capi-management-cluster/#mine-4">Day 6 的地雷 4</a>)且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 <code>/etc/kolla/config/magnum/kubeconfig</code> 並 <code>kolla-ansible deploy --tags magnum</code>。</p>
 
 
 

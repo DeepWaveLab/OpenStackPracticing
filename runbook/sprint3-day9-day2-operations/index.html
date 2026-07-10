@@ -907,10 +907,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -921,19 +921,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-surge-nova-no-valid-host" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 升版 surge 撞 Nova No valid host
+        地雷 1:升版 surge 撞 Nova No valid host
       
     </span>
   </a>
@@ -941,10 +941,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-nodegroup-failuredomain-null-capi-solutions" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
+        地雷 2:nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
       
     </span>
   </a>
@@ -952,10 +952,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-autoscaler-managed-topology-replicas-flap" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. autoscaler 在 managed topology 上 replicas 被打回(flap)
+        地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)
       
     </span>
   </a>
@@ -963,10 +963,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-autoscaler-kind-vs-workload" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. autoscaler 拓樸選擇(kind vs workload)
+        地雷 4:autoscaler 拓樸選擇(kind vs workload)
       
     </span>
   </a>
@@ -3170,10 +3170,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-09" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-09)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3184,19 +3184,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-surge-nova-no-valid-host" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 升版 surge 撞 Nova No valid host
+        地雷 1:升版 surge 撞 Nova No valid host
       
     </span>
   </a>
@@ -3204,10 +3204,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-nodegroup-failuredomain-null-capi-solutions" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
+        地雷 2:nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
       
     </span>
   </a>
@@ -3215,10 +3215,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-autoscaler-managed-topology-replicas-flap" class="md-nav__link">
+  <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. autoscaler 在 managed topology 上 replicas 被打回(flap)
+        地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)
       
     </span>
   </a>
@@ -3226,10 +3226,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-autoscaler-kind-vs-workload" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. autoscaler 拓樸選擇(kind vs workload)
+        地雷 4:autoscaler 拓樸選擇(kind vs workload)
       
     </span>
   </a>
@@ -3286,7 +3286,7 @@
 <h3 id="2-disk_allocation_ratio">2. 為什麼要調 <code>disk_allocation_ratio</code><a class="headerlink" href="#2-disk_allocation_ratio" title="Permanent link">&para;</a></h3>
 <p>單機 compute 上,Nova 的 disk 用 <strong>flavor 磁碟總和</strong>計帳(不是實際用量),SHUTOFF 也算。nested VM 是 thin qcow2,實際用量遠低於 flavor 宣告(m1.medium 宣告 40GB,實裝可能 3-5GB)。升版 surge 一台 40GB 會撞 <code>No valid host</code>。解:<code>[DEFAULT] disk_allocation_ratio = 3.0</code> → placement 的 DISK_GB 可分配量 ×3(122→366),surge 有空間。這是 lab thin-provisioning 的正確調校,生產環境依實際超賣風險設定。</p>
 <h3 id="3-node-group-machinedeployment-clusterclass-topology">3. node group ↔ MachineDeployment ↔ ClusterClass topology<a class="headerlink" href="#3-node-group-machinedeployment-clusterclass-topology" title="Permanent link">&para;</a></h3>
-<p>magnum-cluster-api 用 <strong>ClusterClass(managed topology)</strong>:cluster 的 <code>spec.topology.workers.machineDeployments[]</code> 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。<code>openstack coe nodegroup create</code> = 在 topology 陣列多加一格。<strong>踩雷</strong>:driver 對新 MD 若沒帶 <code>availability_zone</code> label,<code>failureDomain</code> 會是 <code>null</code>,被 CAPI v1.13 topology schema 拒(見踩雷#2)。</p>
+<p>magnum-cluster-api 用 <strong>ClusterClass(managed topology)</strong>:cluster 的 <code>spec.topology.workers.machineDeployments[]</code> 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。<code>openstack coe nodegroup create</code> = 在 topology 陣列多加一格。<strong>踩雷</strong>:driver 對新 MD 若沒帶 <code>availability_zone</code> label,<code>failureDomain</code> 會是 <code>null</code>,被 CAPI v1.13 topology schema 拒(見<a href="#mine-2">地雷 2</a>)。</p>
 <h3 id="4-cluster-autoscaler-capi">4. cluster-autoscaler 在 CAPI 上怎麼運作<a class="headerlink" href="#4-cluster-autoscaler-capi" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>provider <code>clusterapi</code></strong>:autoscaler 不直接開 VM,而是<strong>改 MachineDeployment 的 replicas</strong>,CAPO 再去 Nova 開節點。</li>
@@ -3320,7 +3320,7 @@
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="c1"># UPDATE_COMPLETE 後 kubectl get nodes 全 v1.35.5</span>
 </span></code></pre></div>
 <h3 id="c-node-group">C. node group<a class="headerlink" href="#c-node-group" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(踩雷#2)</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(地雷 2)</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>ng-app<span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--role<span class="w"> </span>app<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--labels<span class="w"> </span><span class="nv">availability_zone</span><span class="o">=</span>nova
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>list<span class="w"> </span>k8s-lab<span class="w">           </span><span class="c1"># ng-app CREATE_COMPLETE</span>
@@ -3333,7 +3333,7 @@
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>annotate<span class="w"> </span><span class="nv">$MD</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size<span class="o">=</span><span class="m">3</span><span class="w"> </span>--overwrite
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># 2. topology 交出 replicas 擁有權(關鍵,見踩雷#3)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># 2. topology 交出 replicas 擁有權(關鍵,原因見地雷 3)</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>patch<span class="w"> </span>cluster<span class="w"> </span>kube-plpuz<span class="w"> </span>--type<span class="o">=</span>json<span class="w"> </span>-p<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w"> </span><span class="s1">&#39;[{&quot;op&quot;:&quot;remove&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/replicas&quot;},</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s1">   {&quot;op&quot;:&quot;add&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/metadata/annotations&quot;,</span>
@@ -3345,56 +3345,57 @@
 </span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1">#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=kube-plpuz</span>
 </span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="c1"># 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3</span>
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-09">Checkpoint(全數通過 2026-07-09)<a class="headerlink" href="#checkpoint-2026-07-09" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>disk ratio</td>
 <td>placement DISK_GB allocation_ratio=3.0</td>
-<td>✅ surge master 排得進</td>
+<td>surge master 排得進</td>
 </tr>
 <tr>
 <td><strong>升版</strong></td>
 <td>rolling 完成、nodes 全新版</td>
-<td>✅ v1.34.8 → <strong>v1.35.5</strong>(surge→drain→replace,~5.5 分)</td>
+<td>v1.34.8 → <strong>v1.35.5</strong>(surge→drain→replace,~5.5 分)</td>
 </tr>
 <tr>
 <td><strong>node group</strong></td>
 <td>ng-app CREATE_COMPLETE、節點 role=app join</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>autoscaler 發現</td>
 <td>discovered MachineDeployment ng-app (min:1 max:3)</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td><strong>autoscaler 觸發</strong></td>
 <td>pending pod → ng-app 自動 1→3、pods 全排上</td>
-<td>✅ 3/3 Running,2 新節點自動 join</td>
+<td>3/3 Running,2 新節點自動 join</td>
 </tr>
 <tr>
 <td>scale-down</td>
 <td>移除負載後回 min</td>
-<td>✅ 刪 scale-test 後 autoscaler 縮回</td>
+<td>刪 scale-test 後 autoscaler 縮回</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_3">踩雷<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1-surge-nova-no-valid-host">1. 升版 surge 撞 Nova <code>No valid host</code><a class="headerlink" href="#1-surge-nova-no-valid-host" title="Permanent link">&para;</a></h3>
+<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:升版 surge 撞 Nova <code>No valid host</code><a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p>見原理 §2。單機 compute disk 用 flavor 總和計帳,升版多開一台就爆。解:<code>disk_allocation_ratio=3.0</code>(thin qcow2 可安全超賣)。</p>
-<h3 id="2-nodegroup-failuredomain-null-capi-solutions">2. nodegroup <code>failureDomain: null</code> 被 CAPI 拒(solutions 級)<a class="headerlink" href="#2-nodegroup-failuredomain-null-capi-solutions" title="Permanent link">&para;</a></h3>
-<p><code>openstack coe nodegroup create</code> 直接 CREATE_FAILED:<code>spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string</code>。driver 對新 MD 設 <code>failureDomain = labels.get("availability_zone")</code>,沒這 label 就是 <code>None→null</code>,CAPI v1.13 topology schema 不收 null(第一個 default-worker 是 <code>""</code> 合法)。解:<code>--labels availability_zone=nova</code>。詳見 <code>solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null.md</code>。</p>
-<h3 id="3-autoscaler-managed-topology-replicas-flap">3. autoscaler 在 managed topology 上 replicas 被打回(flap)<a class="headerlink" href="#3-autoscaler-managed-topology-replicas-flap" title="Permanent link">&para;</a></h3>
+<h3 id="mine-2">地雷 2:nodegroup <code>failureDomain: null</code> 被 CAPI 拒(solutions 級)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><code>openstack coe nodegroup create</code> 直接 CREATE_FAILED:<code>spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string</code>。driver 對新 MD 設 <code>failureDomain = labels.get("availability_zone")</code>,沒這 label 就是 <code>None→null</code>,CAPI v1.13 topology schema 不收 null(第一個 default-worker 是 <code>""</code> 合法)。解:<code>--labels availability_zone=nova</code>。完整記錄見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/">nodegroup failureDomain null</a>。</p>
+<h3 id="mine-3">地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p>autoscaler 正確偵測 pending、把 MD replicas 設 3,但 <strong>topology controller 依 <code>spec.topology...replicas: 1</code> 一直打回 1</strong>(監控看到 1↔3 來回)。managed topology 下 replicas 由 topology 擁有。解:把該 MD 在 topology 的 <code>replicas</code> <strong>移除</strong>(交給 autoscaler)。生產做法是建 cluster 時帶 <code>auto_scaling_enabled=true</code> + nodegroup min/max,driver 會自動配好 topology;本 lab cluster 未帶該 label,故手動 patch。</p>
-<h3 id="4-autoscaler-kind-vs-workload">4. autoscaler 拓樸選擇(kind vs workload)<a class="headerlink" href="#4-autoscaler-kind-vs-workload" title="Permanent link">&para;</a></h3>
+<h3 id="mine-4">地雷 4:autoscaler 拓樸選擇(kind vs workload)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
 <p>autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、<code>--kubeconfig</code> 指 workload(其 API FIP <code>172.24.4.x</code> 從 kind 可達)。若跑 workload 內,要餵 mgmt 的 kubeconfig,但 kind API 綁 <code>127.0.0.1:33689</code>(host loopback)workload pod 打不到,得額外 port-forward + skip-TLS,較麻煩。</p>
 <h2 id="day-10">下一步(Day 10)<a class="headerlink" href="#day-10" title="Permanent link">&para;</a></h2>
 <p>Terraform 接管(terraform-provider-openstack 管 network/VM/LB)+ teardown 演練(<code>kolla-ansible destroy</code> → 重部速度驗證)+ 寫 <code>sprint3-reflection.md</code>。開工前照 Day8 Pre-flight 確認 kind/magnum/octavia o-hm0 就緒。</p>

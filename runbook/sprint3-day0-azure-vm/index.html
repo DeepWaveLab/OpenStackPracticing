@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#sprint-3-day-0-azure-lab" class="md-skip">
+        <a href="#day-0-azure-lab" class="md-skip">
           跳轉到
         </a>
       
@@ -699,10 +699,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-07" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-07)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -724,19 +724,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#usestandardsecuritytype-feature-gate" class="md-nav__link">
+  <a href="#1-security-type-standard-azure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UseStandardSecurityType feature gate(新)
+        地雷 1:--security-type Standard 被 Azure 拒絕
       
     </span>
   </a>
@@ -749,10 +749,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-1" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 1)
+        下一步
       
     </span>
   </a>
@@ -3236,10 +3236,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-07" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-07)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3261,19 +3261,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷
+        地雷記錄
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷">
+    <nav class="md-nav" aria-label="地雷記錄">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#usestandardsecuritytype-feature-gate" class="md-nav__link">
+  <a href="#1-security-type-standard-azure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UseStandardSecurityType feature gate(新)
+        地雷 1:--security-type Standard 被 Azure 拒絕
       
     </span>
   </a>
@@ -3286,10 +3286,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-1" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 1)
+        下一步
       
     </span>
   </a>
@@ -3313,11 +3313,17 @@
 
 
 
-<h1 id="sprint-3-day-0-azure-lab">Sprint 3 / Day 0: Azure Lab 環境建置<a class="headerlink" href="#sprint-3-day-0-azure-lab" title="Permanent link">&para;</a></h1>
+<h1 id="day-0-azure-lab">Day 0:準備 Azure Lab 環境<a class="headerlink" href="#day-0-azure-lab" title="Permanent link">&para;</a></h1>
 <blockquote>
-<p>課程定位:本章目標是建出一台<strong>能跑 nested virtualization 的乾淨 lab VM</strong>,並把成本 guardrails 一次到位。
-完整計畫見 <code>docs/plans/2026-07-07-feat-sprint3-kolla-magnum-capi-azure-lab-course-plan.md</code>。</p>
+<p>今天還不碰 OpenStack——先把地基打好:在 Azure 開一台<strong>支援巢狀虛擬化</strong>的 VM 當實驗室,並且把成本控管(自動關機、預算警報)一次設好,確保這個 lab 不會變成月底的帳單驚喜。</p>
 </blockquote>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
+<ul>
+<li><strong>今天</strong>:租一台夠大的 Azure VM。規格、安全類型、網路限制每一項都有理由,原理章會逐一解釋。</li>
+<li><strong>今天之後</strong>:接下來十一天的所有東西——整朵 OpenStack 雲、裡面開的每台虛擬機——全部跑在這一台 VM 上。它每晚 22:00 會自動關機幫你省錢,早上記得自己開。</li>
+</ul>
+</div>
 <h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <h3 id="1-e16s_v5">1. 為什麼是 E16s_v5<a class="headerlink" href="#1-e16s_v5" title="Permanent link">&para;</a></h3>
 <p>Kolla-Ansible AIO + Magnum CAPI 的記憶體帳(Day 8 全套同時跑的尖峰):</p>
@@ -3360,7 +3366,7 @@
 <li>這不是缺陷,是公有雲上跑 IaaS lab 的既定架構;生產環境的 external network 會接真實的 provider VLAN</li>
 </ul>
 <h3 id="3-security-type-standard">3. Security type:為什麼堅持 Standard<a class="headerlink" href="#3-security-type-standard" title="Permanent link">&para;</a></h3>
-<p>Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與 nested virt 的相容性有版本地雷,lab 沒必要冒險 —— 直接用 <code>--security-type Standard</code>。<strong>地雷</strong>:新訂閱要先註冊 feature <code>Microsoft.Compute/UseStandardSecurityType</code> 才准用 Standard(見下方踩雷)。</p>
+<p>Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與巢狀虛擬化的相容性有版本地雷,lab 沒必要冒險——直接用 <code>--security-type Standard</code>。但要注意:新訂閱必須先註冊 feature <code>Microsoft.Compute/UseStandardSecurityType</code> 才准用 Standard,忘了會在開 VM 時被拒絕(步驟 2 就是在做這件事;完整錯誤訊息見文末的地雷記錄)。</p>
 <h3 id="4-guardrails">4. 成本 guardrails 三件套<a class="headerlink" href="#4-guardrails" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3391,9 +3397,10 @@
 <p>牌價(japaneast, 2026-07-07):E16s_v5 $1.216/hr;P10 $22.67/月 + P15 $43.72/月(<strong>磁碟關機也計費</strong>)。每天 10 小時 ≈ <strong>US$101/週</strong>。</p>
 <h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="0">0. 前置確認<a class="headerlink" href="#0" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>az<span class="w"> </span>account<span class="w"> </span>list<span class="w"> </span>-o<span class="w"> </span>table<span class="w">          </span><span class="c1"># 確認 &lt;subscription-id&gt;(Azure AI Services)在列</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ls<span class="w"> </span>~/.ssh/juju_id_rsa.pub<span class="w">         </span><span class="c1"># SSH key 存在</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># quota 免申請:japaneast ESv5 family 50 vCPU、用量 0(az vm list-usage 確認過)</span>
+<p>確認三件事:要用的訂閱存在、SSH 金鑰存在、目標區域的 vCPU 配額夠開 16 核:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>az<span class="w"> </span>account<span class="w"> </span>list<span class="w"> </span>-o<span class="w"> </span>table<span class="w">          </span><span class="c1"># 你要用的訂閱在清單裡</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ls<span class="w"> </span>~/.ssh/juju_id_rsa.pub<span class="w">         </span><span class="c1"># SSH 公鑰存在(沒有就先 ssh-keygen)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>az<span class="w"> </span>vm<span class="w"> </span>list-usage<span class="w"> </span>-l<span class="w"> </span>japaneast<span class="w"> </span>-o<span class="w"> </span>table<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>esv5<span class="w">   </span><span class="c1"># ESv5 家族配額 ≥ 16(不足要先申請)</span>
 </span></code></pre></div>
 <h3 id="1-resource-group">1. Resource group<a class="headerlink" href="#1-resource-group" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>az<span class="w"> </span>group<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>souch-openstack-sprint3<span class="w"> </span>-l<span class="w"> </span>japaneast<span class="w"> </span><span class="se">\</span>
@@ -3444,40 +3451,31 @@
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>kvm-ok
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>lsblk<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE,MOUNTPOINT
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-07">Checkpoint(全數通過 2026-07-07)<a class="headerlink" href="#checkpoint-2026-07-07" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>在 VM 上逐項執行,<strong>全部符合判準才算完成今天</strong>;不符合就回對應步驟排查:</p>
 <table>
 <thead>
 <tr>
-<th>驗證</th>
-<th>判準</th>
-<th>實測</th>
+<th>驗證指令</th>
+<th>你應該看到</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>sudo kvm-ok</code></td>
-<td><code>KVM acceleration can be used</code></td>
-<td>✅</td>
+<td><code>KVM acceleration can be used</code>——巢狀虛擬化可用,這是整個 lab 的前提</td>
 </tr>
 <tr>
-<td><code>nproc</code> / <code>free -h</code></td>
-<td>16 / 125Gi</td>
-<td>✅</td>
+<td><code>nproc</code> 與 <code>free -h</code></td>
+<td>16 核心、約 125 GiB 記憶體</td>
 </tr>
 <tr>
 <td><code>lsblk</code></td>
-<td>sda 128G(/)、sdb 256G(未格式化,Day 3 做 cinder-volumes VG)</td>
-<td>✅</td>
+<td>sda 128G 掛在 <code>/</code>;sdb 256G <strong>保持未格式化</strong>(Day 3 會把它做成 Cinder 的儲存池)</td>
 </tr>
 <tr>
 <td><code>lsb_release -d</code></td>
 <td>Ubuntu 24.04 LTS</td>
-<td>✅ 24.04.4</td>
-</tr>
-<tr>
-<td>既有 3 個 <code>*-deepwave-central-services</code> RG</td>
-<td>零接觸</td>
-<td>✅</td>
 </tr>
 </tbody>
 </table>
@@ -3528,11 +3526,13 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_3">踩雷<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="usestandardsecuritytype-feature-gate">UseStandardSecurityType feature gate(新)<a class="headerlink" href="#usestandardsecuritytype-feature-gate" title="Permanent link">&para;</a></h3>
-<p><code>az vm create --security-type Standard</code> 直接吃 <code>BadRequest: The value 'Standard' is not available for property 'securityType' until the feature Microsoft.Compute/UseStandardSecurityType is registered</code>。Azure 2024 起新訂閱預設鎖 TrustedLaunch,Standard 要 feature opt-in + provider 重註冊(步驟 2)。Sprint 2 當時用 TrustedLaunch + 關 secure boot 繞過,沒撞到這顆。</p>
-<h2 id="day-1">下一步(Day 1)<a class="headerlink" href="#day-1" title="Permanent link">&para;</a></h2>
-<p>Kolla-Ansible 原理 + AIO 部署 core 服務 —— 見課程計畫 Day 1;開工前先重讀 Sprint 1 的 <code>docs/solutions/</code> 當先修教材。</p>
+<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="1-security-type-standard-azure">地雷 1:<code>--security-type Standard</code> 被 Azure 拒絕<a class="headerlink" href="#1-security-type-standard-azure" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>az vm create --security-type Standard</code> 直接失敗,錯誤訊息是 <code>BadRequest: The value 'Standard' is not available for property 'securityType' until the feature Microsoft.Compute/UseStandardSecurityType is registered</code>。</p>
+<p><strong>根因</strong>:Azure 從 2024 年起,新訂閱預設強制 TrustedLaunch;要用 Standard 必須先註冊 feature 並重新註冊 provider——也就是步驟 2 存在的原因。如果你跳過了步驟 2,回去補跑再重試 <code>az vm create</code> 即可。</p>
+<h2 id="_4">下一步<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>一台乾淨的、支援巢狀虛擬化的 VM 已經就緒。<a href="../sprint3-day1-kolla-aio-core/">Day 1</a> 我們安裝部署工具 Kolla-Ansible,把 OpenStack 的五個核心服務部上去——今天這台空白的主機,明天就會是一朵能登入的雲。</p>
+<p>如果你想先了解「為什麼選 Kolla-Ansible、之前兩條路線怎麼失敗的」,可以先讀<a href="../../previous-attempts/">前兩次嘗試</a>;想直接動手也完全沒問題,Day 1 開頭會給你需要的所有背景。</p>
 
 
 

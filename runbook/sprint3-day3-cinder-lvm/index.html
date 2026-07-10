@@ -756,10 +756,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-08" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-08)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -770,19 +770,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷 / 觀察
+        地雷與觀察
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷 / 觀察">
+    <nav class="md-nav" aria-label="地雷與觀察">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cinder-backup-down" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. cinder-backup 預設被帶起來但必然 down
+        地雷 1:cinder-backup 預設被帶起來但必然 down
       
     </span>
   </a>
@@ -790,10 +790,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-epoxy-lvm-thin-provisioning" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Epoxy 預設 LVM thin provisioning(觀察,非地雷)
+        地雷 2:Epoxy 預設 LVM thin provisioning(觀察,非地雷)
       
     </span>
   </a>
@@ -3182,10 +3182,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint-2026-07-08" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Checkpoint(全數通過 2026-07-08)
+        驗收 checkpoint
       
     </span>
   </a>
@@ -3196,19 +3196,19 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        踩雷 / 觀察
+        地雷與觀察
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="踩雷 / 觀察">
+    <nav class="md-nav" aria-label="地雷與觀察">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cinder-backup-down" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. cinder-backup 預設被帶起來但必然 down
+        地雷 1:cinder-backup 預設被帶起來但必然 down
       
     </span>
   </a>
@@ -3216,10 +3216,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-epoxy-lvm-thin-provisioning" class="md-nav__link">
+  <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Epoxy 預設 LVM thin provisioning(觀察,非地雷)
+        地雷 2:Epoxy 預設 LVM thin provisioning(觀察,非地雷)
       
     </span>
   </a>
@@ -3262,7 +3262,7 @@
 <h1 id="sprint-3-day-3-cinder-lvmsprint-1-1">Sprint 3 / Day 3: Cinder LVM(Sprint 1 未完成項 #1)<a class="headerlink" href="#sprint-3-day-3-cinder-lvmsprint-1-1" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>課程定位:把 data disk 變成 Cinder 的 LVM backend,學會「已上線的 Kolla 環境增量加服務」的工作流,並完成 volume 生命週期 + boot-from-volume。
-Sprint 1 這一步死在 LXD:unprivileged container 拿不到 device-mapper ioctl 權限、udev event 進不了 namespace(solutions #22)。本次跑在真 VM,理應直通 —— 驗證這個假設。</p>
+前一次嘗試在這一步卡死:整套跑在 LXD 容器裡,容器拿不到操作磁碟(device-mapper)所需的權限,先天做不到。本次跑在真 VM 上,理論上完全沒有這個限制——今天就來驗證這個假設。</p>
 </blockquote>
 <div class="admonition abstract">
 <p class="admonition-title">你在課程的哪裡</p>
@@ -3312,29 +3312,29 @@ Sprint 1 這一步死在 LXD:unprivileged container 拿不到 device-mapper ioct
 <li><strong>iSCSI</strong>:「把磁碟透過網路接給另一台機器」的協定。切出來的邏輯碟就是靠它接給 VM 所在的 hypervisor。</li>
 </ul>
 <h3 id="volume-create-attach">一個 <code>volume create</code> + attach 的完整旅程<a class="headerlink" href="#volume-create-attach" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>sequenceDiagram
-    participant U as openstack CLI
-    participant A as cinder-api
-    participant S as cinder-scheduler
-    participant V as cinder-volume(LVM driver)
-    participant N as nova-compute
-    participant VM as VM
-    U-&gt;&gt;A: volume create --size 5
-    A-&gt;&gt;S: 這顆 volume 放哪個 backend?
-    S-&gt;&gt;V: 交給 LVM backend
-    V-&gt;&gt;V: lvcreate 切出 5G 邏輯碟
-    U-&gt;&gt;N: server add volume(attach)
-    N-&gt;&gt;V: 用 iSCSI 把邏輯碟接過來
-    N-&gt;&gt;VM: qemu 掛進 VM → VM 內出現 /dev/vdb</code></pre>
+<pre class="mermaid"><code>flowchart TB
+    subgraph p1["第一段:volume create --size 5"]
+        direction LR
+        C1["CLI 下單"] --&gt; C2["cinder-api 收單"] --&gt; C3["cinder-scheduler&lt;br/&gt;挑 backend"] --&gt; C4["cinder-volume:&lt;br/&gt;lvcreate 切出 5G 邏輯碟"]
+    end
+    subgraph p2["第二段:server add volume(attach)"]
+        direction LR
+        A1["CLI 要求掛載"] --&gt; A2["nova-compute 用 iSCSI&lt;br/&gt;把邏輯碟接過來"] --&gt; A3["qemu 掛進 VM"] --&gt; A4["VM 內出現&lt;br/&gt;/dev/vdb"]
+    end
+    C4 ~~~ A1</code></pre>
 <p>關鍵理解:<strong>控制流程(上半)是 OpenStack 的,資料流(LVM + iSCSI)是純 Linux 的</strong>。OpenStack 沒有發明新儲存技術,它只是把 Linux 既有機制自動化、API 化——這也是為什麼 Sprint 1 跑在 LXD 容器裡會死:容器碰不到這些 kernel 層機制。</p>
 <h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-cinder">1. Cinder 三元件與資料路徑<a class="headerlink" href="#1-cinder" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openstack CLI ──► cinder-api ──► cinder-scheduler ──► cinder-volume(LVM driver)
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                                          │ lvcreate -L 5G cinder-volumes
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                                                          ▼
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>   nova-compute ◄── iSCSI target(host 上的 LIO/tgt)◄── LV /dev/cinder-volumes/volume-&lt;uuid&gt;
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        │ 把 iSCSI LUN 接給 qemu,VM 內看到 /dev/vdb
-</span></code></pre></div>
+<pre class="mermaid"><code>flowchart TB
+    subgraph ctrl["控制路徑(OpenStack 的部分)"]
+        direction LR
+        CLI["openstack CLI"] --&gt; API["cinder-api"] --&gt; SCH["cinder-scheduler"] --&gt; VOL["cinder-volume&lt;br/&gt;(LVM driver)"]
+    end
+    subgraph data["資料路徑(純 Linux 的部分)"]
+        direction LR
+        LV["邏輯磁碟區 LV&lt;br/&gt;volume-…"] --&gt; ISCSI["包成 iSCSI target&lt;br/&gt;分享出去"] --&gt; NC["nova-compute&lt;br/&gt;接上 LUN 交給 qemu"] --&gt; VM["VM 內看到&lt;br/&gt;/dev/vdb"]
+    end
+    VOL ==&gt;|"lvcreate 切一塊 5G"| LV</code></pre>
 <p>關鍵理解:<strong>control path 是 OpenStack 的,data path 是 Linux 的</strong>(LVM + iSCSI)。AIO 下 iSCSI 是 loopback(initiator 和 target 同一台),生產 multinode 就是跨網路的同一套協定 —— 架構不變,只是距離變遠。</p>
 <h3 id="2-kolla">2. 增量加服務的 Kolla 工作流<a class="headerlink" href="#2-kolla" title="Permanent link">&para;</a></h3>
 <ol>
@@ -3372,77 +3372,78 @@ Sprint 1 這一步死在 LXD:unprivileged container 拿不到 device-mapper ioct
 </table>
 <h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <h3 id="1-data-disk-vg">1. Data disk → VG(動手前先確認是對的碟!)<a class="headerlink" href="#1-data-disk-vg" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>lsblk<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE<span class="w"> </span>/dev/sdb<span class="w">   </span><span class="c1"># 256G、無分割、無檔案系統</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>blkid<span class="w"> </span>/dev/sdb<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;safe&quot;</span><span class="w">                    </span><span class="c1"># 無 signature 才動手</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>sudo<span class="w"> </span>pvcreate<span class="w"> </span>/dev/sdb
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>sudo<span class="w"> </span>vgcreate<span class="w"> </span>cinder-volumes<span class="w"> </span>/dev/sdb<span class="w">                 </span><span class="c1"># VG 名稱 = kolla 預設 cinder_volume_group</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>lsblk<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE<span class="w"> </span>/dev/sdb<span class="w">   </span><span class="c1"># 256G、無分割、無檔案系統</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sudo<span class="w"> </span>blkid<span class="w"> </span>/dev/sdb<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;safe&quot;</span><span class="w">                    </span><span class="c1"># 無 signature 才動手</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sudo<span class="w"> </span>pvcreate<span class="w"> </span>/dev/sdb
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>sudo<span class="w"> </span>vgcreate<span class="w"> </span>cinder-volumes<span class="w"> </span>/dev/sdb<span class="w">                 </span><span class="c1"># VG 名稱 = kolla 預設 cinder_volume_group</span>
 </span></code></pre></div>
 <p>註:E16s_v5 沒有 local temp disk,所以 sdb 一定是 data disk;用有「d」的機型(Ed16s_v5)時 sdb 可能是 temp disk,<strong>必按 size 確認</strong>。</p>
 <h3 id="2-globalsyml-deploy">2. globals.yml + 增量 deploy<a class="headerlink" href="#2-globalsyml-deploy" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;enable_cinder: &quot;yes&quot;\nenable_cinder_backend_lvm: &quot;yes&quot;\n&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w">    </span><span class="c1"># 冪等重跑</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;enable_cinder: &quot;yes&quot;\nenable_cinder_backend_lvm: &quot;yes&quot;\n&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w">    </span><span class="c1"># 冪等重跑</span>
 </span></code></pre></div>
 <h3 id="3-volume-lab">3. Volume 生命週期 lab<a class="headerlink" href="#3-volume-lab" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>--size<span class="w"> </span><span class="m">5</span><span class="w"> </span>vol-data<span class="w">          </span><span class="c1"># → available</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>volume<span class="w"> </span>vm-ubuntu<span class="w"> </span>vol-data<span class="w">     </span><span class="c1"># VM 內出現 /dev/vdb</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>ubuntu@172.24.4.111<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="s2">&quot;sudo mkfs.ext4 /dev/vdb &amp;&amp; sudo mount /dev/vdb /mnt &amp;&amp; echo test | sudo tee /mnt/proof.txt&quot;</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>openstack<span class="w"> </span>server<span class="w"> </span>remove<span class="w"> </span>volume<span class="w"> </span>vm-ubuntu<span class="w"> </span>vol-data<span class="w">  </span><span class="c1"># → available</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>sudo<span class="w"> </span>lvs<span class="w"> </span>cinder-volumes<span class="w">                            </span><span class="c1"># host 端看 thin LV</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>openstack<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>--size<span class="w"> </span><span class="m">5</span><span class="w"> </span>vol-data<span class="w">          </span><span class="c1"># → available</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>volume<span class="w"> </span>vm-ubuntu<span class="w"> </span>vol-data<span class="w">     </span><span class="c1"># VM 內出現 /dev/vdb</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>ubuntu@172.24.4.111<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="s2">&quot;sudo mkfs.ext4 /dev/vdb &amp;&amp; sudo mount /dev/vdb /mnt &amp;&amp; echo test | sudo tee /mnt/proof.txt&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>openstack<span class="w"> </span>server<span class="w"> </span>remove<span class="w"> </span>volume<span class="w"> </span>vm-ubuntu<span class="w"> </span>vol-data<span class="w">  </span><span class="c1"># → available</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>sudo<span class="w"> </span>lvs<span class="w"> </span>cinder-volumes<span class="w">                            </span><span class="c1"># host 端看 thin LV</span>
 </span></code></pre></div>
 <h3 id="4-boot-from-volume">4. Boot-from-volume<a class="headerlink" href="#4-boot-from-volume" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--size<span class="w"> </span><span class="m">2</span><span class="w"> </span>vol-boot<span class="w">   </span><span class="c1"># 把 image 灌進 volume</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--volume<span class="w"> </span>vol-boot<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--network<span class="w"> </span>net1<span class="w"> </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--wait<span class="w"> </span>vm-bfv<span class="w">            </span><span class="c1"># 根碟在 Cinder,不在 hypervisor 本地</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--size<span class="w"> </span><span class="m">2</span><span class="w"> </span>vol-boot<span class="w">   </span><span class="c1"># 把 image 灌進 volume</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--volume<span class="w"> </span>vol-boot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--network<span class="w"> </span>net1<span class="w"> </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--wait<span class="w"> </span>vm-bfv<span class="w">            </span><span class="c1"># 根碟在 Cinder,不在 hypervisor 本地</span>
 </span></code></pre></div>
-<h2 id="checkpoint-2026-07-08">Checkpoint(全數通過 2026-07-08)<a class="headerlink" href="#checkpoint-2026-07-08" title="Permanent link">&para;</a></h2>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>
 <thead>
 <tr>
 <th>驗證</th>
 <th>判準</th>
-<th>實測</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>openstack volume service list</code></td>
 <td>scheduler + volume@lvm-1 up</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>attach → VM 內可用</td>
 <td>/dev/vdb 可 mkfs/mount/寫檔</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>detach</td>
 <td>volume 回 available、資料保留在 LV</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>boot-from-volume</td>
 <td>vm-bfv ACTIVE</td>
-<td>✅</td>
+<td>符合</td>
 </tr>
 <tr>
 <td>host 端</td>
 <td>LV 出現在 cinder-volumes VG</td>
-<td>✅ thin LV(見下)</td>
+<td>thin LV(為什麼是 thin,見下方觀察)</td>
 </tr>
 <tr>
-<td><strong>對照 Sprint 1</strong></td>
-<td>Sprint 1 solutions #22 的 LXD 限制在真 VM 上不存在</td>
-<td>✅ 零阻力直通</td>
+<td><strong>對照前一次嘗試</strong></td>
+<td>Sprint 1 卡死這一步的 LXD 權限限制,在真 VM 上不存在</td>
+<td>零阻力直通(當時的細節見<a href="../../previous-attempts/">前兩次嘗試</a>)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="_4">踩雷 / 觀察<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="1-cinder-backup-down">1. cinder-backup 預設被帶起來但必然 down<a class="headerlink" href="#1-cinder-backup-down" title="Permanent link">&para;</a></h3>
+<h2 id="_4">地雷與觀察<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:cinder-backup 預設被帶起來但必然 down<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p><code>enable_cinder: "yes"</code> 會順帶部 cinder-backup,但它需要 backup backend(Swift/Ceph/NFS),本 lab 都沒有 → 服務 down。<strong>這不是故障</strong>;處理:<code>enable_cinder_backup: "no"</code> + <code>docker rm -f cinder_backup</code>。教訓:kolla 的服務開關有「父子連動」,開父服務前先看它會帶起哪些子服務。</p>
-<h3 id="2-epoxy-lvm-thin-provisioning">2. Epoxy 預設 LVM thin provisioning(觀察,非地雷)<a class="headerlink" href="#2-epoxy-lvm-thin-provisioning" title="Permanent link">&para;</a></h3>
+<h3 id="mine-2">地雷 2:Epoxy 預設 LVM thin provisioning(觀察,非地雷)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p><code>lvs</code> 看到的不是 5G 的 thick LV,而是 243G 的 <code>cinder-volumes-pool</code>(thin pool)+ 掛在裡面的 thin LV(實際只佔 1.33%)。代表 volume 超賣是預設行為 —— 生產環境要監控 pool 的 Data% 而不是 VG free。</p>
 <h2 id="day-4">下一步(Day 4)<a class="headerlink" href="#day-4" title="Permanent link">&para;</a></h2>
 <p>Octavia(Sprint 1 未完成項 #2):amphora image 準備 + LB 手動建置全流程。</p>
