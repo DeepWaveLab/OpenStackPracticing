@@ -181,6 +181,30 @@
          <lastmod>2026-07-11</lastmod>
     </url>
     <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day13-skyline/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day14-ceph-bootstrap/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day15-object-storage-rgw/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day16-manila-cephfs/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day17-designate-dns/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day18-trove-dbaas/</loc>
+         <lastmod>2026-07-11</lastmod>
+    </url>
+    <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/</loc>
          <lastmod>2026-07-11</lastmod>
     </url>

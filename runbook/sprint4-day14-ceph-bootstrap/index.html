@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/day-1-juju-bootstrap/">
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day14-ceph-bootstrap/">
       
       
-        <link rel="prev" href="../day-1-lxd-juju-install/">
+        <link rel="prev" href="../sprint4-day13-skyline/">
       
       
-        <link rel="next" href="../day-1-first-relation/">
+        <link rel="next" href="../sprint4-day15-object-storage-rgw/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Day 1 · Juju bootstrap - OpenStack Lab Course</title>
+        <title>Day 14 · Ceph 基礎 - OpenStack Lab Course</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-1-juju-bootstrap-openstack-model" class="md-skip">
+        <a href="#day-14ceph" class="md-skip">
           跳轉到
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 1 · Juju bootstrap
+              Day 14 · Ceph 基礎
             
           </span>
         </div>
@@ -231,6 +231,8 @@
   
   
   
+    
+  
   
     
     
@@ -238,10 +240,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
           
   
@@ -285,12 +289,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../../previous-attempts/" class="md-tabs__link">
           
   
@@ -397,8 +399,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -410,19 +414,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -440,7 +447,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -492,17 +499,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
-          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
             
   
   
@@ -907,8 +917,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -929,18 +941,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
             
   
   
@@ -958,7 +973,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1001,10 +1016,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../sprint4-day14-ceph-bootstrap/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 14 · Ceph 基礎
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1020,6 +1062,264 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ceph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Ceph?先讀這段
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="第一次接觸 Ceph?先讀這段">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ceph_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼生產環境的答案是 Ceph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最小心智模型:三種守護程序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cephadm-kolla" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cephadm 與 Kolla 的分工
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cephadm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:安裝前置與 cephadm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:bootstrap(三個旗標都有理由)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:單機調校(每一條都在拆一顆雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-osd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:加入 OSD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:處理必然出現的告警
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:裝置掃描被 Cinder 的 thin-pool 嗆到
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:記憶體 autotune 會吃掉幾十 GB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:告警讀到舊值——health check 有快取
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:調校與 pool 誕生的時序
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        彩蛋:重開機的兩種命運
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        附錄:整套拆除
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1966,10 +2266,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1987,22 +2285,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -2020,7 +2315,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2091,10 +2386,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -2143,21 +2436,18 @@
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
           
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
             
   
   
@@ -2175,7 +2465,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2246,37 +2536,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Day 1 · Juju bootstrap
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
         
   
   
@@ -2292,192 +2555,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        目的
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        對應官方指南
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-bootstrap-juju-controller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Bootstrap Juju controller
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-openstack-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: 建立 openstack model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        學到的核心概念
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="學到的核心概念">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bootstrap 做了什麼
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#juju" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Juju 的層級關係
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        懶加載
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gotchas" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Gotchas
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Gotchas">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#group-bootstrap" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚠️ Group 沒生效就 bootstrap 會失敗
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-bootstrap-seriesjammy-vs-host-os-noble" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ⚠️ --bootstrap-series=jammy vs host OS noble
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        現狀總結
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#replay" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下次用時的快速 replay
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2990,20 +3067,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   
@@ -3365,77 +3439,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#ceph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        目的
+        第一次接觸 Ceph?先讀這段
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        對應官方指南
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Prerequisites
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-1-bootstrap-juju-controller" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 1: Bootstrap Juju controller
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#step-2-openstack-model" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Step 2: 建立 openstack model
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        學到的核心概念
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="學到的核心概念">
+    <nav class="md-nav" aria-label="第一次接觸 Ceph?先讀這段">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#bootstrap" class="md-nav__link">
+  <a href="#ceph_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Bootstrap 做了什麼
+        為什麼生產環境的答案是 Ceph
       
     </span>
   </a>
@@ -3443,10 +3462,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#juju" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Juju 的層級關係
+        最小心智模型:三種守護程序
       
     </span>
   </a>
@@ -3454,10 +3473,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#cephadm-kolla" class="md-nav__link">
     <span class="md-ellipsis">
       
-        懶加載
+        cephadm 與 Kolla 的分工
       
     </span>
   </a>
@@ -3470,22 +3489,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#gotchas" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gotchas
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Gotchas">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#group-bootstrap" class="md-nav__link">
+  <a href="#1-cephadm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ⚠️ Group 沒生效就 bootstrap 會失敗
+        步驟 1:安裝前置與 cephadm
       
     </span>
   </a>
@@ -3493,10 +3523,115 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#-bootstrap-seriesjammy-vs-host-os-noble" class="md-nav__link">
+  <a href="#2bootstrap" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ⚠️ --bootstrap-series=jammy vs host OS noble
+        步驟 2:bootstrap(三個旗標都有理由)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:單機調校(每一條都在拆一顆雷)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-osd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:加入 OSD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:處理必然出現的告警
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:裝置掃描被 Cinder 的 thin-pool 嗆到
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:記憶體 autotune 會吃掉幾十 GB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:告警讀到舊值——health check 有快取
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:調校與 pool 誕生的時序
       
     </span>
   </a>
@@ -3512,7 +3647,7 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        現狀總結
+        彩蛋:重開機的兩種命運
       
     </span>
   </a>
@@ -3520,10 +3655,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#replay" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下次用時的快速 replay
+        附錄:整套拆除
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
       
     </span>
   </a>
@@ -3547,150 +3693,173 @@
 
 
 
-<h1 id="day-1-juju-bootstrap-openstack-model">Day 1: Juju Bootstrap + 建立 openstack Model<a class="headerlink" href="#day-1-juju-bootstrap-openstack-model" title="Permanent link">&para;</a></h1>
-<p><img align="right" alt="OpenStack Charms 官方吉祥物" src="../../assets/mascots/openstack-charms.png" width="90" /></p>
-<h2 id="_1">目的<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>Bootstrap 一個 Juju controller 到 LXD（取代 MaaS），並建立之後部署 OpenStack 用的 <code>openstack</code> model。</p>
-<h2 id="_2">對應官方指南<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p><a href="https://docs.openstack.org/project-deploy-guide/charm-deployment-guide/latest/install-juju.html">Chapter 2: Install Juju § Bootstrap + add-model</a></p>
-<p><strong>差異表</strong>：</p>
+<h1 id="day-14ceph">Day 14:Ceph 基礎 —— 在同一台主機立起儲存骨幹<a class="headerlink" href="#day-14ceph" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>今天不碰 OpenStack 本體,改立一套 <strong>Ceph</strong>——生產環境 OpenStack 的儲存標配。它會成為 Day 15(物件儲存)與 Day 16(共享檔案系統)的共同地基。單機跑 Ceph 有一串「必須預先知道」的調校,本章全部寫清楚;照著做,一小時內 <code>HEALTH_OK</code>。</p>
+</blockquote>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
+<ul>
+<li><strong>Day 3 的儲存</strong>:Cinder 用主機上的 LVM——單機夠用,但生產環境很少這樣做。</li>
+<li><strong>今天</strong>:用 <strong>cephadm</strong> 在同一台主機部署一套最小 Ceph 叢集(mon + mgr + osd)。今天只立骨幹,還不接 OpenStack。</li>
+<li><strong>今天之後</strong>:Day 15 在上面開物件儲存(RGW),Day 16 開共享檔案系統(CephFS)。</li>
+</ul>
+</div>
+<h2 id="ceph">第一次接觸 Ceph?先讀這段<a class="headerlink" href="#ceph" title="Permanent link">&para;</a></h2>
+<h3 id="ceph_1">為什麼生產環境的答案是 Ceph<a class="headerlink" href="#ceph_1" title="Permanent link">&para;</a></h3>
+<p><img align="right" alt="Ceph 官方標誌" src="../../assets/logos/ceph.png" width="110" /></p>
+<p>Day 3 的 LVM 方案有個天花板:硬碟綁在單一主機上,主機掛了資料就下線。<strong>Ceph 是一套分散式儲存系統</strong>:把許多主機的許多硬碟組成一個大池子,資料自動複製多份、自動修復,而且<strong>一套系統同時提供三種儲存介面</strong>——區塊(給 Cinder 當後端)、物件(S3/Swift API)、檔案(共享檔案系統)。這就是為什麼業界不再為物件儲存單獨維護一套 Swift(這段歷史在 <a href="../sprint3-day12-sprint4-preview/">Day 12</a> 講過):養一套 Ceph,三種儲存全有了。</p>
+<p>順帶一提,Ceph 的吉祥物是章魚 🐙——多隻觸手同時做事,跟它的架構挺相配。</p>
+<h3 id="_1">最小心智模型:三種守護程序<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TB
+    subgraph brain["控制面(小而關鍵)"]
+        direction LR
+        MON["mon:叢集地圖與投票&lt;br/&gt;(誰活著、資料在哪)"] ~~~ MGR["mgr:管理與編排&lt;br/&gt;(cephadm 的大腦)"]
+    end
+    subgraph data["資料面(可以一直加)"]
+        direction LR
+        OSD1["osd:一顆硬碟一個 osd&lt;br/&gt;真正存資料的人"] ~~~ POOL["pool:邏輯儲存池&lt;br/&gt;(設定複本數的單位)"]
+    end
+    brain ==&gt;|"指揮資料放置"| data</code></pre>
+<p>生產環境:mon×3(投票要奇數)、osd 幾十到幾千顆。我們的 lab:全部一份,擠在同一台主機——<strong>這正是今天所有特殊調校的原因</strong>。</p>
+<h3 id="cephadm-kolla">cephadm 與 Kolla 的分工<a class="headerlink" href="#cephadm-kolla" title="Permanent link">&para;</a></h3>
+<p>Kolla-Ansible 自 2020 年起就<strong>不部署 Ceph 本體</strong>,只做「接上一套現成 Ceph」的整合——部署 Ceph 的官方工具是 <strong>cephadm</strong>(Ceph 自帶的編排器)。所以今天的角色分工:cephadm 管 Ceph、Kolla 管 OpenStack,兩者同機共存。</p>
+<p>一個關鍵決定:<strong>cephadm 底下用 podman,不用 docker</strong>。因為 Kolla 每次 deploy 都可能重啟主機的 docker daemon——Ceph 若也掛在 docker 下,mon/osd 會被連坐重啟;podman 沒有常駐 daemon,每個 Ceph 守護程序是獨立的 systemd 服務,跟 Kolla 完全解耦。(這個選擇在本章結尾的重開機測試會得到回報。)</p>
+<h2 id="_2">開始之前<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 一顆<strong>全新的空硬碟</strong>給 Ceph 專用。本課環境:在 Azure 加掛一顆 256G Premium 磁碟,VM 內出現為 <code>/dev/sdc</code>:
+  <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 在你的電腦上執行</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>az<span class="w"> </span>vm<span class="w"> </span>disk<span class="w"> </span>attach<span class="w"> </span>-g<span class="w"> </span>&lt;資源群組&gt;<span class="w"> </span>--vm-name<span class="w"> </span>&lt;VM名&gt;<span class="w"> </span>--name<span class="w"> </span>ceph-data<span class="w"> </span>--new<span class="w"> </span>--size-gb<span class="w"> </span><span class="m">256</span><span class="w"> </span>--sku<span class="w"> </span>Premium_LRS
+</span></code></pre></div></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 建議先拍一張磁碟 snapshot(動儲存屬於高風險操作):<code>az snapshot create …</code></li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 確認 <code>lsblk</code> 看得到新磁碟且<strong>沒有任何分割</strong></li>
+</ul>
+<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="1-cephadm">步驟 1:安裝前置與 cephadm<a class="headerlink" href="#1-cephadm" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>podman<span class="w"> </span>lvm2<span class="w"> </span>chrony
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">cd</span><span class="w"> </span>~
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>--silent<span class="w"> </span>--remote-name<span class="w"> </span>--location<span class="w"> </span>https://download.ceph.com/rpm-20.2.2/el9/noarch/cephadm
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>chmod<span class="w"> </span>+x<span class="w"> </span>cephadm
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>./cephadm<span class="w"> </span>version
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cephadm version 20.2.2 (...) tentacle (stable)
+</span></code></pre></div>
+<p>版本選擇有講究:<strong>釘 Tentacle 20.2.2</strong>。前一代 Squid 即將停止維護,而 Ubuntu 發行版倉庫裡的 ceph 套件是有已知問題的預覽快照——一律用官方下載的 cephadm(它是不挑發行版的獨立執行檔,<code>el9</code> 路徑在 Ubuntu 上照用)。</p>
+<h3 id="2bootstrap">步驟 2:bootstrap(三個旗標都有理由)<a class="headerlink" href="#2bootstrap" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>bootstrap<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--mon-ip<span class="w"> </span><span class="m">10</span>.0.0.4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--single-host-defaults<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--skip-monitoring-stack<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--skip-dashboard
+</span></code></pre></div>
+<ul>
+<li><code>--single-host-defaults</code>:把「資料要分散在多台主機」的預設放寬到單機。</li>
+<li><code>--skip-monitoring-stack</code>:<strong>必帶</strong>。Ceph 自帶的 grafana(3000)、node-exporter(9100)、alertmanager(9093)與 Day 21 要部署的 Kolla 監控<strong>完全同 port</strong>——現在跳過,未來才不會對撞。</li>
+<li><code>--skip-dashboard</code>:lab 省資源;要看狀態用 CLI 就夠。</li>
+</ul>
+<p>結尾看到 <code>Bootstrap complete.</code> 即成功(約 2–3 分鐘,含拉 Ceph 容器映像檔)。</p>
+<h3 id="3">步驟 3:單機調校(每一條都在拆一顆雷)<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="s2">ceph config set global mon_allow_pool_size_one true</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s2">ceph config set global osd_pool_default_size 1</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="s2">ceph config set global osd_pool_default_min_size 1</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="s2">ceph config set mon osd_pool_default_size 1</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="s2">ceph config set osd osd_memory_target_autotune false</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s2">ceph config set osd osd_memory_target 2G</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="s2">ceph config set mds mds_cache_memory_limit 1G</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="s2">&quot;</span>
+</span></code></pre></div>
+<p>前四條:只有一顆硬碟,資料只能存一份(<code>size=1</code>)——生產環境絕不這樣,lab 明知故犯並知道代價。
+後三條是<strong>本章最重要的一顆雷的預拆</strong>:cephadm 有記憶體自動調整,公式是「總記憶體 × 0.7 ÷ OSD 數」——在 128 GB、單 OSD 的機器上,它會把 OSD 的記憶體目標推到<strong>幾十 GB</strong>,直接跟 OpenStack 搶記憶體。關掉自動調整、鎖 2 GB。</p>
+<h3 id="4-osd">步驟 4:加入 OSD<a class="headerlink" href="#4-osd" title="Permanent link">&para;</a></h3>
+<p>指名硬碟,不用「自動吃掉所有可用磁碟」的懶人選項——這台主機上還有 OpenStack 的磁碟:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>orch<span class="w"> </span>daemon<span class="w"> </span>add<span class="w"> </span>osd<span class="w"> </span><span class="k">$(</span>hostname<span class="w"> </span>-s<span class="k">)</span>:/dev/sdc
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Created osd(s) 0 on host &#39;openstack-lab&#39;
+</span></code></pre></div>
+<p>約 30 秒後 <code>ceph osd stat</code> 應顯示 <code>1 osds: 1 up, 1 in</code>。</p>
+<h3 id="5">步驟 5:處理必然出現的告警<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>health<span class="w"> </span>detail
+</span></code></pre></div>
+<p>單機 + 與 OpenStack 共存,會看到兩種告警,都要「知情處理」而不是無視:</p>
+<ol>
+<li><code>POOL_NO_REDUNDANCY</code>——size=1 的必然產物,知情靜音:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>health<span class="w"> </span>mute<span class="w"> </span>POOL_NO_REDUNDANCY<span class="w"> </span>--sticky
+</span></code></pre></div></li>
+<li><code>CEPHADM_REFRESH_FAILED</code>——見<a href="#mine-1">地雷 1</a>,同樣知情靜音。</li>
+</ol>
+<p>處理完:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>-s
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>    health: HEALTH_OK
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    mon: 1 daemons, quorum openstack-lab
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    mgr: openstack-lab.xxxx(active), standbys: openstack-lab.yyyy
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    osd: 1 osds: 1 up, 1 in
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    usage: 28 MiB used, 256 GiB / 256 GiB avail
+</span></code></pre></div>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值:</p>
 <table>
 <thead>
 <tr>
-<th>指南（MaaS）</th>
-<th>我們（LXD）</th>
+<th>驗證</th>
+<th>判準</th>
+<th>本課環境的結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>juju add-cloud maas-one -f maas-cloud.yaml</code></td>
-<td><strong>跳過</strong>（LXD 是 Juju 內建 cloud，cloud 名 = <code>localhost</code>）</td>
+<td><code>ceph -s</code></td>
+<td>HEALTH_OK(兩項知情靜音已記錄)</td>
+<td>符合</td>
 </tr>
 <tr>
-<td><code>juju add-credential maas-one -f maas-creds.yaml</code></td>
-<td><strong>跳過</strong>（LXD 本機 socket，無需 credential）</td>
+<td>OSD</td>
+<td>1 up / 1 in,容量等於新磁碟</td>
+<td>256 GiB 可用</td>
 </tr>
 <tr>
-<td><code>juju bootstrap --bootstrap-series=jammy --constraints tags=juju maas-one maas-controller</code></td>
-<td><code>juju bootstrap --bootstrap-series=jammy localhost openstack-controller</code></td>
+<td>記憶體</td>
+<td>部署後增量 ≤ 8 GiB</td>
+<td>實測只多 ~1 GiB(OSD 空載)</td>
 </tr>
 <tr>
-<td><code>juju add-model --config default-series=jammy openstack</code></td>
-<td><strong>完全照抄</strong></td>
+<td>Kolla 不受影響</td>
+<td><code>openstack service list</code> 正常、容器數不變</td>
+<td>13 服務 / 53 容器,無感</td>
+</tr>
+<tr>
+<td>守護程序歸屬</td>
+<td><code>ceph orch ps</code> 全部由 systemd+podman 管理</td>
+<td>符合(與 kolla 的 docker 零耦合)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Day 1 LXD + Juju 安裝完成（<a href="../day-1-lxd-juju-install/">day-1-lxd-juju-install.md</a>）</li>
-<li><code>azureuser</code> 已經在 <code>lxd</code> group 且<strong>重新 SSH 過</strong>（或新 session）</li>
-</ul>
+<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:裝置掃描被 Cinder 的 thin-pool 嗆到<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>ceph health</code> 出現 <code>CEPHADM_REFRESH_FAILED: failed to probe daemons or devices</code>,詳情裡是一長串 <code>blkid: error: /dev/cinder-volumes/...pool_tmeta: No such file or directory</code>。</p>
+<p><strong>根因</strong>:cephadm 定期做全機磁碟盤點(<code>ceph-volume inventory</code>),掃到 Day 3 建立的 Cinder thin-pool 的<strong>內部中繼 LV</strong> 時讀不到裝置節點而失敗。這是「OpenStack 與 Ceph 同機共存」特有的碰撞——各自獨立時都不會發生。</p>
+<p><strong>處置</strong>:功能無損——加 OSD 走的是指名路徑(步驟 4),不依賴盤點。知情靜音並記錄:<code>ceph health mute CEPHADM_REFRESH_FAILED --sticky</code>。</p>
+<h3 id="mine-2">地雷 2:記憶體 autotune 會吃掉幾十 GB<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>已在步驟 3 預拆。若忘了關,<code>osd_memory_target</code> 會被自動推到「總記憶體 × 0.7 ÷ OSD 數」——單 OSD 的大記憶體主機上是災難。驗證:<code>ceph config get osd osd_memory_target</code> 應回 <code>2147483648</code>(2G)。</p>
+<h3 id="mine-3">地雷 3:告警讀到舊值——health check 有快取<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:明明 <code>ceph config get mon osd_pool_default_size</code> 已回 1,<code>ceph -s</code> 卻持續顯示 <code>OSD count 1 &lt; osd_pool_default_size 2</code>。</p>
+<p><strong>根因</strong>:健康檢查的評估值有快取,改設定後不會立即重算。</p>
+<p><strong>解法</strong>:<code>ceph mgr fail</code> 讓 standby mgr 接手,告警立即依新值重評消失。「改了設定但告警沒變?先讓 mgr 換手再說」是張好用的牌。</p>
+<h3 id="mine-4">地雷 4:調校與 pool 誕生的時序<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p>bootstrap 剛完成時叢集裡<strong>零個 pool</strong>(第一個 pool <code>.mgr</code> 要等首顆 OSD 上線才誕生),此時對 <code>.mgr</code> pool 的操作會回 <code>unrecognized pool</code>。無需補救——只要 <code>osd_pool_default_size=1</code> 在 pool 誕生<strong>之前</strong>設好,新 pool 就會以正確參數出生。教訓:<strong>先調 default、再加 OSD</strong>,順序就是一切。</p>
+<h2 id="_5">彩蛋:重開機的兩種命運<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>本課環境的 VM 每晚自動關機。隔天開機後實測:<strong>Ceph 全自動復原</strong>——<code>HEALTH_OK</code> 秒回、靜音設定都在,零人工介入。對照 Day 6 的 kind(重開機後要人工檢查、換 port 還要重配 kubeconfig),這就是「每個守護程序都是 systemd 服務」的架構紅利,也是 podman 選擇的回報。</p>
+<h2 id="_6">附錄:整套拆除<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>Lab 結束或想重來:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nv">FSID</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>fsid<span class="k">)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>rm-cluster<span class="w"> </span>--force<span class="w"> </span>--zap-osds<span class="w"> </span>--fsid<span class="w"> </span><span class="nv">$FSID</span>
+</span></code></pre></div>
+<p><code>--zap-osds</code> 會把資料碟上的 Ceph 痕跡一併清除。</p>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>儲存骨幹立起來了,但現在它跟 OpenStack 還是兩個世界。<a href="../sprint4-day15-object-storage-rgw/">Day 15</a> 蓋第一座橋:在 Ceph 上開 <strong>RGW 物件儲存</strong>,讓你的雲同時擁有 S3 與 Swift 兩種 API。</p>
 <hr />
-<h2 id="step-1-bootstrap-juju-controller">Step 1: Bootstrap Juju controller<a class="headerlink" href="#step-1-bootstrap-juju-controller" title="Permanent link">&para;</a></h2>
-<p><strong>做什麼</strong>：要 LXD 給 Juju 開一台 container，把 jujud agent 裝上去，讓它變成 controller。</p>
-<p><strong>為什麼 <code>--bootstrap-series=jammy</code></strong>：對齊 OpenStack 2023.2 charm 支援的 Ubuntu 版本（22.04）。charm 在 <code>2023.2/stable</code> channel 預期 host OS 是 jammy。</p>
-<p><strong>為什麼 controller 名字叫 <code>openstack-controller</code></strong>：純命名；未來如果要 bootstrap 其他 cloud（例如另一個 LXD、或 AWS），名稱分開好管理。</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>juju<span class="w"> </span>bootstrap<span class="w"> </span>--bootstrap-series<span class="o">=</span>jammy<span class="w"> </span>localhost<span class="w"> </span>openstack-controller
-</span></code></pre></div>
-<p><strong>⏱ 時間</strong>：約 3-5 分鐘（首次要下載 552MB LXD image）。</p>
-<p><strong>關鍵輸出階段</strong>：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1. Looking for packaged Juju agent version 3.6.21 for amd64
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2. acquiring LXD image - Retrieving image: rootfs: 100% (~50MB/s)
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>3. Creating container → juju-&lt;uuid6&gt;-0 (arch=amd64)
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>4. Installing Juju agent on bootstrap instance
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>5. Attempting to connect to 10.254.154.xxx:22 (via lxdbr0)
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>6. Bootstrap complete, controller &quot;openstack-controller&quot; is now available
-</span></code></pre></div>
-<p><strong>驗證</strong>：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>juju<span class="w"> </span>controllers
-</span></code></pre></div>
-<p>預期（範例）：
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Controller             Model  User   Access     Cloud/Region         Models  Nodes    HA  Version
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack-controller*  -      admin  superuser  localhost/localhost       1      1  none  3.6.21
-</span></code></pre></div></p>
-<p>重點：
-- <code>*</code> = 目前預設 controller
-- <code>Models: 1</code> = 自動建的 <code>controller</code> model（管 controller 自己）
-- <code>Nodes: 1</code> = 1 個 LXD container 在跑</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>lxc<span class="w"> </span>list
-</span></code></pre></div>
-<p>預期：
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>| juju-&lt;uuid6&gt;-0 | RUNNING | 10.254.154.xxx (eth0) | | CONTAINER | 0 |
-</span></code></pre></div></p>
-<hr />
-<h2 id="step-2-openstack-model">Step 2: 建立 openstack model<a class="headerlink" href="#step-2-openstack-model" title="Permanent link">&para;</a></h2>
-<p><strong>做什麼</strong>：在 controller 下建一個 namespace 叫 <code>openstack</code>，之後所有 OpenStack 相關 charm 部署都在這裡面。</p>
-<p><strong>為什麼要分 model</strong>：Juju 的 model 類似 Kubernetes 的 namespace — 隔離應用，權限分組。一個 controller 可以管無數個 model。</p>
-<p><strong><code>--config default-series=jammy</code></strong>：這個 model 裡新開的 machine 預設用 Ubuntu 22.04。</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>juju<span class="w"> </span>add-model<span class="w"> </span>--config<span class="w"> </span>default-series<span class="o">=</span>jammy<span class="w"> </span>openstack
-</span></code></pre></div>
-<p><strong>⏱ &lt; 5 秒</strong>。只是在 controller 的 MongoDB 裡建一個 entry，不會叫 LXD 開機器。</p>
-<p><strong>驗證</strong>：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>juju<span class="w"> </span>models
-</span></code></pre></div>
-<p>預期：
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Model       Cloud/Region         Type  Status     Machines  Units  Access  Last connection
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>controller  localhost/localhost  lxd   available         1      1  admin   just now
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openstack*  localhost/localhost  lxd   available         0      -  admin   never connected
-</span></code></pre></div></p>
-<p>重點：
-- <code>openstack*</code> — 星號在這，所有後續 <code>juju</code> 指令預設對 openstack model
-- <code>0 Machines</code> — 驗證「model 不是馬上吃資源」的懶加載原則</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>juju<span class="w"> </span>status
-</span></code></pre></div>
-<p>預期：
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Model      Controller            Cloud/Region         Version  SLA          Timestamp
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>openstack  openstack-controller  localhost/localhost  3.6.21   unsupported  16:27:50Z
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>Model &quot;admin/openstack&quot; is empty.
-</span></code></pre></div></p>
-<hr />
-<h2 id="_3">學到的核心概念<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="bootstrap">Bootstrap 做了什麼<a class="headerlink" href="#bootstrap" title="Permanent link">&para;</a></h3>
-<p>一個 <code>juju bootstrap</code> 指令背後：
-1. 跟 cloud（LXD）要一台 machine
-2. 在 machine 上裝 jujud 和 MongoDB
-3. 從此這台 machine 就是 controller，所有 juju client 指令都打到這裡</p>
-<p><strong>對照 Terraform</strong>：<code>terraform init</code> 下載 provider 但不開資源；<code>juju bootstrap</code> 會<strong>立即開一個 container</strong>。</p>
-<h3 id="juju">Juju 的層級關係<a class="headerlink" href="#juju" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Controller (jujud + MongoDB)
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>├─ Model: controller  (自動建，管 controller 自己)
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>└─ Model: openstack   (我們建的，還空著)
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>     └─ (future) Applications / Units / Machines / Relations
-</span></code></pre></div>
-<h3 id="_4">懶加載<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>juju bootstrap</code> → 開 1 個 container（controller）</li>
-<li><code>juju add-model</code> → 0 個 container</li>
-<li><code>juju deploy &lt;charm&gt;</code> → 開 N 個 container（依 charm 需求）</li>
-</ul>
-<hr />
-<h2 id="gotchas">Gotchas<a class="headerlink" href="#gotchas" title="Permanent link">&para;</a></h2>
-<h3 id="group-bootstrap">⚠️ Group 沒生效就 bootstrap 會失敗<a class="headerlink" href="#group-bootstrap" title="Permanent link">&para;</a></h3>
-<p>如果前一步 <code>usermod -aG lxd azureuser</code> 後沒重開 SSH session 就 bootstrap，會看到 permission denied on LXD socket。</p>
-<p><strong>解法</strong>：重開 SSH session（新的 bash shell 會讀 <code>/etc/group</code>）。</p>
-<h3 id="-bootstrap-seriesjammy-vs-host-os-noble">⚠️ <code>--bootstrap-series=jammy</code> vs host OS noble<a class="headerlink" href="#-bootstrap-seriesjammy-vs-host-os-noble" title="Permanent link">&para;</a></h3>
-<p>Host（Azure VM）是 Ubuntu 24.04 (noble)，但 controller container 跑 22.04 (jammy)。這不衝突——LXD container 可以跑任何 Ubuntu 版本。</p>
-<hr />
-<h2 id="_5">現狀總結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>做完這兩步後：
-- <strong>1 個 LXD container</strong>：<code>juju-&lt;uuid6&gt;-0</code>（controller）
-- <strong>Controller</strong>：<code>openstack-controller</code> in <code>localhost/localhost</code>
-- <strong>Models</strong>：<code>controller</code>（自動）+ <code>openstack*</code>（我們的）
-- <strong>資源</strong>：controller 約佔 500MB disk，小量 RAM
-- <strong>下一步</strong>：在 <code>openstack</code> model 裡部署 charm</p>
-<hr />
-<h2 id="replay">下次用時的快速 replay<a class="headerlink" href="#replay" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/juju_id_rsa<span class="w"> </span>azureuser@20.210.233.133
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1"># 如果 controller 已存在，跳過 bootstrap；否則：</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>juju<span class="w"> </span>bootstrap<span class="w"> </span>--bootstrap-series<span class="o">=</span>jammy<span class="w"> </span>localhost<span class="w"> </span>openstack-controller
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="c1"># 如果 model 已存在，跳過；否則：</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>juju<span class="w"> </span>add-model<span class="w"> </span>--config<span class="w"> </span>default-series<span class="o">=</span>jammy<span class="w"> </span>openstack
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>juju<span class="w"> </span>status
-</span></code></pre></div>
+<p><em>Ceph 標誌為 Ceph 專案之官方資產,此處作社群教學用途。</em></p>
 
 
 
@@ -3728,7 +3897,7 @@
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
           
-          <a href="../day-1-lxd-juju-install/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 1 · LXD + Juju install">
+          <a href="../sprint4-day13-skyline/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 13 · Skyline 儀表板">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3738,20 +3907,20 @@
                 上一頁
               </span>
               <div class="md-ellipsis">
-                Day 1 · LXD + Juju install
+                Day 13 · Skyline 儀表板
               </div>
             </div>
           </a>
         
         
           
-          <a href="../day-1-first-relation/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 1 · First relation">
+          <a href="../sprint4-day15-object-storage-rgw/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 15 · 物件儲存 RGW">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 1 · First relation
+                Day 15 · 物件儲存 RGW
               </div>
             </div>
             <div class="md-footer__button md-icon">
