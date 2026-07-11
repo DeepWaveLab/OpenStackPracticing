@@ -142,6 +142,13 @@ openstack server create --flavor m1.tiny --volume vol-boot \
 
 `lvs` 看到的不是 5G 的 thick LV,而是 243G 的 `cinder-volumes-pool`(thin pool)+ 掛在裡面的 thin LV(實際只佔 1.33%)。代表 volume 超賣是預設行為 —— 生產環境要監控 pool 的 Data% 而不是 VG free。
 
+
+## 從儀表板看成果
+
+![skyline-volumes](../assets/screenshots/skyline-volumes.png)
+
+*Volume 列表(Skyline 檢視):圖中那顆 1 GiB 的 `pvc-*` volume,正是 Day 8 K8s PVC 動態供裝的產物——今天學的 Cinder,就是它背後的引擎。*
+
 ## 下一步(Day 4)
 
 Octavia(Sprint 1 未完成項 #2):amphora image 準備 + LB 手動建置全流程。

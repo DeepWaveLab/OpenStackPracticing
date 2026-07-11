@@ -106,6 +106,10 @@ flowchart TB
 | — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | Horizon 夠用;想看現代化 UI 可以並存試裝 |
 | — | **Prometheus + Grafana**(Kolla 內建整合) | 監控與儀表板 | CloudWatch | lab 用 `docker logs` 硬看;任何正式環境第一件事就是把監控開起來(這兩位是 CNCF 專案,不是 OpenStack,所以沒有 OpenStack 吉祥物) |
 
+![skyline-overview](../assets/screenshots/skyline-overview.png)
+
+*上表提到的 Skyline 長這樣:同一朵雲、新一代介面(本站截圖時額外部署試玩,課程本體未包含)。*
+
 ### 第二梯隊:特定場景才需要
 
 | | 服務 | 管什麼 | 場景 |
@@ -127,21 +131,18 @@ flowchart TB
 ## 一張圖總結:這朵雲的現況
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph deployed["已上線(Day 0–10 的成果)"]
-        direction TB
-        A["核心:Keystone / Glance /<br/>Placement / Nova / Neutron / Horizon"]
-        B["儲存:Cinder(LVM)"]
-        C["網路加值:Octavia"]
-        D["平台:Heat / Barbican / Magnum"]
+        direction LR
+        A["核心:Keystone / Glance / Placement /<br/>Nova / Neutron / Horizon"] ~~~ B["儲存:Cinder(LVM)"]
+        C["網路加值:Octavia"] ~~~ D["平台:Heat / Barbican / Magnum"]
     end
+    deployed ==>|"globals.yml 開 flag + 增量 deploy(Day 3 學過的工作流)"| next
     subgraph next["最自然的下一步"]
-        E["Manila(K8s RWX)"]
-        F["Prometheus/Grafana(監控)"]
-        G["Designate(DNS)"]
-        H["Swift 或 Ceph(物件儲存)"]
+        direction LR
+        E["Manila(K8s RWX)"] ~~~ F["Prometheus / Grafana(監控)"]
+        G["Designate(DNS)"] ~~~ H["Swift 或 Ceph(物件儲存)"]
     end
-    deployed -->|"globals.yml 開 flag<br/>+ 增量 deploy(Day 3 學過的工作流)"| next
 ```
 
 要加任何一塊,流程都是你在 Day 3 練過的那套:`globals.yml` 開 `enable_xxx` → `kolla-ansible deploy` 增量套用 → 驗證。這門課教的不只是十一個服務,是**這個可以無限擴充的工作流**。

@@ -35,6 +35,7 @@ flowchart TB
         direction LR
         NET["network + subnet<br/>(自己的內網)"] ~~~ RTR["router<br/>(內網↔外網的閘道)"] ~~~ SG["security group<br/>(防火牆規則)"] ~~~ KEY["keypair<br/>(SSH 公鑰)"]
     end
+    admin ~~~ tenant
     admin ==> VM["server create → VM 誕生"]
     tenant ==> VM
     VM ==>|"最後貼上 floating IP,外界才連得到"| FIP["floating IP"]
@@ -181,6 +182,13 @@ ssh -i ~/.ssh/oslab_ed25519 ubuntu@$UFIP "ping -c2 8.8.8.8"
 ## 地雷記錄
 
 **今天零地雷。**這不是運氣——前一次嘗試撞過的三個問題,這次在動手前就被預防掉了:Ubuntu VM 改用 config-drive 拿 metadata(Sprint 1 曾因此拿不到 SSH 金鑰)、flat provider 網路在 Kolla 預設就支援(charm 時代要另外開)、security group 規則明確加上(charm 預設把安全群組整個關掉的教訓)。**教訓的複利在這裡兌現**——完整故事見[前兩次嘗試](../previous-attempts.md)。
+
+
+## 從儀表板看今天的概念
+
+![skyline-topology](../assets/screenshots/skyline-topology.png)
+
+*網路拓樸視圖:外部網路 → router → 租戶內網 → VM,正是今天手動建立的那條鏈。(畫面來自新一代儀表板 Skyline,本課程未部署它——見 Day 11 的介紹;圖中為課程後期的 K8s cluster 網路)*
 
 ## 下一步(Day 3)
 

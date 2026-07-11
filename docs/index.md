@@ -132,13 +132,13 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 
 ```mermaid
-flowchart LR
-    A[openstack coe<br/>cluster create] --> B[Magnum<br/>+ CAPI driver]
-    B --> C[CAPI / CAPO<br/>管理叢集]
-    C -->|Nova| D[節點 VM]
-    C -->|Octavia| E[API LB]
-    C -->|Cinder| F[PVC volume]
-    D --> G[workload<br/>K8s cluster]
+flowchart TB
+    A["openstack coe cluster create"] --> B["Magnum + CAPI driver"]
+    B --> C["CAPI / CAPO 管理叢集"]
+    C -->|Nova| D["節點 VM"]
+    C -->|Octavia| E["API LB"]
+    C -->|Cinder| F["PVC volume"]
+    D --> G["workload K8s cluster"]
     E --> G
     F --> G
 ```

@@ -129,6 +129,13 @@ autoscaler 正確偵測 pending、把 MD replicas 設 3,但 **topology controlle
 
 autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、`--kubeconfig` 指 workload(其 API FIP `172.24.4.x` 從 kind 可達)。若跑 workload 內,要餵 mgmt 的 kubeconfig,但 kind API 綁 `127.0.0.1:33689`(host loopback)workload pod 打不到,得額外 port-forward + skip-TLS,較麻煩。
 
+
+## 從儀表板看成果
+
+![skyline-instances](../assets/screenshots/skyline-instances.png)
+
+*Instance 列表(Skyline 檢視):三台 Active 的節點就是 workload cluster 的全部家當——注意第一台 `ng-app` 開頭的節點,它是本日 node group 操作的產物。*
+
 ## 下一步(Day 10)
 
 Terraform 接管(terraform-provider-openstack 管 network/VM/LB)+ teardown 演練(`kolla-ansible destroy` → 重部速度驗證)+ 寫 `sprint3-reflection.md`。開工前照 Day8 Pre-flight 確認 kind/magnum/octavia o-hm0 就緒。

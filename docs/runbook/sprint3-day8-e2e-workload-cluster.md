@@ -163,6 +163,17 @@ Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部解決:
 | Cinder LVM:LXD device-mapper 限制 | ✅ Day 3 LVM;Day 8 PVC 由 Cinder CSI 動態供裝 |
 | Magnum:heat driver 內嵌 image URL 全失效 | ✅ CAPI driver + capo-image-elements 維護的 node image,cluster CREATE_COMPLETE |
 
+
+## 從儀表板看成果
+
+![skyline-coe-clusters](../assets/screenshots/skyline-coe-clusters.png)
+
+*Magnum 的 cluster 列表(Skyline 檢視):k8s-lab,狀態 UPDATE COMPLETE、健康狀態 HEALTHY——十一天的成果濃縮成這一列。*
+
+![kubectl-nodes](../assets/screenshots/kubectl-nodes.png)
+
+*同一座 cluster,從 kubectl 看:三個節點全 Ready(control-plane、worker,加上 Day 9 的 `app` node group)。這裡用的是**暫存的 kubeconfig**(`KUBECONFIG=/tmp/wl.kubeconfig` 只影響這一條指令)——查別人的 cluster 時養成這個習慣,不會弄髒自己的 kubectl 設定。*
+
 ## 下一步(Day 9)
 
 Day-2 operations:用 `k8s-v1.34.8-azure` template 驗 cluster 升版(CAPI rolling,如 v1.34→v1.35,需先上傳對應 node image)、node group、cluster-autoscaler。開工前照 Pre-flight §0 確認 kind/magnum/octavia o-hm0 就緒。

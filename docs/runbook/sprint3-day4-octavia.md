@@ -23,14 +23,14 @@
 建一個能用的 LB 要疊四塊積木,每塊都有明確分工:
 
 ```mermaid
-flowchart LR
+flowchart TB
     C["client(請求)"] --> FIP["floating IP"]
-    FIP --> LB["loadbalancer(VIP:LB 的固定門牌)"]
-    LB --> LIS["listener(聽哪個 port?例:HTTP :80)"]
-    LIS --> P["pool(後端伺服器群 + 分配演算法)"]
+    FIP --> LB["loadbalancer<br/>(VIP:LB 的固定門牌)"]
+    LB --> LIS["listener<br/>(聽哪個 port?例:HTTP :80)"]
+    LIS --> P["pool<br/>(後端伺服器群 + 分配演算法)"]
+    HM["health monitor<br/>(定期戳後端,活著才派流量)"] -.->|監控| P
     P --> M1["member: vm-web1"]
     P --> M2["member: vm-web2"]
-    HM["health monitor(定期戳後端,活著才派流量)"] -.監控.-> P
 ```
 
 | 積木 | 白話 |
@@ -196,6 +196,13 @@ LB 卡 `PENDING_CREATE`、amphora 根本沒開機,worker log:`MasterNotFoundErro
 ### 地雷 5:卡在 PENDING_* 的 LB 無法刪除(擴展知識) {#mine-5}
 
 Redis 壞掉期間建立的 lb1 永遠停在 `PENDING_CREATE`,delete 回 409(PENDING 狀態 immutable,而 job 從未進 queue,永遠不會有人來改狀態)。社群公認處置(**lab 限定,生產環境先開 ticket**):DB 把 `provisioning_status` 改 `ERROR` → `loadbalancer delete --cascade`。這是本 lab 唯一一次手改 DB,原因:Octavia 沒有提供 stuck-PENDING 的官方重置工具。
+
+
+## 從儀表板看成果
+
+![skyline-lb](../assets/screenshots/skyline-lb.png)
+
+*Load Balancer 列表(Skyline 檢視):兩顆 LB 都是 Day 8 的 K8s 自動建的——`kubeapi` 是 cluster API 的入口,`web-lb` 是 `Service type=LoadBalancer` 的產物。Operating Status 的綠色 Online 來自 health monitor 的持續檢查,正是今天教的機制。*
 
 ## 下一步(Day 5)
 

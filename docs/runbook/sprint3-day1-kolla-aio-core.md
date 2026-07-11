@@ -316,6 +316,11 @@ grep keystone_admin_password /etc/kolla/passwords.yml
 
 登入看到 Horizon 儀表板,今天就完成了。
 
+![horizon-overview](../assets/screenshots/horizon-overview.png)
+
+*登入後的 Horizon Overview:配額圓餅圖顯示這朵雲目前的資源用量——你的第一個雲端儀表板。*
+
+
 ## 驗收 checkpoint
 
 逐項執行,**全部符合才算完成今天**。「本課環境的結果」欄是我們實測的參考值,你的數字可以略有出入,但判準必須成立:
