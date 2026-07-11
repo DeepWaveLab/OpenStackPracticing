@@ -3,6 +3,7 @@ title: "feat: Sprint 4 課程規劃 —— 服務擴充、內部原理、維運�
 type: feat
 status: active
 date: 2026-07-11
+deepened: 2026-07-11(部署驗證作戰計畫;上游旗標與 cephadm 全查證)
 ---
 
 # feat: Sprint 4 課程規劃(Day 13–24)+ Day 12 預告頁
@@ -108,7 +109,8 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 - [ ] 「Nova/Magnum 怎麼準備機器」在 Day 24 有正面、可操作的答案
 - [ ] Day 12 預告頁上線(課程主線 + 首頁課表 + 積木表加註)
 - [ ] 多機環境成本與拓樸選項給出明確數字,kickoff 可拍板
-- [ ] 高風險日(Trove/Zun)有 spike 閘門與 fallback 設計
+- [ ] 高風險日(Trove)有 spike 閘門與 fallback 設計
+- [ ] **部署驗證階段**:Day 13–24 逐日 gate 全過(見作戰計畫),教材僅在驗證通過後撰寫
 
 ## Dependencies & Risks
 
@@ -121,6 +123,102 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 | Ceph 單機資源壓力(E16s 上再跑 Ceph + 全套 OpenStack) | replica=1、只開必要 daemon;監控記憶體水位,必要時 Day 13 起關閉 Zun/Trove 等測完的服務 |
 | 2025.2 upgrade 路徑未實測 | 列為 Day 22 的選做;minor upgrade 是必做保底 |
 | 多機部署的未知雷(全新領域) | 這是課程價值不是風險——Sprint 3 證明了「每個地雷都能定位、能修」的路線韌性 |
+
+
+## 部署驗證作戰計畫(教材前置,/ce:work 的執行腳本)
+
+> **本節目的**:在寫任何教材之前,Day 13–24 逐日真實部署驗證——一天一關、gate 全過才前進,確保課綱不會寫出部不動的東西。教材等驗證全數通過後再補。
+> 所有旗標與指令均已於 2026-07-11 向上游查證(kolla-ansible stable/2025.1 原始碼逐行比對 + Ceph 官方文件),不是推測。
+
+### 基線(2026-07-11 實測)
+
+- lab VM:RAM 25Gi / 125Gi 使用中(Kolla 全套 + Skyline + kind + 3 台 K8s node 全開,53 容器)——**剩 100Gi,全 Sprint 不需中途關服務**
+- 磁碟:sda 128G(OS)、sdb 256G(cinder LVM 已佔)→ **Ceph 需新掛 sdc**
+- Skyline 已部署並實測(= Day 13 gate 已過)
+
+### 通用規則(每一天都適用)
+
+1. **開工**:`kolla-genpwd` 到暫存檔 + `kolla-mergepwd` 補齊新服務密碼條目 → `kolla-ansible prechecks`
+2. **Gate**:當日驗證全過才進下一天;失敗就修或標記阻塞,不帶傷前進
+3. **收工**:`tar czf ~/kolla-config-day{N}.tgz /etc/kolla`(設定快照)+ 把當日完整指令與輸出記進 `~/sprint4-day{N}.log`(教材素材)
+4. **高風險日前拍 Azure disk snapshot**:Day 14(Ceph 動磁碟)、Day 22(升版)前必拍
+5. 記憶體預算:基線 25Gi + Ceph 6–8Gi + 監控 3–4Gi + Trove guest ~4Gi ≈ 峰值 40Gi / 125Gi ✅
+
+### 逐日驗證規格
+
+#### Day 13 · Skyline ✅ 已完成(2026-07-11)
+`enable_skyline` → `deploy --tags skyline`,一次過;9998/9999 healthy、UI 實測正常。**待辦尾巴**:Day 21 開 Prometheus 後要連 skyline 一起 reconfigure(skyline.yaml.j2 會自動接 prometheus,監控頁才會亮)。
+
+#### Day 14 · Ceph 基礎(cephadm 單機)
+- **前置**:`az vm disk attach`(P15 256G → sdc);Azure snapshot;`apt install podman lvm2 chrony`
+- **版本釘死 Tentacle 20.2.2**(Squid 兩個月後 EOL;Ubuntu 發行版套件是問題快照,不用)。curl 官方 cephadm binary
+- **容器引擎必用 podman**:kolla 每次 deploy 會重啟 docker daemon,Ceph 掛 docker 下會連坐全滅;podman daemonless、各 daemon 是獨立 systemd unit
+- **bootstrap**:`cephadm bootstrap --mon-ip 10.0.0.4 --single-host-defaults --skip-monitoring-stack --skip-dashboard`
+  - `--skip-monitoring-stack` **必帶**:ceph 的 grafana(3000)/node-exporter(9100)/alertmanager(9093)與 Day 21 的 kolla 監控完全撞 port
+- **單碟 size=1 設定**:`mon_allow_pool_size_one true`、`osd_pool_default_size 1`、`min_size 1`、`.mgr pool size 1`、`ceph health mute POOL_NO_REDUNDANCY`
+- **記憶體地雷(必拆)**:cephadm autotune 會把 osd_memory_target 設成 0.7×128G÷1 OSD=幾十 GB → `ceph config set osd osd_memory_target_autotune false` + `osd_memory_target 2G` + `mds_cache_memory_limit 1G`
+- OSD:`ceph orch daemon add osd $(hostname -s):/dev/sdc`(不用 --all-available-devices,同機還有 OpenStack 的碟)
+- **Gate**:`ceph -s` HEALTH_OK(mute 後)、osd up 1/1、RAM 增量 ≤8Gi
+- **Teardown 備援**:`cephadm rm-cluster --force --zap-osds --fsid <fsid>`
+
+#### Day 15 · 物件儲存 RGW
+- **架構確認**:kolla 的 ceph-rgw role **不部署容器**(原始碼註解明言),只做 Keystone 註冊 + 選配 LB → RGW daemon 由 cephadm 跑
+- Ceph 端:`ceph orch apply rgw kolla --placement=1 --port=7480`(**預設 port 80 會撞 Horizon,必改**);`ceph config set client.rgw rgw_keystone_*` 整批(url/api_version 3/admin_user ceph_rgw/密碼取自 passwords.yml/accepted_roles/implicit_tenants/`rgw_enable_apis 's3,swift,swift_auth,admin'`)
+- Kolla 端 globals:`enable_ceph_rgw: true`、**`enable_ceph_rgw_loadbalancer: "no"`(不設會因 haproxy 停用 precheck 直接 fail)**、`ceph_rgw_port: 7480`、`ceph_rgw_internal_fqdn/external_fqdn` 指向本機(haproxy off 時預設指到沒人聽的 6780)、**`update_keystone_service_user_passwords: false`**(否則每次 reconfigure 重設密碼、token 失效)
+- 密碼:merge `ceph_rgw_keystone_password`;`deploy --tags ceph-rgw`
+- **Gate**:`openstack endpoint list --service object-store` 有 `/swift/v1`;`openstack container create t1` 成功;S3 API 用 s3cmd 或 aws cli 對 7480 驗一筆
+
+#### Day 16 · Manila(CephFS native)
+- Ceph 端:`ceph fs volume create manila_fs`(單機 MDS 記得 `standby_count_wanted 0`);client key **只需** `mon 'allow r' mgr 'allow rw'`(Wallaby+ caps)
+- Kolla 檔案(**照原始碼不照文件——文件有 bug**):keyring 放 `/etc/kolla/config/manila/ceph.client.manila.keyring`(不是文件寫的 manila-share/ 子目錄);`/etc/kolla/config/manila/ceph.conf` 用 `ceph config generate-minimal-conf` 產生後**把行首 tab 刪掉**(kolla 的 ini parser 會壞)
+- globals:`enable_manila: "yes"`、`enable_manila_backend_cephfs_native: "yes"`、`manila_cephfs_filesystem_name: manila_fs`;注意 `ceph_manila_keyring` 這類舊變數 2025.1 已移除,檔名由 `ceph_cluster`+`ceph_manila_user` 推導
+- share type 是 DHSS=False:`openstack share type create default_share_type False`
+- **Gate**:`share service list` 的 manila-share up;建 share → export location 可取;兩台 VM 同掛讀寫(K8s RWX 留給教材日示範,驗證日做到 VM 層即可)
+
+#### Day 17 · Designate(bind9)
+- globals:`enable_designate: "yes"`(bind9 是預設 backend,kolla 自帶容器);`designate_ns_record` 是 **list**;`neutron_dns_domain` **必須以 `.` 結尾且 ≠ openstacklocal**(最常見翻車點)
+- Neutron 整合**全自動**(`neutron_dns_integration` 預設=enable_designate;extension driver、[designate] auth section 都由模板代勞)——但要 **`deploy --tags designate,neutron,nova`** 讓跨服務設定生效
+- 單節點不需 coordination(多 worker 才要 valkey);port 53/5354/953 佔用先 prechecks
+- **Gate**:建 zone → `openstack network set --dns-domain` → 開 VM → `recordset list` 出現 A 記錄 → `dig -p 5354 @<dns_interface_ip>` 解得到
+
+#### Day 18 · Trove(重心:management network)
+- globals:`enable_trove: "yes"`;guest-agent 覆寫放 `/etc/kolla/config/trove/trove-guestagent.conf`(原始碼確認的合法路徑)
+- **主戰場——guest → RabbitMQ 打通**:guest-agent 的 `transport_url` 直指內部 RabbitMQ(10.0.0.4:5672)。本 lab 方案:management network 用 ext-net(172.24.4.0/24,host 內可路由到 10.0.0.4)→ `/etc/kolla/config/trove.conf` 覆寫 `management_networks = <ext-net id>` + `management_security_groups`(放行 egress 5672);不通再評估獨立 provider 網
+- image:Plan A 下載 `trove-master-guest-ubuntu-noble.qcow2`(每日出貨,1.4G)+ `openstack datastore version create ... --image-tags trove,mysql`;RPC 版本偏差就切 Plan B:`TROVE_BRANCH=stable/2025.1 ./trovestack build-image ubuntu jammy false ubuntu`
+- datastore 容器可覆寫 `docker_image = quay.io/openstack.trove/mysql` 避開 Docker Hub 限流;**備份存 object-store = 吃 Day 15 的 RGW swift endpoint**(依賴鏈剛好)
+- **Gate**:`database instance create` → ACTIVE → 連進 MySQL 寫一筆 → `database backup create` 成功落到 RGW
+- **本日是全 Sprint 最可能吃掉兩天的一關**;卡死 fallback:記錄卡點、降級為「部署 + 已知限制」教材
+
+#### Day 19–20 · 原理雙日(無部署)
+驗證 = 演練腳本能跑:fernet token 解碼、request-id 跨 log 追蹤(`grep req-xxx /var/log/kolla/*/*.log`)、`rabbitmqctl list_queues` 看 RPC、`virsh dumpxml`;OVN 側 `ovn-nbctl show`/`ovn-sbctl lflow-list`/`ovn-trace`(容器內工具已在)。**Gate**:兩天各自的示範腳本從頭到尾跑通並存檔
+
+#### Day 21 · 可觀測性
+- globals:`enable_prometheus`、`enable_grafana`、`enable_central_logging`(自動連動 opensearch + dashboards);**用 stable/2025.1 最新版部署**(20.4.0 修了 dashboards logrotate 與 retention timeout)
+- 記憶體:opensearch heap 預設 1g(RSS ~2G),整套 +3–4Gi;prometheus 是 **9091 不是 9090**、有 basic auth(admin/`prometheus_password`)
+- **連動**:同日把 skyline 一起 reconfigure(接 prometheus);ceph 端可設 `prometheus_ceph_mgr_exporter_endpoints` 把 ceph mgr 指標拉進來(mgr prometheus module port 9283)
+- **Gate**:`/api/v1/targets` 全 up;9200 cluster health green(單節點 yellow 可接受,記錄);grafana 3000 / dashboards 5601 登得進;fluentd 有 log 進 opensearch
+
+#### Day 22 · 升版與備份(前拍 snapshot)
+- **系列內更新的正確姿勢**(operating-kolla 原文):pip 升級 kolla-ansible@stable/2025.1 → `install-deps` → `pull`(同 tag 抓新 digest)→ prechecks → **`deploy`(不是 `upgrade`——upgrade 是跨系列用)**
+- **已知變更**:20.4.0 起 MariaDB `innodb_log_file_size` 預設 96MB→2GB(磁碟與 recovery 時間);`--limit` 不要用在更新
+- 備份:`enable_mariabackup: "yes"` → `reconfigure -t mariadb` → **`kolla-ansible mariadb-backup`(CLI 是 dash,文件內文的底線寫法是殘留錯誤)**;落點 docker volume `mariadb_backup`
+- **Gate**:更新後全容器 healthy + `openstack service list` 正常;備份檔存在;**還原演練**(臨時容器 mbstream→prepare→stop mariadb→copy-back→start)走一遍成功
+- 2025.2 跨系列升級:時間允許才做,做前再拍一次 snapshot
+
+#### Day 23 · 多節點部署(新環境)
+- 依 kickoff 拓樸(建議 A:2 control + 2 compute,E8s×4);新 RG、同 VNet subnet、hostnames、SSH key 佈署
+- globals 關鍵差異:`kolla_internal_vip_address` 改成**網段上未使用的 IP**(keepalived 漂移);**移除** `enable_haproxy: "no"` 覆寫;inventory 用官方 multinode sample 起手(**務必 diff 新版 sample**,群組是 control/network/compute/monitoring/storage + :children 映射)
+- **Gate**:VIP 在、關掉一台 controller API 仍可用(HA 演練)、開一台 VM 落在指定 compute
+#### Day 24 · 橫向擴展
+- 加節點(官方文件逐字驗證過):`bootstrap-servers --limit <new>` → `pull --limit` → `deploy --limit`;**cell discover 自動**(nova-cell role 的 discover_computes 會代跑,不用手動 nova-manage)
+- **Gate**:`openstack compute service list` 新節點 up;`hypervisor list` 可見;live migration 成功;node drain(disable service + migrate)演練;placement API 看到容量變化
+- 收工:整套多機環境 teardown(Day 10 程序實戰)
+
+### 依賴與順序鎖
+
+- Day 15、16 依賴 Day 14(Ceph);Day 18 的備份依賴 Day 15(RGW)
+- Day 21 必須在 Day 22 之前(升版過程要有觀測)
+- Day 23–24 獨立新環境,與單機 lab 無耦合,可視 VM 交期並行準備
 
 ## 開工前決策(kickoff)
 

@@ -81,20 +81,28 @@ not_in_nav: |
 nav:
   - 首頁: index.md
 
-  - 課程主線(Day 0–12):
-      - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
-      - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
-      - "Day 2 · OpenStack 資源全流程": runbook/sprint3-day2-openstack-resource-flow.md
-      - "Day 3 · Cinder LVM": runbook/sprint3-day3-cinder-lvm.md
-      - "Day 4 · Octavia LB": runbook/sprint3-day4-octavia.md
-      - "Day 5 · Barbican + Heat": runbook/sprint3-day5-barbican-heat.md
-      - "Day 6 · CAPI 管理叢集": runbook/sprint3-day6-capi-management-cluster.md
-      - "Day 7 · Magnum CAPI driver": runbook/sprint3-day7-magnum-capi-driver.md
-      - "Day 8 · E2E workload cluster": runbook/sprint3-day8-e2e-workload-cluster.md
-      - "Day 9 · Day-2 operations": runbook/sprint3-day9-day2-operations.md
-      - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
-      - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
-      - "Day 12 · 下一步的地圖:Sprint 4 預告": runbook/sprint3-day12-sprint4-preview.md
+  - 課程主線(Day 0–18):
+      - "Sprint 3 · 親手蓋一朵雲(Day 0–12)":
+          - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
+          - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
+          - "Day 2 · OpenStack 資源全流程": runbook/sprint3-day2-openstack-resource-flow.md
+          - "Day 3 · Cinder LVM": runbook/sprint3-day3-cinder-lvm.md
+          - "Day 4 · Octavia LB": runbook/sprint3-day4-octavia.md
+          - "Day 5 · Barbican + Heat": runbook/sprint3-day5-barbican-heat.md
+          - "Day 6 · CAPI 管理叢集": runbook/sprint3-day6-capi-management-cluster.md
+          - "Day 7 · Magnum CAPI driver": runbook/sprint3-day7-magnum-capi-driver.md
+          - "Day 8 · E2E workload cluster": runbook/sprint3-day8-e2e-workload-cluster.md
+          - "Day 9 · Day-2 operations": runbook/sprint3-day9-day2-operations.md
+          - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
+          - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
+          - "Day 12 · 下一步的地圖:Sprint 4 預告": runbook/sprint3-day12-sprint4-preview.md
+      - "Sprint 4 · 邁向生產環境(Day 13–,連載中)":
+          - "Day 13 · Skyline 儀表板": runbook/sprint4-day13-skyline.md
+          - "Day 14 · Ceph 基礎": runbook/sprint4-day14-ceph-bootstrap.md
+          - "Day 15 · 物件儲存 RGW": runbook/sprint4-day15-object-storage-rgw.md
+          - "Day 16 · Manila 共享檔案": runbook/sprint4-day16-manila-cephfs.md
+          - "Day 17 · Designate DNS": runbook/sprint4-day17-designate-dns.md
+          - "Day 18 · Trove 資料庫服務": runbook/sprint4-day18-trove-dbaas.md
 
   - 排錯手冊:
       - solutions/README.md

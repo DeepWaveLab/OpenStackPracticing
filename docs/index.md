@@ -41,6 +41,10 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | ![Heat](assets/mascots/heat.png){ width="32" } | [Heat](runbook/sprint3-day5-barbican-heat.md) | 宣告式資源編排(IaC) | CloudFormation | Infrastructure Manager | Bicep / ARM |
 | ![Magnum](assets/mascots/magnum.png){ width="32" } | [Magnum](runbook/sprint3-day7-magnum-capi-driver.md) | 代管 Kubernetes 叢集 | EKS | GKE | AKS |
 | ![Horizon](assets/mascots/horizon.png){ width="32" } | [Horizon](runbook/sprint3-day1-kolla-aio-core.md) | 雲資源的網頁管理介面 | Console | Cloud Console | Portal |
+| ![Swift](assets/mascots/swift.png){ width="32" } | [物件儲存(RGW)](runbook/sprint4-day15-object-storage-rgw.md) | 物件儲存(S3 + Swift 雙 API) | S3 | Cloud Storage | Blob Storage |
+| ![Manila](assets/mascots/manila.png){ width="32" } | [Manila](runbook/sprint4-day16-manila-cephfs.md) | 共享檔案系統 | EFS | Filestore | Azure Files |
+| ![Designate](assets/mascots/designate.png){ width="32" } | [Designate](runbook/sprint4-day17-designate-dns.md) | DNS 代管 | Route 53 | Cloud DNS | Azure DNS |
+| ![Trove](assets/mascots/trove.png){ width="32" } | [Trove](runbook/sprint4-day18-trove-dbaas.md) | 資料庫即服務 | RDS | Cloud SQL | Azure Database |
 
 點服務名稱可以直接跳到認識它的那一天。
 
@@ -50,17 +54,13 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 | | 服務 | 它給你什麼 | AWS | GCP | Azure |
 |---|---|---|---|---|---|
-| ![Swift](assets/mascots/swift.png){ width="32" } | [Swift](runbook/sprint3-day11-openstack-service-map.md) | 物件儲存 | S3 | Cloud Storage | Blob Storage |
-| ![Manila](assets/mascots/manila.png){ width="32" } | [Manila](runbook/sprint3-day11-openstack-service-map.md) | 共享檔案系統 | EFS | Filestore | Azure Files |
-| ![Designate](assets/mascots/designate.png){ width="32" } | [Designate](runbook/sprint3-day11-openstack-service-map.md) | DNS 代管 | Route 53 | Cloud DNS | Azure DNS |
-| ![Trove](assets/mascots/trove.png){ width="32" } | [Trove](runbook/sprint3-day11-openstack-service-map.md) | 資料庫即服務 | RDS | Cloud SQL | Azure Database |
 | ![Zun](assets/mascots/zun.png){ width="32" } | [Zun](runbook/sprint3-day11-openstack-service-map.md) | 容器即服務(不經 K8s) | Fargate | Cloud Run | Container Instances |
 | ![Ironic](assets/mascots/ironic.png){ width="32" } | [Ironic](runbook/sprint3-day11-openstack-service-map.md) | 裸機佈建與生命週期管理 | EC2 Bare Metal | Bare Metal Solution | Azure BareMetal |
 | ![Telemetry](assets/mascots/telemetry.png){ width="32" } | [Telemetry](runbook/sprint3-day11-openstack-service-map.md) | 計量、監控與告警 | CloudWatch | Cloud Monitoring | Azure Monitor |
 | ![CloudKitty](assets/mascots/cloudkitty.png){ width="32" } | [CloudKitty](runbook/sprint3-day11-openstack-service-map.md) | 用量計費與費率管理 | Cost Explorer | Cloud Billing | Cost Management |
 | ![Masakari](assets/mascots/masakari.png){ width="32" } | [Masakari](runbook/sprint3-day11-openstack-service-map.md) | 虛擬機高可用與自動復原 | (EC2 內建自動復原) | (內建即時遷移) | (內建服務修復) |
 
-每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。其中 **Swift(以 RGW 形式)、Manila、Designate、Trove,加上新一代儀表板 Skyline,已排入 [Sprint 4 預告](runbook/sprint3-day12-sprint4-preview.md)**——下一段課程就拼這些。
+每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。**Swift(RGW)、Manila、Designate、Trove 已在 Sprint 4(Day 15–18)拼上**,升級到上面的主表了;Sprint 4 後半的課綱見 [Day 12 預告](runbook/sprint3-day12-sprint4-preview.md)。
 
 
 ## 從這裡出發
@@ -109,7 +109,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
 
-## 課程路徑(Day 0 → 12)
+## 課程路徑(Day 0 → 18,連載中)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
 
@@ -128,6 +128,12 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | [10](runbook/sprint3-day10-terraform-teardown.md) | Terraform 接管 + 拆除演練 | HCL 管 network/VM/LB |
 | [11](runbook/sprint3-day11-openstack-service-map.md) | 後日談:服務全景圖 | 用過的 11 個服務盤點 + 沒用到的版圖 |
 | [12](runbook/sprint3-day12-sprint4-preview.md) | 下一步的地圖:Sprint 4 預告 | 服務擴充、內部原理、維運實務、水平擴展 |
+| [13](runbook/sprint4-day13-skyline.md) | Skyline 新一代儀表板 | 一個 flag 增量部署、兩代 UI 並存 |
+| [14](runbook/sprint4-day14-ceph-bootstrap.md) | Ceph 基礎 | cephadm 單機叢集、與 Kolla 同機共存 |
+| [15](runbook/sprint4-day15-object-storage-rgw.md) | 物件儲存 RGW | S3 + Swift 雙 API、Keystone 整合 |
+| [16](runbook/sprint4-day16-manila-cephfs.md) | Manila 共享檔案系統 | CephFS 後端、掛載讀寫全流程 |
+| [17](runbook/sprint4-day17-designate-dns.md) | Designate DNS | zone/recordset、FIP 自動 DNS 記錄 |
+| [18](runbook/sprint4-day18-trove-dbaas.md) | Trove 資料庫服務 | 一行指令開出代管 MySQL |
 
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 

@@ -100,10 +100,10 @@ flowchart TB
 
 | | 服務 | 管什麼 | AWS 對應 | 為什麼這次沒用 / 什麼時候會要 |
 |---|---|---|---|---|
-| ![Swift](../assets/mascots/swift.png){ width="64" } | **Swift** | 物件儲存(丟檔案、拿 URL) | S3 | 本課 Glance 直接存本機檔案系統就夠。要做備份、存 image 集中庫、給應用程式丟檔案時就需要它(或 Ceph) |
-| ![Designate](../assets/mascots/designate.png){ width="64" } | **Designate** | DNS as a Service | Route 53 | 本課全用 IP 直連。有多服務、多環境時第一個想加的就是它 |
-| ![Manila](../assets/mascots/manila.png){ width="64" } | **Manila** | 共享檔案系統(多 VM 同時掛同一顆) | EFS | K8s 的 RWX(多 Pod 共寫)PVC 需要它——我們的 Cinder CSI 只能 RWO。Magnum driver 其實已內建 manila 支援,是本 lab 最自然的下一塊積木 |
-| — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | 已排入 [Sprint 4 Day 13](sprint3-day12-sprint4-preview.md)——與 Horizon 並存對照 |
+| ![Swift](../assets/mascots/swift.png){ width="64" } | **Swift** | 物件儲存(丟檔案、拿 URL) | S3 | 已於 [Day 15](sprint4-day15-object-storage-rgw.md) 以 Ceph RGW 形式拼上(Swift API 相容) |
+| ![Designate](../assets/mascots/designate.png){ width="64" } | **Designate** | DNS as a Service | Route 53 | 已於 [Day 17](sprint4-day17-designate-dns.md) 拼上 |
+| ![Manila](../assets/mascots/manila.png){ width="64" } | **Manila** | 共享檔案系統(多 VM 同時掛同一顆) | EFS | 已於 [Day 16](sprint4-day16-manila-cephfs.md) 拼上;K8s RWX 整合是它的殺手應用 |
+| — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | 已於 [Day 13](sprint4-day13-skyline.md) 部署——與 Horizon 並存對照 |
 | — | **Prometheus + Grafana**(Kolla 內建整合) | 監控與儀表板 | CloudWatch | lab 用 `docker logs` 硬看;任何正式環境第一件事就是把監控開起來(這兩位是 CNCF 專案,不是 OpenStack,所以沒有 OpenStack 吉祥物) |
 
 ![skyline-overview](../assets/screenshots/skyline-overview.png)
@@ -117,7 +117,7 @@ flowchart TB
 | ![Ironic](../assets/mascots/ironic.png){ width="64" } | **Ironic** | 裸機即服務(把實體機當 VM 一樣開) | 資料中心自動化;跟 Kolla 部署工具是絕配 |
 | ![Telemetry](../assets/mascots/telemetry.png){ width="64" } | **Ceilometer / Gnocchi / Aodh** | 計量、時序資料、告警三兄弟(合稱 Telemetry) | 要做計費(誰用了多少)或用量告警時 |
 | ![CloudKitty](../assets/mascots/cloudkitty.png){ width="64" } | **CloudKitty** | 費率與計費(把計量變帳單) | 對內部門拆帳、對外收費 |
-| ![Trove](../assets/mascots/trove.png){ width="64" } | **Trove** | 資料庫即服務 | 想給租戶「一鍵開 MySQL」(AWS RDS 的體驗) |
+| ![Trove](../assets/mascots/trove.png){ width="64" } | **Trove** | 資料庫即服務 | 已於 [Day 18](sprint4-day18-trove-dbaas.md) 拼上(一鍵開 MySQL) |
 | ![Masakari](../assets/mascots/masakari.png){ width="64" } | **Masakari** | VM 高可用(主機掛了自動在別台重生) | 多節點生產環境 |
 | ![Zun](../assets/mascots/zun.png){ width="64" } | **Zun** | 容器即服務(不經 K8s 直接跑容器) | 想要 AWS Fargate 體驗——但注意:上游已近停維,Kolla 自 2026.1 起移除支援;業界的答案是 Magnum/K8s |
 

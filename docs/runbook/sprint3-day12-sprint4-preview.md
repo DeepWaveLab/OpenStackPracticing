@@ -1,6 +1,6 @@
 # Day 12 · 下一步的地圖:Sprint 4 預告
 
-> 正課(Day 0–10)教你把雲蓋出來,後日談(Day 11)帶你看全景。這一篇望向下一段旅程:**Sprint 4 已經排入規劃**——讓這朵雲從「會用」變成「像生產環境」。本頁是課綱預告,實際內容會隨開課時的上游現況微調。
+> 正課(Day 0–10)教你把雲蓋出來,後日談(Day 11)帶你看全景。這一篇望向下一段旅程:**Sprint 4 已經開跑**——階段一(Day 13–18)已完課上線,後半仍在進行。本頁保留完整課綱地圖。
 
 !!! abstract "你在課程的哪裡"
     - **Day 0–10**:動手蓋雲,11 個服務上線,K8s-as-a-Service 走通。
@@ -59,12 +59,12 @@ Sprint 4 用 **12 天、四個階段**回答這三類問題:
 
 | Day | 主題 | 一句話 |
 |---|---|---|
-| 13 | **Skyline 新一代儀表板** | 一個 flag 的增量部署暖身;同一朵雲,現代化介面——與 Horizon 並存對照 |
-| 14 | **Ceph 基礎** | 生產 OpenStack 的儲存標配,單機 bootstrap 一套當骨幹 |
-| 15 | **物件儲存(RGW)** | S3 與 Swift 兩種 API 一次學會;為什麼不是原生 Swift,見下方設計決定 |
-| 16 | **Manila 共享檔案系統** | 多台 VM 同掛一顆碟;壓軸把 **K8s RWX PVC** 接回 Day 8 的 cluster |
-| 17 | **Designate DNS** | zone 與 recordset、Neutron 整合,幫 Day 4 的 LB 掛上域名 |
-| 18 | **Trove 資料庫服務** | 一鍵開 MySQL 的 RDS 體驗:建立實例、備份、還原 |
+| [13](sprint4-day13-skyline.md) | **Skyline 新一代儀表板** ✅ | 一個 flag 的增量部署暖身;同一朵雲,現代化介面——與 Horizon 並存對照 |
+| [14](sprint4-day14-ceph-bootstrap.md) | **Ceph 基礎** ✅ | 生產 OpenStack 的儲存標配,單機 bootstrap 一套當骨幹 |
+| [15](sprint4-day15-object-storage-rgw.md) | **物件儲存(RGW)** ✅ | S3 與 Swift 兩種 API 一次學會;為什麼不是原生 Swift,見下方設計決定 |
+| [16](sprint4-day16-manila-cephfs.md) | **Manila 共享檔案系統** ✅ | 多台 VM 同掛一顆碟;壓軸把 **K8s RWX PVC** 接回 Day 8 的 cluster |
+| [17](sprint4-day17-designate-dns.md) | **Designate DNS** ✅ | zone 與 recordset、Neutron 整合,幫 Day 4 的 LB 掛上域名 |
+| [18](sprint4-day18-trove-dbaas.md) | **Trove 資料庫服務** ✅ | 一鍵開 MySQL 的 RDS 體驗:建立實例、備份、還原 |
 | 19 | **API 請求的完整生命週期** | fernet token 解剖、request-id 跨服務追蹤、RPC 實況、qemu 進程對讀 |
 | 20 | **OVN 封包轉送剖析** | OVN 深潛:logical flow、`ovn-trace` 追封包、FIP 的 NAT 在哪一條規則 |
 | 21 | **可觀測性** | Prometheus + Grafana + 集中式 log;該盯什麼、怎麼用它把除錯加速十倍 |

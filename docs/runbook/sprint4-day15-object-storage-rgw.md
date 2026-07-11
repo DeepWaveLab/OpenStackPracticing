@@ -1,0 +1,161 @@
+# Day 15:物件儲存 —— RGW 讓你的雲同時說 S3 和 Swift
+
+> 今天把 Day 14 的 Ceph 接上 OpenStack,開出**物件儲存**服務。做完之後,你的雲會多一個 `object-store` endpoint,S3 和 Swift 兩種 API 同時可用——而且你會親眼看到,為什麼業界用一個 RGW 就取代了整套 Swift。
+
+![Swift 官方吉祥物](../assets/mascots/swift.png){ align=right width="100" }
+
+!!! abstract "你在課程的哪裡"
+    - **Day 14**:Ceph 骨幹已立(mon/mgr/osd,HEALTH_OK)。
+    - **今天**:在 Ceph 上開 **RGW**(RADOS Gateway),並讓 OpenStack 的使用者能用 Keystone 身分直接使用它。
+    - **今天之後**:Day 16 用同一套 Ceph 開共享檔案系統;Day 18 的資料庫備份也會存到今天開的物件儲存裡。
+
+## 第一次接觸物件儲存?先讀這段
+
+前幾天的儲存都是「掛在機器上的磁碟」(區塊儲存);**物件儲存**是另一種正規化:沒有目錄樹、沒有掛載,只有「容器(bucket)裝物件(檔案)」,一切透過 HTTP API 存取——AWS 的 S3 就是這個模式的代名詞。適合放備份、映像檔、log、靜態網站這類「寫一次、讀多次、不需要檔案系統語意」的資料。
+
+OpenStack 世界有兩種介面歷史:自家的 **Swift API** 與業界事實標準 **S3 API**。而 Ceph 的 **RGW** 一個守護程序同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣([Day 12 講過這段歷史](sprint3-day12-sprint4-preview.md))。
+
+## 原理與架構
+
+今天的部署有個必須先想通的分工——**Kolla 的 `ceph-rgw` 角色不部署任何容器**(它的原始碼註解直接寫明這件事),RGW 守護程序由 cephadm 管:
+
+```mermaid
+flowchart TB
+    subgraph cephside["cephadm 負責(Day 14 的世界)"]
+        RGW["RGW daemon(:7480)<br/>同時聽 S3 與 Swift API"]
+    end
+    subgraph kollaside["Kolla 負責(OpenStack 的世界)"]
+        KS["Keystone:建 service user<br/>+ 註冊 object-store endpoint"]
+    end
+    U["使用者(openstack CLI / s3 工具)"] ==>|"1. 向 Keystone 拿 token"| KS
+    U ==>|"2. 帶 token 打 RGW"| RGW
+    RGW -.->|"3. 回頭向 Keystone 驗 token"| KS
+```
+
+所以今天是「兩邊各設定一半、在 Keystone 會合」:cephadm 端起 daemon 並告訴它去哪驗 token;Kolla 端把 endpoint 與 service user 註冊好。
+
+## 步驟
+
+### 步驟 1:cephadm 端起 RGW
+
+```bash
+sudo ./cephadm shell -- ceph orch apply rgw kolla --placement=1 --port=7480
+```
+
+**`--port=7480` 不能省**:RGW 預設綁 port 80,而這台主機的 80 已被 Horizon 佔用——不指定的話兩邊都會壞。約 30 秒後驗證 daemon 活著(S3 API 對匿名請求會回一份空的 bucket 清單 XML):
+
+```bash
+curl -s http://10.0.0.4:7480/
+```
+
+```text
+<?xml version="1.0"...><ListAllMyBucketsResult ...><Buckets></Buckets></ListAllMyBucketsResult>
+```
+
+### 步驟 2:Kolla 端註冊(globals 每一行都有理由)
+
+```bash
+sudo tee -a /etc/kolla/globals.yml << 'EOF'
+enable_ceph_rgw: "yes"
+enable_ceph_rgw_loadbalancer: "no"
+ceph_rgw_port: "7480"
+ceph_rgw_internal_fqdn: "10.0.0.4"
+ceph_rgw_external_fqdn: "10.0.0.4"
+update_keystone_service_user_passwords: "no"
+EOF
+```
+
+- `enable_ceph_rgw_loadbalancer: "no"`——我們的單機部署關掉了 haproxy,這行不設,**部署前檢查會直接失敗**。
+- 兩個 `fqdn` 指向主機——haproxy 停用時,預設 endpoint 會指到一個沒人在聽的位址,必須明確覆寫。
+- `update_keystone_service_user_passwords: "no"`——不設的話,之後每次 reconfigure 都會重設服務密碼、造成 token 失效(官方文件的明確警告)。
+
+```bash
+source ~/kolla-venv/bin/activate
+kolla-ansible deploy -i ~/all-in-one --tags ceph-rgw
+```
+
+```text
+PLAY RECAP: ok=11  changed=5  failed=0
+```
+
+這一步建立了 Keystone 的 `ceph_rgw` service user 與 `object-store` endpoint。
+
+### 步驟 3:回到 Ceph 端,告訴 RGW 怎麼驗 Keystone token
+
+密碼從 Kolla 的密碼庫拿(兩邊必須一致):
+
+```bash
+PW=$(sudo grep '^ceph_rgw_keystone_password:' /etc/kolla/passwords.yml | awk '{print $2}')
+sudo ./cephadm shell -- bash -c "
+ceph config set client.rgw rgw_keystone_url http://10.0.0.4:5000
+ceph config set client.rgw rgw_keystone_api_version 3
+ceph config set client.rgw rgw_keystone_admin_user ceph_rgw
+ceph config set client.rgw rgw_keystone_admin_password $PW
+ceph config set client.rgw rgw_keystone_admin_project service
+ceph config set client.rgw rgw_keystone_admin_domain Default
+ceph config set client.rgw rgw_keystone_accepted_roles member,Member,admin
+ceph config set client.rgw rgw_keystone_implicit_tenants true
+ceph config set client.rgw rgw_s3_auth_use_keystone true
+ceph config set client.rgw rgw_enable_apis s3,swift,swift_auth,admin
+ceph orch restart rgw.kolla
+"
+```
+
+### 步驟 4:完整往返驗證
+
+```bash
+source /etc/kolla/admin-openrc.sh
+openstack endpoint list --service object-store -f value -c Interface -c URL
+openstack container create day15-test
+echo "hello-rgw" > /tmp/obj.txt
+openstack object create day15-test /tmp/obj.txt
+openstack object save day15-test /tmp/obj.txt --file /tmp/back.txt && cat /tmp/back.txt
+```
+
+```text
+internal http://10.0.0.4:7480/swift/v1
+public   http://10.0.0.4:7480/swift/v1
+day15-test
+/tmp/obj.txt
+hello-rgw
+```
+
+上傳再下載、內容一致——**Swift API 的完整認證與資料鏈全通**。Ceph 端同時可以看到 RGW 自動建出六個 `default.rgw.*` pool(`ceph osd pool ls`)。
+
+## 驗收 checkpoint
+
+逐項驗證,**全部符合判準才算完成今天**:
+
+| 驗證 | 判準 | 本課環境的結果 |
+|---|---|---|
+| RGW daemon | `ceph orch ps` 顯示 rgw running、7480 有回應 | 符合 |
+| endpoint | `object-store` internal+public 指向 `:7480/swift/v1` | 符合 |
+| Swift 往返 | container 建立、object 上傳後下載內容一致 | `hello-rgw` 原樣取回 |
+| S3 API | 匿名請求回 `ListAllMyBucketsResult` XML | 符合(雙 API 並存) |
+| Ceph 端 | `default.rgw.*` pool 自動誕生 | 6 個 pool |
+
+## 地雷記錄
+
+### 地雷 1:RGW 預設 port 80,會與 Horizon 對撞 {#mine-1}
+
+已在步驟 1 預拆(`--port=7480`)。這類「兩套系統同機、預設 port 相撞」是本 Sprint 的主旋律之一——Day 14 的監控套件、今天的 80,之後還會再見。
+
+### 地雷 2:haproxy 停用時的兩個隱形前提 {#mine-2}
+
+`enable_ceph_rgw_loadbalancer: "no"` 與 fqdn 覆寫缺一不可:前者不設 precheck 直接失敗,後者不設 endpoint 會指向空位址。這是「單機關掉 haproxy」在 Sprint 3 埋下的長尾效應——每個新服務接上來時都要重新想一次入口在哪。
+
+### 地雷 3:自動化檢查撞到範本的註解行 {#mine-3}
+
+**症狀**:用 `grep -q "enable_ceph_rgw"` 判斷 globals.yml 是否已設定,結果永遠判定「已存在」而跳過寫入。
+
+**根因**:kolla 的 globals.yml 範本本來就含有**註解掉的** `#enable_ceph_rgw: "no"`,不錨定行首的 grep 會誤中。
+
+**教訓**:對 globals.yml 做存在性檢查一律錨定行首(`grep -q "^enable_ceph_rgw"`)。寫自動化腳本的人一定會踩一次。
+
+## 彩蛋:一次計畫外的重開機測試
+
+執行本日步驟時剛好撞上 lab VM 的每日自動關機。重開機後:**Ceph(含 RGW)全自動復原、Kolla 服務照常回歸**——沒有任何一步需要人工修復。Day 14 選 podman + systemd 的架構決定,在這裡拿到第一次實戰回報。
+
+## 下一步
+
+物件儲存上線,三種儲存介面已有其二(區塊 Day 3、物件今天)。[Day 16](sprint4-day16-manila-cephfs.md) 補上第三種:**Manila 共享檔案系統**——多台 VM 同時掛同一顆碟,也是 K8s 世界 RWX volume 的底層答案。
