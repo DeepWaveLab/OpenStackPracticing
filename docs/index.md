@@ -60,7 +60,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | ![CloudKitty](assets/mascots/cloudkitty.png){ width="32" } | [CloudKitty](runbook/sprint3-day11-openstack-service-map.md) | 用量計費與費率管理 | Cost Explorer | Cloud Billing | Cost Management |
 | ![Masakari](assets/mascots/masakari.png){ width="32" } | [Masakari](runbook/sprint3-day11-openstack-service-map.md) | 虛擬機高可用與自動復原 | (EC2 內建自動復原) | (內建即時遷移) | (內建服務修復) |
 
-每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。其中 **Swift(以 RGW 形式)、Manila、Designate、Zun、Trove 已排入 [Sprint 4 預告](runbook/sprint3-day12-sprint4-preview.md)**——下一段課程就拼這些。
+每一個的定位與「什麼時候會需要」,都整理在 [Day 11 · 服務全景圖](runbook/sprint3-day11-openstack-service-map.md)。其中 **Swift(以 RGW 形式)、Manila、Designate、Trove,加上新一代儀表板 Skyline,已排入 [Sprint 4 預告](runbook/sprint3-day12-sprint4-preview.md)**——下一段課程就拼這些。
 
 
 ## 從這裡出發

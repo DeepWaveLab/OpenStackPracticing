@@ -13,7 +13,7 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 
 | 階段 | 主題 | 天數 | 回答的問題 |
 |---|---|---|---|
-| 一 | **服務擴充**(儲存三部曲 + DNS + 容器 + DBaaS) | 6 | 首頁「還沒拼上的積木」怎麼拼上 |
+| 一 | **服務擴充**(儀表板 + 儲存三部曲 + DNS + DBaaS) | 6 | 首頁「還沒拼上的積木」怎麼拼上 |
 | 二 | **內部原理**(深層拆解) | 2 | 不靠 OpenStack CLI,你能不能讀懂這朵雲? |
 | 三 | **維運實務**(方法論與工具) | 2 | 監控什麼、怎麼升版、怎麼備份 |
 | 四 | **水平擴展**(多機部署) | 2 | **Nova/Magnum 怎麼「準備好機器讓使用者需要時去長」** |
@@ -34,12 +34,12 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 
 | Day | 主題 | 內容與里程碑 | 已知風險/地雷預告 |
 |---|---|---|---|
-| **13** | **Ceph 基礎** | cephadm 單機 bootstrap、OSD/pool/RBD 心智模型、為什麼生產 OpenStack 的儲存標配是 Ceph(而不是 LVM/Swift) | 需要**新掛一顆 data disk**(現有 256G 已被 cinder-volumes VG 用掉);cephadm 單機要壓 replica=1 | 
-| **14** | **物件儲存:RGW(Swift 的現代答案)** | Kolla 的 external Ceph 整合、RGW + Keystone 認證、**同一個服務同時講 S3 與 Swift 兩種 API** 並實測、交代「為什麼 Kolla 放棄原生 Swift」(引用部署工具圖鑑的實測矩陣) | Kolla 自 Rocky 起不部署 Ceph 本體,只做整合——這是教學點不是限制 |
-| **15** | **Manila 共享檔案系統** | CephFS 後端、建 share、兩台 VM 同掛一顆、壓軸:**K8s RWX PVC**(Manila CSI 接回 Day 7-8 的 Magnum cluster——Sprint 3 的 Cinder RWO 補上另一半) | manila 與 CephFS NFS/native 模式選擇;Magnum driver 內建 manila 支援(Day 11 已考證) |
-| **16** | **Designate DNS** | bind9 後端、zone/recordset 生命週期、**Neutron 整合**(port `dns_domain`、FIP 自動 A/PTR),幫 Day 4 的 LB 掛上域名收尾 | Neutron extension 設定容易漏;拿舊資源(LB)來整合是刻意設計 |
-| **17** | **Zun 容器服務** | kuryr-libnetwork + etcd、容器直接跑在雲上(不經 K8s)、與 Magnum 的定位比較(Fargate vs EKS) | **預期高風險日**:kuryr 要接管 docker 網路,而 Kolla 的 docker 是 `iptables:false`——Day 6 kind 事件的續集,地雷記錄的富礦 |
-| **18** | **Trove DBaaS** | guest image 準備、MySQL instance 生命週期、備份/還原、與「自己在 VM 裝 MySQL」的差異 | **開工前 30 分鐘 spike**:先驗證 guest image 生態是否可用(Sprint 1 Magnum 死於 image 斷代的教訓);斷代則本日改為「Trove 現況考證 + 替代方案」 |
+| **13** | **Skyline 儀表板** | `enable_skyline` 增量部署(2026-07-11 已在本 lab 實測一次過)、與 Horizon 並存對照、UI 導覽;當 Sprint 4 的暖身日 | 零已知風險——唯一「已實測通過」的一天 |
+| **14** | **Ceph 基礎** | cephadm 單機 bootstrap、OSD/pool/RBD 心智模型、為什麼生產 OpenStack 的儲存標配是 Ceph(而不是 LVM/Swift) | 需要**新掛一顆 data disk**(現有 256G 已被 cinder-volumes VG 用掉);cephadm 單機要壓 replica=1 | 
+| **15** | **物件儲存:RGW(Swift 的現代答案)** | Kolla 的 external Ceph 整合、RGW + Keystone 認證、**同一個服務同時講 S3 與 Swift 兩種 API** 並實測、交代「為什麼 Kolla 放棄原生 Swift」(引用部署工具圖鑑的實測矩陣) | Kolla 自 Rocky 起不部署 Ceph 本體,只做整合——這是教學點不是限制 |
+| **16** | **Manila 共享檔案系統** | CephFS 後端、建 share、兩台 VM 同掛一顆、壓軸:**K8s RWX PVC**(Manila CSI 接回 Day 7-8 的 Magnum cluster——Sprint 3 的 Cinder RWO 補上另一半) | manila 與 CephFS NFS/native 模式選擇;Magnum driver 內建 manila 支援(Day 11 已考證) |
+| **17** | **Designate DNS** | bind9 後端、zone/recordset 生命週期、**Neutron 整合**(port `dns_domain`、FIP 自動 A/PTR),幫 Day 4 的 LB 掛上域名收尾 | Neutron extension 設定容易漏;拿舊資源(LB)來整合是刻意設計 |
+| **18** | **Trove DBaaS** | guest image 準備、**management network 佈線(本日教學重心)**、MySQL instance 生命週期、備份/還原 | **已查證(2026-07-11):image 斷代是假警報**——官方 guest image 每日發佈(查證當天的 noble qcow2)、datastore 容器在 quay.io 每日更新、上游活躍有 PTL。真雷是 **guest agent → RabbitMQ 的管理網路打通**(Kolla 不代勞,要自建 provider network + `management_networks` 覆寫);次要:官方只發 master 分支 image,備案 `TROVE_BRANCH=stable/2025.1` 自建(~30 分) |
 
 ### 階段二:內部原理(Day 19–20)
 
@@ -70,7 +70,7 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 
 在課程主線尾端新增 **「Day 12 · 下一步的地圖:Sprint 4 預告」**:
 - 定位:如 Day 11 是「後日談」,Day 12 是「預告篇」——不動手,講清楚下一階段學什麼、為什麼是這四個階段
-- 內容:四個階段架構圖(mermaid,直排)、逐日一句話課表、「為什麼 Swift 變成 RGW」的說明(連到部署工具圖鑑)、多機環境的成本預告
+- 內容:四個階段課程地圖(吉祥物版)、逐日一句話課表、「為什麼 Swift 變成 RGW」的說明(連到部署工具圖鑑)、多機環境的成本預告
 - 首頁課表補一列 Day 12;「還沒拼上的積木」表加註「Sprint 4 預定」標記
 
 ## Technical Considerations
@@ -89,7 +89,7 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 ### 課程工法(沿用 Sprint 3 驗證過的)
 - 每日 runbook 固定格式 + 驗收 checkpoint(判準/參考值)+ 具名地雷錨點
 - mermaid 直排紀律(每列 ≤4 格)
-- 高風險日的 **30 分鐘 spike 前置**(Day 18 Trove、Day 17 Zun):斷代就轉考證課,不硬碰
+- 高風險日的 spike 前置:Day 17/18 已於 2026-07-11 提前完成查證(見風險表),其餘日開工前照舊驗貨
 - 版本一律釘 stable 分支,不追 latest
 
 ## Alternative Approaches Considered
@@ -112,10 +112,12 @@ Sprint 3 讓一朵雲從零長出來;**Sprint 4 讓它變成一朵「像生產�
 
 ## Dependencies & Risks
 
-| 風險 | 對策 |
+兩大高風險日已於 2026-07-11 預先查證完畢(向 CI/Zuul、tarballs、quay.io、Launchpad、Gerrit 一手驗證),原本的兩個假設**都被推翻**,真雷另有其人:
+
+| 風險 | 查證結果與對策 |
 |---|---|
-| Trove guest image 斷代(Sprint 1 Magnum 的翻版) | Day 18 開工前 spike;斷代則轉「現況考證 + DBaaS 替代路徑」課 |
-| Zun/kuryr 與 Kolla docker 設定衝突 | 預期中的地雷(Day 6 續集),預留除錯時間;衝突本身就是教材 |
+| ~~Trove guest image 斷代~~ → **假警報** | 官方 image 管線每日出貨(tarballs noble qcow2、quay.io datastore images 皆為查證當日更新)、上游活躍。**真雷:management network 佈線**(guest agent 連不回 RabbitMQ 5672 是 kolla+trove lab 卡最久的一關)→ Day 18 課程重心改放這裡;版本偏差備案:`TROVE_BRANCH=stable/2025.1` 自建 image |
+| ~~Zun~~ → **決策:移除(2026-07-11)** | 查證結論:上游一年僅 14 個 housekeeping commit、2026.1 出生即壞無人修、kolla master 已整包移除、官方 User Survey 連提都不提(對照 Magnum 21% 生產採用)。與使用者確認後**從課綱移除**,Day 13 改為 Skyline(已實測);Zun 的退場故事保留在 Day 11 的服務表註記,當「業界怎麼淘汰技術」的一句話教材 |
 | Ceph 單機資源壓力(E16s 上再跑 Ceph + 全套 OpenStack) | replica=1、只開必要 daemon;監控記憶體水位,必要時 Day 13 起關閉 Zun/Trove 等測完的服務 |
 | 2025.2 upgrade 路徑未實測 | 列為 Day 22 的選做;minor upgrade 是必做保底 |
 | 多機部署的未知雷(全新領域) | 這是課程價值不是風險——Sprint 3 證明了「每個地雷都能定位、能修」的路線韌性 |

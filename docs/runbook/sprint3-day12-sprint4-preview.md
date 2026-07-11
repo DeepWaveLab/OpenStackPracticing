@@ -18,13 +18,13 @@ Sprint 3 結束時,你擁有一朵能開 VM、能長 K8s 的雲。但把時間�
 Sprint 4 用 **12 天、四個階段**回答這三類問題:
 
 <div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段一 · 服務擴充</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 13–18 · 六個新服務上線</span>
+  <strong>階段一 · 服務擴充</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 13–18 · 六塊新積木上線</span>
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🐙</span><span><b>13</b>&nbsp;Ceph 基礎</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/swift.png" width="28" style="display:block;"><span><b>14</b>&nbsp;物件儲存 RGW</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/manila.png" width="28" style="display:block;"><span><b>15</b>&nbsp;Manila 共享檔案</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/designate.png" width="28" style="display:block;"><span><b>16</b>&nbsp;Designate DNS</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/zun.png" width="28" style="display:block;"><span><b>17</b>&nbsp;Zun 容器</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🎛️</span><span><b>13</b>&nbsp;Skyline 儀表板</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🐙</span><span><b>14</b>&nbsp;Ceph 基礎</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/swift.png" width="28" style="display:block;"><span><b>15</b>&nbsp;物件儲存 RGW</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/manila.png" width="28" style="display:block;"><span><b>16</b>&nbsp;Manila 共享檔案</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/designate.png" width="28" style="display:block;"><span><b>17</b>&nbsp;Designate DNS</span></div>
     <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/trove.png" width="28" style="display:block;"><span><b>18</b>&nbsp;Trove 資料庫</span></div>
   </div>
 </div>
@@ -59,12 +59,12 @@ Sprint 4 用 **12 天、四個階段**回答這三類問題:
 
 | Day | 主題 | 一句話 |
 |---|---|---|
-| 13 | **Ceph 基礎** | 生產 OpenStack 的儲存標配,單機 bootstrap 一套當骨幹 |
-| 14 | **物件儲存(RGW)** | S3 與 Swift 兩種 API 一次學會;為什麼不是原生 Swift,見下方設計決定 |
-| 15 | **Manila 共享檔案系統** | 多台 VM 同掛一顆碟;壓軸把 **K8s RWX PVC** 接回 Day 8 的 cluster |
-| 16 | **Designate DNS** | zone 與 recordset、Neutron 整合,幫 Day 4 的 LB 掛上域名 |
-| 17 | **Zun 容器服務** | 容器直接跑在雲上(不經 K8s),與 Magnum 的定位比較 |
-| 18 | **Trove 資料庫服務** | 一鍵開 MySQL 的 RDS 體驗;開工前先驗證 image 生態(Sprint 1 的教訓) |
+| 13 | **Skyline 新一代儀表板** | 一個 flag 的增量部署暖身;同一朵雲,現代化介面——與 Horizon 並存對照 |
+| 14 | **Ceph 基礎** | 生產 OpenStack 的儲存標配,單機 bootstrap 一套當骨幹 |
+| 15 | **物件儲存(RGW)** | S3 與 Swift 兩種 API 一次學會;為什麼不是原生 Swift,見下方設計決定 |
+| 16 | **Manila 共享檔案系統** | 多台 VM 同掛一顆碟;壓軸把 **K8s RWX PVC** 接回 Day 8 的 cluster |
+| 17 | **Designate DNS** | zone 與 recordset、Neutron 整合,幫 Day 4 的 LB 掛上域名 |
+| 18 | **Trove 資料庫服務** | 一鍵開 MySQL 的 RDS 體驗:建立實例、備份、還原 |
 | 19 | **API 請求的完整生命週期** | fernet token 解剖、request-id 跨服務追蹤、RPC 實況、qemu 進程對讀 |
 | 20 | **OVN 封包轉送剖析** | OVN 深潛:logical flow、`ovn-trace` 追封包、FIP 的 NAT 在哪一條規則 |
 | 21 | **可觀測性** | Prometheus + Grafana + 集中式 log;該盯什麼、怎麼用它把除錯加速十倍 |
@@ -89,14 +89,6 @@ Day 19–20 的驗收標準只有一條:**不靠 OpenStack CLI,你能不能讀�
 ### 為什麼最後兩天要租新機器
 
 橫向擴展在單機上教不了——「多機」的意義就在於真的有網路隔在中間。Day 23–24 會另租 3–4 台小型 VM(兩天約 US$36–49),部一套真正的多節點 OpenStack:你會看到單機時被關掉的 haproxy/VIP 為什麼存在、新的 compute 節點怎麼在使用者無感的情況下讓雲變大——**這正是「Nova/Magnum 怎麼準備好機器讓使用者去長」的答案**。教完即拆,Day 10 記錄的重建程序終於派上用場。
-
-## 誠實的風險預告
-
-照本課程的慣例,先把可能翻車的地方講在前面:
-
-- **Trove(Day 18)**:guest image 生態有斷代風險——跟 Sprint 1 的 Magnum 死法同型。開工前會先做 30 分鐘查證,斷代就把該日轉為「DBaaS 現況考證與替代方案」。
-- **Zun(Day 17)**:kuryr 要接管 Docker 網路,而 Kolla 把 Docker 的 iptables 關了——[Day 6 那顆地雷](sprint3-day6-capi-management-cluster.md#mine-1)的續集幾乎注定上演。這是預期中的教材,不是意外。
-- 全部版本照舊釘 stable 分支;所有支援狀態以開課當日向上游查證為準(方法見[部署工具圖鑑](../deployment-tools.md)的「自己驗貨」一節)。
 
 ## 下一步
 

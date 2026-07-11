@@ -103,12 +103,12 @@ flowchart TB
 | ![Swift](../assets/mascots/swift.png){ width="64" } | **Swift** | 物件儲存(丟檔案、拿 URL) | S3 | 本課 Glance 直接存本機檔案系統就夠。要做備份、存 image 集中庫、給應用程式丟檔案時就需要它(或 Ceph) |
 | ![Designate](../assets/mascots/designate.png){ width="64" } | **Designate** | DNS as a Service | Route 53 | 本課全用 IP 直連。有多服務、多環境時第一個想加的就是它 |
 | ![Manila](../assets/mascots/manila.png){ width="64" } | **Manila** | 共享檔案系統(多 VM 同時掛同一顆) | EFS | K8s 的 RWX(多 Pod 共寫)PVC 需要它——我們的 Cinder CSI 只能 RWO。Magnum driver 其實已內建 manila 支援,是本 lab 最自然的下一塊積木 |
-| — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | Horizon 夠用;想看現代化 UI 可以並存試裝 |
+| — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | 已排入 [Sprint 4 Day 13](sprint3-day12-sprint4-preview.md)——與 Horizon 並存對照 |
 | — | **Prometheus + Grafana**(Kolla 內建整合) | 監控與儀表板 | CloudWatch | lab 用 `docker logs` 硬看;任何正式環境第一件事就是把監控開起來(這兩位是 CNCF 專案,不是 OpenStack,所以沒有 OpenStack 吉祥物) |
 
 ![skyline-overview](../assets/screenshots/skyline-overview.png)
 
-*上表提到的 Skyline 長這樣:同一朵雲、新一代介面(本站截圖時額外部署試玩,課程本體未包含)。*
+*上表提到的 Skyline 長這樣:同一朵雲、新一代介面——Sprint 4 Day 13 會正式把它部起來。*
 
 ### 第二梯隊:特定場景才需要
 
@@ -119,7 +119,7 @@ flowchart TB
 | ![CloudKitty](../assets/mascots/cloudkitty.png){ width="64" } | **CloudKitty** | 費率與計費(把計量變帳單) | 對內部門拆帳、對外收費 |
 | ![Trove](../assets/mascots/trove.png){ width="64" } | **Trove** | 資料庫即服務 | 想給租戶「一鍵開 MySQL」(AWS RDS 的體驗) |
 | ![Masakari](../assets/mascots/masakari.png){ width="64" } | **Masakari** | VM 高可用(主機掛了自動在別台重生) | 多節點生產環境 |
-| ![Zun](../assets/mascots/zun.png){ width="64" } | **Zun** | 容器即服務(不經 K8s 直接跑容器) | 想要 AWS Fargate 體驗;有了 Magnum 通常不再需要 |
+| ![Zun](../assets/mascots/zun.png){ width="64" } | **Zun** | 容器即服務(不經 K8s 直接跑容器) | 想要 AWS Fargate 體驗——但注意:上游已近停維,Kolla 自 2026.1 起移除支援;業界的答案是 Magnum/K8s |
 
 ### 第三梯隊:知道存在即可
 
