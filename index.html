@@ -3366,13 +3366,13 @@
 </tbody>
 </table>
 <h2 id="k8s">課程壓軸:一鍵 K8s 背後發生什麼<a class="headerlink" href="#k8s" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
-    A[openstack coe&lt;br/&gt;cluster create] --&gt; B[Magnum&lt;br/&gt;+ CAPI driver]
-    B --&gt; C[CAPI / CAPO&lt;br/&gt;管理叢集]
-    C --&gt;|Nova| D[節點 VM]
-    C --&gt;|Octavia| E[API LB]
-    C --&gt;|Cinder| F[PVC volume]
-    D --&gt; G[workload&lt;br/&gt;K8s cluster]
+<pre class="mermaid"><code>flowchart TB
+    A["openstack coe cluster create"] --&gt; B["Magnum + CAPI driver"]
+    B --&gt; C["CAPI / CAPO 管理叢集"]
+    C --&gt;|Nova| D["節點 VM"]
+    C --&gt;|Octavia| E["API LB"]
+    C --&gt;|Cinder| F["PVC volume"]
+    D --&gt; G["workload K8s cluster"]
     E --&gt; G
     F --&gt; G</code></pre>
 <p>Day 6–8 會把這條生產線一站一站蓋出來。</p>

@@ -3369,6 +3369,8 @@
 </tr>
 </tbody>
 </table>
+<p><img alt="skyline-overview" src="../../assets/screenshots/skyline-overview.png" /></p>
+<p><em>上表提到的 Skyline 長這樣:同一朵雲、新一代介面(本站截圖時額外部署試玩,課程本體未包含)。</em></p>
 <h3 id="_4">第二梯隊:特定場景才需要<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -3425,21 +3427,18 @@
 <p>回去翻 Day 5 部署 Barbican 時的輸出——那一長串 <code>PLAY [Apply role cyborg] ... skipping: no hosts matched</code>、<code>PLAY [Apply role designate] ... skipping</code>、trove、watcher、cloudkitty、tacker、zun、blazar、masakari、venus、skyline……<strong>Kolla-Ansible 每次部署都會把整盒積木掃一遍,沒開的直接跳過</strong>。當時被你捲過去的雜訊,現在你知道每一行是什麼了。</p>
 </div>
 <h2 id="_6">一張圖總結:這朵雲的現況<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
+<pre class="mermaid"><code>flowchart TB
     subgraph deployed["已上線(Day 0–10 的成果)"]
-        direction TB
-        A["核心:Keystone / Glance /&lt;br/&gt;Placement / Nova / Neutron / Horizon"]
-        B["儲存:Cinder(LVM)"]
-        C["網路加值:Octavia"]
-        D["平台:Heat / Barbican / Magnum"]
+        direction LR
+        A["核心:Keystone / Glance / Placement /&lt;br/&gt;Nova / Neutron / Horizon"] ~~~ B["儲存:Cinder(LVM)"]
+        C["網路加值:Octavia"] ~~~ D["平台:Heat / Barbican / Magnum"]
     end
+    deployed ==&gt;|"globals.yml 開 flag + 增量 deploy(Day 3 學過的工作流)"| next
     subgraph next["最自然的下一步"]
-        E["Manila(K8s RWX)"]
-        F["Prometheus/Grafana(監控)"]
-        G["Designate(DNS)"]
-        H["Swift 或 Ceph(物件儲存)"]
-    end
-    deployed --&gt;|"globals.yml 開 flag&lt;br/&gt;+ 增量 deploy(Day 3 學過的工作流)"| next</code></pre>
+        direction LR
+        E["Manila(K8s RWX)"] ~~~ F["Prometheus / Grafana(監控)"]
+        G["Designate(DNS)"] ~~~ H["Swift 或 Ceph(物件儲存)"]
+    end</code></pre>
 <p>要加任何一塊,流程都是你在 Day 3 練過的那套:<code>globals.yml</code> 開 <code>enable_xxx</code> → <code>kolla-ansible deploy</code> 增量套用 → 驗證。這門課教的不只是十一個服務,是<strong>這個可以無限擴充的工作流</strong>。</p>
 <h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
 <ul>

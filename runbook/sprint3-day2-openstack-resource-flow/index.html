@@ -763,6 +763,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看今天的概念
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-3" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3228,6 +3239,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看今天的概念
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-3" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3325,6 +3347,7 @@
         direction LR
         NET["network + subnet&lt;br/&gt;(自己的內網)"] ~~~ RTR["router&lt;br/&gt;(內網↔外網的閘道)"] ~~~ SG["security group&lt;br/&gt;(防火牆規則)"] ~~~ KEY["keypair&lt;br/&gt;(SSH 公鑰)"]
     end
+    admin ~~~ tenant
     admin ==&gt; VM["server create → VM 誕生"]
     tenant ==&gt; VM
     VM ==&gt;|"最後貼上 floating IP,外界才連得到"| FIP["floating IP"]</code></pre>
@@ -3537,6 +3560,9 @@
 </table>
 <h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p><strong>今天零地雷。</strong>這不是運氣——前一次嘗試撞過的三個問題,這次在動手前就被預防掉了:Ubuntu VM 改用 config-drive 拿 metadata(Sprint 1 曾因此拿不到 SSH 金鑰)、flat provider 網路在 Kolla 預設就支援(charm 時代要另外開)、security group 規則明確加上(charm 預設把安全群組整個關掉的教訓)。<strong>教訓的複利在這裡兌現</strong>——完整故事見<a href="../../previous-attempts/">前兩次嘗試</a>。</p>
+<h2 id="_4">從儀表板看今天的概念<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p><img alt="skyline-topology" src="../../assets/screenshots/skyline-topology.png" /></p>
+<p><em>網路拓樸視圖:外部網路 → router → 租戶內網 → VM,正是今天手動建立的那條鏈。(畫面來自新一代儀表板 Skyline,本課程未部署它——見 Day 11 的介紹;圖中為課程後期的 K8s cluster 網路)</em></p>
 <h2 id="day-3">下一步(Day 3)<a class="headerlink" href="#day-3" title="Permanent link">&para;</a></h2>
 <p>Cinder LVM:data disk(sdb 256G)做 <code>cinder-volumes</code> VG → globals 開 cinder → <code>kolla-ansible reconfigure/deploy</code> 增量上服務 → volume attach/boot-from-volume。Sprint 1 未完成項 #1,本次重做。</p>
 

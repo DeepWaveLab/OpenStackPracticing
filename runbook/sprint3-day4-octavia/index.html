@@ -902,6 +902,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-5" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3394,6 +3405,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-5" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3441,14 +3463,14 @@
 <p>多數人以為 LB 是什麼神祕硬體——在 Octavia 的預設模式裡,<strong>LB 就是一台自動幫你開好、裡面跑著 haproxy 的小 VM</strong>,叫 <strong>amphora</strong>(雙耳瓶,取「承載流量的容器」之意)。Octavia 負責:自動開這台 VM、把 haproxy 設定推進去、監控它的心跳、掛了就自動砍掉重開一台。</p>
 <h3 id="lb">LB 的物件模型:四層積木<a class="headerlink" href="#lb" title="Permanent link">&para;</a></h3>
 <p>建一個能用的 LB 要疊四塊積木,每塊都有明確分工:</p>
-<pre class="mermaid"><code>flowchart LR
+<pre class="mermaid"><code>flowchart TB
     C["client(請求)"] --&gt; FIP["floating IP"]
-    FIP --&gt; LB["loadbalancer(VIP:LB 的固定門牌)"]
-    LB --&gt; LIS["listener(聽哪個 port?例:HTTP :80)"]
-    LIS --&gt; P["pool(後端伺服器群 + 分配演算法)"]
+    FIP --&gt; LB["loadbalancer&lt;br/&gt;(VIP:LB 的固定門牌)"]
+    LB --&gt; LIS["listener&lt;br/&gt;(聽哪個 port?例:HTTP :80)"]
+    LIS --&gt; P["pool&lt;br/&gt;(後端伺服器群 + 分配演算法)"]
+    HM["health monitor&lt;br/&gt;(定期戳後端,活著才派流量)"] -.-&gt;|監控| P
     P --&gt; M1["member: vm-web1"]
-    P --&gt; M2["member: vm-web2"]
-    HM["health monitor(定期戳後端,活著才派流量)"] -.監控.-&gt; P</code></pre>
+    P --&gt; M2["member: vm-web2"]</code></pre>
 <table>
 <thead>
 <tr>
@@ -3652,6 +3674,9 @@
 <p>文件說會有 <code>/etc/kolla/octavia-openrc.sh</code>,實際沒出現。不影響:image 上傳改用 admin + <code>--project &lt;amp_image_owner_id&gt;</code>(從 octavia.conf 讀,auto-configure 已填好)。</p>
 <h3 id="mine-5">地雷 5:卡在 PENDING_* 的 LB 無法刪除(擴展知識)<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
 <p>Redis 壞掉期間建立的 lb1 永遠停在 <code>PENDING_CREATE</code>,delete 回 409(PENDING 狀態 immutable,而 job 從未進 queue,永遠不會有人來改狀態)。社群公認處置(<strong>lab 限定,生產環境先開 ticket</strong>):DB 把 <code>provisioning_status</code> 改 <code>ERROR</code> → <code>loadbalancer delete --cascade</code>。這是本 lab 唯一一次手改 DB,原因:Octavia 沒有提供 stuck-PENDING 的官方重置工具。</p>
+<h2 id="_5">從儀表板看成果<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p><img alt="skyline-lb" src="../../assets/screenshots/skyline-lb.png" /></p>
+<p><em>Load Balancer 列表(Skyline 檢視):兩顆 LB 都是 Day 8 的 K8s 自動建的——<code>kubeapi</code> 是 cluster API 的入口,<code>web-lb</code> 是 <code>Service type=LoadBalancer</code> 的產物。Operating Status 的綠色 Online 來自 health monitor 的持續檢查,正是今天教的機制。</em></p>
 <h2 id="day-5">下一步(Day 5)<a class="headerlink" href="#day-5" title="Permanent link">&para;</a></h2>
 <p>Barbican(Magnum 的憑證倉庫)+ Heat 複習(白撿的,Day 1 已部)。</p>
 

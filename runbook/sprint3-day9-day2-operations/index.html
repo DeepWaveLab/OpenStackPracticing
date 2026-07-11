@@ -981,6 +981,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-10" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3272,6 +3283,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-10" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3427,6 +3449,9 @@
 <p>autoscaler 正確偵測 pending、把 MD replicas 設 3,但 <strong>topology controller 依 <code>spec.topology...replicas: 1</code> 一直打回 1</strong>(監控看到 1↔3 來回)。managed topology 下 replicas 由 topology 擁有。解:把該 MD 在 topology 的 <code>replicas</code> <strong>移除</strong>(交給 autoscaler)。生產做法是建 cluster 時帶 <code>auto_scaling_enabled=true</code> + nodegroup min/max,driver 會自動配好 topology;本 lab cluster 未帶該 label,故手動 patch。</p>
 <h3 id="mine-4">地雷 4:autoscaler 拓樸選擇(kind vs workload)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
 <p>autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、<code>--kubeconfig</code> 指 workload(其 API FIP <code>172.24.4.x</code> 從 kind 可達)。若跑 workload 內,要餵 mgmt 的 kubeconfig,但 kind API 綁 <code>127.0.0.1:33689</code>(host loopback)workload pod 打不到,得額外 port-forward + skip-TLS,較麻煩。</p>
+<h2 id="_4">從儀表板看成果<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p><img alt="skyline-instances" src="../../assets/screenshots/skyline-instances.png" /></p>
+<p><em>Instance 列表(Skyline 檢視):三台 Active 的節點就是 workload cluster 的全部家當——注意第一台 <code>ng-app</code> 開頭的節點,它是本日 node group 操作的產物。</em></p>
 <h2 id="day-10">下一步(Day 10)<a class="headerlink" href="#day-10" title="Permanent link">&para;</a></h2>
 <p>Terraform 接管(terraform-provider-openstack 管 network/VM/LB)+ teardown 演練(<code>kolla-ansible destroy</code> → 重部速度驗證)+ 寫 <code>sprint3-reflection.md</code>。開工前照 Day8 Pre-flight 確認 kind/magnum/octavia o-hm0 就緒。</p>
 
