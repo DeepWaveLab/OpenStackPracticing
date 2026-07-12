@@ -149,6 +149,14 @@ openstack server create --flavor m1.tiny --volume vol-boot \
 
 *Volume 列表(Skyline 檢視):圖中那顆 1 GiB 的 `pvc-*` volume,正是 Day 8 K8s PVC 動態供裝的產物——今天學的 Cinder,就是它背後的引擎。*
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Kolla-Ansible 的 Cinder 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/cinder-guide.html)** —— 本章 LVM 後端設定的官方對照,也列出其他後端(NFS、Ceph)的接法。
+- **[Cinder LVM driver 參考](https://docs.openstack.org/cinder/2025.1/configuration/block-storage/drivers/lvm-volume-driver.html)** —— 這個 driver 的完整設定選項與限制。
+- **[Cinder 磁碟區操作手冊](https://docs.openstack.org/cinder/2025.1/cli/cli-manage-volumes.html)** —— 建立、掛載、快照、擴容的官方 CLI 流程。
+
 ## 下一步(Day 4)
 
 Octavia(Sprint 1 未完成項 #2):amphora image 準備 + LB 手動建置全流程。

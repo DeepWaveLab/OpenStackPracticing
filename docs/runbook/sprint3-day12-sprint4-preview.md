@@ -32,8 +32,8 @@ Sprint 4 用 **12 天、四個階段**回答這三類問題:
 <div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
   <strong>階段二 · 內部原理</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 19–20 · 拆開引擎看內部</span>
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🔬</span><span><b>19</b>&nbsp;API 請求生命週期</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/neutron.png" width="28" style="display:block;"><span><b>20</b>&nbsp;OVN 封包剖析</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🔬</span><span><b>19</b>&nbsp;server create 背後</span></div>
+    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/neutron.png" width="28" style="display:block;"><span><b>20</b>&nbsp;封包怎麼流</span></div>
   </div>
 </div>
 <div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
@@ -65,9 +65,9 @@ Sprint 4 用 **12 天、四個階段**回答這三類問題:
 | [16](sprint4-day16-manila-cephfs.md) | **Manila 共享檔案系統** ✅ | 多台 VM 同掛一顆碟;壓軸把 **K8s RWX PVC** 接回 Day 8 的 cluster |
 | [17](sprint4-day17-designate-dns.md) | **Designate DNS** ✅ | zone 與 recordset、Neutron 整合,幫 Day 4 的 LB 掛上域名 |
 | [18](sprint4-day18-trove-dbaas.md) | **Trove 資料庫服務** ✅ | 一鍵開 MySQL 的 RDS 體驗:建立實例、備份、還原 |
-| 19 | **API 請求的完整生命週期** | fernet token 解剖、request-id 跨服務追蹤、RPC 實況、qemu 進程對讀 |
-| 20 | **OVN 封包轉送剖析** | OVN 深潛:logical flow、`ovn-trace` 追封包、FIP 的 NAT 在哪一條規則 |
-| 21 | **可觀測性** | Prometheus + Grafana + 集中式 log;該盯什麼、怎麼用它把除錯加速十倍 |
+| [19](sprint4-day19-api-request-lifecycle.md) | **server create 背後發生什麼** ✅ | fernet token 解剖、request-id 跨服務追蹤、RPC 實況、qemu 進程對讀 |
+| [20](sprint4-day20-ovn-packet-trace.md) | **封包怎麼流(OVN)** ✅ | OVN 深潛:logical flow、`ovn-trace` 追封包、FIP 的 NAT 在哪一條規則 |
+| [21](sprint4-day21-observability.md) | **可觀測性** ✅ | Prometheus + Grafana + 集中式 log;該盯什麼、怎麼用它把除錯加速十倍 |
 | 22 | **升版、備份與 DB 維運** | SLURP 升級政策、`kolla-ansible upgrade` 實戰、備份還原演練 |
 | 23 | **多節點部署** | 多台真機、haproxy/keepalived VIP 復活、關掉一台 controller 給你看 |
 | 24 | **橫向擴展實戰** | **雲怎麼「長」**:新 compute 節點怎麼加入、容量怎麼規劃、Magnum 要長的前提 |

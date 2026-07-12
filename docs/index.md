@@ -109,7 +109,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
 
-## 課程路徑(Day 0 → 18,連載中)
+## 課程路徑(Day 0 → 21,連載中)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
 
@@ -134,6 +134,9 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | [16](runbook/sprint4-day16-manila-cephfs.md) | Manila 共享檔案系統 | CephFS 後端、掛載讀寫全流程 |
 | [17](runbook/sprint4-day17-designate-dns.md) | Designate DNS | zone/recordset、FIP 自動 DNS 記錄 |
 | [18](runbook/sprint4-day18-trove-dbaas.md) | Trove 資料庫服務 | 一行指令開出代管 MySQL |
+| [19](runbook/sprint4-day19-api-request-lifecycle.md) | server create 背後發生什麼 | token → RPC → qemu 進程徒手追蹤 |
+| [20](runbook/sprint4-day20-ovn-packet-trace.md) | 封包怎麼流(OVN) | ovn-trace 看 NAT 改寫的確切一刻 |
+| [21](runbook/sprint4-day21-observability.md) | 可觀測性 | Prometheus/Grafana/集中 log |
 
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 

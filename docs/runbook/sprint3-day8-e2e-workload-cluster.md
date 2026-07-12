@@ -174,6 +174,15 @@ Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部解決:
 
 *同一座 cluster,從 kubectl 看:三個節點全 Ready(control-plane、worker,加上 Day 9 的 `app` node group)。這裡用的是**暫存的 kubeconfig**(`KUBECONFIG=/tmp/wl.kubeconfig` 只影響這一條指令)——查別人的 cluster 時養成這個習慣,不會弄髒自己的 kubectl 設定。*
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[K8s 官方:Cloud Controller Manager 概念](https://kubernetes.io/docs/concepts/architecture/cloud-controller/)** —— 為什麼 K8s 需要一個「懂雲」的元件?CCM 的職責邊界在這份講得最清楚。
+- **[cloud-provider-openstack 專案](https://github.com/kubernetes/cloud-provider-openstack)** —— 本章部署的 OCCM 與 Cinder CSI 都住在這個 repo;文件目錄裡有各元件的設定參考。
+- **[K8s 官方:Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)** —— PV/PVC/StorageClass 的權威定義;本章「PVC 自動變出 Cinder volume」的 K8s 側原理。
+- **[K8s 官方:Service](https://kubernetes.io/docs/concepts/services-networking/service/)** —— `type=LoadBalancer` 到底承諾了什麼,以及它如何委託給雲(我們的 Octavia)實現。
+
 ## 下一步(Day 9)
 
 Day-2 operations:用 `k8s-v1.34.8-azure` template 驗 cluster 升版(CAPI rolling,如 v1.34→v1.35,需先上傳對應 node image)、node group、cluster-autoscaler。開工前照 Pre-flight §0 確認 kind/magnum/octavia o-hm0 就緒。

@@ -13,32 +13,53 @@
 
 ![Ceph 官方標誌](../assets/logos/ceph.png){ align=right width="110" }
 
-Day 3 的 LVM 方案有個天花板:硬碟綁在單一主機上,主機掛了資料就下線。**Ceph 是一套分散式儲存系統**:把許多主機的許多硬碟組成一個大池子,資料自動複製多份、自動修復,而且**一套系統同時提供三種儲存介面**——區塊(給 Cinder 當後端)、物件(S3/Swift API)、檔案(共享檔案系統)。這就是為什麼業界不再為物件儲存單獨維護一套 Swift(這段歷史在 [Day 12](sprint3-day12-sprint4-preview.md) 講過):養一套 Ceph,三種儲存全有了。
+Day 3 的 Cinder 用主機上的 LVM,能用,但有個天花板:硬碟綁在單一主機上,主機掛了、資料就跟著下線,而且容量加到單機塞不下就到頂了。生產環境需要的是另一種東西——**能橫跨很多台機器、壞一台不掉資料、想擴容就加硬碟**的儲存。這就是 Ceph。
 
-順帶一提,Ceph 的吉祥物是章魚 🐙——多隻觸手同時做事,跟它的架構挺相配。
+它的運作方式,比較像 RAID 從一台機器裡的幾顆硬碟,放大到整個機房的幾百顆硬碟:你寫進去的每一份資料,Ceph 都幫你在**不同機器**上各留一份副本。於是同一份資料同時存在好幾個地方——壞掉一顆硬碟、甚至垮掉一整台機器,資料都還在別處,系統照常運轉。對使用它的人來說,底下有幾台機器、資料實際躺在哪顆硬碟上,全部看不見也不用管,只看到一個能一直寫、一直加大的儲存空間。
 
-### 最小心智模型:三種守護程序
+這個「把硬碟細節藏起來、對外只給一個大空間」的能力,展開來是三件單機 LVM 做不到的事:
+
+- **資料自動存多份**:同一份資料複製到不同機器上的不同硬碟,任何一顆壞掉都不掉資料——這叫「沒有單點故障」。
+- **自動修復**:偵測到某顆硬碟掛了,自動把它上面的資料在別處重建一份,不必等人半夜爬起來換硬碟。
+- **一套系統、三種介面**:同一座 Ceph,可以當**區塊**儲存(像一顆硬碟,給 Cinder 當後端)、**物件**儲存(用 HTTP API,提供 S3/Swift)、**檔案**儲存(掛成網路資料夾)。這就是為什麼業界不再為了物件儲存單獨養一套 Swift([Day 12](sprint3-day12-sprint4-preview.md) 講過這段歷史):養一座 Ceph,三種儲存全有了。
+
+Ceph 的吉祥物是章魚 🐙,其實挺傳神——很多隻觸手各抓各的硬碟,腦袋卻協調成一個整體對外動作,正是它的運作寫照。
+
+### 它是怎麼做到的?四個角色
+
+Ceph 之所以能「壞一台不掉資料」,是因為它把工作拆給四種背景程式(daemon),各司其職。理解這四個角色,今天後面所有的調校指令你就知道在調誰:
 
 ```mermaid
 flowchart TB
-    subgraph brain["控制面(小而關鍵)"]
+    subgraph brain["大腦(數量少、體積小,但一停全停)"]
         direction LR
-        MON["mon:叢集地圖與投票<br/>(誰活著、資料在哪)"] ~~~ MGR["mgr:管理與編排<br/>(cephadm 的大腦)"]
+        MON["MON 監視器<br/>掌握「叢集地圖」:<br/>有哪些硬碟、誰活著、資料該放哪"] ~~~ MGR["MGR 管理員<br/>對外的管理介面、<br/>統計數據、cephadm 的執行者"]
     end
-    subgraph data["資料面(可以一直加)"]
+    subgraph muscle["肌肉(數量多、可一直加)"]
         direction LR
-        OSD1["osd:一顆硬碟一個 osd<br/>真正存資料的人"] ~~~ POOL["pool:邏輯儲存池<br/>(設定複本數的單位)"]
+        OSD["OSD 儲存元<br/>一顆硬碟配一個 OSD,<br/>真正存資料、也負責複製與修復"] ~~~ MDS["MDS 檔案中繼<br/>只有用到檔案儲存(CephFS)時才需要,<br/>管目錄樹與檔名"]
     end
-    brain ==>|"指揮資料放置"| data
+    brain ==>|"MON 告訴客戶端<br/>資料該去哪顆 OSD"| muscle
 ```
 
-生產環境:mon×3(投票要奇數)、osd 幾十到幾千顆。我們的 lab:全部一份,擠在同一台主機——**這正是今天所有特殊調校的原因**。
+- **MON(監視器)**:Ceph 的權威記帳員,維護一張「叢集地圖」——哪些 OSD 存在、誰健康、資料該怎麼分佈。客戶端要讀寫資料前,先問 MON「這份資料在哪」。生產環境放 **3 個或 5 個**(奇數),因為它們要投票決定「誰說了算」,避免腦裂。
+- **MGR(管理員)**:提供對外的管理與監控介面,也是 cephadm 下指令的實際執行者。通常跟 MON 成對出現(一主一備)。
+- **OSD(儲存元,Object Storage Daemon)**:**一顆硬碟對應一個 OSD**,是真正把資料寫進磁碟的角色,也負責把資料複製到其他 OSD、以及在某顆壞掉時參與修復。要擴容,就是加硬碟、加 OSD——這就是 Ceph 能「橫向長大」的原因。
+- **MDS(檔案中繼)**:只有當你用它的**檔案儲存**功能(CephFS,Day 16 會用到)時才需要,負責管理目錄結構與檔名(資料本體還是存在 OSD 上)。
+
+還有一個不是背景程式、但天天會遇到的名詞——**pool(儲存池)**:OSD 是實體硬碟,pool 是它們之上的**邏輯分區**,「資料要存幾份」這個設定就是掛在 pool 上的。今天調的 `size=1`(只存一份)就是 pool 的參數。
+
+### 為什麼我們的 lab 需要一堆特殊調校
+
+看懂上面就懂了:**Ceph 的每個預設值,都是為「很多台機器、很多顆硬碟」設計的**——資料預設存 3 份、MON 要投票、故障域跨主機。而我們的 lab 是**一台機器、一顆硬碟**,把這套為叢集設計的系統硬塞進單機,預設值全部水土不服:只有 1 顆硬碟卻要存 3 份(放不下)、只有 1 個 MON 卻在等投票、記憶體預設會依「機器很大、OSD 很多」的公式暴衝。所以步驟 3 的每一條調校,本質上都是在跟 Ceph 說「我知道這樣不是生產做法,lab 就這一台,你將就一下」——**明知故犯,但知道犯在哪、代價是什麼**,這正是 lab 的價值。
 
 ### cephadm 與 Kolla 的分工
 
-Kolla-Ansible 自 2020 年起就**不部署 Ceph 本體**,只做「接上一套現成 Ceph」的整合——部署 Ceph 的官方工具是 **cephadm**(Ceph 自帶的編排器)。所以今天的角色分工:cephadm 管 Ceph、Kolla 管 OpenStack,兩者同機共存。
+![podman 官方標誌](../assets/logos/podman.png){ align=right width="150" }
 
-一個關鍵決定:**cephadm 底下用 podman,不用 docker**。因為 Kolla 每次 deploy 都可能重啟主機的 docker daemon——Ceph 若也掛在 docker 下,mon/osd 會被連坐重啟;podman 沒有常駐 daemon,每個 Ceph 守護程序是獨立的 systemd 服務,跟 Kolla 完全解耦。(這個選擇在本章結尾的重開機測試會得到回報。)
+還有一個部署面的決定要先講。Kolla-Ansible 自 2020 年起就**不部署 Ceph 本體**,只做「接上一套現成的 Ceph」的整合——部署 Ceph 用的是它官方的專屬工具 **cephadm**。所以今天主機上是兩套系統並存:cephadm 管 Ceph、Kolla 管 OpenStack。
+
+一個關鍵決定:**cephadm 底下用 podman,不用 docker**。原因是 Kolla 每次部署都可能重啟主機的 docker 服務——如果 Ceph 也跑在 docker 下,那 MON/OSD 會跟著被連坐重啟。而 **podman 沒有一個常駐的總管程式(daemon)**,每個 Ceph 背景程式都是獨立的 systemd 服務,跟 Kolla 的 docker 完全井水不犯河水。(這個選擇的回報,在本章結尾的重開機測試會看到。)
 
 ## 開始之前
 
@@ -153,7 +174,7 @@ sudo ./cephadm shell -- ceph -s
 | OSD | 1 up / 1 in,容量等於新磁碟 | 256 GiB 可用 |
 | 記憶體 | 部署後增量 ≤ 8 GiB | 實測只多 ~1 GiB(OSD 空載) |
 | Kolla 不受影響 | `openstack service list` 正常、容器數不變 | 13 服務 / 53 容器,無感 |
-| 守護程序歸屬 | `ceph orch ps` 全部由 systemd+podman 管理 | 符合(與 kolla 的 docker 零耦合) |
+| 背景程式歸屬 | `ceph orch ps` 全部由 systemd+podman 管理 | 符合(與 kolla 的 docker 零耦合) |
 
 ## 地雷記錄
 
@@ -181,9 +202,11 @@ sudo ./cephadm shell -- ceph -s
 
 bootstrap 剛完成時叢集裡**零個 pool**(第一個 pool `.mgr` 要等首顆 OSD 上線才誕生),此時對 `.mgr` pool 的操作會回 `unrecognized pool`。無需補救——只要 `osd_pool_default_size=1` 在 pool 誕生**之前**設好,新 pool 就會以正確參數出生。教訓:**先調 default、再加 OSD**,順序就是一切。
 
-## 彩蛋:重開機的兩種命運
+## 為什麼 Ceph 重開機不需要照顧
 
-本課環境的 VM 每晚自動關機。隔天開機後實測:**Ceph 全自動復原**——`HEALTH_OK` 秒回、靜音設定都在,零人工介入。對照 Day 6 的 kind(重開機後要人工檢查、換 port 還要重配 kubeconfig),這就是「每個守護程序都是 systemd 服務」的架構紅利,也是 podman 選擇的回報。
+前面選 podman 時提過,好處會在重開機時看到——這裡具體說明。因為每個 Ceph 背景程式都被註冊成獨立的 systemd 服務,主機重開後,systemd 會自動把它們一個個拉回來:`HEALTH_OK` 直接回歸、先前的靜音設定也都還在,不需要任何人工介入。
+
+這一點值得跟 [Day 6 的 kind](sprint3-day6-capi-management-cluster.md) 對照:kind 叢集重開機後往往要人工檢查、API port 變了還得重配 kubeconfig。同樣是「主機上的一套系統」,能不能撐過重開機,取決於它有沒有把自己交給 systemd 託管——這是評估任何自建服務時值得問的一個問題。
 
 ## 附錄:整套拆除
 
@@ -196,10 +219,19 @@ sudo ./cephadm rm-cluster --force --zap-osds --fsid $FSID
 
 `--zap-osds` 會把資料碟上的 Ceph 痕跡一併清除。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[cephadm 部署官方指南](https://docs.ceph.com/en/tentacle/cephadm/install/)** —— bootstrap 流程與單機選項的官方版;本章步驟的出處。
+- **[Ceph 架構總覽](https://docs.ceph.com/en/tentacle/architecture/)** —— MON/MGR/OSD 這些角色的權威定義,比本章的白話版深一層。
+- **[Ceph 硬體建議](https://docs.ceph.com/en/tentacle/start/hardware-recommendations/)** —— OSD 記憶體目標等調校參數的官方基準;本章防暴走設定的依據。
+- **[Red Hat:單機跑 Ceph](https://www.redhat.com/en/blog/ceph-cluster-single-machine)** —— 單機部署的取捨講得很直白,適合當本章「明知故犯」段的延伸。
+
 ## 下一步
 
 儲存骨幹立起來了,但現在它跟 OpenStack 還是兩個世界。[Day 15](sprint4-day15-object-storage-rgw.md) 蓋第一座橋:在 Ceph 上開 **RGW 物件儲存**,讓你的雲同時擁有 S3 與 Swift 兩種 API。
 
 ---
 
-*Ceph 標誌為 Ceph 專案之官方資產,此處作社群教學用途。*
+*Ceph 標誌為 Ceph 專案、podman 標誌為 Podman 專案之官方資產,此處作社群教學用途。*

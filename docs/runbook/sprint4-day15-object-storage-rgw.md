@@ -152,9 +152,14 @@ hello-rgw
 
 **教訓**:對 globals.yml 做存在性檢查一律錨定行首(`grep -q "^enable_ceph_rgw"`)。寫自動化腳本的人一定會踩一次。
 
-## 彩蛋:一次計畫外的重開機測試
+## 延伸閱讀
 
-執行本日步驟時剛好撞上 lab VM 的每日自動關機。重開機後:**Ceph(含 RGW)全自動復原、Kolla 服務照常回歸**——沒有任何一步需要人工修復。Day 14 選 podman + systemd 的架構決定,在這裡拿到第一次實戰回報。
+想往下深挖,從這幾份開始:
+
+- **[Ceph Object Gateway 總覽](https://docs.ceph.com/en/tentacle/radosgw/)** —— RGW 的完整文件入口:S3/Swift API 相容性、multisite、進階設定。
+- **[RGW 的 Keystone 整合](https://docs.ceph.com/en/tentacle/radosgw/keystone/)** —— 本章步驟 3 那一整批 `rgw_keystone_*` 設定的權威出處。
+- **[Kolla-Ansible External Ceph 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/external-ceph-guide.html)** —— Kolla 這側所有 ceph 整合(RGW/Glance/Cinder/Manila)的官方對照。
+- **[cephadm 部署 RGW](https://docs.ceph.com/en/tentacle/cephadm/services/rgw/)** —— `ceph orch apply rgw` 的完整選項(placement、port、realm)。
 
 ## 下一步
 

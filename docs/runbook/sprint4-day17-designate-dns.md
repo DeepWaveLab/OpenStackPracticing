@@ -153,6 +153,14 @@ openstack recordset list oslab.test. -f value | grep vm-dns || echo "記錄已�
 
 本日步驟已在建 subnet 時就給了 `--dns-nameserver 8.8.8.8`。這不是為了 Designate——是為了**網路裡未來的住戶**:少了它,VM 對外解析全部失敗,而症狀往往在幾天後才爆(Day 18 的資料庫實例就差點死在這裡)。把「建 subnet 必給 DNS」當肌肉記憶。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Kolla-Ansible 的 Designate 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/designate-guide.html)** —— 本章設定的官方對照,包含 sink 等本章沒開的進階選項。
+- **[Neutron 的 DNS 整合說明](https://docs.openstack.org/neutron/2025.1/admin/config-dns-int.html)** —— 「哪些 port 會發布到外部 DNS」的權威答案;本章地雷 1(私網不發布)的官方出處。
+- **[Designate 官方文件](https://docs.openstack.org/designate/2025.1/)** —— zone/recordset/pool 的完整概念與 API。
+
 ## 下一步
 
 你的雲現在會自己管理域名了。階段一只剩最後一塊積木:[Day 18](sprint4-day18-trove-dbaas.md) 的 **Trove**——一行指令開出一台代管 MySQL,今天建的 `day17-net` 直接當它的家。

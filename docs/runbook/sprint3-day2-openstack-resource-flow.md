@@ -190,6 +190,15 @@ ssh -i ~/.ssh/oslab_ed25519 ubuntu@$UFIP "ping -c2 8.8.8.8"
 
 *網路拓樸視圖:外部網路 → router → 租戶內網 → VM,正是今天手動建立的那條鏈。(畫面來自新一代儀表板 Skyline,本課程未部署它——見 Day 11 的介紹;圖中為課程後期的 K8s cluster 網路)*
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Nova 官方「Launch instances」流程](https://docs.openstack.org/nova/2025.1/user/launch-instances.html)** —— 開機的官方標準流程;本章「零件」清單的出處脈絡。
+- **[Neutron 網路概念總覽](https://docs.openstack.org/neutron/2025.1/admin/intro-os-networking.html)** —— network/subnet/router/floating IP 這些名詞的第一手定義,provider 網與自助網的差異也在這份。
+- **[官方安裝指南的「Launch an instance」](https://docs.openstack.org/install-guide/launch-instance.html)** —— 跟本章同結構的官方版 walkthrough,適合對照著看第二遍。
+- **[Nova 的 Security Groups 說明](https://docs.openstack.org/nova/2025.1/user/security-groups.html)** —— 安全群組規則的完整語法與預設行為。
+
 ## 下一步(Day 3)
 
 Cinder LVM:data disk(sdb 256G)做 `cinder-volumes` VG → globals 開 cinder → `kolla-ansible reconfigure/deploy` 增量上服務 → volume attach/boot-from-volume。Sprint 1 未完成項 #1,本次重做。

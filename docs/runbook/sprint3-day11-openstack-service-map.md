@@ -103,8 +103,8 @@ flowchart TB
 | ![Swift](../assets/mascots/swift.png){ width="64" } | **Swift** | 物件儲存(丟檔案、拿 URL) | S3 | 已於 [Day 15](sprint4-day15-object-storage-rgw.md) 以 Ceph RGW 形式拼上(Swift API 相容) |
 | ![Designate](../assets/mascots/designate.png){ width="64" } | **Designate** | DNS as a Service | Route 53 | 已於 [Day 17](sprint4-day17-designate-dns.md) 拼上 |
 | ![Manila](../assets/mascots/manila.png){ width="64" } | **Manila** | 共享檔案系統(多 VM 同時掛同一顆) | EFS | 已於 [Day 16](sprint4-day16-manila-cephfs.md) 拼上;K8s RWX 整合是它的殺手應用 |
-| — | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | 已於 [Day 13](sprint4-day13-skyline.md) 部署——與 Horizon 並存對照 |
-| — | **Prometheus + Grafana**(Kolla 內建整合) | 監控與儀表板 | CloudWatch | lab 用 `docker logs` 硬看;任何正式環境第一件事就是把監控開起來(這兩位是 CNCF 專案,不是 OpenStack,所以沒有 OpenStack 吉祥物) |
+| ![Skyline](../assets/mascots/skyline.png){ width="64" } | **Skyline** | 新一代儀表板(取代 Horizon 的方向) | Console | 已於 [Day 13](sprint4-day13-skyline.md) 部署——與 Horizon 並存對照 |
+| ![Prometheus](../assets/logos/prometheus.png){ width="40" } ![Grafana](../assets/logos/grafana.svg){ width="36" } | **Prometheus + Grafana**(Kolla 內建整合) | 監控與儀表板 | CloudWatch | 已於 [Day 21](sprint4-day21-observability.md) 部署;這兩位來自 CNCF/上游生態,不是 OpenStack 專案 |
 
 ![skyline-overview](../assets/screenshots/skyline-overview.png)
 

@@ -369,6 +369,15 @@ kolla-ansible deploy -i ~/all-in-one   # 冪等,直接重跑
 
 **教訓**:單機部署關 haproxy 時,**proxysql 要一起關**。詳細分析見排錯手冊:[Kolla ProxySQL vs MariaDB port](../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict.md)。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Kolla-Ansible 官方 Quick Start](https://docs.openstack.org/kolla-ansible/2025.1/user/quickstart.html)** —— 本章部署流程的官方版;哪些步驟是 Kolla 標準動作、哪些是本課環境特調,對照著看就清楚。
+- **[Get started with OpenStack](https://docs.openstack.org/install-guide/get-started-with-openstack.html)** —— 官方的服務總覽:每個核心服務是什麼、彼此怎麼分工,一頁講完。
+- **[Kolla 專案文件](https://docs.openstack.org/kolla/2025.1/)** —— 那些容器映像檔是誰做的?就是這個專案;想理解映像檔怎麼組出來的看這份。
+- **[Kolla-Ansible 支援矩陣](https://docs.openstack.org/kolla-ansible/2025.1/user/support-matrix.html)** —— 哪些作業系統、哪些服務受官方支援,規劃環境前值得先掃一眼。
+
 ## 下一步
 
 雲部好了,但現在是「空的」——沒有租戶、沒有 image、沒有網路。[Day 2](sprint3-day2-openstack-resource-flow.md) 我們扮演管理員和租戶,把開出第一台 VM 需要的所有資源從零建立起來。

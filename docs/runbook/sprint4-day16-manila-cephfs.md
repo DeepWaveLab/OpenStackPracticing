@@ -7,7 +7,7 @@
 !!! abstract "你在課程的哪裡"
     - **儲存三部曲**:區塊(Day 3 Cinder)✅、物件(Day 15 RGW)✅、**檔案(今天)**。
     - **今天**:CephFS 當後端,部署 Manila,建立 share、授權、掛載、讀寫全流程。
-    - **今天之後**:Day 8 的 K8s PVC 只能單 Pod 讀寫(RWO);有了 Manila,`ReadWriteMany` 的缺口就補上了——這條線留給未來的整合示範。
+    - **今天之後**:Day 8 的 K8s PVC 只能單 Pod 讀寫(RWO);有了 Manila,`ReadWriteMany` 的缺口就補上了——文末的 **Day 16+ 選讀**會把它真的接回 Day 8 的 cluster。
 
 ## 第一次接觸共享檔案系統?先讀這段
 
@@ -152,6 +152,119 @@ manila-e2e
 **根因**:每個 pool 都帶著預設的 PG 數出生,單 OSD 的上限很快被多個 pool 疊爆——又是單機才會撞到的邊界。
 
 **解法**:lab 直接放寬上限 `ceph config set mon mon_max_pg_per_osd 512`。生產環境的正解是讓 autoscaler 依容量比例縮放,多 OSD 下不會發生。
+
+## Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster
+
+!!! tip "這是選讀的進階整合"
+    上面的核心課程到 host 掛載就完成了。這一節示範 Manila 最有價值的應用場景——**填補 Kubernetes 的儲存缺口**。內容較深(要動到兩個 CSI 驅動),但成果很值得:你會看到一個 K8s 應用要求共享儲存,而 OpenStack 自動在 Ceph 上開一顆 share 滿足它。
+
+### 為什麼這個整合重要
+
+回想 [Day 8](sprint3-day8-e2e-workload-cluster.md):我們讓 K8s 的 PVC 由 Cinder 供裝——但 Cinder 是**區塊**儲存,一顆 volume 一次只能掛給一個 Pod(`ReadWriteOnce`,RWO)。可是很多場景需要**多個 Pod 同時讀寫同一份資料**(`ReadWriteMany`,RWX):共用的上傳目錄、多副本網站的靜態資源、共享的模型檔案。**RWX 正是 Cinder 給不了、而 Manila 天生就能提供的**——這一節就把這塊拼上,讓 Sprint 3 的儲存故事真正完整。
+
+### 運作原理
+
+```mermaid
+flowchart TB
+    A["K8s 應用宣告一個 RWX PVC"] --> B["Manila CSI driver<br/>(裝在 workload cluster 內)"]
+    B ==>|"呼叫 Manila API"| C["Manila 在 Ceph 上<br/>自動建一顆 CephFS share"]
+    C ==>|"share + cephx 存取金鑰"| D["ceph-csi 把 share<br/>掛進每個 Pod"]
+    D --> E["多個 Pod、跨不同節點<br/>同時讀寫同一份資料"]
+```
+
+安裝需要兩個 CSI 驅動搭配:**csi-driver-manila**(負責跟 Manila 要 share)委派給 **ceph-csi**(負責實際掛載 CephFS)。兩者用 helm 裝進 Day 8 的 workload cluster。
+
+### 驗證:兩個 nginx Pod 共用一顆 RWX 卷
+
+建一個 `ReadWriteMany` 的 PVC(用 Manila 的 StorageClass),然後讓兩個 nginx Pod 掛同一顆——關鍵是**確認它們被排到不同節點**,這樣「跨節點共享」才有說服力:
+
+```text
+$ kubectl get pvc shared-static
+NAME            STATUS   VOLUME            CAPACITY   ACCESS MODES   ...
+shared-static   Bound    manila-share-pv   1Gi        RWX            ...
+
+$ kubectl get pods -l app=shared-web -o wide
+web-reader   Running   kube-plpuz-default-worker-...    ← 節點 A
+web-writer   Running   kube-plpuz-ng-app-...            ← 節點 B(不同節點!)
+
+$ openstack share list          # 這顆 RWX 卷,就是 Manila 開的一顆 share
+pvc-e6cbc3c7-...  CEPHFS  available
+```
+
+![Manila RWX kubectl 驗證](../assets/screenshots/day16-kubectl.png)
+
+最後一行是整個整合的證據:**K8s 開一個 PVC,OpenStack 這側就多了一顆同名的 share**——這朵雲的儲存服務,自動滿足了它上面 K8s 應用的需求。
+
+### 收尾:讓它真的 serve 一個網頁
+
+叫 `web-writer` 寫一個 hello world HTML 到共享卷,再從**另一個節點上**的 `web-reader` 讀——它的 nginx 吐出的,正是 writer 剛寫的那一份:
+
+```bash
+kubectl exec web-writer  -- sh -c 'echo "<h1>Hello, World!</h1>..." > /usr/share/nginx/html/index.html'
+kubectl exec web-reader  -- wget -qO- http://localhost/     # 讀到同一份頁面
+```
+
+![兩個 Pod 共用 RWX 卷 serve 出的 hello world 頁面](../assets/screenshots/day16-hello-page.png)
+
+*這個頁面由 `web-writer` 寫入、`web-reader`(不同節點的 Pod)serve 出來,底層是 Manila 供裝、Ceph 承載的共享卷。Sprint 3 的 Cinder RWO 加上今天的 Manila RWX,K8s 的兩種儲存需求現在都由你自己的雲滿足了。*
+
+!!! note "實作時的地雷(如果你要自己做)"
+    這個整合有兩個 CSI 之間的磨合點,踩過才知道:
+    - **provisioner 名稱有 protocol 前綴**:csi-driver-manila 的 CephFS driver 實際註冊成 `cephfs.manila.csi.openstack.org`(不是 `manila.csi.openstack.org`),StorageClass 的 `provisioner` 要寫對才綁得到 PVC。
+    - **node-stage secret 要放 OpenStack 認證**(不是 ceph key):node 掛載時 Manila CSI 要用 OS 憑證去跟 Manila 查 share 的存取規則。
+    - **靜態掛載缺 `fsName` 會失敗**:ceph-csi 掛 CephFS 必須知道檔案系統名(我們的是 `manila_fs`),少了它報 `missing required field fsName`。
+
+### 從你的瀏覽器看到這個網頁:兩種路徑
+
+網頁在 cluster 裡跑起來了,但你的電腦要怎麼連到它?這個問題本身就是一堂網路課——因為 Pod 活在 cluster 內部網路(`10.100.x.x`),外界碰不到。有兩條路,一條給 lab、一條給正式環境:
+
+#### 路徑一:`kubectl port-forward`(lab 臨時用,本課採用)
+
+`kubectl port-forward` 借用 K8s API server 當跳板,打一條「臨時隧道」直通某個 Pod——不需要負載平衡器、不需要對外 IP,一行指令就通。因為我們的 lab 從你的電腦到 cluster 隔著兩層(Azure lab VM、cluster 內網),所以要串接兩段隧道:
+
+```mermaid
+flowchart LR
+    A["你的瀏覽器<br/>localhost:8888"] -->|"SSH tunnel"| B["Azure lab VM<br/>(10.0.0.4)"]
+    B -->|"kubectl port-forward<br/>(借道 K8s API server)"| C["web-reader Pod<br/>裡的 nginx"]
+    C --> D["讀取 Manila RWX 卷<br/>上的 index.html"]
+```
+
+```bash
+# 在 lab VM 上:把 pod 的 80 埠轉發到 VM 的 8888
+kubectl port-forward --address 0.0.0.0 pod/web-reader 8888:80 &
+# 在你的電腦上:把 VM 的 8888 接到本機 8888
+ssh -L 8888:127.0.0.1:8888 azureuser@<VM公網IP>
+# 瀏覽器開 http://localhost:8888 —— 就看到那個 hello world 頁
+```
+
+這條路的特點是**臨時、點對點、只給操作者自己看**——適合除錯或 demo,不是給真實使用者用的入口。
+
+#### 路徑二:`Service type=LoadBalancer`(正式環境的做法)
+
+正式環境會用你在 [Day 8](sprint3-day8-e2e-workload-cluster.md) 學過的方式:把 Service 宣告成 `type=LoadBalancer`,K8s 的 CCM 就會自動叫 **Octavia** 開一台負載平衡器、掛上對外 IP,把流量分流到每個節點上的 Pod:
+
+```mermaid
+flowchart LR
+    U["真實使用者<br/>(從外部網路)"] --> LB["Octavia 負載平衡器<br/>(對外 IP)"]
+    LB -->|"分流"| N1["節點 A 的 Pod"]
+    LB -->|"分流"| N2["節點 B 的 Pod"]
+    N1 --> V["Manila RWX 共享卷<br/>(兩個 Pod 讀寫同一份)"]
+    N2 --> V
+```
+
+這才是「一個公開網站」該有的樣子:有穩定的對外 IP、有負載平衡、多個 Pod 分攤流量——而它們共用的正是今天這顆 RWX 卷。
+
+!!! warning "在本 lab 開 LoadBalancer 會撞到 Day 8 的老朋友"
+    如果你在這座 cluster 試 `type=LoadBalancer`,CCM 建 LB 時會失敗:`Provider 'amphorav2' is not enabled`。這正是 [Day 8 的地雷 #3](sprint3-day8-e2e-workload-cluster.md#mine-3)——CCM 預設要 `amphorav2`,而我們的 Octavia 只啟用了 `amphora`。所以本課的 demo 走 `port-forward`(路徑一);要走 LoadBalancer,得依 Day 8 的解法給 cluster 帶上 `octavia_provider=amphora` 標籤。**同一顆雷在不同章節重逢,正好說明它是這套 lab 架構的固有特性,不是偶發。**
+
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Manila CephFS driver 官方文件](https://docs.openstack.org/manila/2025.1/configuration/shared-file-systems/drivers/cephfs_driver.html)** —— native 與 NFS 兩種模式的差異、`client.manila` 權限的出處。
+- **[Kolla-Ansible 的 Manila 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/manila-guide.html)** —— Kolla 側部署選項的官方對照(注意本章地雷 2 提到的文件勘誤)。
+- **[CephFS 官方文件](https://docs.ceph.com/en/tentacle/cephfs/)** —— MDS、subvolume、配額這些概念的權威定義。
+- **[Manila CSI plugin](https://github.com/kubernetes/cloud-provider-openstack/tree/master/docs/manila-csi-plugin)** —— Day 16+ 那套 K8s 整合的官方文件與部署選項。
 
 ## 下一步
 

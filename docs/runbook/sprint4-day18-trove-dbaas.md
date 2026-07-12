@@ -171,6 +171,15 @@ Trove 對建立失敗的實例會自動刪除 guest VM——**連 console log �
 
 六天、六塊積木:Skyline、Ceph、RGW、Manila、Designate、Trove——首頁那張「還沒拼上的積木」表,一半已經拼上了。更重要的是方法論的複利:**同型雷第 N 次出現時,你已經能在錯誤出現之前說出答案**(CLI 外掛、行首錨定、subnet DNS)。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Trove 生產環境部署指南](https://docs.openstack.org/trove/2025.1/admin/run_trove_in_production.html)** —— 官方的管理網設計;本章「極簡路徑」的正式版對照組。
+- **[Trove guest image 建置指南](https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html)** —— 自建映像檔(本章 Plan B)的官方流程與 `trovestack` 用法。
+- **[官方 guest image 出貨處](https://tarballs.opendev.org/openstack/trove/images/)** —— 每日自動建置的映像檔就放在這;本章步驟 2 下載的來源。
+- **[Trove User Guide](https://docs.openstack.org/trove/2025.1/user/)** —— 實例、備份、設定群組的使用者操作大全。
+
 ## 下一步
 
 [Day 19](sprint3-day12-sprint4-preview.md) 起進入階段二:不再加新東西,改為**拆開你已經用了三個星期的東西**——一個 API 請求從 token 到 qemu 的完整生命週期。(內容隨 Sprint 4 進度陸續上線)

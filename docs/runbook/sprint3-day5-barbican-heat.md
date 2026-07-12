@@ -203,6 +203,14 @@ openstack stack delete --yes --wait day5-stack                        # 一條�
 
 擔心 targeted deploy 漏掉 barbican 的 haproxy frontend 導致 endpoint 打不通。動手前讀 `~/kolla-venv/share/kolla-ansible/ansible/site.yml`:loadbalancer play 內對每個服務有 `include_role: loadbalancer, tasks_from: loadbalancer` 的子任務,barbican 那筆明確 `tags: barbican`(L129-131)。**結論:`--tags barbican` 本身就會配 barbican 的 haproxy frontend**;本 lab 仍加 `loadbalancer` 求穩(保證 haproxy reload),實測 `changed=18 failed=0` 一次過。教訓同 Day 4:tag 行為以 `site.yml` 原始碼為準,別猜。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Barbican 官方文件](https://docs.openstack.org/barbican/2025.1/)** —— 密鑰管理服務的架構與 API;secret 型別的完整定義在這。
+- **[Heat 範本指南](https://docs.openstack.org/heat/2025.1/template_guide/index.html)** —— 寫 HOT 範本的官方教學,從入門範例到進階功能。
+- **[HOT 規格書](https://docs.openstack.org/heat/2025.1/template_guide/hot_spec.html)** —— 範本每個欄位的權威定義;寫範本卡住時查這份最快。
+
 ## 下一步(Day 6)
 
 Cluster API 原理 + management cluster:kind 起 CAPI mgmt cluster、`clusterctl init` 裝 CAPO,為 Day 7 的 Magnum CAPI driver 整合鋪路。Barbican(本日)+ Heat 複習到此,Magnum 的兩塊前置依賴(憑證倉庫 + 編排概念)都就緒。

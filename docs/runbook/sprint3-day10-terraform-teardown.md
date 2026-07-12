@@ -143,3 +143,11 @@ kolla-ansible deploy -i ~/all-in-one              # core + octavia + barbican + 
 ---
 
 *Terraform 標誌為 HashiCorp 之商標,此處作社群教學用途。*
+
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Terraform OpenStack Provider 文件](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs)** —— 每種資源(instance/network/volume)的完整參數;本章範本的字典。
+- **[Terraform 官方入門](https://developer.hashicorp.com/terraform/intro)** —— state、plan、apply 這套心智模型的第一手說明。
+- **[Azure VM 狀態與計費](https://learn.microsoft.com/en-us/azure/virtual-machines/states-billing)** —— 為什麼 deallocate 才停止計費、stop 不會;本課「用完就關」習慣的依據。

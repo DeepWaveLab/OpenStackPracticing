@@ -136,6 +136,15 @@ autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、`--kubecon
 
 *Instance 列表(Skyline 檢視):三台 Active 的節點就是 workload cluster 的全部家當——注意第一台 `ng-app` 開頭的節點,它是本日 node group 操作的產物。*
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Nova 排程與資源配置](https://docs.openstack.org/nova/2025.1/admin/scheduling.html)** —— allocation ratio 的官方說明;本章調 `disk_allocation_ratio` 的理論依據。
+- **[Magnum User Guide](https://docs.openstack.org/magnum/2025.1/user/)** —— rolling upgrade 與 node group 的官方參數定義,本章兩個主題的出處。
+- **[Kubernetes Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)** —— 自動擴縮的上游專案;各雲 provider(含 Magnum)的支援狀態與設定。
+- **[Kolla-Ansible 維運指南](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html)** —— reconfigure/upgrade 這些日常操作的官方工作流。
+
 ## 下一步(Day 10)
 
 Terraform 接管(terraform-provider-openstack 管 network/VM/LB)+ teardown 演練(`kolla-ansible destroy` → 重部速度驗證)+ 寫 `sprint3-reflection.md`。開工前照 Day8 Pre-flight 確認 kind/magnum/octavia o-hm0 就緒。

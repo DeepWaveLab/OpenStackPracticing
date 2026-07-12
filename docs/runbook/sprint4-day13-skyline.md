@@ -9,6 +9,8 @@
 
 ## 第一次接觸 Skyline?先讀這段
 
+![Skyline 官方吉祥物:九色鹿](../assets/mascots/skyline.png){ align=right width="100" }
+
 Horizon(Day 1 部署的網頁儀表板)已經服役超過十年,技術棧是 Django 伺服器端渲染——功能齊全,但操作體感跟現代網頁應用有落差。**Skyline 是 OpenStack 官方的新一代儀表板**:前後端分離(Vue 前端 + Python API server),頁面即時更新、內建資源拓樸圖、深色模式。
 
 兩者的關係不是取代,是**並存過渡**:Skyline 還在追趕 Horizon 的功能覆蓋面(例如部分管理員操作仍缺),所以實務上常兩個都開——日常瀏覽用 Skyline,深度管理回 Horizon。這也是今天部署完的狀態。
@@ -74,7 +76,19 @@ ssh -L 9999:<VM私有IP>:9999 -i <你的金鑰> azureuser@<VM公網IP>
 
 *登入後的首頁:配額總覽即時圖表。左側選單每一項,都是你在 Sprint 3 親手部署過的服務。*
 
-值得逛的頁面:**Network → Topology**(資源拓樸圖,Day 2 手建的那條鏈畫給你看)、**Container → Clusters**(Day 8 的 K8s cluster)、切換右上角的深色模式。
+值得逛的幾個頁面:
+
+**Network → Topology** —— 資源拓樸圖,把 Day 2 手建的那條「外網 → router → 內網 → VM」畫成一張圖;Day 8 的 K8s cluster 三個節點、Sprint 4 建的 `day17-net` 也都在上面:
+
+![Skyline 網路拓樸](../assets/screenshots/skyline-topology-day13.png)
+
+**Container → Clusters** —— Day 8 開的 Magnum K8s cluster,狀態 `UPDATE COMPLETE`、健康 `HEALTHY`:
+
+![Skyline Magnum cluster](../assets/screenshots/skyline-clusters-day13.png)
+
+順帶一提,左側選單此刻已經比 Day 1 剛部署時長很多——`Share File Storage`、`Database`、`DNS Zones` 這些項目,都是 Sprint 4 之後幾天陸續加上的服務(Manila / Trove / Designate)。這張選單本身,就是這朵雲成長的縮影。
+
+別忘了右上角還能切換**深色模式**——現代儀表板的基本配備。
 
 ## 驗收 checkpoint
 
@@ -95,6 +109,18 @@ ssh -L 9999:<VM私有IP>:9999 -i <你的金鑰> azureuser@<VM公網IP>
 !!! note "待辦尾巴:Day 21 要回來動它一次"
     Skyline 的設定模板會在 Prometheus 存在時自動接上監控資料。Day 21 部署完監控套件後,**要連 Skyline 一起 reconfigure**,它的監控頁面才會亮起來。到時候會提醒你。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Skyline 官方文件](https://docs.openstack.org/skyline-apiserver/2025.1/)** —— apiserver 的架構與設定參考;本章「兩容器分工」的完整定義在這裡。
+- **[Kolla-Ansible 的 Skyline 部署指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/skyline-guide.html)** —— 本章部署步驟的官方對照,SSO 與自訂外觀等進階選項也在這份。
+- **[skyline-console 原始碼](https://opendev.org/openstack/skyline-console)** —— 想看前端怎麼組出資源拓樸圖,直接讀源頭。
+
 ## 下一步
 
 儀表板換新了,接下來三天是 Sprint 4 的重頭戲——**儲存三部曲**。[Day 14](sprint4-day14-ceph-bootstrap.md) 先把地基打好:在同一台主機上立起一套 **Ceph**,它是生產環境 OpenStack 的儲存標配,也是 Day 15(物件儲存)與 Day 16(共享檔案系統)的共同骨幹。
+
+---
+
+*Skyline 吉祥物(九色鹿)為 OpenStack 官方專案標誌,此處作社群教學用途。*

@@ -174,6 +174,15 @@ openstack coe cluster template create k8s-v1.34.8 \
 
 driver(image 內建)、CAPI/CAPO(mgmt cluster)、node image 三者版本要相容。本課全部對齊 vexxhost 測過的組合:driver = Kolla Epoxy 內建版、CAPI v1.13.2 / CAPO v0.14.4(Day 6)、node image k8s v1.34.8(capo-image-elements 2026.05-7)。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Magnum 官方 User Guide](https://docs.openstack.org/magnum/2025.1/user/)** —— cluster template 每個參數的權威定義;本章 label 的完整選項清單在這份。
+- **[magnum-capi-helm 官方文件](https://docs.openstack.org/magnum-capi-helm/latest/user_docs/index.html)** —— 本章部署的 driver 的原理說明與支援矩陣(官方文件目前只有 latest 版)。
+- **[The Cluster API Book](https://cluster-api.sigs.k8s.io/)** —— CAPI 的正典:Machine、MachineDeployment 這些 Day 6 見過的資源,完整概念都在這本。
+- **[The Turtle-Powered Shark(StackHPC)](https://www.stackhpc.com/magnum-clusterapi.html)** —— driver 作者團隊親述為什麼要用 CAPI 取代 Heat driver;本章開頭那段歷史的第一手版本。
+
 ## 下一步(Day 8)
 
 E2E:`openstack coe cluster create` 用本 template 實際開 workload cluster —— Magnum → CAPI(kind)→ CAPO → Nova 開節點 VM、Octavia 給 API LB。驗 `kubectl get nodes` 全 Ready、部 app 拿 LoadBalancer(Octavia)、PVC 綁 Cinder。三項全過 = Sprint 1 三個未完成項全數補完。**開工前注意**:若 VM 隔夜重開,先確認 kind cluster 回穩([Day 6 的地雷 4](sprint3-day6-capi-management-cluster.md#mine-4))且 magnum 的 kubeconfig 內 API port(33689)未變;kind 重建會換 port,需同步更新 `/etc/kolla/config/magnum/kubeconfig` 並 `kolla-ansible deploy --tags magnum`。

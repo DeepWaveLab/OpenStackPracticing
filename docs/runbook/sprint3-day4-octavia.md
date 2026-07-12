@@ -204,6 +204,14 @@ Redis 壞掉期間建立的 lb1 永遠停在 `PENDING_CREATE`,delete 回 409(PEN
 
 *Load Balancer 列表(Skyline 檢視):兩顆 LB 都是 Day 8 的 K8s 自動建的——`kubeapi` 是 cluster API 的入口,`web-lb` 是 `Service type=LoadBalancer` 的產物。Operating Status 的綠色 Online 來自 health monitor 的持續檢查,正是今天教的機制。*
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Octavia 官方介紹](https://docs.openstack.org/octavia/2025.1/reference/introduction.html)** —— amphora 架構的權威說明;本章「LB 其實是一台 VM」的完整版。
+- **[Kolla-Ansible 的 Octavia 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html)** —— 憑證產生、管理網設定這些本章最容易卡的步驟,官方版在這。
+- **[Octavia Basic Cookbook](https://docs.openstack.org/octavia/2025.1/user/guides/basic-cookbook.html)** —— 各種 LB 拓樸(TCP/HTTP/健康檢查)的官方食譜,本章只做了最基本的一種。
+
 ## 下一步(Day 5)
 
 Barbican(Magnum 的憑證倉庫)+ Heat 複習(白撿的,Day 1 已部)。

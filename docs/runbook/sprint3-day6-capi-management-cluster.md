@@ -225,6 +225,15 @@ kind 的 docker network 帶 IPv6 ULA(`fc00::/64`)且有 v6 default route,`getent
 - **MASQUERADE**:已由 `kind-masquerade.service` 開機自動補,免手動。
 - **kind cluster 本身**:kind node 容器預設不隨 VM reboot 自動健康復原。早上開機後若要用 management cluster,先 `docker start capi-mgmt-control-plane` 等它回穩(或重建 cluster + 重跑 clusterctl init)。Day 7 開工前確認 `kubectl get providers -A` 四筆都在。
 
+## 延伸閱讀
+
+想往下深挖,從這幾份開始:
+
+- **[Cluster API Quick Start](https://cluster-api.sigs.k8s.io/user/quick-start)** —— CAPI 官方入門;本章 kind + clusterctl 的流程就是它的 OpenStack 版。
+- **[CAPO:Cluster API Provider OpenStack](https://cluster-api-openstack.sigs.k8s.io/)** —— 本章裝的那個 provider 的官方手冊,OpenStackCluster/OpenStackMachine 資源的定義都在這。
+- **[kind 官方文件](https://kind.sigs.k8s.io/)** —— 用 Docker 容器跑 K8s 的工具;設定檔選項與已知限制。
+- **[Docker 的封包過濾與防火牆](https://docs.docker.com/engine/network/packet-filtering-firewalls/)** —— 本章那顆 iptables 地雷的背景知識:Docker 到底對 iptables 做了什麼。
+
 ## 下一步(Day 7)
 
 Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。
