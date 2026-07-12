@@ -918,6 +918,17 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -1271,6 +1282,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1297,7 +1314,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -1313,7 +1330,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1474,6 +1491,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3769,6 +3870,17 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -4116,7 +4228,15 @@
 </span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w">   </span><span class="c1"># 冪等,直接重跑</span>
 </span></code></pre></div>
 <p><strong>教訓</strong>:單機部署關 haproxy 時,<strong>proxysql 要一起關</strong>。詳細分析見排錯手冊:<a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/">Kolla ProxySQL vs MariaDB port</a>。</p>
-<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/quickstart.html">Kolla-Ansible 官方 Quick Start</a></strong> —— 本章部署流程的官方版;哪些步驟是 Kolla 標準動作、哪些是本課環境特調,對照著看就清楚。</li>
+<li><strong><a href="https://docs.openstack.org/install-guide/get-started-with-openstack.html">Get started with OpenStack</a></strong> —— 官方的服務總覽:每個核心服務是什麼、彼此怎麼分工,一頁講完。</li>
+<li><strong><a href="https://docs.openstack.org/kolla/2025.1/">Kolla 專案文件</a></strong> —— 那些容器映像檔是誰做的?就是這個專案;想理解映像檔怎麼組出來的看這份。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/support-matrix.html">Kolla-Ansible 支援矩陣</a></strong> —— 哪些作業系統、哪些服務受官方支援,規劃環境前值得先掃一眼。</li>
+</ul>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
 <p>雲部好了,但現在是「空的」——沒有租戶、沒有 image、沒有網路。<a href="../sprint3-day2-openstack-resource-flow/">Day 2</a> 我們扮演管理員和租戶,把開出第一台 VM 需要的所有資源從零建立起來。</p>
 
 

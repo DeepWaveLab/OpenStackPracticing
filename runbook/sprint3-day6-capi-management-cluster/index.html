@@ -1044,6 +1044,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-7" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1260,6 +1271,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1286,7 +1303,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -1302,7 +1319,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1463,6 +1480,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3744,6 +3845,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-7" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4067,6 +4179,14 @@
 <ul>
 <li><strong>MASQUERADE</strong>:已由 <code>kind-masquerade.service</code> 開機自動補,免手動。</li>
 <li><strong>kind cluster 本身</strong>:kind node 容器預設不隨 VM reboot 自動健康復原。早上開機後若要用 management cluster,先 <code>docker start capi-mgmt-control-plane</code> 等它回穩(或重建 cluster + 重跑 clusterctl init)。Day 7 開工前確認 <code>kubectl get providers -A</code> 四筆都在。</li>
+</ul>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://cluster-api.sigs.k8s.io/user/quick-start">Cluster API Quick Start</a></strong> —— CAPI 官方入門;本章 kind + clusterctl 的流程就是它的 OpenStack 版。</li>
+<li><strong><a href="https://cluster-api-openstack.sigs.k8s.io/">CAPO:Cluster API Provider OpenStack</a></strong> —— 本章裝的那個 provider 的官方手冊,OpenStackCluster/OpenStackMachine 資源的定義都在這。</li>
+<li><strong><a href="https://kind.sigs.k8s.io/">kind 官方文件</a></strong> —— 用 Docker 容器跑 K8s 的工具;設定檔選項與已知限制。</li>
+<li><strong><a href="https://docs.docker.com/engine/network/packet-filtering-firewalls/">Docker 的封包過濾與防火牆</a></strong> —— 本章那顆 iptables 地雷的背景知識:Docker 到底對 iptables 做了什麼。</li>
 </ul>
 <h2 id="day-7">下一步(Day 7)<a class="headerlink" href="#day-7" title="Permanent link">&para;</a></h2>
 <p>Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost <code>magnum-cluster-api</code> v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。</p>

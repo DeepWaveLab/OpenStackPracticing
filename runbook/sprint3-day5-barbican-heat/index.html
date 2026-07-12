@@ -939,6 +939,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-6" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1183,6 +1194,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1209,7 +1226,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -1225,7 +1242,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1386,6 +1403,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3590,6 +3691,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#day-6" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3849,6 +3961,13 @@
 <p><code>openstack stack ...</code> 與 <code>openstack secret ...</code> 不隨 <code>python-openstackclient</code> 內建 —— 它們是各自 client 的 <strong>osc plugin</strong>。乾淨 venv 只會回 <code>is not an openstack command</code>。修:<code>pip install python-heatclient python-barbicanclient</code>。同 Day 4 的 <code>python-octaviaclient</code>,這是 kolla venv 的通則:<strong>每個非 core 服務的 CLI 都要各自 pip 裝 plugin</strong>。</p>
 <h3 id="mine-2">地雷 2:<code>--tags barbican</code> 是否自帶 haproxy?(查證,非地雷)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
 <p>擔心 targeted deploy 漏掉 barbican 的 haproxy frontend 導致 endpoint 打不通。動手前讀 <code>~/kolla-venv/share/kolla-ansible/ansible/site.yml</code>:loadbalancer play 內對每個服務有 <code>include_role: loadbalancer, tasks_from: loadbalancer</code> 的子任務,barbican 那筆明確 <code>tags: barbican</code>(L129-131)。<strong>結論:<code>--tags barbican</code> 本身就會配 barbican 的 haproxy frontend</strong>;本 lab 仍加 <code>loadbalancer</code> 求穩(保證 haproxy reload),實測 <code>changed=18 failed=0</code> 一次過。教訓同 Day 4:tag 行為以 <code>site.yml</code> 原始碼為準,別猜。</p>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/barbican/2025.1/">Barbican 官方文件</a></strong> —— 密鑰管理服務的架構與 API;secret 型別的完整定義在這。</li>
+<li><strong><a href="https://docs.openstack.org/heat/2025.1/template_guide/index.html">Heat 範本指南</a></strong> —— 寫 HOT 範本的官方教學,從入門範例到進階功能。</li>
+<li><strong><a href="https://docs.openstack.org/heat/2025.1/template_guide/hot_spec.html">HOT 規格書</a></strong> —— 範本每個欄位的權威定義;寫範本卡住時查這份最快。</li>
+</ul>
 <h2 id="day-6">下一步(Day 6)<a class="headerlink" href="#day-6" title="Permanent link">&para;</a></h2>
 <p>Cluster API 原理 + management cluster:kind 起 CAPI mgmt cluster、<code>clusterctl init</code> 裝 CAPO,為 Day 7 的 Magnum CAPI driver 整合鋪路。Barbican(本日)+ Heat 複習到此,Magnum 的兩塊前置依賴(憑證倉庫 + 編排概念)都就緒。</p>
 

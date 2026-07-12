@@ -936,6 +936,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -962,7 +968,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -978,7 +984,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1321,6 +1327,17 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -1352,6 +1369,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3525,6 +3626,17 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -3682,7 +3794,14 @@
 <p>已在步驟 1 預拆。忘了結尾的 <code>.</code>,一切照常部署、只有整合默默不動作——屬於「錯了不會叫」的最陰險類型。</p>
 <h3 id="mine-3">地雷 3:subnet 沒設 DNS nameserver 的長尾<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p>本日步驟已在建 subnet 時就給了 <code>--dns-nameserver 8.8.8.8</code>。這不是為了 Designate——是為了<strong>網路裡未來的住戶</strong>:少了它,VM 對外解析全部失敗,而症狀往往在幾天後才爆(Day 18 的資料庫實例就差點死在這裡)。把「建 subnet 必給 DNS」當肌肉記憶。</p>
-<h2 id="_4">下一步<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/designate-guide.html">Kolla-Ansible 的 Designate 指南</a></strong> —— 本章設定的官方對照,包含 sink 等本章沒開的進階選項。</li>
+<li><strong><a href="https://docs.openstack.org/neutron/2025.1/admin/config-dns-int.html">Neutron 的 DNS 整合說明</a></strong> —— 「哪些 port 會發布到外部 DNS」的權威答案;本章地雷 1(私網不發布)的官方出處。</li>
+<li><strong><a href="https://docs.openstack.org/designate/2025.1/">Designate 官方文件</a></strong> —— zone/recordset/pool 的完整概念與 API。</li>
+</ul>
+<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <p>你的雲現在會自己管理域名了。階段一只剩最後一塊積木:<a href="../sprint4-day18-trove-dbaas/">Day 18</a> 的 <strong>Trove</strong>——一行指令開出一台代管 MySQL,今天建的 <code>day17-net</code> 直接當它的家。</p>
 
 

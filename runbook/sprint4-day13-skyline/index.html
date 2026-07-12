@@ -936,6 +936,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -962,7 +968,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -978,7 +984,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1148,6 +1154,17 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -1291,6 +1308,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3403,6 +3504,17 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         下一步
       
     </span>
@@ -3440,6 +3552,7 @@
 </ul>
 </div>
 <h2 id="skyline">第一次接觸 Skyline?先讀這段<a class="headerlink" href="#skyline" title="Permanent link">&para;</a></h2>
+<p><img align="right" alt="Skyline 官方吉祥物:九色鹿" src="../../assets/mascots/skyline.png" width="100" /></p>
 <p>Horizon(Day 1 部署的網頁儀表板)已經服役超過十年,技術棧是 Django 伺服器端渲染——功能齊全,但操作體感跟現代網頁應用有落差。<strong>Skyline 是 OpenStack 官方的新一代儀表板</strong>:前後端分離(Vue 前端 + Python API server),頁面即時更新、內建資源拓樸圖、深色模式。</p>
 <p>兩者的關係不是取代,是<strong>並存過渡</strong>:Skyline 還在追趕 Horizon 的功能覆蓋面(例如部分管理員操作仍缺),所以實務上常兩個都開——日常瀏覽用 Skyline,深度管理回 Horizon。這也是今天部署完的狀態。</p>
 <h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
@@ -3496,7 +3609,13 @@
 <p>瀏覽器開 <code>http://localhost:9999</code>,帳號 <code>admin</code>、密碼與 Horizon 同一組(<code>grep keystone_admin_password /etc/kolla/passwords.yml</code>)。</p>
 <p><img alt="skyline-overview" src="../../assets/screenshots/skyline-overview.png" /></p>
 <p><em>登入後的首頁:配額總覽即時圖表。左側選單每一項,都是你在 Sprint 3 親手部署過的服務。</em></p>
-<p>值得逛的頁面:<strong>Network → Topology</strong>(資源拓樸圖,Day 2 手建的那條鏈畫給你看)、<strong>Container → Clusters</strong>(Day 8 的 K8s cluster)、切換右上角的深色模式。</p>
+<p>值得逛的幾個頁面:</p>
+<p><strong>Network → Topology</strong> —— 資源拓樸圖,把 Day 2 手建的那條「外網 → router → 內網 → VM」畫成一張圖;Day 8 的 K8s cluster 三個節點、Sprint 4 建的 <code>day17-net</code> 也都在上面:</p>
+<p><img alt="Skyline 網路拓樸" src="../../assets/screenshots/skyline-topology-day13.png" /></p>
+<p><strong>Container → Clusters</strong> —— Day 8 開的 Magnum K8s cluster,狀態 <code>UPDATE COMPLETE</code>、健康 <code>HEALTHY</code>:</p>
+<p><img alt="Skyline Magnum cluster" src="../../assets/screenshots/skyline-clusters-day13.png" /></p>
+<p>順帶一提,左側選單此刻已經比 Day 1 剛部署時長很多——<code>Share File Storage</code>、<code>Database</code>、<code>DNS Zones</code> 這些項目,都是 Sprint 4 之後幾天陸續加上的服務(Manila / Trove / Designate)。這張選單本身,就是這朵雲成長的縮影。</p>
+<p>別忘了右上角還能切換<strong>深色模式</strong>——現代儀表板的基本配備。</p>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值:</p>
 <table>
@@ -3541,8 +3660,17 @@
 <p class="admonition-title">待辦尾巴:Day 21 要回來動它一次</p>
 <p>Skyline 的設定模板會在 Prometheus 存在時自動接上監控資料。Day 21 部署完監控套件後,<strong>要連 Skyline 一起 reconfigure</strong>,它的監控頁面才會亮起來。到時候會提醒你。</p>
 </div>
-<h2 id="_4">下一步<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/skyline-apiserver/2025.1/">Skyline 官方文件</a></strong> —— apiserver 的架構與設定參考;本章「兩容器分工」的完整定義在這裡。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/skyline-guide.html">Kolla-Ansible 的 Skyline 部署指南</a></strong> —— 本章部署步驟的官方對照,SSO 與自訂外觀等進階選項也在這份。</li>
+<li><strong><a href="https://opendev.org/openstack/skyline-console">skyline-console 原始碼</a></strong> —— 想看前端怎麼組出資源拓樸圖,直接讀源頭。</li>
+</ul>
+<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <p>儀表板換新了,接下來三天是 Sprint 4 的重頭戲——<strong>儲存三部曲</strong>。<a href="../sprint4-day14-ceph-bootstrap/">Day 14</a> 先把地基打好:在同一台主機上立起一套 <strong>Ceph</strong>,它是生產環境 OpenStack 的儲存標配,也是 Day 15(物件儲存)與 Day 16(共享檔案系統)的共同骨幹。</p>
+<hr />
+<p><em>Skyline 吉祥物(九色鹿)為 OpenStack 官方專案標誌,此處作社群教學用途。</em></p>
 
 
 

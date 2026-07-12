@@ -936,6 +936,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -962,7 +968,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
     
@@ -978,7 +984,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
   
 
           </label>
@@ -1290,7 +1296,118 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#day-16-manila-day-8-k8s-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼這個整合重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        運作原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nginx-pod-rwx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證:兩個 nginx Pod 共用一顆 RWX 卷
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        收尾:讓它真的 serve 一個網頁
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從你的瀏覽器看到這個網頁:兩種路徑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="從你的瀏覽器看到這個網頁:兩種路徑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kubectl-port-forwardlab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        路徑一:kubectl port-forward(lab 臨時用,本課採用)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-typeloadbalancer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        路徑二:Service type=LoadBalancer(正式環境的做法)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1352,6 +1469,90 @@
     
   
     Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 背後發生什麼
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
   
 
     
@@ -3522,7 +3723,118 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#day-16-manila-day-8-k8s-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼這個整合重要
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        運作原理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nginx-pod-rwx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證:兩個 nginx Pod 共用一顆 RWX 卷
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        收尾:讓它真的 serve 一個網頁
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從你的瀏覽器看到這個網頁:兩種路徑
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="從你的瀏覽器看到這個網頁:兩種路徑">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#kubectl-port-forwardlab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        路徑一:kubectl port-forward(lab 臨時用,本課採用)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-typeloadbalancer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        路徑二:Service type=LoadBalancer(正式環境的做法)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -3559,7 +3871,7 @@
 <ul>
 <li><strong>儲存三部曲</strong>:區塊(Day 3 Cinder)✅、物件(Day 15 RGW)✅、<strong>檔案(今天)</strong>。</li>
 <li><strong>今天</strong>:CephFS 當後端,部署 Manila,建立 share、授權、掛載、讀寫全流程。</li>
-<li><strong>今天之後</strong>:Day 8 的 K8s PVC 只能單 Pod 讀寫(RWO);有了 Manila,<code>ReadWriteMany</code> 的缺口就補上了——這條線留給未來的整合示範。</li>
+<li><strong>今天之後</strong>:Day 8 的 K8s PVC 只能單 Pod 讀寫(RWO);有了 Manila,<code>ReadWriteMany</code> 的缺口就補上了——文末的 <strong>Day 16+ 選讀</strong>會把它真的接回 Day 8 的 cluster。</li>
 </ul>
 </div>
 <h2 id="_1">第一次接觸共享檔案系統?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
@@ -3707,7 +4019,86 @@
 <p><strong>症狀</strong>:<code>manila_fs</code> 建立後 <code>ceph health</code> 出現 <code>too many PGs per OSD (369 &gt; max 250)</code>。</p>
 <p><strong>根因</strong>:每個 pool 都帶著預設的 PG 數出生,單 OSD 的上限很快被多個 pool 疊爆——又是單機才會撞到的邊界。</p>
 <p><strong>解法</strong>:lab 直接放寬上限 <code>ceph config set mon mon_max_pg_per_osd 512</code>。生產環境的正解是讓 autoscaler 依容量比例縮放,多 OSD 下不會發生。</p>
-<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="day-16-manila-day-8-k8s-cluster">Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster<a class="headerlink" href="#day-16-manila-day-8-k8s-cluster" title="Permanent link">&para;</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">這是選讀的進階整合</p>
+<p>上面的核心課程到 host 掛載就完成了。這一節示範 Manila 最有價值的應用場景——<strong>填補 Kubernetes 的儲存缺口</strong>。內容較深(要動到兩個 CSI 驅動),但成果很值得:你會看到一個 K8s 應用要求共享儲存,而 OpenStack 自動在 Ceph 上開一顆 share 滿足它。</p>
+</div>
+<h3 id="_5">為什麼這個整合重要<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>回想 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a>:我們讓 K8s 的 PVC 由 Cinder 供裝——但 Cinder 是<strong>區塊</strong>儲存,一顆 volume 一次只能掛給一個 Pod(<code>ReadWriteOnce</code>,RWO)。可是很多場景需要<strong>多個 Pod 同時讀寫同一份資料</strong>(<code>ReadWriteMany</code>,RWX):共用的上傳目錄、多副本網站的靜態資源、共享的模型檔案。<strong>RWX 正是 Cinder 給不了、而 Manila 天生就能提供的</strong>——這一節就把這塊拼上,讓 Sprint 3 的儲存故事真正完整。</p>
+<h3 id="_6">運作原理<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TB
+    A["K8s 應用宣告一個 RWX PVC"] --&gt; B["Manila CSI driver&lt;br/&gt;(裝在 workload cluster 內)"]
+    B ==&gt;|"呼叫 Manila API"| C["Manila 在 Ceph 上&lt;br/&gt;自動建一顆 CephFS share"]
+    C ==&gt;|"share + cephx 存取金鑰"| D["ceph-csi 把 share&lt;br/&gt;掛進每個 Pod"]
+    D --&gt; E["多個 Pod、跨不同節點&lt;br/&gt;同時讀寫同一份資料"]</code></pre>
+<p>安裝需要兩個 CSI 驅動搭配:<strong>csi-driver-manila</strong>(負責跟 Manila 要 share)委派給 <strong>ceph-csi</strong>(負責實際掛載 CephFS)。兩者用 helm 裝進 Day 8 的 workload cluster。</p>
+<h3 id="nginx-pod-rwx">驗證:兩個 nginx Pod 共用一顆 RWX 卷<a class="headerlink" href="#nginx-pod-rwx" title="Permanent link">&para;</a></h3>
+<p>建一個 <code>ReadWriteMany</code> 的 PVC(用 Manila 的 StorageClass),然後讓兩個 nginx Pod 掛同一顆——關鍵是<strong>確認它們被排到不同節點</strong>,這樣「跨節點共享」才有說服力:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$ kubectl get pvc shared-static
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>NAME            STATUS   VOLUME            CAPACITY   ACCESS MODES   ...
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>shared-static   Bound    manila-share-pv   1Gi        RWX            ...
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>$ kubectl get pods -l app=shared-web -o wide
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>web-reader   Running   kube-plpuz-default-worker-...    ← 節點 A
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>web-writer   Running   kube-plpuz-ng-app-...            ← 節點 B(不同節點!)
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>$ openstack share list          # 這顆 RWX 卷,就是 Manila 開的一顆 share
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>pvc-e6cbc3c7-...  CEPHFS  available
+</span></code></pre></div>
+<p><img alt="Manila RWX kubectl 驗證" src="../../assets/screenshots/day16-kubectl.png" /></p>
+<p>最後一行是整個整合的證據:<strong>K8s 開一個 PVC,OpenStack 這側就多了一顆同名的 share</strong>——這朵雲的儲存服務,自動滿足了它上面 K8s 應用的需求。</p>
+<h3 id="serve">收尾:讓它真的 serve 一個網頁<a class="headerlink" href="#serve" title="Permanent link">&para;</a></h3>
+<p>叫 <code>web-writer</code> 寫一個 hello world HTML 到共享卷,再從<strong>另一個節點上</strong>的 <code>web-reader</code> 讀——它的 nginx 吐出的,正是 writer 剛寫的那一份:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-writer<span class="w">  </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;echo &quot;&lt;h1&gt;Hello, World!&lt;/h1&gt;...&quot; &gt; /usr/share/nginx/html/index.html&#39;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-reader<span class="w">  </span>--<span class="w"> </span>wget<span class="w"> </span>-qO-<span class="w"> </span>http://localhost/<span class="w">     </span><span class="c1"># 讀到同一份頁面</span>
+</span></code></pre></div>
+<p><img alt="兩個 Pod 共用 RWX 卷 serve 出的 hello world 頁面" src="../../assets/screenshots/day16-hello-page.png" /></p>
+<p><em>這個頁面由 <code>web-writer</code> 寫入、<code>web-reader</code>(不同節點的 Pod)serve 出來,底層是 Manila 供裝、Ceph 承載的共享卷。Sprint 3 的 Cinder RWO 加上今天的 Manila RWX,K8s 的兩種儲存需求現在都由你自己的雲滿足了。</em></p>
+<div class="admonition note">
+<p class="admonition-title">實作時的地雷(如果你要自己做)</p>
+<p>這個整合有兩個 CSI 之間的磨合點,踩過才知道:
+- <strong>provisioner 名稱有 protocol 前綴</strong>:csi-driver-manila 的 CephFS driver 實際註冊成 <code>cephfs.manila.csi.openstack.org</code>(不是 <code>manila.csi.openstack.org</code>),StorageClass 的 <code>provisioner</code> 要寫對才綁得到 PVC。
+- <strong>node-stage secret 要放 OpenStack 認證</strong>(不是 ceph key):node 掛載時 Manila CSI 要用 OS 憑證去跟 Manila 查 share 的存取規則。
+- <strong>靜態掛載缺 <code>fsName</code> 會失敗</strong>:ceph-csi 掛 CephFS 必須知道檔案系統名(我們的是 <code>manila_fs</code>),少了它報 <code>missing required field fsName</code>。</p>
+</div>
+<h3 id="_7">從你的瀏覽器看到這個網頁:兩種路徑<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>網頁在 cluster 裡跑起來了,但你的電腦要怎麼連到它?這個問題本身就是一堂網路課——因為 Pod 活在 cluster 內部網路(<code>10.100.x.x</code>),外界碰不到。有兩條路,一條給 lab、一條給正式環境:</p>
+<h4 id="kubectl-port-forwardlab">路徑一:<code>kubectl port-forward</code>(lab 臨時用,本課採用)<a class="headerlink" href="#kubectl-port-forwardlab" title="Permanent link">&para;</a></h4>
+<p><code>kubectl port-forward</code> 借用 K8s API server 當跳板,打一條「臨時隧道」直通某個 Pod——不需要負載平衡器、不需要對外 IP,一行指令就通。因為我們的 lab 從你的電腦到 cluster 隔著兩層(Azure lab VM、cluster 內網),所以要串接兩段隧道:</p>
+<pre class="mermaid"><code>flowchart LR
+    A["你的瀏覽器&lt;br/&gt;localhost:8888"] --&gt;|"SSH tunnel"| B["Azure lab VM&lt;br/&gt;(10.0.0.4)"]
+    B --&gt;|"kubectl port-forward&lt;br/&gt;(借道 K8s API server)"| C["web-reader Pod&lt;br/&gt;裡的 nginx"]
+    C --&gt; D["讀取 Manila RWX 卷&lt;br/&gt;上的 index.html"]</code></pre>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># 在 lab VM 上:把 pod 的 80 埠轉發到 VM 的 8888</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>--address<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>pod/web-reader<span class="w"> </span><span class="m">8888</span>:80<span class="w"> </span><span class="p">&amp;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># 在你的電腦上:把 VM 的 8888 接到本機 8888</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">8888</span>:127.0.0.1:8888<span class="w"> </span>azureuser@&lt;VM公網IP&gt;
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># 瀏覽器開 http://localhost:8888 —— 就看到那個 hello world 頁</span>
+</span></code></pre></div>
+<p>這條路的特點是<strong>臨時、點對點、只給操作者自己看</strong>——適合除錯或 demo,不是給真實使用者用的入口。</p>
+<h4 id="service-typeloadbalancer">路徑二:<code>Service type=LoadBalancer</code>(正式環境的做法)<a class="headerlink" href="#service-typeloadbalancer" title="Permanent link">&para;</a></h4>
+<p>正式環境會用你在 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 學過的方式:把 Service 宣告成 <code>type=LoadBalancer</code>,K8s 的 CCM 就會自動叫 <strong>Octavia</strong> 開一台負載平衡器、掛上對外 IP,把流量分流到每個節點上的 Pod:</p>
+<pre class="mermaid"><code>flowchart LR
+    U["真實使用者&lt;br/&gt;(從外部網路)"] --&gt; LB["Octavia 負載平衡器&lt;br/&gt;(對外 IP)"]
+    LB --&gt;|"分流"| N1["節點 A 的 Pod"]
+    LB --&gt;|"分流"| N2["節點 B 的 Pod"]
+    N1 --&gt; V["Manila RWX 共享卷&lt;br/&gt;(兩個 Pod 讀寫同一份)"]
+    N2 --&gt; V</code></pre>
+<p>這才是「一個公開網站」該有的樣子:有穩定的對外 IP、有負載平衡、多個 Pod 分攤流量——而它們共用的正是今天這顆 RWX 卷。</p>
+<div class="admonition warning">
+<p class="admonition-title">在本 lab 開 LoadBalancer 會撞到 Day 8 的老朋友</p>
+<p>如果你在這座 cluster 試 <code>type=LoadBalancer</code>,CCM 建 LB 時會失敗:<code>Provider 'amphorav2' is not enabled</code>。這正是 <a href="../sprint3-day8-e2e-workload-cluster/#mine-3">Day 8 的地雷 #3</a>——CCM 預設要 <code>amphorav2</code>,而我們的 Octavia 只啟用了 <code>amphora</code>。所以本課的 demo 走 <code>port-forward</code>(路徑一);要走 LoadBalancer,得依 Day 8 的解法給 cluster 帶上 <code>octavia_provider=amphora</code> 標籤。<strong>同一顆雷在不同章節重逢,正好說明它是這套 lab 架構的固有特性,不是偶發。</strong></p>
+</div>
+<h2 id="_8">延伸閱讀<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/manila/2025.1/configuration/shared-file-systems/drivers/cephfs_driver.html">Manila CephFS driver 官方文件</a></strong> —— native 與 NFS 兩種模式的差異、<code>client.manila</code> 權限的出處。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/manila-guide.html">Kolla-Ansible 的 Manila 指南</a></strong> —— Kolla 側部署選項的官方對照(注意本章地雷 2 提到的文件勘誤)。</li>
+<li><strong><a href="https://docs.ceph.com/en/tentacle/cephfs/">CephFS 官方文件</a></strong> —— MDS、subvolume、配額這些概念的權威定義。</li>
+<li><strong><a href="https://github.com/kubernetes/cloud-provider-openstack/tree/master/docs/manila-csi-plugin">Manila CSI plugin</a></strong> —— Day 16+ 那套 K8s 整合的官方文件與部署選項。</li>
+</ul>
+<h2 id="_9">下一步<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
 <p>儲存三部曲完成——你的雲現在同時提供區塊、物件、檔案三種儲存,全部長在同一套 Ceph 上。<a href="../sprint4-day17-designate-dns/">Day 17</a> 換個領域:給雲加上 <strong>DNS 服務</strong>,讓每台 VM 自動擁有自己的域名。</p>
 
 
