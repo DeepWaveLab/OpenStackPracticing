@@ -1,4 +1,4 @@
-# Day 20:封包怎麼流過這朵雲的網路
+# Day 20: 封包怎麼流過這朵雲的網路
 
 > Day 2 的網路對你來說可能還帶著一點魔法:建個網路、接個 router、掛個 floating IP,VM 就能上網了。今天把魔法拆光——用 OVN 的原生工具讀出邏輯拓樸、看安全群組怎麼變成規則、用 `ovn-trace` 讓一個封包「在紙上」走完全程,親眼看到它在哪一刻被 NAT 改寫。全程不發一個真封包、不用 tcpdump。
 
@@ -154,4 +154,4 @@ sudo docker exec openvswitch_vswitchd ovs-ofctl dump-flows br-int | wc -l
 
 ## 下一步
 
-拆解告一段落,回到動手。[Day 21](sprint4-day21-observability.md) 進入階段三——給這朵雲裝上眼睛:Prometheus、Grafana、集中式 log,以及最實際的一課「有觀測和沒觀測,除錯速度差幾個數量級」。
+拆解告一段落,回到動手。[Day 21](sprint4-day21-observability.md) 進入階段三——可觀測性:Prometheus、Grafana、集中式 log,以及最實際的一課「有觀測和沒觀測,除錯速度差幾個數量級」。

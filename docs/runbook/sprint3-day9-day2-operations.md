@@ -1,4 +1,4 @@
-# Sprint 3 / Day 9: Day-2 Operations —— 升版 / node group / cluster-autoscaler
+# Day 9: Day-2 Operations——升版、node group、cluster-autoscaler
 
 > 課程定位:cluster 開起來只是開始,Day-2 才是生產重點。本日用 CAPI 做三件事:**① K8s 小版升級(rolling)② 新增 node group ③ cluster-autoscaler 自動擴縮**。三者都會 surge 出新 nested VM,所以先解決 Nova disk 的帳。
 

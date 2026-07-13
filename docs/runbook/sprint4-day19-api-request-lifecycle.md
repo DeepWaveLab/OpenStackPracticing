@@ -1,4 +1,4 @@
-# Day 19:server create 背後,OpenStack 做了什麼
+# Day 19: server create 的完整路徑——從 token 到 qemu
 
 > 階段二開始,換一種學法:不再加新服務,改為**拆開你已經用了三個星期的東西**。今天的目標很單純也很硬——挑一個 `openstack server create`,不靠任何抽象層,徒手把它從一張 token 一路追到主機上的 qemu 進程。做完之後,「開一台 VM」在你眼裡不再是一行指令,而是一條看得見每一段的鏈。
 

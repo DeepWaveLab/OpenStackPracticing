@@ -1,4 +1,4 @@
-# Day 1:用 Kolla-Ansible 部署 OpenStack 核心服務
+# Day 1: 用 Kolla-Ansible 部署 OpenStack 核心服務
 
 > 今天結束時,你會擁有一朵**能登入、能用的 OpenStack 雲**:五個核心服務跑在 33 個容器裡,網頁儀表板打得開,CLI 查得到服務清單。
 

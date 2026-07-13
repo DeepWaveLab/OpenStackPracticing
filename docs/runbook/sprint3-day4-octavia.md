@@ -1,4 +1,4 @@
-# Sprint 3 / Day 4: Octavia LBaaS(Sprint 1 未完成項 #2)
+# Day 4: Octavia LBaaS
 
 > 課程定位:部署 Octavia 並手動走完 LB 全流程(LB → listener → pool → member → health monitor → VIP FIP)。
 > 前一次嘗試在這一步直接出局:官方 charm 當時在主流架構上根本沒有發佈可用版本,想裝都裝不了。Kolla 這邊 Octavia 是一等公民,今天把它完整部起來。

@@ -1,4 +1,4 @@
-# Day 15:物件儲存 —— RGW 讓你的雲同時說 S3 和 Swift
+# Day 15: 物件儲存——用 RGW 提供 S3 與 Swift API
 
 > 今天把 Day 14 的 Ceph 接上 OpenStack,開出**物件儲存**服務。做完之後,你的雲會多一個 `object-store` endpoint,S3 和 Swift 兩種 API 同時可用——而且你會親眼看到,為什麼業界用一個 RGW 就取代了整套 Swift。
 

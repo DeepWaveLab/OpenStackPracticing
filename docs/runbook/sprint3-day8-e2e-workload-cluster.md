@@ -1,4 +1,4 @@
-# Sprint 3 / Day 8: E2E — 開 workload cluster 跑起來(Sprint 1 未完成項 #3 收尾)
+# Day 8: E2E——開 workload cluster 跑起來
 
 > 課程定位:用 Day 7 的 ClusterTemplate 真的 `openstack coe cluster create` 開一座 K8s workload cluster,驗證三層互動並完成三項最終驗收:**① `kubectl get nodes` 全 Ready ② `Service type=LoadBalancer` 拿到 Octavia LB ③ PVC 由 Cinder CSI 供裝**。
 > 本日踩了四個雷(microversion、CIDR 撞號、LB provider、Nova disk),全部記錄——這正是本次路線的價值:Sprint 1 死在無法診斷的 charm/image 斷代,本次每個地雷都能定位、能修。

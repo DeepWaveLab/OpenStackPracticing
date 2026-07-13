@@ -1,4 +1,4 @@
-# Day 17:Designate —— 讓 VM 自動擁有域名
+# Day 17: Designate——讓 VM 自動擁有域名
 
 > 到目前為止,你都是用 IP 存取雲裡的資源。今天部署 **Designate**(DNS 即服務),並打通它與 Neutron 的整合——掛上 floating IP 的瞬間,DNS 記錄自動誕生;刪掉的瞬間,自動消失。本章還有一個「看起來像故障、其實是設計」的行為,幾乎每個學員都會在那裡卡住,我們正面教它。
 
@@ -163,4 +163,4 @@ openstack recordset list oslab.test. -f value | grep vm-dns || echo "記錄已�
 
 ## 下一步
 
-你的雲現在會自己管理域名了。階段一只剩最後一塊積木:[Day 18](sprint4-day18-trove-dbaas.md) 的 **Trove**——一行指令開出一台代管 MySQL,今天建的 `day17-net` 直接當它的家。
+你的雲現在會自己管理域名了。階段一只剩最後一塊積木:[Day 18](sprint4-day18-trove-dbaas.md) 的 **Trove**——資料庫即服務,今天建的 `day17-net` 直接當它的家。

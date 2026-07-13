@@ -1,4 +1,4 @@
-# Sprint 3 / Day 5: Barbican + Heat
+# Day 5: Barbican + Heat
 
 > 課程定位:補齊 Magnum 的前置依賴 **Barbican**(secret/cert 倉庫),並複習 **Heat**(HOT 宣告式編排,Day 1 kolla 預設已部,白撿)。
 > 這兩個服務本身都不難,重點在「為什麼 Magnum 需要 Barbican」與「Heat 的依賴排序模型」,兩者都會在 Day 6-8 的 CAPI cluster 出現。

@@ -1,4 +1,4 @@
-# Sprint 3 / Day 3: Cinder LVM(Sprint 1 未完成項 #1)
+# Day 3: Cinder LVM
 
 > 課程定位:把 data disk 變成 Cinder 的 LVM backend,學會「已上線的 Kolla 環境增量加服務」的工作流,並完成 volume 生命週期 + boot-from-volume。
 > 前一次嘗試在這一步卡死:整套跑在 LXD 容器裡,容器拿不到操作磁碟(device-mapper)所需的權限,先天做不到。本次跑在真 VM 上,理論上完全沒有這個限制——今天就來驗證這個假設。
@@ -159,4 +159,4 @@ openstack server create --flavor m1.tiny --volume vol-boot \
 
 ## 下一步(Day 4)
 
-Octavia(Sprint 1 未完成項 #2):amphora image 準備 + LB 手動建置全流程。
+Octavia:amphora image 準備 + LB 手動建置全流程。

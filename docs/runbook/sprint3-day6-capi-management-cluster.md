@@ -1,4 +1,4 @@
-# Sprint 3 / Day 6: Cluster API 管理叢集(kind + CAPO)
+# Day 6: Cluster API 管理叢集——kind + CAPO
 
 > 課程定位:立起 Magnum CAPI driver 的底層 —— 一個 **Cluster API management cluster**(跑在 kind 上),裝好 CAPI core + kubeadm bootstrap/control-plane + **CAPO**(OpenStack infrastructure provider)。Day 7 才把 Magnum 的 driver 接上來。
 > 今天有一個必須先知道的整合陷阱:**Kolla 為了 OpenStack,關掉了 Docker 的防火牆管理——這會直接斷掉 kind 的對外網路**。原理章會解釋為什麼,步驟 3 會處理它。
@@ -236,7 +236,7 @@ kind 的 docker network 帶 IPv6 ULA(`fc00::/64`)且有 v6 default route,`getent
 
 ## 下一步(Day 7)
 
-Magnum + CAPI driver 整合(Sprint 1 未完成項 #3):把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。
+Magnum + CAPI driver 整合:把 vexxhost `magnum-cluster-api` v0.37.0 driver 裝進 Kolla 的 magnum image(pip 客製)、把本 management cluster 的 kubeconfig 餵給 magnum conductor、建 ClusterTemplate。底層 CAPI/CAPO 已就緒。
 
 ---
 

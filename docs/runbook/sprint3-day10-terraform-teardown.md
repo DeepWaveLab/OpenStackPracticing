@@ -1,4 +1,4 @@
-# Sprint 3 / Day 10: Terraform 接管 + Teardown 演練(Sprint 收尾)
+# Day 10: Terraform 接管 + Teardown 演練
 
 > 課程定位:Sprint 3 最後一天。用 **terraform-provider-openstack**(Sprint 1 未竟項)以 HCL 管 network/VM/LB,並整理 **teardown/重建**程序。回顧另見 `docs/sprint3-reflection.md`。
 

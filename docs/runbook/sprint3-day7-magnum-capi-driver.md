@@ -1,4 +1,4 @@
-# Sprint 3 / Day 7: Magnum + Cluster API driver 整合(Sprint 1 未完成項 #3)
+# Day 7: Magnum + Cluster API driver 整合
 
 > 課程定位:把 Day 6 立好的 CAPI management cluster 接上 Magnum。**關鍵發現:Kolla Epoxy 的官方 magnum image 已內建 vexxhost `magnum-cluster-api` driver**,不用自建 image、不用 `docker exec pip install` —— 整個整合收斂成「開 magnum + 放一份 kubeconfig」。
 > Sprint 1 這步死於 heat driver 內嵌的 2019-2021 image URL 全數失效(day-6/day-7 紀錄)。CAPI driver 的 node image 由 CAPI 生態(capo-image-elements)持續維護,從根本解掉這個問題。
