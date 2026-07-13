@@ -41,6 +41,7 @@
 | 症狀 | 根因一句話 | 出處 |
 |---|---|---|
 | [repo 要轉公開,但歷史 commit 裡有真實 IP / 訂閱 ID / 密碼](security-issues/git-history-scrub-sensitive-data-filter-repo.md) | 改 HEAD 不夠,敏感資料活在歷史;需 filter-repo 全歷史抹除,且有四個非顯而易見的地雷 | 轉公開前 |
+| [補專案 logo,抓到路人自拍 / 灰底色塊 / 深色模式隱形](site-maintenance/official-logo-sourcing-verification.md) | 圖片來源與格式沒有驗證紀律;org avatar 不保證是 logo 也不保證透明 | 加視覺素材時 |
 
 ## 跨越三次嘗試的共同教訓
 
