@@ -96,7 +96,7 @@ nav:
           - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
           - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
           - "Day 12 · 下一步的地圖:Sprint 4 預告": runbook/sprint3-day12-sprint4-preview.md
-      - "Sprint 4 · 邁向生產環境(Day 13–25)":
+      - "Sprint 4 · 邁向生產環境(Day 13–26)":
           - "Day 13 · Skyline 儀表板": runbook/sprint4-day13-skyline.md
           - "Day 14 · Ceph 基礎": runbook/sprint4-day14-ceph-bootstrap.md
           - "Day 15 · 物件儲存 RGW": runbook/sprint4-day15-object-storage-rgw.md
@@ -110,6 +110,7 @@ nav:
           - "Day 23 · 多節點部署與 HA": runbook/sprint4-day23-multinode-ha.md
           - "Day 24 · 橫向擴展": runbook/sprint4-day24-scale-out.md
           - "Day 25 · Sprint 4 總結": runbook/sprint4-day25-sprint4-recap.md
+          - "Day 26 · 下一步的地圖:Sprint 5 預告": runbook/sprint4-day26-sprint5-preview.md
 
   - 排錯手冊:
       - solutions/README.md

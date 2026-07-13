@@ -109,7 +109,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
 
-## 課程路徑(Day 0 → 25)
+## 課程路徑(Day 0 → 26)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
 
@@ -141,6 +141,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | [23](runbook/sprint4-day23-multinode-ha.md) | 多節點部署與 HA | 四台機器、關掉一台 controller 只停 6 秒 |
 | [24](runbook/sprint4-day24-scale-out.md) | 橫向擴展 | 加節點三部曲、熱遷移、node drain |
 | [25](runbook/sprint4-day25-sprint4-recap.md) | Sprint 4 總結 | 前後對比、28 顆地雷、誠實的差距清單 |
+| [26](runbook/sprint4-day26-sprint5-preview.md) | 下一步的地圖:Sprint 5 預告 | 把雲當成生意經營——計量、計費、SLA、治理稽核 |
 
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 
