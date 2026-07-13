@@ -16,7 +16,7 @@
         <link rel="prev" href="../sprint4-day20-ovn-packet-trace/">
       
       
-        <link rel="next" href="../../solutions/">
+        <link rel="next" href="../sprint4-day22-upgrade-backup/">
       
       
         
@@ -252,7 +252,7 @@
   
     
   
-  課程主線(Day 0–18)
+  課程主線(Day 0–25)
 
         </a>
       </li>
@@ -436,7 +436,7 @@
   <span class="md-ellipsis">
     
   
-    課程主線(Day 0–18)
+    課程主線(Day 0–25)
   
 
     
@@ -452,7 +452,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    課程主線(Day 0–18)
+    課程主線(Day 0–25)
   
 
           </label>
@@ -942,6 +942,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -968,7 +978,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–26)
   
 
     
@@ -984,7 +994,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–26)
   
 
           </label>
@@ -1172,7 +1182,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 背後發生什麼
+    Day 19 · server create 的完整路徑
   
 
     
@@ -1450,6 +1460,146 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day22-upgrade-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 22 · 更新與備份還原
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day23-multinode-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 23 · 多節點部署與 HA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day24-scale-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 24 · 橫向擴展
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day25-sprint4-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 25 · Sprint 4 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day26-sprint5-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 26 · 下一步的地圖:Sprint 5 預告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2192,6 +2342,8 @@
       
         
       
+        
+      
     
     
     
@@ -2252,6 +2404,34 @@
     
   
     git 歷史清洗敏感資料
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    官方 logo 安全取得流程
   
 
     
@@ -3639,7 +3819,7 @@
 
 
 
-<h1 id="day-21">Day 21:可觀測性 —— 給這朵雲裝上眼睛<a class="headerlink" href="#day-21" title="Permanent link">&para;</a></h1>
+<h1 id="day-21">Day 21: 可觀測性——替雲巡田水<a class="headerlink" href="#day-21" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>到目前為止,除錯全靠 <code>docker logs</code> 一個容器一個容器翻。今天部署一整套可觀測性:Prometheus 收指標、Grafana 畫圖、集中式 log 把散在各處的紀錄匯到一個地方。本章最實際的一課不是「怎麼裝」,而是<strong>裝完之後,同一個除錯情境快了幾個數量級</strong>——用 Day 19 學的 UUID 追蹤,親自感受一次。</p>
 </blockquote>
@@ -3813,7 +3993,7 @@
 <li><strong><a href="https://sre.google/sre-book/monitoring-distributed-systems/">Google SRE Book:Monitoring Distributed Systems</a></strong> —— 「四大黃金訊號」的出處;本章「該監控什麼」那張表的理論根據。</li>
 </ul>
 <h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>雲有眼睛了。<a href="../sprint3-day12-sprint4-preview/">Day 22</a> 進入維運最實際的兩件事:<strong>升版</strong>與<strong>備份</strong>——而且從今天起,升版過程中系統的每一個反應,你都看得見。（內容隨 Sprint 4 進度陸續上線）</p>
+<p>監控上線了。<a href="../sprint4-day22-upgrade-backup/">Day 22</a> 進入維運最實際的兩件事:<strong>更新</strong>與<strong>備份</strong>——而且從今天起,更新過程中系統的每一個反應,你都看得見。</p>
 <hr />
 <p><em>Prometheus 標誌取自 CNCF 官方 artwork;Grafana 標誌為 Grafana Labs 資產。均作社群教學用途。</em></p>
 
@@ -3870,13 +4050,13 @@
         
         
           
-          <a href="../../solutions/" class="md-footer__link md-footer__link--next" aria-label="下一頁: 排錯手冊">
+          <a href="../sprint4-day22-upgrade-backup/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 22 · 更新與備份還原">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                排錯手冊
+                Day 22 · 更新與備份還原
               </div>
             </div>
             <div class="md-footer__button md-icon">

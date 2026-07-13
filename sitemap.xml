@@ -2,286 +2,310 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/deployment-tools/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/previous-attempts/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/reflection/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/sprint2-course-plan/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/sprint2-reflection/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/sprint3-reflection/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-0-azure-vm/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-1-first-relation/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-1-juju-bootstrap/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-1-lxd-juju-install/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-2-openstack-charm-map/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-glance/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-horizon/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-keystone/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-mysql-innodb-cluster/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-network-stack/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-nova-cloud-controller/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-nova-compute/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-placement/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-rabbitmq/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-3-vault-tls/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-4-configure-openstack/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-5-heat/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-6-magnum/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-7-magnum-k8s-cluster/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/day-8-storage-attempts/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint2-course-1-osh-infra/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint2-day-0-azure-vm/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint2-day-0-k8s-bootstrap/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint2-day-1-ansible-kolla-install/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day0-azure-vm/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day1-kolla-aio-core/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day10-terraform-teardown/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day11-openstack-service-map/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day12-sprint4-preview/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day2-openstack-resource-flow/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day3-cinder-lvm/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day4-octavia/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day5-barbican-heat/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day6-capi-management-cluster/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day7-magnum-capi-driver/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day8-e2e-workload-cluster/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day9-day2-operations/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day13-skyline/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day14-ceph-bootstrap/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day15-object-storage-rgw/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day16-manila-cephfs/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day17-designate-dns/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day18-trove-dbaas/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day19-api-request-lifecycle/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day20-ovn-packet-trace/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day21-observability/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day22-upgrade-backup/</loc>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day23-multinode-ha/</loc>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day24-scale-out/</loc>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day25-sprint4-recap/</loc>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint4-day26-sprint5-preview/</loc>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/heat-missing-domain-setup-action/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/kind-kolla-docker-iptables-masquerade/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/kolla-octavia-dhclient-noble/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/kolla-octavia-redis-jobboard/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/mysql-charm-not-compatible-with-openstack/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/neutron-security-groups-disabled-default/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/nova-compute-caracal-cloud-credentials/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/nova-compute-missing-neutron-auth/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/ovn-charms-caracal-release-mismatch/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
     </url>
     <url>
          <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/</loc>
-         <lastmod>2026-07-12</lastmod>
+         <lastmod>2026-07-13</lastmod>
+    </url>
+    <url>
+         <loc>https://deepwavelab.github.io/OpenStackPracticing/solutions/site-maintenance/official-logo-sourcing-verification/</loc>
+         <lastmod>2026-07-13</lastmod>
     </url>
 </urlset>

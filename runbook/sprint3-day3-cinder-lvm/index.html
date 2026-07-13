@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#sprint-3-day-3-cinder-lvmsprint-1-1" class="md-skip">
+        <a href="#day-3-cinder-lvm" class="md-skip">
           跳轉到
         </a>
       
@@ -252,7 +252,7 @@
   
     
   
-  課程主線(Day 0–18)
+  課程主線(Day 0–25)
 
         </a>
       </li>
@@ -436,7 +436,7 @@
   <span class="md-ellipsis">
     
   
-    課程主線(Day 0–18)
+    課程主線(Day 0–25)
   
 
     
@@ -452,7 +452,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    課程主線(Day 0–18)
+    課程主線(Day 0–25)
   
 
           </label>
@@ -1211,6 +1211,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1237,7 +1247,7 @@
   <span class="md-ellipsis">
     
   
-    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–26)
   
 
     
@@ -1253,7 +1263,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Sprint 4 · 邁向生產環境(Day 13–21,連載中)
+    Sprint 4 · 邁向生產環境(Day 13–26)
   
 
           </label>
@@ -1441,7 +1451,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 背後發生什麼
+    Day 19 · server create 的完整路徑
   
 
     
@@ -1498,6 +1508,146 @@
     
   
     Day 21 · 可觀測性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day22-upgrade-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 22 · 更新與備份還原
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day23-multinode-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 23 · 多節點部署與 HA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day24-scale-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 24 · 橫向擴展
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day25-sprint4-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 25 · Sprint 4 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day26-sprint5-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 26 · 下一步的地圖:Sprint 5 預告
   
 
     
@@ -2248,6 +2398,8 @@
       
         
       
+        
+      
     
     
     
@@ -2308,6 +2460,34 @@
     
   
     git 歷史清洗敏感資料
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    官方 logo 安全取得流程
   
 
     
@@ -3751,7 +3931,7 @@
 
 
 
-<h1 id="sprint-3-day-3-cinder-lvmsprint-1-1">Sprint 3 / Day 3: Cinder LVM(Sprint 1 未完成項 #1)<a class="headerlink" href="#sprint-3-day-3-cinder-lvmsprint-1-1" title="Permanent link">&para;</a></h1>
+<h1 id="day-3-cinder-lvm">Day 3: Cinder LVM<a class="headerlink" href="#day-3-cinder-lvm" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p>課程定位:把 data disk 變成 Cinder 的 LVM backend,學會「已上線的 Kolla 環境增量加服務」的工作流,並完成 volume 生命週期 + boot-from-volume。
 前一次嘗試在這一步卡死:整套跑在 LXD 容器裡,容器拿不到操作磁碟(device-mapper)所需的權限,先天做不到。本次跑在真 VM 上,理論上完全沒有這個限制——今天就來驗證這個假設。</p>
@@ -3948,7 +4128,7 @@
 <li><strong><a href="https://docs.openstack.org/cinder/2025.1/cli/cli-manage-volumes.html">Cinder 磁碟區操作手冊</a></strong> —— 建立、掛載、快照、擴容的官方 CLI 流程。</li>
 </ul>
 <h2 id="day-4">下一步(Day 4)<a class="headerlink" href="#day-4" title="Permanent link">&para;</a></h2>
-<p>Octavia(Sprint 1 未完成項 #2):amphora image 準備 + LB 手動建置全流程。</p>
+<p>Octavia:amphora image 準備 + LB 手動建置全流程。</p>
 
 
 
