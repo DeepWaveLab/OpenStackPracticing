@@ -81,7 +81,7 @@ not_in_nav: |
 nav:
   - 首頁: index.md
 
-  - 課程主線(Day 0–18):
+  - 課程主線(Day 0–25):
       - "Sprint 3 · 親手蓋一朵雲(Day 0–12)":
           - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
           - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
@@ -96,16 +96,20 @@ nav:
           - "Day 10 · Terraform + teardown": runbook/sprint3-day10-terraform-teardown.md
           - "Day 11 · 後日談:服務全景圖": runbook/sprint3-day11-openstack-service-map.md
           - "Day 12 · 下一步的地圖:Sprint 4 預告": runbook/sprint3-day12-sprint4-preview.md
-      - "Sprint 4 · 邁向生產環境(Day 13–21,連載中)":
+      - "Sprint 4 · 邁向生產環境(Day 13–25)":
           - "Day 13 · Skyline 儀表板": runbook/sprint4-day13-skyline.md
           - "Day 14 · Ceph 基礎": runbook/sprint4-day14-ceph-bootstrap.md
           - "Day 15 · 物件儲存 RGW": runbook/sprint4-day15-object-storage-rgw.md
           - "Day 16 · Manila 共享檔案": runbook/sprint4-day16-manila-cephfs.md
           - "Day 17 · Designate DNS": runbook/sprint4-day17-designate-dns.md
           - "Day 18 · Trove 資料庫服務": runbook/sprint4-day18-trove-dbaas.md
-          - "Day 19 · server create 背後發生什麼": runbook/sprint4-day19-api-request-lifecycle.md
+          - "Day 19 · server create 的完整路徑": runbook/sprint4-day19-api-request-lifecycle.md
           - "Day 20 · 封包怎麼流(OVN)": runbook/sprint4-day20-ovn-packet-trace.md
           - "Day 21 · 可觀測性": runbook/sprint4-day21-observability.md
+          - "Day 22 · 更新與備份還原": runbook/sprint4-day22-upgrade-backup.md
+          - "Day 23 · 多節點部署與 HA": runbook/sprint4-day23-multinode-ha.md
+          - "Day 24 · 橫向擴展": runbook/sprint4-day24-scale-out.md
+          - "Day 25 · Sprint 4 總結": runbook/sprint4-day25-sprint4-recap.md
 
   - 排錯手冊:
       - solutions/README.md
@@ -129,6 +133,7 @@ nav:
           - "cirros sshd race vs config-drive": solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive.md
       - "維護網站本身":
           - "git 歷史清洗敏感資料": solutions/security-issues/git-history-scrub-sensitive-data-filter-repo.md
+          - "官方 logo 安全取得流程": solutions/site-maintenance/official-logo-sourcing-verification.md
 
   - 歷史 · 前兩次嘗試:
       - previous-attempts.md
