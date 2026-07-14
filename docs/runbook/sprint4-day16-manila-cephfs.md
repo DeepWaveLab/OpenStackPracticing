@@ -123,6 +123,10 @@ manila-e2e
 
 寫得進、讀得回、配額 1G 正確呈現——三部曲的最後一塊拼圖到位。
 
+這顆 share 不只在 CLI 看得到——Skyline 的「Share File Storage」頁把它列得清清楚楚:size、protocol(CEPHFS)、狀態一欄到位。下圖的兩列裡,`day16-share` 是你剛手動建的,`pvc-…`(描述寫 `provisioned by=manila.csi.openstack.org`)則是稍後 Day 16+ 由 K8s 動態要來的——同一個共享檔案服務,CLI 與主控台看到的是同一份資料:
+
+![Skyline 的共享檔案頁:手動建的 day16-share 與 K8s 動態供裝的 PVC 並列](../assets/screenshots/day16-skyline-shares.png)
+
 ## 驗收 checkpoint
 
 逐項驗證,**全部符合判準才算完成今天**:

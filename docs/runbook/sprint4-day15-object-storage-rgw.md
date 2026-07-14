@@ -122,6 +122,13 @@ hello-rgw
 
 上傳再下載、內容一致——**Swift API 的完整認證與資料鏈全通**。Ceph 端同時可以看到 RGW 自動建出六個 `default.rgw.*` pool(`ceph osd pool ls`)。
 
+同一顆 bucket 在主控台也看得到。Skyline 目前沒有物件儲存頁,但 Horizon 有(專案 → Object Store → Containers)——左邊是 container 的統計(物件數、總大小、storage policy),右邊列出裡面的物件,還能直接下載:
+
+![Horizon 的 Object Store:day15-test container 與裡面的物件](../assets/screenshots/day15-horizon-objectstore.png)
+
+!!! tip "物件名別直接吃本機路徑"
+    上面那行 `openstack object create day15-test /tmp/obj.txt` 會**拿本機路徑當物件名**,於是物件真的叫 `/tmp/obj.txt`——開頭那個斜線會讓 Horizon 把它當成資料夾層級,結果物件列表看起來是空的。想要乾淨的名字就明講:`openstack object create --name hello-rgw.txt day15-test /tmp/obj.txt`(圖上那個就是)。
+
 ## 驗收 checkpoint
 
 逐項驗證,**全部符合判準才算完成今天**:

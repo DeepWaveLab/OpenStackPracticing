@@ -128,6 +128,16 @@ openstack database db list day18-db        # demo、demo2 都在
 
 寫得進去 = guest 裡的 MySQL 真實運作中。
 
+Skyline 的「Database」頁把這台代管實例列得跟 RDS 主控台一樣:datastore、版本、配發到的位址、磁碟大小、狀態一欄到位——使用者不需要知道底下是一台 Nova VM:
+
+![Skyline 的資料庫實例頁:day18-db,mysql 8.0、2GiB、Active](../assets/screenshots/day18-skyline-trove.png)
+
+而從使用者的角度,這就是**一台普通的 MySQL**:拿任何 MySQL client 連上去,SQL 照打——建表、寫入、查詢,跟你平常用的資料庫沒有兩樣:
+
+![用 mysql client 連進 day18-db:SHOW DATABASES、建表、寫入、查詢](../assets/screenshots/day18-mysql-terminal.png)
+
+最後一行的 `served_by` 洩了底:真正回答你的是 guest VM 裡那個 mysql 容器(`--datastore mysql` 拉下來的那個)。但這是實作細節——**使用者只看到一台 MySQL,這正是 DBaaS 的意義**。
+
 ## 驗收 checkpoint
 
 逐項驗證,**全部符合判準才算完成今天**:
@@ -163,7 +173,7 @@ Trove 對建立失敗的實例會自動刪除 guest VM——**連 console log �
 
 新版 troveclient 的備份指令是 `openstack database backup create --instance <實例> <備份名>`——舊教學裡「實例當第一個位置參數」的寫法會直接吐 usage。
 
-### 地雷 4:備份的最後一哩(開放項){#mine-4}
+### 地雷 4:備份的最後一哩(開放項) {#mine-4}
 
 備份功能會把資料上傳到 object-store(正是 Day 15 的 RGW,依賴鏈設計如此)。實測:備份任務成功派送(`storage_driver: swift` 正確),但 guest 內拉取**備份工具容器**時卡住——修法已知:在 `/etc/kolla/config/trove/trove-guestagent.conf` 覆寫備份容器來源後重部。本章先如實記錄現象與修法方向;完整步驟驗證後會補進本頁。
 

@@ -75,6 +75,10 @@ yellow open flog-2026.07.12  ... 3857
 
 `yellow` 在單節點是正常的(它想要副本但只有一個節點可放)。索引裡已經有幾千筆 log——fluentd 正把各容器的 log 持續匯進來。
 
+登入 Grafana(`3000` 埠)不用手動接資料源——Kolla 已經把 Prometheus(指標)和 OpenSearch(log)兩個都自動配置好了:
+
+![Grafana 的資料源頁:Prometheus 與 OpenSearch 都已自動接上](../assets/screenshots/day21-grafana-datasources.png)
+
 ### 步驟 4:收尾 Day 13 的待辦 —— 把 Skyline 接上監控
 
 還記得 Day 13 說「Prometheus 裝好後要回來動 Skyline 一次」嗎?就是現在。Skyline 的監控頁需要 Prometheus 當資料源,重新部署一次讓它接上:
@@ -86,7 +90,7 @@ kolla-ansible deploy -i ~/all-in-one --tags skyline
 !!! note "會撞到一個隱性依賴（見地雷 2）"
     這一步在本課環境第一次跑會失敗,原因是 Day 15 開了 RGW 卻沒設一個相容變數。修法一行,細節在[地雷 2](#mine-2)。修完 `failed=0`,Skyline 的監控頁就有資料了。
 
-## 高潮:有觀測 vs 沒觀測
+## 同一個除錯,有觀測與沒觀測差多少
 
 這是今天最值得體會的一段。回想 [Day 8](sprint3-day8-e2e-workload-cluster.md) 除 CCM 的錯——當時要一個容器一個容器 `docker logs` 慢慢翻。現在有了集中式 log,同樣的「跨服務追一個資源」變成一次查詢:
 
@@ -111,6 +115,10 @@ curl -s http://10.0.0.4:9200/flog-*/_search -H 'Content-Type: application/json' 
 ```
 
 **一次查詢,19 筆 log,橫跨 nova 與 placement**——你直接看到這台 VM 從 claim 資源到 placement 記帳的完整軌跡。Day 8 那種「翻遍容器找線索」的除錯,現在是一行指令。這就是可觀測性的價值:它不是讓系統跑得更好,是讓**你**修得更快。
+
+同一招在 OpenSearch Dashboards 的 Discover 頁長這樣——把某台 VM 的 UUID 貼進搜尋框,所有含這個 ID 的 log 一次濾出來,黃底就是命中的 UUID,`programname` 欄一眼看出它散落在 `neutron-server`、`placement-api` 等不同服務:
+
+![在 OpenSearch Dashboards 用 server UUID 過濾,跨服務的 log 全被串起來](../assets/screenshots/day21-opensearch-uuid.png)
 
 清理:`openstack server delete obs-vm`。
 

@@ -80,7 +80,13 @@ openstack zone create --email admin@oslab.test oslab.test.
 openstack zone show oslab.test. -f value -c status    # PENDING → 約 10 秒 → ACTIVE
 ```
 
-### 步驟 4:見證自動化(以及那個「像故障的設計」)
+zone 一建好,主控台就看得到。Skyline 目前沒有 DNS 頁,但 **Horizon 有 designate-dashboard**(專案 → DNS → Zones)——點進 `oslab.test.` 的「Record Sets」,可以看到 Designate 自動幫新 zone 建好的 NS 與 SOA 兩筆記錄:
+
+![Horizon 的 DNS zone 頁:oslab.test. 的 NS 與 SOA record set](../assets/screenshots/day17-horizon-dns-zone.png)
+
+等一下步驟 4 讓 VM 掛上 FIP 後,這裡還會自動長出一筆 A 記錄——不用你手動加。
+
+### 步驟 4:開一台 VM,看域名自己長出來
 
 建一個掛上 `dns_domain` 的網路、開一台 VM:
 
