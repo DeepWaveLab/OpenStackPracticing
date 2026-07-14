@@ -1357,10 +1357,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4mine-4" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:備份的最後一哩(開放項){#mine-4}
+        地雷 4:備份的最後一哩(開放項)
       
     </span>
   </a>
@@ -3820,10 +3820,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4mine-4" class="md-nav__link">
+  <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:備份的最後一哩(開放項){#mine-4}
+        地雷 4:備份的最後一哩(開放項)
       
     </span>
   </a>
@@ -3973,6 +3973,11 @@
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openstack<span class="w"> </span>database<span class="w"> </span>db<span class="w"> </span>list<span class="w"> </span>day18-db<span class="w">        </span><span class="c1"># demo、demo2 都在</span>
 </span></code></pre></div>
 <p>寫得進去 = guest 裡的 MySQL 真實運作中。</p>
+<p>Skyline 的「Database」頁把這台代管實例列得跟 RDS 主控台一樣:datastore、版本、配發到的位址、磁碟大小、狀態一欄到位——使用者不需要知道底下是一台 Nova VM:</p>
+<p><img alt="Skyline 的資料庫實例頁:day18-db,mysql 8.0、2GiB、Active" src="../../assets/screenshots/day18-skyline-trove.png" /></p>
+<p>而從使用者的角度,這就是<strong>一台普通的 MySQL</strong>:拿任何 MySQL client 連上去,SQL 照打——建表、寫入、查詢,跟你平常用的資料庫沒有兩樣:</p>
+<p><img alt="用 mysql client 連進 day18-db:SHOW DATABASES、建表、寫入、查詢" src="../../assets/screenshots/day18-mysql-terminal.png" /></p>
+<p>最後一行的 <code>served_by</code> 洩了底:真正回答你的是 guest VM 裡那個 mysql 容器(<code>--datastore mysql</code> 拉下來的那個)。但這是實作細節——<strong>使用者只看到一台 MySQL,這正是 DBaaS 的意義</strong>。</p>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
 <table>
@@ -4027,7 +4032,7 @@
 <p>Trove 對建立失敗的實例會自動刪除 guest VM——<strong>連 console log 一起帶走</strong>。發現 ERROR 時,<code>openstack console log show</code> 要趁早;晚了就只剩 taskmanager 的 log 可查(<code>/var/log/kolla/trove/</code>)。</p>
 <h3 id="mine-3">地雷 3:backup 指令的新版語法<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p>新版 troveclient 的備份指令是 <code>openstack database backup create --instance &lt;實例&gt; &lt;備份名&gt;</code>——舊教學裡「實例當第一個位置參數」的寫法會直接吐 usage。</p>
-<h3 id="4mine-4">地雷 4:備份的最後一哩(開放項){#mine-4}<a class="headerlink" href="#4mine-4" title="Permanent link">&para;</a></h3>
+<h3 id="mine-4">地雷 4:備份的最後一哩(開放項)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
 <p>備份功能會把資料上傳到 object-store(正是 Day 15 的 RGW,依賴鏈設計如此)。實測:備份任務成功派送(<code>storage_driver: swift</code> 正確),但 guest 內拉取<strong>備份工具容器</strong>時卡住——修法已知:在 <code>/etc/kolla/config/trove/trove-guestagent.conf</code> 覆寫備份容器來源後重部。本章先如實記錄現象與修法方向;完整步驟驗證後會補進本頁。</p>
 <h2 id="_3">階段一完成 🎉<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>六天、六塊積木:Skyline、Ceph、RGW、Manila、Designate、Trove——首頁那張「還沒拼上的積木」表,一半已經拼上了。更重要的是方法論的複利:<strong>同型雷第 N 次出現時,你已經能在錯誤出現之前說出答案</strong>(CLI 外掛、行首錨定、subnet DNS)。</p>

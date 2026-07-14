@@ -4152,6 +4152,8 @@
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>10.0.0.4:6789:/volumes/...  1.0G  0  1.0G  0% /mnt/day16
 </span></code></pre></div>
 <p>寫得進、讀得回、配額 1G 正確呈現——三部曲的最後一塊拼圖到位。</p>
+<p>這顆 share 不只在 CLI 看得到——Skyline 的「Share File Storage」頁把它列得清清楚楚:size、protocol(CEPHFS)、狀態一欄到位。下圖的兩列裡,<code>day16-share</code> 是你剛手動建的,<code>pvc-…</code>(描述寫 <code>provisioned by=manila.csi.openstack.org</code>)則是稍後 Day 16+ 由 K8s 動態要來的——同一個共享檔案服務,CLI 與主控台看到的是同一份資料:</p>
+<p><img alt="Skyline 的共享檔案頁:手動建的 day16-share 與 K8s 動態供裝的 PVC 並列" src="../../assets/screenshots/day16-skyline-shares.png" /></p>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
 <table>
