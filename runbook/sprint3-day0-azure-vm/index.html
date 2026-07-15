@@ -627,7 +627,7 @@
   <a href="#1-e16s_v5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 為什麼是 E16s_v5
+        1. 機器規格:為什麼是 E16s_v5
       
     </span>
   </a>
@@ -3900,7 +3900,7 @@
   <a href="#1-e16s_v5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 為什麼是 E16s_v5
+        1. 機器規格:為什麼是 E16s_v5
       
     </span>
   </a>
@@ -4140,8 +4140,10 @@
 </ul>
 </div>
 <h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="1-e16s_v5">1. 為什麼是 E16s_v5<a class="headerlink" href="#1-e16s_v5" title="Permanent link">&para;</a></h3>
-<p>Kolla-Ansible AIO + Magnum CAPI 的記憶體帳(Day 8 全套同時跑的尖峰):</p>
+<p>租一台 VM 看起來只是填幾個欄位,但這台機器要扛完接下來十二天的所有東西——<strong>選錯了不是重開一台就算了,是整個 lab 的架構前提跟著變</strong>。動手前有四個決定要先想通:<strong>機器規格</strong>(要多大、為什麼非得支援巢狀虛擬化)、<strong>Azure 網路約束</strong>(公有雲不給你什麼)、<strong>security type</strong>(為什麼要退回 Standard)、<strong>成本 guardrails</strong>(三道保險絲)。</p>
+<p>其中第二項最容易被當成故障:<strong>它不是設定選項,是這個 lab 的物理定律</strong>——後面每一天的網路行為都受它約束,Day 2、Day 8、Day 20 都會再回來找它。</p>
+<h3 id="1-e16s_v5">1. 機器規格:為什麼是 E16s_v5<a class="headerlink" href="#1-e16s_v5" title="Permanent link">&para;</a></h3>
+<p>先算帳,再挑機型。Kolla-Ansible AIO + Magnum CAPI 全套同時跑的記憶體尖峰(以 Day 8 為準):</p>
 <table>
 <thead>
 <tr>
