@@ -81,7 +81,7 @@ not_in_nav: |
 nav:
   - 首頁: index.md
 
-  - 課程主線(Day 0–25):
+  - 課程主線(Day 0–30):
       - "Sprint 3 · 親手蓋一朵雲(Day 0–12)":
           - "Day 0 · Azure Lab 環境": runbook/sprint3-day0-azure-vm.md
           - "Day 1 · Kolla AIO core": runbook/sprint3-day1-kolla-aio-core.md
@@ -111,6 +111,11 @@ nav:
           - "Day 24 · 橫向擴展": runbook/sprint4-day24-scale-out.md
           - "Day 25 · Sprint 4 總結": runbook/sprint4-day25-sprint4-recap.md
           - "Day 26 · 下一步的地圖:Sprint 5 預告": runbook/sprint4-day26-sprint5-preview.md
+      - "Sprint 5 · 把雲當生意經營(Day 27–35)":
+          - "Day 27 · 多租戶治理與額度": runbook/sprint5-day27-multi-tenant-governance.md
+          - "Day 28 · 計量管線(Ceilometer)": runbook/sprint5-day28-ceilometer-metering.md
+          - "Day 29 · 告警與自動擴縮(Aodh)": runbook/sprint5-day29-aodh-autoscaling.md
+          - "Day 30 · 計費(CloudKitty)": runbook/sprint5-day30-cloudkitty-rating.md
 
   - 排錯手冊:
       - solutions/README.md
