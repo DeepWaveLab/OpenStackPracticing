@@ -1,0 +1,4699 @@
+
+<!doctype html>
+<html lang="zh-TW" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+      
+      
+      
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint5-day29-aodh-autoscaling/">
+      
+      
+        <link rel="prev" href="../sprint5-day28-ceilometer-metering/">
+      
+      
+        <link rel="next" href="../sprint5-day30-cloudkitty-rating/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Day 29 · 告警與自動擴縮(Aodh) - OpenStack Lab Course</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#day-29" class="md-skip">
+          跳轉到
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="頁首">
+    <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OpenStack Lab Course
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Day 29 · 告警與自動擴縮(Aodh)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切換深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換淺色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切換淺色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="標籤" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首頁
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  課程主線(Day 0–30)
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../solutions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  排錯手冊
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../previous-attempts/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  歷史 · 前兩次嘗試
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sprint3-reflection/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  回顧與教訓
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    OpenStack Lab Course
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首頁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    課程主線(Day 0–30)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    課程主線(Day 0–30)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 · 親手蓋一朵雲(Day 0–12)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 3 · 親手蓋一朵雲(Day 0–12)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure Lab 環境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day1-kolla-aio-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Kolla AIO core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · OpenStack 資源全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day3-cinder-lvm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Cinder LVM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day4-octavia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Octavia LB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day5-barbican-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Barbican + Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day6-capi-management-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · CAPI 管理叢集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum CAPI driver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · E2E workload cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day9-day2-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 9 · Day-2 operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day10-terraform-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 10 · Terraform + teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day11-openstack-service-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 11 · 後日談:服務全景圖
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day12-sprint4-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 12 · 下一步的地圖:Sprint 4 預告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 4 · 邁向生產環境(Day 13–26)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 4 · 邁向生產環境(Day 13–26)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day13-skyline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 13 · Skyline 儀表板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day14-ceph-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 14 · Ceph 基礎
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day15-object-storage-rgw/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 15 · 物件儲存 RGW
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day16-manila-cephfs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 16 · Manila 共享檔案
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day17-designate-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 17 · Designate DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day18-trove-dbaas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 的完整路徑
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day22-upgrade-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 22 · 更新與備份還原
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day23-multinode-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 23 · 多節點部署與 HA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day24-scale-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 24 · 橫向擴展
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day25-sprint4-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 25 · Sprint 4 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day26-sprint5-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 26 · 下一步的地圖:Sprint 5 預告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 5 · 把雲當生意經營(Day 27–35)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 5 · 把雲當生意經營(Day 27–35)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day27-multi-tenant-governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 27 · 多租戶治理與額度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day28-ceilometer-metering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 28 · 計量管線(Ceilometer)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 29 · 告警與自動擴縮(Aodh)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 29 · 告警與自動擴縮(Aodh)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#aodh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Aodh?先讀這段
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一個先天限制,決定了今天的設計
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-aodh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:部署 Aodh
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-aodh-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:讓 Aodh 找得到 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:第一條告警,兩個方向都要驗
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4heat-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:Heat autoscaling 補課
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:接起來,看它自己跑完一輪
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:Aodh 不讀 Keystone 服務目錄,而 kolla 不產它要的檔
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:Prometheus 有認證,而這條鏈上沒有地方填帳密
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:官方 autoscaling 範例的 alarm_url 會回 403
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:取樣太稀,告警卡在 insufficient data 而且不叫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:CLI 的 rule 欄對 prometheus 告警顯示 null
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完整範本
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day30-cloudkitty-rating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../solutions/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排錯手冊
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    排錯手冊
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kolla ProxySQL vs MariaDB port
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia dhclient (Noble)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia amphora Redis jobboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    kind × Kolla docker iptables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CAPI 子網撞 API IP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nodegroup failureDomain null
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史路線(Juju / Charms)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史路線(Juju / Charms)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL charm 不相容
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN charm Caracal 版差
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN chassis 未註冊
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute Caracal 憑證
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute 缺 neutron auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neutron SG 預設關閉
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    magnum-api bind vs haproxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    heat 缺 domain setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime errors
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runtime errors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cirros sshd race vs config-drive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    維護網站本身
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    維護網站本身
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    git 歷史清洗敏感資料
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    官方 logo 安全取得流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史 · 前兩次嘗試
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史 · 前兩次嘗試
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../previous-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前兩次嘗試:走過才知道的路
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    部署工具圖鑑(矩陣與晶片支援)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-lxd-juju-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · LXD + Juju install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Juju bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-first-relation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · First relation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-2-openstack-charm-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · Charm map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-keystone/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Keystone
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-mysql-innodb-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · MySQL InnoDB cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-rabbitmq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · RabbitMQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-vault-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Vault TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-glance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Glance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Placement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-cloud-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova cloud controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-compute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova compute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-network-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Network stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-horizon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Horizon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-4-configure-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Configure OpenStack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-5-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-6-magnum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · Magnum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum k8s cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-8-storage-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · Storage attempts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · k8s bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Ansible + Kolla install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-course-1-osh-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSH infra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-course-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 課程計畫(後來被推翻)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    回顧與教訓
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    回顧與教訓
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint3-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 回顧(本課程)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 回顧(OSH,2 天喊停)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 回顧(Juju,9 天)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#aodh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        第一次接觸 Aodh?先讀這段
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理與架構
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理與架構">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一個先天限制,決定了今天的設計
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-aodh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:部署 Aodh
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-aodh-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:讓 Aodh 找得到 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:第一條告警,兩個方向都要驗
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4heat-autoscaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:Heat autoscaling 補課
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:接起來,看它自己跑完一輪
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:Aodh 不讀 Keystone 服務目錄,而 kolla 不產它要的檔
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:Prometheus 有認證,而這條鏈上沒有地方填帳密
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:官方 autoscaling 範例的 alarm_url 會回 403
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:取樣太稀,告警卡在 insufficient data 而且不叫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:CLI 的 rule 欄對 prometheus 告警顯示 null
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        完整範本
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="day-29">Day 29: 告警與自動擴縮——讓雲自己反應<a class="headerlink" href="#day-29" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Day 28 把用量變成了 Prometheus 裡的數字。今天讓那些數字<strong>產生後果</strong>:Aodh 用 PromQL 盯著它們,超標時通知 Heat 自己長出機器,負載退了再自己收回去。同時補上 Day 5 沒教完的 Heat autoscaling。本章的價值不在「裝起來」——而在官方主推的這條路上,有四個缺口是文件不會告訴你的,包括<strong>官方範例至今仍在用一個會回 403 的寫法</strong>。</p>
+</blockquote>
+<p><img align="right" alt="Heat 官方吉祥物" src="../../assets/mascots/heat.png" width="100" /></p>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
+<ul>
+<li><strong>Day 28</strong>:計量資料流進 Prometheus,而且每筆都帶 <code>project_id</code>。</li>
+<li><strong>今天</strong>:Aodh 用 PromQL 查那些資料下判斷 → 觸發 Heat 的擴縮政策 → VM 自動增減。</li>
+<li><strong>今天之後</strong>:<a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 把同一批數字換算成帳單。</li>
+</ul>
+</div>
+<h2 id="aodh">第一次接觸 Aodh?先讀這段<a class="headerlink" href="#aodh" title="Permanent link">&para;</a></h2>
+<p><strong>Aodh 是 OpenStack 的 CloudWatch Alarms</strong>。它本身不存資料、也不畫圖,只做一件事:<strong>定期問一次「現在的數字超標了嗎」,狀態變化時打通知出去</strong>。</p>
+<p>三個名詞今天會一直出現:</p>
+<ul>
+<li><strong>alarm(告警)</strong>:一條規則。「team-a 的平均 CPU 超過 0.4 顆核」就是一條。</li>
+<li><strong>state(狀態)</strong>:每條告警永遠處在 <code>ok</code>(沒超標)、<code>alarm</code>(超標)、<code>insufficient data</code>(算不出來)三者之一。</li>
+<li><strong>action(動作)</strong>:狀態變化時要打的 webhook。<code>alarm_actions</code> 在轉為超標時打,<code>ok_actions</code> 在轉回正常時打。</li>
+</ul>
+<p>第三個狀態 <code>insufficient data</code> 今天會咬人:<strong>它既不觸發 <code>alarm_actions</code>、也不觸發 <code>ok_actions</code></strong>。告警卡在這個狀態時,整條鏈默默不動,而且沒有任何錯誤。</p>
+<h2 id="architecture">原理與架構<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<p>今天要接起來的是一條四棒接力,每一棒的交接處都有雷:</p>
+<pre class="mermaid"><code>flowchart TB
+    VM["VM 燒 CPU"] ==&gt; CEIL["Ceilometer 取樣&lt;br/&gt;(Day 28)"]
+    CEIL ==&gt; PROM["Prometheus 存&lt;br/&gt;(Day 21)"]
+    PROM ==&gt; AODH["aodh-evaluator&lt;br/&gt;用 PromQL 算、判斷"]
+    AODH ==&gt;|"webhook"| HEAT["Heat ScalingPolicy&lt;br/&gt;→ 開新 VM"]
+    HEAT -.-&gt;|"新 VM 也被取樣&lt;br/&gt;形成回饋迴路"| CEIL</code></pre>
+<p><strong>注意最後那條虛線</strong>:擴容出來的新機器會再被計量,平均值因此改變——這是一個閉環的控制系統,不是單向管線。這件事在<a href="#step-5">步驟 5</a> 會產生一個很好看的結果。</p>
+<h3 id="_1">一個先天限制,決定了今天的設計<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<p>教科書的 Heat autoscaling 是這樣鎖定「哪些機器算同一組」的:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">metadata</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="s">&quot;metering.server_group&quot;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">get_param</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;OS::stack_id&quot;</span><span class="p p-Indicator">}}</span><span class="w">   </span><span class="c1"># 幫 VM 貼標籤</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Aodh::GnocchiAggregationByResourcesAlarm</span><span class="w">                 </span><span class="c1"># 再用標籤篩</span>
+</span></code></pre></div>
+<p>它成立的前提是 <strong>Gnocchi 存得住 resource metadata</strong>。而 Ceilometer 推進 Prometheus 的指標,身上只有四個 label:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>__name__      = cpu
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>job           = openstack-telemetry
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>project_id    = d2b258226e6b4d4493d93b5411726c97
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>resource_id   = dd3cfe9a-0301-470c-bef5-c8620dc4e3f5
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>user_id       = 1384190dc01245789ea1465816402146
+</span></code></pre></div>
+<p><strong>沒有 <code>server_group</code>,沒有任何自訂 metadata。</strong><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 講的「儲存層換人」在這裡露出代價:換掉 Gnocchi,也換掉了「用任意標籤圈選機群」的能力。Prometheus 路線能拿來收斂範圍的,只剩 <code>project_id</code> 與 <code>user_id</code>。</p>
+<p>所以今天的做法是:<strong>一個 scaling group 一個 project</strong>。這聽起來像將就,其實正是 <a href="../sprint5-day27-multi-tenant-governance/">Day 27</a> 蓋好的東西——租戶邊界本來就該是資源邊界。缺口與解法在這裡剛好對上。</p>
+<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="1-aodh">步驟 1:部署 Aodh<a class="headerlink" href="#1-aodh" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_aodh: &quot;yes&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>aodh
+</span></code></pre></div>
+<p>四個容器(api / evaluator / notifier / listener)healthy 即可續行。</p>
+<h3 id="2-aodh-prometheus">步驟 2:讓 Aodh 找得到 Prometheus<a class="headerlink" href="#2-aodh-prometheus" title="Permanent link">&para;</a></h3>
+<p>建一條 PromQL 告警試試:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-aodhclient<span class="w">        </span><span class="c1"># CLI 外掛,同型雷第 N 次</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nv">TEAM_A</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>project<span class="w"> </span>show<span class="w"> </span>team-a<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>openstack<span class="w"> </span>alarm<span class="w"> </span>create<span class="w"> </span>--type<span class="w"> </span>prometheus<span class="w"> </span>--name<span class="w"> </span>day29-vm-count<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--query<span class="w"> </span><span class="s2">&quot;count(cpu{project_id=\&quot;</span><span class="nv">$TEAM_A</span><span class="s2">\&quot;})&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--comparison-operator<span class="w"> </span>ge<span class="w"> </span>--threshold<span class="w"> </span><span class="m">1</span><span class="w"> </span>--evaluation-periods<span class="w"> </span><span class="m">1</span><span class="w"> </span>--granularity<span class="w"> </span><span class="m">60</span>
+</span></code></pre></div>
+<p>告警建立成功,但狀態停在 <code>insufficient data</code>,evaluator 的 log 說:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Could not load &#39;prometheus&#39;: Can&#39;t find prometheus host and port configuration
+</span></code></pre></div>
+<p><strong>Aodh 不從 Keystone 服務目錄找 Prometheus</strong>——它讀一個設定檔,而 <strong>kolla 不會產生這個檔</strong>(完整判讀見<a href="#mine-1">地雷 1</a>)。自己補:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^prometheus_password:&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/openstack
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/openstack/prometheus.yaml<span class="w"> </span><span class="s">&lt;&lt; EOF</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="s">host: admin:${PW}@10.0.0.4</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s">port: 9091</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s">EOF</span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">那個 <code>admin:密碼@</code> 不是筆誤</p>
+<p>Day 21 的 Prometheus 有 basic auth,而 Aodh 這條鏈上<strong>沒有任何地方可以填帳號密碼</strong>(<a href="#mine-2">地雷 2</a>)。把憑證內嵌進 host 字串是唯一不必拆掉認證的解法。</p>
+</div>
+<p>檔案在主機上,但 Aodh 跑在容器裡——用 kolla 的官方機制掛進去:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s">aodh_extra_volumes:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">  - &quot;/etc/openstack:/etc/openstack:ro&quot;</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s">EOF</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>aodh
+</span></code></pre></div>
+<h3 id="3">步驟 3:第一條告警,兩個方向都要驗<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>alarm<span class="w"> </span>show<span class="w"> </span>day29-vm-count<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>state<span class="w"> </span>-c<span class="w"> </span>state_reason
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>alarm
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Transition to alarm due to 1 samples outside threshold, most recent: 1.0
+</span></code></pre></div>
+<p>超標會叫了。但<strong>只驗一個方向不算驗</strong>——條件不成立時它必須回得來,否則你分不清「真的在算」和「卡在 alarm 動不了」:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>alarm<span class="w"> </span>update<span class="w"> </span>day29-vm-count<span class="w"> </span>--threshold<span class="w"> </span><span class="m">99</span>
+</span></code></pre></div>
+<p>門檻改成 99(不可能達到),狀態應回 <code>ok</code>。這裡要用 API 看,不要用 CLI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>token<span class="w"> </span>issue<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nv">AODH</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>endpoint<span class="w"> </span>list<span class="w"> </span>--service<span class="w"> </span>alarming<span class="w"> </span>--interface<span class="w"> </span>public<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>URL<span class="k">)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$AODH</span><span class="s2">/v2/alarms/&lt;alarm-id&gt;&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>json.tool
+</span></code></pre></div>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">&quot;state&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nt">&quot;prometheus_rule&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">&quot;comparison_operator&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ge&quot;</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nt">&quot;threshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">99.0</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nt">&quot;query&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;count(cpu{project_id=\&quot;d2b258226e6b4d4493d93b5411726c97\&quot;})&quot;</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>threshold 1 → alarm</code>、<code>threshold 99 → ok</code>,<strong>兩個方向都對,告警是真的在算</strong>。至於為什麼不用 <code>openstack alarm show</code> 看規則——見<a href="#mine-5">地雷 5</a>。</p>
+<p>驗完把門檻改回來:<code>openstack alarm update day29-vm-count --threshold 1</code>。</p>
+<h3 id="4heat-autoscaling">步驟 4:Heat autoscaling 補課<a class="headerlink" href="#4heat-autoscaling" title="Permanent link">&para;</a></h3>
+<p><a href="../sprint3-day5-barbican-heat/">Day 5</a> 教了 Heat 的範本與 stack,但沒教<strong>自動擴縮</strong>。補上三個資源:</p>
+<table>
+<thead>
+<tr>
+<th>資源</th>
+<th>做什麼</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OS::Heat::AutoScalingGroup</code></td>
+<td>一群同規格的 VM,有 <code>min_size</code> / <code>max_size</code> 上下限</td>
+</tr>
+<tr>
+<td><code>OS::Heat::ScalingPolicy</code></td>
+<td>一個「加一台」或「減一台」的動作,附帶 <code>cooldown</code></td>
+</tr>
+<tr>
+<td><code>OS::Aodh::PrometheusAlarm</code></td>
+<td>條件成立時去打 ScalingPolicy 的 webhook</td>
+</tr>
+</tbody>
+</table>
+<p>先確認 Heat 認得這個告警型別:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>openstack<span class="w"> </span>orchestration<span class="w"> </span>resource<span class="w"> </span><span class="nb">type</span><span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>aodh
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>| OS::Aodh::Alarm                              |
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>| OS::Aodh::CompositeAlarm                     |
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>| OS::Aodh::EventAlarm                         |
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>| OS::Aodh::GnocchiAggregationByMetricsAlarm   |
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>| OS::Aodh::GnocchiAggregationByResourcesAlarm |
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>| OS::Aodh::GnocchiResourcesAlarm              |
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>| OS::Aodh::LBMemberHealthAlarm                |
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>| OS::Aodh::PrometheusAlarm                    |
+</span></code></pre></div>
+<p>三種 Gnocchi 型別仍在(教科書那條路),而 <code>PrometheusAlarm</code> 也已經是一等公民——<a href="../sprint4-day26-sprint5-preview/">Day 26</a> 講的路線之爭,在這張清單上看得一清二楚。</p>
+<h3 id="step-5">步驟 5:接起來,看它自己跑完一輪<a class="headerlink" href="#step-5" title="Permanent link">&para;</a></h3>
+<p>完整範本(<a href="#full-template"><code>day29-autoscale.yaml</code></a>在本頁最後):</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="w">  </span><span class="nt">cpu_high</span><span class="p">:</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Aodh::PrometheusAlarm</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">      </span><span class="nt">query</span><span class="p">:</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">          </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;avg(rate(cpu{project_id=&quot;PID&quot;}[5m]))</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">1000000000&#39;</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">          </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">            </span><span class="nt">PID</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">project_id</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">      </span><span class="nt">comparison_operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gt</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="w">      </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">      </span><span class="nt">alarm_actions</span><span class="p">:</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trust+url</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">            </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="w">              </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">scale_out</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">signal_url</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+<p>三個地方值得停下來看:</p>
+<p><strong><code>rate(cpu[...]) / 1000000000</code></strong>——<code>cpu</code> 是累計的 CPU 奈秒數,取速率再除以 10⁹ 就是「用掉幾顆核」。窗口 <code>[5m]</code> 不能再短,原因見<a href="#mine-4">地雷 4</a>。</p>
+<p><strong><code>trust+url</code></strong>——這不是筆誤,<code>str_replace</code> 會把它變成 <code>trust+http://...</code>。<strong>官方 autoscaling 範例用的 <code>alarm_url</code> 在本課環境會回 403</strong>(<a href="#mine-3">地雷 3</a>),這是今天最大的一顆。</p>
+<p><strong>用 <code>project_id</code> 收斂</strong>——就是前面說的那個先天限制。</p>
+<p>以租戶身分建立 stack(這朵雲的日常操作本來就不該全用 admin):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>openstack<span class="w"> </span>stack<span class="w"> </span>create<span class="w"> </span>day29-as<span class="w"> </span>-t<span class="w"> </span>~/day29-autoscale.yaml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--parameter<span class="w"> </span><span class="nv">project_id</span><span class="o">=</span><span class="nv">$TEAM_A</span><span class="w"> </span>--wait
+</span></code></pre></div>
+<p>範本裡的 VM 開機後會燒 CPU 一段時間再自己停。接下來<strong>什麼都不用做</strong>,看它跑:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>13:08:28  aodh notifier  →  gets response: 200 OK
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>13:08:30  ASG 巢狀 stack UPDATE started
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>13:08:43  UPDATE completed          →  2 台
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>13:08:44  scale_out  Remaining as alarm due to 1 samples outside threshold,
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>                     most recent: 0.40572612101851857
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>13:13:28  aodh notifier  →  gets response: 200 OK
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>13:13:45  scale_out  most recent: 0.6274204384722222   →  3 台(max_size)
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>13:43:36  scale_in   Transition to ok due to 1 samples inside threshold,
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>                     most recent: 0.25709375           →  2 台
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>13:48:36  scale_in   Remaining as ok ... most recent: 0.010958333333333334
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>                                                       →  1 台(min_size)
+</span></code></pre></div>
+<p><strong>1 → 2 → 3 → 2 → 1</strong>,負載上升擴到天花板,燒錄結束縮回地板。</p>
+<p>那些 <code>most recent:</code> 的數字是決定性證據:<strong>Heat 收到的訊號裡帶著 Aodh 現算出來的 PromQL 結果</strong>,而且每次都不一樣(0.4057 → 0.6274 → 0.2571 → 0.0110),忠實反映負載的起落。</p>
+<p>同一段時間,把告警用的那條查詢畫成圖,整件事一眼看完:</p>
+<p><img alt="Prometheus 畫出 team-a 平均 CPU:爬過 0.4 門檻、在 0.75 觸頂、負載結束後落回 0" src="../../assets/screenshots/day29-prometheus-autoscale.png" /></p>
+<p>對照著看更有意思:</p>
+<ul>
+<li><strong>13:10 與 13:15 那兩個凹陷</strong>——正是新機器加進來、還沒開始燒 CPU,把平均值拉低的瞬間。這就是前面那條回饋虛線的實體。</li>
+<li><strong>13:19 之後平在 0.75</strong>——三台全在燒,<code>max_size</code> 到頂,再高也不會有第四台。</li>
+<li><strong>13:38 起一路下滑到 0</strong>——燒錄陸續結束,<code>ok_actions</code> 把機器收回 <code>min_size</code>。</li>
+</ul>
+<div class="admonition question">
+<p class="admonition-title">Aodh 的告警清單在哪個主控台看?</p>
+<p><strong>哪裡都看不到——Aodh 沒有面板。</strong> <a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 那則說明提過:kolla 的 horizon role 逐一列出各服務時,Ceilometer 只有政策檔,<strong>Aodh 連一列都沒有</strong>。</p>
+<p>所以今天的告警只能用 <code>openstack alarm</code> 系列指令或 API 查——而<a href="#mine-5">地雷 5</a> 還告訴你,連 CLI 都看不全(prometheus 型告警的規則要問 API)。<strong>Sprint 5 到目前為止唯一有畫面的服務是 CloudKitty</strong>,那是 <a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 的事。</p>
+<p>上面那張 Prometheus 曲線之所以珍貴,正是因為它是這一天<strong>唯一看得見</strong>的東西。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">凹陷差點造成誤判</p>
+<p>13:10 那個凹陷掉到 <strong>0.28</strong>,已經低於 0.4 的門檻。如果 Aodh 剛好在那一刻評估,它會判定 <code>ok</code> 並開始縮容——<strong>擴容才剛做完就反手縮回去</strong>,也就是 flapping。這一輪沒被觸發,只因為 <code>evaluation_interval</code> 預設 300 秒、剛好跨過那個凹陷——<strong>那是時間點的巧合,不是機制的保證</strong>。擋 flapping 要靠 <code>cooldown</code> 明確設定,不能指望評估週期夠鈍。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">最後一筆是 <code>ok → ok</code>,不是轉態</p>
+<p><code>repeat_actions</code> 預設為 <code>true</code>,意思是<strong>只要還停在該狀態,每次評估都會再送一次動作</strong>。所以縮容不是只發生一次,而是一路把機器數走回 <code>min_size</code>。這個預設值決定了擴縮的行為,值得記住。</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">別用機器數量判斷擴容成功</p>
+<p>ASG 數量從 1 變 2,在<strong>滾動更新</strong>(改了範本觸發 VM 汰換)期間也會出現——先建新的再刪舊的,中間必然短暫看到 2 台。兩者在數字上一模一樣,光看台數分不出來。<strong>要看 notifier 的 <code>200 OK</code> 加上 stack event 裡的 signal 記錄</strong>,那才是因果。</p>
+</div>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>驗證</th>
+<th>判準</th>
+<th>本課環境的結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aodh 容器</td>
+<td>api / evaluator / notifier / listener 全 healthy</td>
+<td>符合</td>
+</tr>
+<tr>
+<td>插件載入</td>
+<td>evaluator log 無 <code>Could not load 'prometheus'</code></td>
+<td>載入失敗次數 0</td>
+</tr>
+<tr>
+<td><strong>告警雙向</strong></td>
+<td>門檻 1 → <code>alarm</code>;門檻 99 → <code>ok</code></td>
+<td>兩個方向都對(API 原始 JSON 為證)</td>
+</tr>
+<tr>
+<td>webhook 送達</td>
+<td>notifier 回應 2xx</td>
+<td><code>gets response: 200 OK</code></td>
+</tr>
+<tr>
+<td><strong>擴容全鏈</strong></td>
+<td>告警觸發後 Heat 真的加機器</td>
+<td>200 OK → 2 秒後 ASG UPDATE → 新 VM</td>
+</tr>
+<tr>
+<td>訊號內容</td>
+<td>Heat 收到的 signal 帶真實 PromQL 值</td>
+<td><code>most recent: 0.40572612101851857</code></td>
+</tr>
+<tr>
+<td>縮容</td>
+<td>負載結束後回到 <code>min_size</code></td>
+<td>3 → 2 → 1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:Aodh 不讀 Keystone 服務目錄,而 kolla 不產它要的檔<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>Could not load 'prometheus': Can't find prometheus host and port configuration</code>。</p>
+<p><strong>根因</strong>:兩層。第一層,<code>observabilityclient</code> 找 Prometheus 的方式是<strong>讀設定檔</strong>,不是查 Keystone 目錄——它依序找 <code>/var/lib/aodh/.config/openstack/</code> 與 <code>/etc/openstack/</code> 下的 <code>prometheus.yaml</code>,只認得 <code>host</code> / <code>port</code> / <code>ca_cert</code> 三個鍵(或環境變數 <code>PROMETHEUS_HOST</code> / <code>PROMETHEUS_PORT</code>)。第二層,<strong>kolla 完全不產生這個檔</strong>。</p>
+<p><strong>解法</strong>:自己寫 <code>/etc/openstack/prometheus.yaml</code>,再用 <code>aodh_extra_volumes</code> 掛進容器。</p>
+<p><strong>教訓</strong>:OpenStack 裡「一個服務怎麼找到另一個服務」有三種機制——Keystone 服務目錄、設定檔、環境變數——而且<strong>沒有統一規則</strong>。在 Keystone 註冊一個 <code>metric</code> endpoint 對這條路完全無效,因為 Aodh 根本不看目錄。遇到「找不到某服務」時,先確認它用的是哪一種,再動手。</p>
+<h3 id="mine-2">地雷 2:Prometheus 有認證,而這條鏈上沒有地方填帳密<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:設定檔補好、插件載入成功,換成 <code>[401] Unauthorized</code>。</p>
+<p><strong>根因</strong>:Day 21 的 kolla Prometheus 帶 basic auth。但 <code>observabilityclient</code> 的設定檔 schema <strong>只有 host / port / ca_cert,沒有帳密欄位</strong>——底層 client 明明有 <code>set_basic_auth()</code>,整條鏈卻沒人呼叫它。</p>
+<p><strong>解法</strong>:client 是拿 host 字串直接拼 URL 的,所以把憑證內嵌進去可行:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">admin:&lt;prometheus_password&gt;@10.0.0.4</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9091</span>
+</span></code></pre></div>
+<p><strong>教訓</strong>:這是「上游功能缺口」的典型長相——不是 bug,是沒人接上。另一條路是把 Prometheus 的認證關掉,但那是<strong>為了讓監控能用而拆掉監控的門鎖</strong>,不該是預設反應。先找不犧牲安全的解法。</p>
+<h3 id="mine-3">地雷 3:官方 autoscaling 範例的 <code>alarm_url</code> 會回 403<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:告警正確轉態、notifier 也確實送出了,但 Heat 回:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>Notifying alarm &lt;...&gt; gets response: 403 AccessDenied.
+</span></code></pre></div>
+<p>手動打那個 URL,拿到完整訊息:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nt">&lt;ErrorResponse&gt;&lt;Error&gt;&lt;Type&gt;</span>Sender<span class="nt">&lt;/Type&gt;&lt;Code&gt;</span>AccessDenied<span class="nt">&lt;/Code&gt;</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="nt">&lt;Message&gt;</span>User<span class="w"> </span>is<span class="w"> </span>not<span class="w"> </span>authorized<span class="w"> </span>to<span class="w"> </span>perform<span class="w"> </span>action<span class="nt">&lt;/Message&gt;&lt;/Error&gt;&lt;/ErrorResponse&gt;</span>
+</span></code></pre></div>
+<p><strong>根因</strong>:<code>OS::Heat::ScalingPolicy</code> 的 <code>alarm_url</code> 是一個 <strong>CFN 風格的 EC2 簽章 URL</strong>。Heat 收到後會把憑證送去 Keystone 的 <code>/v3/ec2tokens</code> 驗證,而那裡回 401:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>INFO  heat.api.aws.ec2token  Authenticating with http://10.0.0.4:5000/v3/ec2tokens
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>ERROR heat.api.aws.ec2token  Failed to obtain a Keystone token from None:
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>      keystoneauth1.exceptions.http.Unauthorized: (HTTP 401)
+</span></code></pre></div>
+<p><strong>解法</strong>:改用現代路線 <code>trust+url</code>——Aodh 的 <code>trust+http</code> 通知器用 <strong>Keystone trust</strong> 拿 token 打 Heat 的原生 API(8004),完全不碰 EC2 簽章:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="w">      </span><span class="nt">alarm_actions</span><span class="p">:</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trust+url</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">            </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">              </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">scale_out</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">signal_url</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+<p>改完立刻從 403 變 200 OK。確認 Aodh 認得這個 scheme:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>aodh_notifier<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="s2">from importlib.metadata import entry_points</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="s2">for ep in entry_points(group=&#39;aodh.notifier&#39;): print(ep.name)&quot;</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>http  https  log  test  trust+heat  trust+http  trust+https  trust+zaqar  zaqar
+</span></code></pre></div>
+<p><strong>教訓</strong>:這顆最值錢,因為<strong>官方文件的 autoscaling 範本至今仍寫 <code>alarm_url</code></strong>。照著抄不會語法錯、stack 會建成功、告警也會轉態——只有最後一棒默默 403。<strong>「範例能跑」和「範例是對的」是兩件事</strong>,而年代久遠的範例最容易在認證機制上過期。</p>
+<h3 id="mine-4">地雷 4:取樣太稀,告警卡在 <code>insufficient data</code> 而且不叫<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:告警停在 <code>insufficient data</code>,PromQL 查詢回空,零錯誤訊息。</p>
+<p><strong>判讀關鍵</strong>:先把告警用的那條查詢<strong>自己打一次</strong>。這是本章最有用的除錯手勢——它一秒分辨「Aodh 壞了」和「查詢本來就沒結果」:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="k">for</span><span class="w"> </span>W<span class="w"> </span><span class="k">in</span><span class="w"> </span>1m<span class="w"> </span>2m<span class="w"> </span>3m<span class="w"> </span>5m<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">  </span>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>--get<span class="w"> </span>http://10.0.0.4:9091/api/v1/query<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">    </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;query=avg(rate(cpu{project_id=\&quot;</span><span class="nv">$TEAM_A</span><span class="s2">\&quot;}[</span><span class="nv">$W</span><span class="s2">]))&quot;</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="k">done</span>
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>rate(cpu[1m]) → 空(算不出來)
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>rate(cpu[2m]) → 0.0
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>rate(cpu[5m]) → 0.0
+</span></code></pre></div>
+<p><strong>根因</strong>:兩件事相乘。<code>rate()</code> 需要窗口內<strong>至少兩個取樣點</strong>才算得出速率;而 Ceilometer 的預設取樣間隔是 <strong>300 秒</strong>:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># 容器內 /etc/ceilometer/polling.yaml</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nt">sources</span><span class="p">:</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">some_pollsters</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span>
+</span></code></pre></div>
+<p>五分鐘一個點,<code>[1m]</code> 的窗口裡永遠只有 0~1 個點 → <code>rate()</code> 回空 → 告警算不出來 → <code>insufficient data</code>。</p>
+<p><strong>解法</strong>:把取樣調密,窗口留寬:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/ceilometer
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>ceilometer_central<span class="w"> </span>cat<span class="w"> </span>/etc/ceilometer/polling.yaml<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/interval: 300/interval: 60/&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/ceilometer/polling.yaml
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>ceilometer
+</span></code></pre></div>
+<p>60 秒取樣配 <code>[5m]</code> 窗口 = 窗口內五個點,穩。</p>
+<p><strong>教訓</strong>:<code>insufficient data</code> <strong>既不觸發 <code>alarm_actions</code> 也不觸發 <code>ok_actions</code></strong>——整條自動化鏈就這樣靜靜地不動,沒有錯誤、沒有告警、沒有任何人通知你。<strong>它是三個狀態裡最危險的一個</strong>,因為 <code>ok</code> 至少代表「算過了,沒事」,而 <code>insufficient data</code> 代表「根本沒算」。看到它,先查資料源,別查 Aodh。</p>
+<div class="admonition tip">
+<p class="admonition-title">順帶算一下端到端延遲</p>
+<p>Ceilometer 取樣 60s + <code>rate()</code> 窗口 5m + <strong>Aodh 的 <code>evaluation_interval</code> 預設 300s</strong> —— 從負載真的上升到機器真的長出來,最壞情況要好幾分鐘。這不是故障,是這條鏈的物理極限。要更快就得三個一起調,而每一個都有代價。</p>
+</div>
+<h3 id="mine-5">地雷 5:CLI 的 <code>rule</code> 欄對 prometheus 告警顯示 <code>null</code><a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>openstack alarm show &lt;name&gt; -f json</code> 的 <code>rule</code> 欄是 <code>null</code>,看起來像規則沒設定。</p>
+<p><strong>根因</strong>:prometheus 型告警的規則存在 <strong><code>prometheus_rule</code></strong> 這個欄位裡,CLI 的 <code>rule</code> 欄對不上,於是顯示 <code>null</code>。規則其實好端端在那。</p>
+<p><strong>解法</strong>:驗規則就問 API。</p>
+<p><strong>教訓</strong>:這是今天第一顆「<strong>顯示不等於真相</strong>」——CLI 沒說謊,它只是沒顯示。<a href="../sprint5-day27-multi-tenant-governance/">Day 27</a> 還有一顆更狠的同族(查詢直接回空,而限制正在執行)。<strong>當 CLI 的輸出讓你想說「這不可能」時,換個介面問一次。</strong></p>
+<h2 id="full-template">完整範本<a class="headerlink" href="#full-template" title="Permanent link">&para;</a></h2>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nt">heat_template_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2021-04-16</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Day 29 - PromQL 驅動的自動擴縮</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="nt">parameters</span><span class="p">:</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">  </span><span class="nt">project_id</span><span class="p">:</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">用 project_id 收斂告警範圍(Prometheus 路線沒有 server_group label)</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="w">  </span><span class="nt">asg</span><span class="p">:</span>
+</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Heat::AutoScalingGroup</span>
+</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-28-15"><a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a><span class="w">      </span><span class="nt">min_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-28-16"><a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a><span class="w">      </span><span class="nt">max_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-28-17"><a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a><span class="w">      </span><span class="nt">desired_capacity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-28-18"><a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a><span class="w">      </span><span class="nt">resource</span><span class="p">:</span>
+</span><span id="__span-28-19"><a id="__codelineno-28-19" name="__codelineno-28-19" href="#__codelineno-28-19"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Nova::Server</span>
+</span><span id="__span-28-20"><a id="__codelineno-28-20" name="__codelineno-28-20" href="#__codelineno-28-20"></a><span class="w">        </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-28-21"><a id="__codelineno-28-21" name="__codelineno-28-21" href="#__codelineno-28-21"></a><span class="w">          </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cirros</span>
+</span><span id="__span-28-22"><a id="__codelineno-28-22" name="__codelineno-28-22" href="#__codelineno-28-22"></a><span class="w">          </span><span class="nt">flavor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">m1.tiny</span>
+</span><span id="__span-28-23"><a id="__codelineno-28-23" name="__codelineno-28-23" href="#__codelineno-28-23"></a><span class="w">          </span><span class="nt">networks</span><span class="p">:</span>
+</span><span id="__span-28-24"><a id="__codelineno-28-24" name="__codelineno-28-24" href="#__codelineno-28-24"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">team-a-net</span>
+</span><span id="__span-28-25"><a id="__codelineno-28-25" name="__codelineno-28-25" href="#__codelineno-28-25"></a><span class="w">          </span><span class="nt">user_data_format</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RAW</span>
+</span><span id="__span-28-26"><a id="__codelineno-28-26" name="__codelineno-28-26" href="#__codelineno-28-26"></a><span class="w">          </span><span class="nt">user_data</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+</span><span id="__span-28-27"><a id="__codelineno-28-27" name="__codelineno-28-27" href="#__codelineno-28-27"></a><span class="w">            </span><span class="no">#!/bin/sh</span>
+</span><span id="__span-28-28"><a id="__codelineno-28-28" name="__codelineno-28-28" href="#__codelineno-28-28"></a><span class="w">            </span><span class="no"># 開機後燒 CPU 30 分鐘再自己停</span>
+</span><span id="__span-28-29"><a id="__codelineno-28-29" name="__codelineno-28-29" href="#__codelineno-28-29"></a><span class="w">            </span><span class="no"># cirros 的 busybox 沒有 timeout 指令,只能自己算時間</span>
+</span><span id="__span-28-30"><a id="__codelineno-28-30" name="__codelineno-28-30" href="#__codelineno-28-30"></a><span class="w">            </span><span class="no">(</span>
+</span><span id="__span-28-31"><a id="__codelineno-28-31" name="__codelineno-28-31" href="#__codelineno-28-31"></a><span class="w">              </span><span class="no">END=$(( $(date +%s) + 1800 ))</span>
+</span><span id="__span-28-32"><a id="__codelineno-28-32" name="__codelineno-28-32" href="#__codelineno-28-32"></a><span class="w">              </span><span class="no">while [ &quot;$(date +%s)&quot; -lt &quot;$END&quot; ]; do</span>
+</span><span id="__span-28-33"><a id="__codelineno-28-33" name="__codelineno-28-33" href="#__codelineno-28-33"></a><span class="w">                </span><span class="no">i=0; while [ $i -lt 200000 ]; do i=$((i+1)); done</span>
+</span><span id="__span-28-34"><a id="__codelineno-28-34" name="__codelineno-28-34" href="#__codelineno-28-34"></a><span class="w">              </span><span class="no">done</span>
+</span><span id="__span-28-35"><a id="__codelineno-28-35" name="__codelineno-28-35" href="#__codelineno-28-35"></a><span class="w">            </span><span class="no">) &amp;</span>
+</span><span id="__span-28-36"><a id="__codelineno-28-36" name="__codelineno-28-36" href="#__codelineno-28-36"></a>
+</span><span id="__span-28-37"><a id="__codelineno-28-37" name="__codelineno-28-37" href="#__codelineno-28-37"></a><span class="w">  </span><span class="nt">scale_out</span><span class="p">:</span>
+</span><span id="__span-28-38"><a id="__codelineno-28-38" name="__codelineno-28-38" href="#__codelineno-28-38"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Heat::ScalingPolicy</span>
+</span><span id="__span-28-39"><a id="__codelineno-28-39" name="__codelineno-28-39" href="#__codelineno-28-39"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-28-40"><a id="__codelineno-28-40" name="__codelineno-28-40" href="#__codelineno-28-40"></a><span class="w">      </span><span class="nt">adjustment_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_in_capacity</span>
+</span><span id="__span-28-41"><a id="__codelineno-28-41" name="__codelineno-28-41" href="#__codelineno-28-41"></a><span class="w">      </span><span class="nt">auto_scaling_group_id</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">asg</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-28-42"><a id="__codelineno-28-42" name="__codelineno-28-42" href="#__codelineno-28-42"></a><span class="w">      </span><span class="nt">cooldown</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+</span><span id="__span-28-43"><a id="__codelineno-28-43" name="__codelineno-28-43" href="#__codelineno-28-43"></a><span class="w">      </span><span class="nt">scaling_adjustment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-28-44"><a id="__codelineno-28-44" name="__codelineno-28-44" href="#__codelineno-28-44"></a>
+</span><span id="__span-28-45"><a id="__codelineno-28-45" name="__codelineno-28-45" href="#__codelineno-28-45"></a><span class="w">  </span><span class="nt">scale_in</span><span class="p">:</span>
+</span><span id="__span-28-46"><a id="__codelineno-28-46" name="__codelineno-28-46" href="#__codelineno-28-46"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Heat::ScalingPolicy</span>
+</span><span id="__span-28-47"><a id="__codelineno-28-47" name="__codelineno-28-47" href="#__codelineno-28-47"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-28-48"><a id="__codelineno-28-48" name="__codelineno-28-48" href="#__codelineno-28-48"></a><span class="w">      </span><span class="nt">adjustment_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_in_capacity</span>
+</span><span id="__span-28-49"><a id="__codelineno-28-49" name="__codelineno-28-49" href="#__codelineno-28-49"></a><span class="w">      </span><span class="nt">auto_scaling_group_id</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_resource</span><span class="p">:</span><span class="w"> </span><span class="nv">asg</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-28-50"><a id="__codelineno-28-50" name="__codelineno-28-50" href="#__codelineno-28-50"></a><span class="w">      </span><span class="nt">cooldown</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+</span><span id="__span-28-51"><a id="__codelineno-28-51" name="__codelineno-28-51" href="#__codelineno-28-51"></a><span class="w">      </span><span class="nt">scaling_adjustment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+</span><span id="__span-28-52"><a id="__codelineno-28-52" name="__codelineno-28-52" href="#__codelineno-28-52"></a>
+</span><span id="__span-28-53"><a id="__codelineno-28-53" name="__codelineno-28-53" href="#__codelineno-28-53"></a><span class="w">  </span><span class="nt">cpu_high</span><span class="p">:</span>
+</span><span id="__span-28-54"><a id="__codelineno-28-54" name="__codelineno-28-54" href="#__codelineno-28-54"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">OS::Aodh::PrometheusAlarm</span>
+</span><span id="__span-28-55"><a id="__codelineno-28-55" name="__codelineno-28-55" href="#__codelineno-28-55"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+</span><span id="__span-28-56"><a id="__codelineno-28-56" name="__codelineno-28-56" href="#__codelineno-28-56"></a><span class="w">      </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">team-a 平均 CPU 超過 0.4 顆核就加機器</span>
+</span><span id="__span-28-57"><a id="__codelineno-28-57" name="__codelineno-28-57" href="#__codelineno-28-57"></a><span class="w">      </span><span class="nt">query</span><span class="p">:</span>
+</span><span id="__span-28-58"><a id="__codelineno-28-58" name="__codelineno-28-58" href="#__codelineno-28-58"></a><span class="w">        </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-28-59"><a id="__codelineno-28-59" name="__codelineno-28-59" href="#__codelineno-28-59"></a><span class="w">          </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;avg(rate(cpu{project_id=&quot;PID&quot;}[5m]))</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">1000000000&#39;</span>
+</span><span id="__span-28-60"><a id="__codelineno-28-60" name="__codelineno-28-60" href="#__codelineno-28-60"></a><span class="w">          </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-28-61"><a id="__codelineno-28-61" name="__codelineno-28-61" href="#__codelineno-28-61"></a><span class="w">            </span><span class="nt">PID</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_param</span><span class="p">:</span><span class="w"> </span><span class="nv">project_id</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-28-62"><a id="__codelineno-28-62" name="__codelineno-28-62" href="#__codelineno-28-62"></a><span class="w">      </span><span class="nt">comparison_operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gt</span>
+</span><span id="__span-28-63"><a id="__codelineno-28-63" name="__codelineno-28-63" href="#__codelineno-28-63"></a><span class="w">      </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span id="__span-28-64"><a id="__codelineno-28-64" name="__codelineno-28-64" href="#__codelineno-28-64"></a><span class="w">      </span><span class="nt">alarm_actions</span><span class="p">:</span>
+</span><span id="__span-28-65"><a id="__codelineno-28-65" name="__codelineno-28-65" href="#__codelineno-28-65"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-28-66"><a id="__codelineno-28-66" name="__codelineno-28-66" href="#__codelineno-28-66"></a><span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trust+url</span>
+</span><span id="__span-28-67"><a id="__codelineno-28-67" name="__codelineno-28-67" href="#__codelineno-28-67"></a><span class="w">            </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-28-68"><a id="__codelineno-28-68" name="__codelineno-28-68" href="#__codelineno-28-68"></a><span class="w">              </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">scale_out</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">signal_url</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-28-69"><a id="__codelineno-28-69" name="__codelineno-28-69" href="#__codelineno-28-69"></a><span class="w">      </span><span class="nt">ok_actions</span><span class="p">:</span>
+</span><span id="__span-28-70"><a id="__codelineno-28-70" name="__codelineno-28-70" href="#__codelineno-28-70"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">str_replace</span><span class="p">:</span>
+</span><span id="__span-28-71"><a id="__codelineno-28-71" name="__codelineno-28-71" href="#__codelineno-28-71"></a><span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">trust+url</span>
+</span><span id="__span-28-72"><a id="__codelineno-28-72" name="__codelineno-28-72" href="#__codelineno-28-72"></a><span class="w">            </span><span class="nt">params</span><span class="p">:</span>
+</span><span id="__span-28-73"><a id="__codelineno-28-73" name="__codelineno-28-73" href="#__codelineno-28-73"></a><span class="w">              </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> get_attr</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">scale_in</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">signal_url</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title"><code>timeout</code> 那行註解不是廢話</p>
+<p>第一版寫的是 <code>timeout 1800 sh -c 'while :; do :; done' &amp;</code>,結果 VM 靜靜地閒置,平均 CPU 永遠 0。原因在 console log 裡:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>/run/cirros/datasource/data/user-data: line 3: timeout: not found
+</span></code></pre></div>
+<p><strong>cirros 的 busybox 沒有 <code>timeout</code> 指令</strong>,腳本第三行就死了,而 Nova 照樣回報 <code>ACTIVE</code>。<strong>VM 開起來 ≠ 你的 user_data 跑起來</strong>,差一個 <code>openstack console log show</code> 才看得到。</p>
+</div>
+<h2 id="_4">帶得走的東西<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>insufficient data</code> 是三個告警狀態裡最危險的一個。</strong> <code>ok</code> 代表「算過了,沒事」;<code>insufficient data</code> 代表「根本沒算」,而它不觸發任何動作、不產生任何錯誤。看到它先查資料源,別查告警系統。</li>
+<li><strong>「範例能跑」和「範例是對的」是兩件事。</strong> 官方 autoscaling 範本至今寫著 <code>alarm_url</code>——語法對、stack 建得起來、告警也會轉態,只有最後一棒默默 403。年代久遠的範例最容易在認證機制上過期。</li>
+<li><strong>自動擴縮是閉環控制系統,不是單向管線。</strong> 加機器會稀釋平均值,平均值又決定要不要再加——所以擴容後必然出現凹陷,而 <code>cooldown</code> 是為那個凹陷存在的,不能指望評估週期夠鈍剛好跨過去。</li>
+<li><strong>端到端延遲是取樣間隔 × <code>rate()</code> 窗口 × 評估間隔的疊加。</strong> 每一項都有代價,要更快就得三個一起調。</li>
+<li><strong>VM 開起來不等於你的 user_data 跑起來。</strong> Nova 回報 <code>ACTIVE</code> 只代表機器活著,腳本第三行死掉它不會告訴你——差一個 <code>console log show</code> 才看得到。</li>
+</ul>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/aodh/2025.1/">Aodh 官方文件</a></strong> —— 告警型別、評估器、通知器的完整說明。</li>
+<li><strong><a href="https://docs.openstack.org/heat/2025.1/template_guide/index.html">Heat autoscaling 範本指南</a></strong> —— <code>AutoScalingGroup</code> / <code>ScalingPolicy</code> 的完整屬性;注意其 autoscaling 範例仍使用 <code>alarm_url</code>(見<a href="#mine-3">地雷 3</a>)。</li>
+<li><strong><a href="https://prometheus.io/docs/prometheus/latest/querying/functions/#rate">Prometheus <code>rate()</code> 的使用注意</a></strong> —— 「窗口內至少兩個點」的權威出處;本章<a href="#mine-4">地雷 4</a> 的理論根據。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html">Kolla-Ansible 的 Telemetry 指南</a></strong> —— Ceilometer / Aodh 在 kolla 這側的官方對照。</li>
+</ul>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>雲會自己反應了。<a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 把同一批 Prometheus 數字換成<strong>錢</strong>——CloudKitty 分租戶出帳單,而且會再撞到一顆「帳單永遠 0 元卻不報錯」的雷。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到頂端
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="頁腳" >
+        
+          
+          <a href="../sprint5-day28-ceilometer-metering/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 28 · 計量管線(Ceilometer)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 28 · 計量管線(Ceilometer)
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sprint5-day30-cloudkitty-rating/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 30 · 計費(CloudKitty)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 30 · 計費(CloudKitty)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
