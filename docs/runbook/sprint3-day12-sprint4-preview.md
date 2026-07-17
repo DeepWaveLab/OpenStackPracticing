@@ -80,7 +80,7 @@ Swift 是 OpenStack 的元老級物件儲存服務,專案至今仍在維護;但 
 
 這反映的是整個業界的走向:物件儲存的主流實作已經是 **Ceph**。一套 Ceph 同時提供三種儲存——區塊(Cinder 後端)、檔案(Manila 後端)、物件(RGW),不需要為了物件儲存另外維護一套獨立系統。而 RGW 同時支援 **S3 與 Swift 兩種 API**,原本寫給 Swift 的應用程式指向 RGW 可以直接沿用。
 
-因此 Sprint 4 用「一天 Ceph、一天 RGW」來教物件儲存:Swift 的 API 照樣學到,還多學到 S3 與 Ceph 本身;Day 15 的 Manila 也建立在同一套 Ceph 上。
+因此 Sprint 4 用「一天 Ceph、一天 RGW」來教物件儲存:Swift 的 API 照樣學到,還多學到 S3 與 Ceph 本身;Day 16 的 Manila 也建立在同一套 Ceph 上。
 
 ### 為什麼深層原理排在服務之後
 

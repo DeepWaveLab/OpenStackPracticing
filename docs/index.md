@@ -25,6 +25,11 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 </div>
 
+!!! note "這門課適合誰、需要什麼底子"
+    - **平台 / DevOps / SRE 工程師**:正中靶心——你會親手把公有雲的每塊積木蓋一遍,搞懂它們底下是誰在動工。
+    - **後端 / 應用工程師**:把它當「消費雲的人的 X 光機」——PVC、負載平衡、代管資料庫、額度、SSO、帳單,底下到底發生什麼,[Day 2 的資源全流程](runbook/sprint3-day2-openstack-resource-flow.md) 與 [Day 8 的 K8s 對應表](runbook/sprint3-day8-e2e-workload-cluster.md) 會給你答案。**前面幾天是純基礎建設,別在開機那天就離開**——真正的 payoff 從 Day 2 開始。
+    - **先備知識**:會 Linux 命令列與基本網路就能上手。**Day 6 起會用到 Kubernetes**(kubectl、pod、deployment),不熟的話先花半小時看官方的 [Learn Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/) 再回來;**Day 28 起會用到 PromQL** 查詢語言,屆時照抄可行,想變通可先補一點 Prometheus 查詢基礎。
+
 ## 這朵雲能做成什麼
 
 你在公有雲用過的東西,OpenStack 幾乎都有對應的積木——這門課會親手把它們一塊塊拼起來:

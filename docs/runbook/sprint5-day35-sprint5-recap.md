@@ -40,13 +40,15 @@ flowchart TB
 | 加密 | 全部 http | 全站 https(haproxy 終結) |
 | 稽核 | 各服務 log 各記各的 | CADF 統一格式,一次查詢串起證據鏈 |
 
-## 「能當生意經營」的三個證據
+## 從「敢動」到「能當生意經營」,靠的就是這三件事
 
-貫穿這個 Sprint 的方法論還是那條:**沒有驗證過的能力,不算能力。** 三件企業真正在意的事,都不是靠文件宣稱,是靠一次可判決的演練:
+生意在意的無非三件事:收得到錢、出事有人扛、對稽核交代得出來。這個 Sprint 沒有一件是靠投影片宣稱的,每一件都留下一次跑得出來、對得起帳的結果——沒驗證過的能力不算能力,這條線從頭拉到尾。
 
-1. **能收錢**([Day 27](sprint5-day27-multi-tenant-governance.md)→[30](sprint5-day30-cloudkitty-rating.md)):從租戶結構、計量、到帳單,一條鏈接到底,而且逐項對帳——兩個真實租戶(team-a $0.75、team-b $0.16)、兩種計費項(機器 + 儲存),金額各自不同且互不汙染。**全程沒有 Gnocchi**,走的是官方現行的 Prometheus 路線。
-2. **能負責**([Day 31](sprint5-day31-masakari-ha.md)):不是「應該會自癒」,是真的 `az vm deallocate` 拔掉一台 compute 的電源,看著它上面兩台 VM 在別台復活——boot-from-volume 那台還帶著同一顆系統碟。故障演練壞在對的層級,結果才算數。
-3. **能交代**([Day 32](sprint5-day32-full-tls.md)→[34](sprint5-day34-cadf-audit.md)):對稽核員的三份答卷——傳輸全加密(TLS)、身分接軌企業且雲裡不存密碼(Federation)、每個動作留下 CADF 軌跡(稽核)。最後那份答卷用一次查詢就攤開了「audit-victim 這台 VM 是 `user=1384190dc012` 在 `12:59:14` 刪的」。
+收錢那條,從租戶結構一路接到帳單(從 [Day 27](sprint5-day27-multi-tenant-governance.md) 到 [Day 30](sprint5-day30-cloudkitty-rating.md)),而且是逐項對過帳的:team-a 收 $0.75、team-b 收 $0.16,機器費和儲存費分開算,兩個租戶的數字互不干擾;整條計費鏈沒碰 Gnocchi,走的是官方現在主推的 Prometheus 路線。
+
+出事的時候([Day 31](sprint5-day31-masakari-ha.md)),沒有停在「理論上會自癒」。`az vm deallocate` 真的把一台 compute 斷了電,它上面兩台 VM 在別台機器復活;其中 boot-from-volume 那台,系統碟還是同一顆。故障演練得壞在對的層級,結果才算數。
+
+稽核員來了要看三樣([Day 32](sprint5-day32-full-tls.md) 到 [Day 34](sprint5-day34-cadf-audit.md)):傳輸全程走 https、身分接上企業 IdP 而密碼不落在雲裡、每個動作都留 CADF 軌跡。最實在的是最後那樣——一句查詢就還原了「audit-victim 這台 VM 是 `user=1384190dc012` 在 `12:59:14` 刪的」。
 
 ## 地雷回顧:四十幾顆,五種會反覆咬人的教訓
 
@@ -90,7 +92,7 @@ Sprint 5 九章記錄了四十幾顆具名地雷。挑出最有普遍性的五�
 「能當生意經營」是相對於 Sprint 4 的進步,但它離真正的生產計費/合規平台還有距離:
 
 - **計費驗到機器與儲存兩項,但沒到全成本**:[Day 30](sprint5-day30-cloudkitty-rating.md) 已補驗雙租戶的機器 + 儲存帳單(金額各自不同、對得上費率),但網路流量、浮動 IP、快照這些成本項還沒納入;真正的雲帳單要涵蓋每一種可計費資源。
-- **主機失效偵測是手動代替的**:[Day 31](sprint5-day31-masakari-ha.md) 的 hostmonitor 沒部署(需要 pacemaker),用手動送通知代替。生產環境要真的自動偵測主機死亡。
+- **主機失效偵測是手動代替的**:[Day 31](sprint5-day31-masakari-ha.md) 的 hostmonitor 沒部署(需要 pacemaker),用手動送通知代替。生產環境不只要**自動偵測**主機死亡,還要**先圍籬(fencing/STONITH)再 evacuate**——本章 demo 安全是因為 `az vm deallocate` 本身保證斷電;少了圍籬,對「看起來死了其實還活著」的主機做 evacuate 會讓同一顆 volume 兩端同時掛寫、資料毀損(詳見 Day 31 的說明)。
 - **TLS 的信任錨點是玩具**:[Day 32](sprint5-day32-full-tls.md) 的 `KollaTestCA` 是自簽的,不能上生產;內網那一跳(backend TLS)也還沒加密。
 - **Keycloak 是開發模式**:[Day 33](sprint5-day33-keycloak-federation.md) 用 `start-dev`,資料跟容器共存亡,沒接外部資料庫。
 - **稽核只接了 nova**:[Day 34](sprint5-day34-cadf-audit.md) 的 CADF 只在 nova 生效,其他服務還沒接;保存策略、稽核事件的告警也還沒設。

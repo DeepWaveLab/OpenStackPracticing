@@ -155,6 +155,11 @@ carol 建網路 sso-net → 開 sso-vm → ACTIVE
 
 **一個 Keystone 資料庫裡本來不存在的人,用公司帳號登入、拿到對應的專案與角色、開出了一台 VM。** 這就是 federation 的全部意義。
 
+!!! warning "本章驗的是 ROPC,不是真正的瀏覽器 SSO——這個界線要講清楚"
+    為了讓 CLI 能一行 `v3oidcpassword` 拿 token,前面在 client 上開了 `directAccessGrantsEnabled=true`(Direct Access Grants,也就是 **ROPC / password grant**)。ROPC 是把使用者的**真實密碼交給 client 再轉給 IdP**——這幾乎抵消了 federation「密碼不存在雲裡」的意義,而且與 MFA 不相容、OAuth 2.1 已把它移除,真實企業 IdP 幾乎都停用。**生產環境要關掉 `directAccessGrants`**,CLI 改用 device flow / authorization code flow,或直接發 [application credential](sprint5-day27-multi-tenant-governance.md)。
+
+    另一半誠實話:員工實際的入口是 **Horizon/Skyline 上點「Login with Keycloak」的瀏覽器授權碼流程**(步驟 3 的 `identity provider list` 已顯示這條信任鏈就緒)——那才是「用公司帳號登入這朵雲」故事的本體,但本章從頭到尾沒用瀏覽器登入過一次。瀏覽器 SSO 的實測留待延伸,本章驗到的是 CLI 這條路。
+
 ## 驗收 checkpoint
 
 | 驗證 | 判準 | 本課環境的結果 |

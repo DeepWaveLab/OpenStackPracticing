@@ -192,4 +192,4 @@ Trove 對建立失敗的實例會自動刪除 guest VM——**連 console log �
 
 ## 下一步
 
-[Day 19](sprint3-day12-sprint4-preview.md) 起進入階段二:不再加新東西,改為**拆開你已經用了三個星期的東西**——一個 API 請求從 token 到 qemu 的完整生命週期。(內容隨 Sprint 4 進度陸續上線)
+[Day 19](sprint4-day19-api-request-lifecycle.md) 起進入階段二:不再加新東西,改為**拆開你已經用了三個星期的東西**——一個 API 請求從 token 到 qemu 的完整生命週期。

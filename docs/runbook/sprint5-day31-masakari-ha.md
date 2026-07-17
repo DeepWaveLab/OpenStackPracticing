@@ -41,6 +41,11 @@ flowchart TB
 !!! note "今天不部署 hostmonitor"
     hostmonitor 需要 pacemaker/corosync 叢集,那是另一套 HA 中介軟體的完整安裝。本課的 lab 規模不值得為了偵測主機存活而養一整套 pacemaker——所以今天**主機級的偵測改用手動送通知**代替(見[步驟 5](#step-5))。這不是偷懶,是**把 evacuate 這個真正的動作和「怎麼偵測到主機死了」這個獨立問題拆開**:偵測方式可以換(pacemaker、外部監控、手動),但收到通知之後的搬家流程是同一套。
 
+!!! danger "偵測可以換,但『圍籬』(fencing)不能省"
+    上面說「偵測方式可以換」是對的,但漏了半句話:**pacemaker 的另一半職責是先圍籬(fencing / STONITH)再搬家**。本章 demo 之所以安全,是因為[步驟 5](#step-5) 那道 gate 用的 `az vm deallocate` **本身就是圍籬**——它保證主機真的斷電,不可能一邊被 evacuate、一邊自己還在寫硬碟。
+
+    真實世界最危險的情境是主機「看起來死了」其實還活著(網路分區:nova 連不到它,但它的 qemu 還在跑)。此時若只靠「偵測到就送通知」自動觸發 evacuate,而**沒有先強制斷電/斷存取**,同一顆 boot-from-volume 的 volume 會被兩台活著的 VM 同時掛寫——資料直接毀損,而且每個健康檢查都是綠的([「錯了不會叫」](../runbook/sprint5-day27-multi-tenant-governance.md)的又一個實例)。所以把手動通知換成自動偵測前,**圍籬是必補的前提,不是選配**。
+
 ## 一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
 
 主機級復原要「把 VM 搬到別台重建」,但如果 VM 的系統碟是主機本地磁碟,**主機死了硬碟也跟著死**——搬過去也沒東西可開。所以 evacuate 真正能救的是 **boot-from-volume** 的 VM:系統碟是一顆 Cinder volume,獨立於任何 compute 存在,主機死了 volume 還在,換台機器重新掛上就能開。

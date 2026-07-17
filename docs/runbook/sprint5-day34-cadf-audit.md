@@ -174,6 +174,12 @@ pipeline: authtoken audit ...
 
 **教訓**:**「事件產生了」和「事件到得了你要的地方」是兩件事。** 中間那條路(driver → log → fluentd → OpenSearch)任何一段沒接上,前面做得再對都到不了終點。接稽核鏈時,要把每一段都當成可能斷掉的地方逐段驗——這也是為什麼[步驟 3、4、5](#step-5) 分成三次查(log 有嗎 → OpenSearch 有嗎 → 查得出來嗎),而不是一次驗到底。
 
+### 地雷 4:改在生成後的 `config.json` 上,下次 deploy 會打回原形 {#mine-4}
+
+[地雷 1](#mine-1) 的解法是改 `config.json` 的複製清單、重啟容器讓 `kolla_set_configs` 重跑。但要注意一件事:**kolla 的 `config.json` 是每次 `deploy` 由角色模板重新生成的**。如果你是直接改容器裡(生成後)的那份 `config.json`,下一次 `deploy --tags nova` 會用模板把它重新生成、把你加的兩筆清單覆蓋掉——`api-paste.ini` 與 audit map 又不進容器,**稽核靜默消失,而且症狀正是本章開頭那個「全綠卻什麼都沒發生」的重演**。
+
+要它撐過 re-deploy,得從 kolla 的**來源模板**下手,而不是改生成後的檔。這和 [Day 32 地雷 5](sprint5-day32-full-tls.md#mine-5)([oslo_limit] 被 TLS 引爆)、[Day 28 地雷 6](sprint5-day28-ceilometer-metering.md#mine-6)(手寫計費端點)同屬「手寫覆寫是會引爆的債」——上正式環境前,把這筆列進你的手寫債清單、確認它撐得過下一次全量部署。
+
 ## 帶得走的東西
 
 - **稽核的價值是「一次查詢回答誰/何時/做什麼」,而 CADF 是讓這件事跨服務通用的格式。** 各服務各記各的,稽核就退化成考古。

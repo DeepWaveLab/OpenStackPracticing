@@ -74,6 +74,7 @@ validation:
 
 exclude_docs: |
   plans/
+  reviews/
 
 not_in_nav: |
   /runbook/README.md

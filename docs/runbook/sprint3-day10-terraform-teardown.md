@@ -46,33 +46,52 @@ provider "openstack" {}                       # 讀 OS_* env
 
 data "openstack_networking_network_v2" "extnet" { name = "ext-net" }
 
-resource "openstack_networking_network_v2" "tf_net"    { name = "tf-net" }
-resource "openstack_networking_subnet_v2"  "tf_subnet" {
-  name = "tf-subnet"; network_id = openstack_networking_network_v2.tf_net.id
-  cidr = "10.20.0.0/24"; ip_version = 4; dns_nameservers = ["8.8.8.8"]
+resource "openstack_networking_network_v2" "tf_net" { name = "tf-net" }
+
+resource "openstack_networking_subnet_v2" "tf_subnet" {
+  name            = "tf-subnet"
+  network_id      = openstack_networking_network_v2.tf_net.id
+  cidr            = "10.20.0.0/24"
+  ip_version      = 4
+  dns_nameservers = ["8.8.8.8"]
 }
+
 resource "openstack_networking_router_v2" "tf_router" {
-  name = "tf-router"; admin_state_up = true
+  name                = "tf-router"
+  admin_state_up      = true
   external_network_id = data.openstack_networking_network_v2.extnet.id
 }
+
 resource "openstack_networking_router_interface_v2" "tf_ri" {
   router_id = openstack_networking_router_v2.tf_router.id
   subnet_id = openstack_networking_subnet_v2.tf_subnet.id
 }
+
 resource "openstack_compute_instance_v2" "tf_vm" {
   name        = "tf-vm"
   depends_on  = [openstack_networking_router_interface_v2.tf_ri]   # ← 原因見下方地雷 1
-  image_name  = "cirros"; flavor_name = "m1.tiny"; key_pair = "k8s-admin"
+  image_name  = "cirros"
+  flavor_name = "m1.tiny"
+  key_pair    = "k8s-admin"
   network { uuid = openstack_networking_network_v2.tf_net.id }
 }
+
 resource "openstack_lb_loadbalancer_v2" "tf_lb" {
-  name = "tf-lb"; vip_subnet_id = openstack_networking_subnet_v2.tf_subnet.id
+  name                  = "tf-lb"
+  vip_subnet_id         = openstack_networking_subnet_v2.tf_subnet.id
   loadbalancer_provider = "amphora"
 }
+
 resource "openstack_lb_listener_v2" "tf_listener" {
-  name = "tf-listener"; protocol = "HTTP"; protocol_port = 80
+  name            = "tf-listener"
+  protocol        = "HTTP"
+  protocol_port   = 80
   loadbalancer_id = openstack_lb_loadbalancer_v2.tf_lb.id
 }
+
+# checkpoint 的 `terraform output` 靠這兩個(值見驗收表:tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234)
+output "tf_vm_ip"  { value = openstack_compute_instance_v2.tf_vm.access_ip_v4 }
+output "tf_lb_vip" { value = openstack_lb_loadbalancer_v2.tf_lb.vip_address }
 ```
 
 ### 3. apply / verify / destroy

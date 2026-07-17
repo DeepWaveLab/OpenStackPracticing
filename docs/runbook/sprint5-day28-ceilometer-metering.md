@@ -93,6 +93,9 @@ sudo docker run -d --name pushgateway --restart unless-stopped --network host \
 - **`--network host`**——kolla 的 docker daemon 設了 `iptables: false` + `bridge: none`,**`-p` 埠映射是死的**([地雷 1](#mine-1))。
 - **`:9092`**——Pushgateway 預設聽 9091,而那正是 Day 21 kolla Prometheus 的埠([地雷 2](#mine-2))。
 
+!!! warning "教學用 `:latest`;生產要 pin,而且這個埠是無認證的計費輸入端點"
+    這裡刻意用 `:latest` 是為了少一個變數,但它不可重現、日後無法稽核「當時到底是哪版」——正好和 [Day 22 教的「別把 tag 當不變保證」](../runbook/sprint4-day22-upgrade-backup.md) 自打臉,生產請 pin 到 digest 或明確版本。更重的是:它跑在 **host network、完全無認證**,餵的卻是 [Day 30](sprint5-day30-cloudkitty-rating.md) 的帳單來源——完整的曝險分析見[地雷 6](#mine-6)。
+
 驗證它活著,並確認兩個服務各據一埠:
 
 ```bash
@@ -371,6 +374,17 @@ No Server found for a0500345-2306-4b09-90d2-82b2b7c209b9
 **教訓**:這是整條管線最根本的設計債,而它來自一個**用途錯配**——Prometheus 官方文件明確說 Pushgateway 不該拿來當推送式監控的通用轉接頭,而 kolla 的 `enable_ceilometer_prometheus_pushgateway` 就是這樣用的。這不是 kolla 的錯,是 push 型計量硬要接上 pull 型監控的必然代價,也正是官方推 **Aetos** 想解決的問題之一。
 
 **實務上要記得**:計費查詢一律帶時間窗口,別用 instant query;定期清理 Pushgateway(`DELETE /metrics/job/openstack-telemetry/...`)也是一種辦法,但要小心別刪到還在用的。
+
+### 地雷 6:無認證、可寫的計費輸入端點 {#mine-6}
+
+**問題**:步驟 1 起的 Pushgateway 跑在 **host network 的 `:9092`、沒有任何認證**,而它正是 [Day 30](sprint5-day30-cloudkitty-rating.md) 帳單的資料來源。Pushgateway 的 API 本來就是「誰都能 POST 一筆指標進去」——放在計費鏈的入口,就成了破口:
+
+- **可讀**:任何搆得到這個埠的人 `curl .../metrics` 就拿到**全租戶的用量**(哪個 project 開了幾台、跑多久),連 `resource_id`、`project_id` 都在裡面。
+- **可寫**:同一個埠能 `POST` 假指標——**低報自己的用量少付錢、灌爆對手的帳單、注入根本不存在的幽靈機器**。帳單是拿這些數字積分出來的,汙染源頭等於偽造帳單。
+
+**為什麼 lab 沒事、多節點會出事**:單機時 `10.0.0.4:9092` 只有本機搆得到;一旦多節點、或計算節點與租戶網路可路由到它,曝險面就打開了。對照 [Day 21](sprint4-day21-observability.md):kolla 自己的 Prometheus 是有 basic auth 的,這個轉接頭卻沒有——這個不對稱課程先前沒點破。
+
+**修法**:把 Pushgateway 綁到只有 Prometheus 搆得到的內部位址、或擋在有認證的反向代理後面;pin 住 image 版本(見步驟 1 的 note);多節點部署前把「誰能讀/寫這條計費鏈」當成威脅模型的一部分。這是 [Day 27 `[oslo_limit]` 手寫覆寫](sprint5-day27-multi-tenant-governance.md)、[Day 32 VIP unit](sprint5-day32-full-tls.md)、[Day 34 config.json 手改](sprint5-day34-cadf-audit.md) 之外,另一筆「lab 便宜省略、prod 要補」的債。
 
 ## 帶得走的東西
 

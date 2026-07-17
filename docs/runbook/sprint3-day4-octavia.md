@@ -150,6 +150,25 @@ openstack floating ip set --port $VIPPORT $LBFIP
 for i in $(seq 6); do curl -s http://$LBFIP/; done   # web1/web2 交替 = round robin
 ```
 
+!!! note "兩個照抄前要處理的地方:user-data 內容、member IP 別寫死"
+    **① `web-userdata.sh` 要做什麼**:它是 member VM 開機時跑的 user-data,只需在 `:80` 起一個回自己 hostname 的 http server。最小可用範本(Ubuntu 24.04 內建 python3):
+
+    ```bash
+    #!/bin/bash
+    hostname > /root/index.html
+    cd /root && python3 -m http.server 80
+    ```
+
+    `curl` 會回各 member VM 自己的 hostname(本課的 `vm-web1`/`vm-web2`,上面輸出簡寫成 web1/web2);看到兩個名字交替出現,就證明 round-robin 通了。
+
+    **② member 位址別照抄**:`10.10.10.124` / `10.10.10.188` 是**本課環境** web1/web2 的 fixed IP,你的幾乎必然不同。先查自己的再代入:
+
+    ```bash
+    openstack server show vm-web1 -c addresses -f value   # 取 net1 上的 fixed IP
+    ```
+
+    填錯的後果正是本章 health monitor 會把兩個不存在的 member 標成 ERROR,而錯誤訊息不會告訴你「因為 IP 抄錯了」。
+
 ### 4. Bonus:OVN provider 對照組
 
 ```bash

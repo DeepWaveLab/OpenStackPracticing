@@ -261,6 +261,8 @@ flowchart LR
 !!! warning "在本 lab 開 LoadBalancer 會撞到 Day 8 的老朋友"
     如果你在這座 cluster 試 `type=LoadBalancer`,CCM 建 LB 時會失敗:`Provider 'amphorav2' is not enabled`。這正是 [Day 8 的地雷 #3](sprint3-day8-e2e-workload-cluster.md#mine-3)——CCM 預設要 `amphorav2`,而我們的 Octavia 只啟用了 `amphora`。所以本課的 demo 走 `port-forward`(路徑一);要走 LoadBalancer,得依 Day 8 的解法給 cluster 帶上 `octavia_provider=amphora` 標籤。**同一顆雷在不同章節重逢,正好說明它是這套 lab 架構的固有特性,不是偶發。**
 
+    但注意時序:這條 `amphora` 指引到 [Day 22 地雷 1](sprint4-day22-upgrade-backup.md#mine-1) 會失效——那天全量 precheck 逼著把 `octavia_provider_drivers` 收斂成只剩 `ovn`,amphora 不再可選。若你的環境已經走過 Day 22,要走 LoadBalancer 得先回頭處理 provider(見那段的取捨說明),不能再直接帶 `amphora` label。
+
 ## 延伸閱讀
 
 想往下深挖,從這幾份開始:

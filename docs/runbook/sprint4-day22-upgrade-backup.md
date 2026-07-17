@@ -209,7 +209,7 @@ openstack project list | grep day22
 
 ### 地雷 1:`--tags` 部署的檢查盲區 {#mine-1}
 
-本課環境的 globals.yml 裡躺著初期寫下的 `octavia_network_type: "tenant"`——它與 OVN 不相容(amphora 管理網走 tenant 型只支援 openvswitch),但因為之後的部署都用 `--tags` 增量進行,這行錯誤設定潛伏了整個 Sprint,直到今天的全量 prechecks 才爆出來。修正是讓設定回歸現實(這朵雲的負載平衡一直由 OVN provider 承擔):
+本課環境的 globals.yml 裡躺著初期寫下的 `octavia_network_type: "tenant"`——它與 OVN 不相容(amphora 管理網走 tenant 型只支援 openvswitch),但因為之後的部署都用 `--tags` 增量進行,這行錯誤設定潛伏了整個 Sprint,直到今天的全量 prechecks 才爆出來。本次修正是把 provider 收斂到 OVN:
 
 ```yaml
 octavia_provider_drivers: "ovn:OVN provider"
@@ -217,6 +217,11 @@ octavia_provider_agents: "ovn"
 ```
 
 教訓:**`--tags` 只檢查該 tag 的世界**。定期跑一次全量 prechecks,把潛伏的設定債翻出來。
+
+!!! warning "和前面幾天對得起來嗎?——這裡要講清楚"
+    Day 4 讀 role 原始碼、實測 amphora round-robin 6/6 通過;Day 8 的 `web-lb`/`kubeapi`([地雷 3](sprint3-day8-e2e-workload-cluster.md#mine-3) 還特地把 label 收斂成 `amphora`,並註明「本 Octavia `enabled_provider_drivers` 只有 `amphora,ovn`」)、Day 10 的 `tf-lb` 也都是 amphora provider——所以把它說成「一直由 OVN 承擔」並不準確,那些 LB 當時確實是 amphora 在服務。
+
+    兩件事可以同時成立:**amphora 在本環境實測可跑,但 `octavia_network_type: "tenant"` 這個組合不在官方支援矩陣內,全量 precheck 站官方那邊把它擋下**。本次為了過 precheck 選了 OVN provider,代價要說明白:`octavia_provider_drivers` 收斂到只剩 `ovn` 之後,再用 `--provider amphora` 建新 LB 會被拒,[Day 8 地雷 3](sprint3-day8-e2e-workload-cluster.md#mine-3) 與 Day 16+「要走 LoadBalancer 得帶 `amphora` label」的指引在此設定下失效;先前用 amphora 建的 LB 的管理要另外評估。若你仍需要 amphora,正解是回頭把 `octavia_network_type` 換成 amphora 支援的網路型,而不是留著 `tenant`。這是「潛伏設定債爆開後,修法本身也有後果」的實例——不是改一行就沒事。
 
 ### 地雷 2:指令是 `mariadb-backup`,文件內文寫的底線是舊寫法 {#mine-2}
 

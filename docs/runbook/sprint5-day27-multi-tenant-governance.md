@@ -473,9 +473,17 @@ neutron_server   enforce_scope/new_defaults = True True
 cinder_api       enforce_scope/new_defaults = True True
 ```
 
-看起來全開了。**但這個數字量到的是 oslo.policy 函式庫的預設值,不是各服務實際覆寫後的生效值**——兩者未必相同,而從外部沒有可靠的方法區分。
+看起來全開了。**但這個數字量到的是 oslo.policy 函式庫的預設值,不是各服務實際覆寫後的生效值**——兩者未必相同,而這種**靜態讀值**分不出兩者。
 
 所以本章的判決是:**列為概念討論,不宣稱已驗證。** 你今天確實用到了 Secure RBAC 的一部分——步驟 4 那個 `--system all reader` 就是 system scope 加 reader 角色的實例,而且它有效([地雷 3](#mine-3) 就是靠它才看得見真相)。但「哪些服務真的在強制執行 scope」,這門課目前答不出來。
+
+!!! note "這個△其實測得出來(留給想收尾的人)"
+    上面說「靜態讀值分不出兩者」是對的,但這不代表無法得知——有兩條路能把這個△變成可判決:
+
+    - **行為測試**:拿一個 **project-scoped** 的 admin token 去打一個「scope 不符時會**明確拒絕**」的 system-scope API。若 `enforce_scope` 真的生效會被擋(403),沒生效會照過——過或擋,直接告訴你答案。**但要挑對 API**:本章 [地雷 3](#mine-3) 實測過 `GET /v3/limits` 對 project token 是回 **200 + 靜默過濾成空清單**(既不 403 也不算「照過」),這種**過濾型**端點當不了判別器,得選 scope 不符會回 403 的操作。
+    - **`oslopolicy-policy-generator`**:對各服務跑一次,它吐出的是**生效後**的 policy 值,不是函式庫預設值,正好補上靜態讀值量不到的那一半。
+
+    本課沒有逐一跑這兩條(所以維持△),但它們的存在說明:這是「本課還沒去驗」,不是「無法得知」。
 
 ## 帶得走的東西
 

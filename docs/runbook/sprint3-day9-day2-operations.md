@@ -91,12 +91,21 @@ kubectl -n magnum-system patch cluster kube-plpuz --type=json -p \
    {"op":"add","path":"/spec/topology/workers/machineDeployments/1/metadata/annotations",
     "value":{"cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size":"1",
              "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size":"3"}}]'
-# 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)
-#    見 sprint3 資產:image registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1
+# 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)——關鍵 image/args:
+#    image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1
 #    args: --cloud-provider=clusterapi --clusterapi-cloud-config-authoritative
-#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=kube-plpuz
+#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=<你的cluster名>
 # 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3
 ```
+
+!!! note "cluster 名別照抄,autoscaler 完整 manifest 從哪來"
+    上面的 `kube-plpuz` 是**本課環境**的 cluster 名(Magnum 帶隨機後綴),你的不一樣——先查再代入(patch 指令、autoscaler 的 `clusterName` args 都要換):
+
+    ```bash
+    kubectl get cluster -n magnum-system
+    ```
+
+    步驟 3 的完整 Deployment + ServiceAccount/RBAC 是 [cluster-autoscaler 官方 `clusterapi` provider 範例](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md) 的標準組態——本課只改三處:image/args 如上、autoscaler 跑在 kind mgmt(in-cluster 讀寫 MachineDeployment)、`--kubeconfig` 指向 workload cluster 的 kubeconfig secret(讓它看得到 pending pod)。這份 manifest 依你的 secret 名稱與 RBAC 而定,故不逐字附上。
 
 ## 驗收 checkpoint
 

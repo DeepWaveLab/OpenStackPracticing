@@ -159,6 +159,11 @@ cafile = /etc/ssl/certs/ca-certificates.crt
 
 91 個容器零不健康、所有面向使用者的 endpoint 都是 https、UI 把 http 自動轉向 https、連 Day 15 的物件儲存往返都還通。
 
+!!! warning "回歸清單漏了旗艦資產:Magnum/CAPI 整合"
+    這次回歸驗了核心 list 與 Swift,但沒驗最大的受災戶——[Day 8](../runbook/sprint3-day8-e2e-workload-cluster.md) 的 workload cluster。全站 http→https、VIP 從 `10.0.0.4` 換到 `10.0.0.250` 之後,cluster 內的 OCCM / Cinder CSI cloud-config、CAPO 的 clouds.yaml、magnum trustee 流程,全都還烤著建立當下的 `http://10.0.0.4:5000`——它們的下一次動作(開 LB、供裝 PVC、reconcile)會跟[地雷 5](#mine-5) 的 `[oslo_limit]` 一樣爆。本章教訓「每個手寫覆寫都是會引爆的債」的最大案例就站在旁邊,卻不在上面的回歸清單裡。
+
+    **誠實交代**:本次回歸沒有重測這條整合(該 cluster 是否還在服役視環境而定),所以這裡標成**已知債**而非驗證結果。要收尾,正解不只是 patch workload `cloud-config` secret 的 `auth-url` 到新的 https VIP——**因為 `KollaTestCA` 是自簽的,還得把 CA 一併餵給 cloud-config(`ca-file`)與 CAPO 的 clouds.yaml(`cacert`),否則只改 `auth-url` 只會從『連不上 http』變成 `x509: unknown authority`**(正是本章 openrc 要補 `OS_CACERT`、[地雷 5](#mine-5) 要補 `cafile` 的同一件事)。補好 CA、重啟 CCM,再測一次 PVC/LB;若這個 cluster 已不再維護,就明講它從今天起半殘、需重建。
+
 !!! note "為什麼 Prometheus 還是 http"
     endpoint 清單裡 prometheus 仍顯示 `http://10.0.0.4:9091`——那是**後端內部位址**,不是使用者入口。使用者透過 haproxy 的 `https://…:9091` 進來(TLS 在那裡終結),haproxy 到後端那一小段走內網 http。這是 TLS-終結架構的正常樣貌:**加密在邊界,內網那一跳是另一個決定**(要不要連內網都加密,是 `kolla_enable_tls_backend` 的課題,本課未開)。
 

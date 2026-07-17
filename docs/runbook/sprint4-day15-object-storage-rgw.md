@@ -13,11 +13,11 @@
 
 前幾天的儲存都是「掛在機器上的磁碟」(區塊儲存);**物件儲存**是另一種正規化:沒有目錄樹、沒有掛載,只有「容器(bucket)裝物件(檔案)」,一切透過 HTTP API 存取——AWS 的 S3 就是這個模式的代名詞。適合放備份、映像檔、log、靜態網站這類「寫一次、讀多次、不需要檔案系統語意」的資料。
 
-OpenStack 世界有兩種介面歷史:自家的 **Swift API** 與業界事實標準 **S3 API**。而 Ceph 的 **RGW** 一個守護程序同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣([Day 12 講過這段歷史](sprint3-day12-sprint4-preview.md))。
+OpenStack 世界有兩種介面歷史:自家的 **Swift API** 與業界事實標準 **S3 API**。而 Ceph 的 **RGW** 一個守護行程同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣([Day 12 講過這段歷史](sprint3-day12-sprint4-preview.md))。
 
 ## 原理與架構
 
-今天的部署有個必須先想通的分工——**Kolla 的 `ceph-rgw` 角色不部署任何容器**(它的原始碼註解直接寫明這件事),RGW 守護程序由 cephadm 管:
+今天的部署有個必須先想通的分工——**Kolla 的 `ceph-rgw` 角色不部署任何容器**(它的原始碼註解直接寫明這件事),RGW 守護行程由 cephadm 管:
 
 ```mermaid
 flowchart TB
@@ -128,6 +128,29 @@ hello-rgw
 
 !!! tip "物件名別直接吃本機路徑"
     上面那行 `openstack object create day15-test /tmp/obj.txt` 會**拿本機路徑當物件名**,於是物件真的叫 `/tmp/obj.txt`——開頭那個斜線會讓 Horizon 把它當成資料夾層級,結果物件列表看起來是空的。想要乾淨的名字就明講:`openstack object create --name hello-rgw.txt day15-test /tmp/obj.txt`(圖上那個就是)。
+
+### 步驟 5:用 S3 憑證打一次(認證版)
+
+上面步驟 4 走的是 Swift API,步驟 0 只驗了 S3 的**匿名**空清單。但這章的賣點是「既有 S3 應用不改碼搬上來」——那條路要的是一組 S3 金鑰。怎麼拿?靠 Keystone 的 **EC2 credentials**:
+
+```bash
+# 1. 拿一組 S3 相容金鑰(access / secret)
+source ~/demo-openrc.sh
+openstack ec2 credentials create        # 輸出的 Access / Secret 就是 S3 金鑰
+
+# 2. 裝 aws-cli、設金鑰與 region,再打 RGW 的 S3 端點(RGW 走 path-style 定址)
+sudo apt-get install -y awscli
+aws configure set aws_access_key_id <access>
+aws configure set aws_secret_access_key <secret>
+aws configure set default.region us-east-1     # RGW 不挑 region 值,給個預設即可,不設會被 aws-cli 擋下
+aws --endpoint-url http://10.0.0.4:7480 s3 mb s3://day15-s3
+echo hello-s3 > /tmp/s3.txt
+aws --endpoint-url http://10.0.0.4:7480 s3 cp /tmp/s3.txt s3://day15-s3/
+aws --endpoint-url http://10.0.0.4:7480 s3 ls s3://day15-s3/     # 列出剛上傳的物件
+```
+
+!!! note "這段是示範路徑,未附本課實測輸出"
+    上面這串是「拿 S3 金鑰、用 aws-cli 打通」的標準做法,回答「使用者怎麼拿到 S3 金鑰」這個問題;但它**不在本課的逐項驗證裡**(所以沒附輸出),照做前自行驗證。要點:金鑰來自 `ec2 credentials`(綁在你的 project 上)、endpoint 直指 RGW 的 `:7480`、RGW 用 path-style 而非 virtual-host style 定址。這條路一旦通,你的既有 S3 SDK 只改 endpoint 就能搬上這朵雲。
 
 ## 驗收 checkpoint
 

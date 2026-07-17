@@ -71,7 +71,9 @@ flowchart TB
 
 ### 1. 每個 CLI 動作在 OVN 裡對應什麼
 
-| OpenStack 資源 | OVN 底層 | Sprint 1 已學,這裡驗證 |
+這張表看不懂沒關係——它是「Day 20 會逐一拆解」的預覽,現在先對照著看 CLI 動作背後是哪個 OVN 物件,看不懂的欄位可以先跳過。
+
+| OpenStack 資源 | OVN 底層 | Day 20 會深入,先對照著看 |
 |---|---|---|
 | `network create net1`(Geneve) | Logical Switch | tenant overlay,MTU 自動扣 overhead(1442) |
 | `network create --external --provider-network-type flat` | Logical Switch + **localnet port** → br-ex | flat = 直通 physnet1(= br-ex = dummy0) |
@@ -97,8 +99,8 @@ VM 10.10.10.x ── net1(Geneve LS)── r1(LR, SNAT/FIP)── ext-net(flat L
 
 ### 3. metadata vs config-drive(刻意兩條路都測)
 
-- **cirros 用 metadata service**:驗證 OVN metadata agent 整條鏈(Sprint 1 曾在這裡踩 shared secret 不同步)
-- **Ubuntu 用 `--config-drive True`**:Sprint 1 教訓 #13(cloud-init 搶在 metadata ready 之前跑的 race),config-drive 把資料燒進 ISO 隨 VM 掛載,天生免疫
+- **cirros 用 metadata service**:驗證 OVN metadata agent 整條鏈(這條鏈的 shared secret 一旦不同步,VM 就拿不到 metadata)
+- **Ubuntu 用 `--config-drive True`**:避開 cloud-init 搶在 metadata ready 之前跑的 race——config-drive 把資料燒進 ISO 隨 VM 掛載,天生免疫
 
 ## 步驟
 
@@ -127,13 +129,42 @@ openstack subnet create --network ext-net --subnet-range 172.24.4.0/24 \
   --allocation-pool start=172.24.4.100,end=172.24.4.200 ext-subnet
 ```
 
-host 端(寫成 `/usr/local/sbin/ext-net-fixup.sh` + systemd oneshot,略——見 VM 上實檔):
+host 端要補三件事——把 br-ex 的閘道位址掛回去、開 IP forwarding、給 ext-net 網段加 NAT。這三行是功能本體,存成 `/usr/local/sbin/ext-net-fixup.sh`(`#!/bin/bash` 必須是檔案第一行):
 
 ```bash
+#!/bin/bash
 ip addr replace 172.24.4.1/24 dev br-ex && ip link set br-ex up
 sysctl -qw net.ipv4.ip_forward=1
 iptables -t nat -A POSTROUTING -s 172.24.4.0/24 -o eth0 -j MASQUERADE
 ```
+
+因為每天 auto-shutdown 後 br-ex 的位址與 NAT 規則都會消失,把它包成開機自動重跑的 systemd oneshot(延遲 30 秒等 OVS 先把 br-ex 建好,對應上面說的「boot +30s」):
+
+```ini
+# /etc/systemd/system/ext-net-fixup.service
+[Unit]
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 30
+ExecStart=/usr/local/sbin/ext-net-fixup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+啟用——**先手動跑一次讓當前 session 就生效**(br-ex 位址、IP forwarding、NAT 立刻掛上,後面開 VM/FIP/SSH 才通),再設定開機自動重跑:
+
+```bash
+sudo chmod +x /usr/local/sbin/ext-net-fixup.sh
+sudo /usr/local/sbin/ext-net-fixup.sh          # 當前這次開機就套上
+sudo systemctl enable ext-net-fixup            # 之後每次開機自動重跑
+```
+
+`systemctl enable` 只寫開機 symlink、不會當下執行——少了上面那行手動執行,這次 session 的 br-ex 還是空的,驗收表前幾項會直接倒。驗收表那項「`ext-net-fixup.service` 為 enabled」就是它。
 
 ### 3. Demo 租戶面:網路、router、SG、keypair
 

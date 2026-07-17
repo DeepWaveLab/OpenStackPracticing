@@ -24,6 +24,7 @@ mines:
   - { id: d28-m3, day: 28, title: "--tags ceilometer 不會回頭打開別人的通知", anchor: "sprint5-day28-ceilometer-metering.md#mine-3" }
   - { id: d28-m4, day: 28, title: "指標名稱沒有 ceilometer_ 前綴", anchor: "sprint5-day28-ceilometer-metering.md#mine-4" }
   - { id: d28-m5, day: 28, title: "Pushgateway 永遠記得已經刪掉的機器", anchor: "sprint5-day28-ceilometer-metering.md#mine-5" }
+  - { id: d28-m6, day: 28, title: "無認證、可寫的計費輸入端點(host-network Pushgateway)", anchor: "sprint5-day28-ceilometer-metering.md#mine-6" }
   - { id: d29-m1, day: 29, title: "Aodh 不讀 Keystone 服務目錄,而 kolla 不產它要的檔", anchor: "sprint5-day29-aodh-autoscaling.md#mine-1" }
   - { id: d29-m2, day: 29, title: "Prometheus 有認證,而這條鏈上沒有地方填帳密", anchor: "sprint5-day29-aodh-autoscaling.md#mine-2" }
   - { id: d29-m3, day: 29, title: "官方 autoscaling 範例的 alarm_url 會回 403", anchor: "sprint5-day29-aodh-autoscaling.md#mine-3" }
@@ -55,3 +56,4 @@ mines:
   - { id: d34-m1, day: 34, title: "kolla 不複製 api-paste.ini,deploy 全綠卻什麼都沒發生", anchor: "sprint5-day34-cadf-audit.md#mine-1" }
   - { id: d34-m2, day: 34, title: "CADF 的四要素藏在 payload 底下", anchor: "sprint5-day34-cadf-audit.md#mine-2" }
   - { id: d34-m3, day: 34, title: "稽核事件靠對的 notification driver 才進 log", anchor: "sprint5-day34-cadf-audit.md#mine-3" }
+  - { id: d34-m4, day: 34, title: "改生成後的 config.json,下次 deploy 會打回原形", anchor: "sprint5-day34-cadf-audit.md#mine-4" }

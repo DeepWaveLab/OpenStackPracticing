@@ -106,7 +106,7 @@ Sprint 5 的九天裡,只有 Masakari(Day 31)非多機不可——「compute 整
 | Monasca、Murano、Sahara、Senlin、Solum、Freezer | 已停止維護(RETIRED) | 文章再完整都別照做 |
 | Vitrage、Venus | 垂死(接連被列 inactive、無人接手) | 別投資學習時間 |
 | Gnocchi | 苟延(還有心跳,不建議新部署) | 讀懂概念即可,見上方設計決定 |
-| Watcher | 沉寂後於 2025 年重啟維護 | 觀察中,Day 34 有選讀 |
+| Watcher | 沉寂後於 2025 年重啟維護 | 觀察中,[Day 35](sprint5-day35-sprint5-recap.md) 的版圖課有提 |
 
 反過來也有專案常被誤傳已死——Mistral、Zaqar、Adjutant 至今都還正常維護,別因為一篇舊文章就跳過它們。**Day 35 的版圖課會教你自己驗證的方法**:看哪幾個頁面、查哪些訊號,五分鐘判斷一個專案的生死,不用等別人告訴你。
 

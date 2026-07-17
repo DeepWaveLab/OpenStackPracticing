@@ -8,6 +8,13 @@
     - **Day 6–8 的大目標**:讓 OpenStack 能像公有雲一樣,**一個指令開出一整座 Kubernetes cluster**。分三步:**今天蓋「造 K8s 的工廠」**(Cluster API),明天把 OpenStack 的接單櫃台(Magnum)接上工廠,後天正式下單開出第一座 cluster。
     - 今天結束時工廠是空轉的——**這是正常的**,還沒有人下單。
 
+!!! warning "Day 6 起需要一點 Kubernetes 基礎"
+    從今天起,課程假設你看得懂基本的 Kubernetes 操作與名詞:`kubectl`(K8s 的命令列工具)、**pod**(一組容器的最小部署單位)、**deployment**(宣告「我要幾份 pod」的控制器)、**namespace**(資源的分組)。這些對你全新的話,先花半小時看官方的 [Learn Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/) 互動教學再回來,後面會順很多。今天還會反覆用到三個詞,先記住白話:
+
+    - **controller(控制器)**:一支常駐程式,不斷把「現實」拉向「你宣告的目標」。
+    - **CRD(自訂資源)**:讓 K8s 認得原本不存在的新資源型別(例如「一座 cluster」也能變成一種 K8s 資源)。
+    - **reconcile(調和)**:controller 的核心動作——比對目標與現況,把差異補上。
+
 ## 第一次接觸 Cluster API?先讀這段
 
 ### 問題:誰來「蓋」K8s cluster?
@@ -160,6 +167,14 @@ docker exec capi-mgmt-control-plane bash -c 'cat </dev/null >/dev/tcp/1.1.1.1/44
 ```
 
 持久化(VM 每天 reboot 會掉,用獨立 systemd oneshot 冪等補上):`/etc/systemd/system/kind-masquerade.service`（見 solutions 檔內完整 unit),`systemctl enable --now kind-masquerade`。
+
+!!! note "為什麼是 `172.17.0.0/16`?別的環境要先查"
+    這條規則寫死 `172.17` 只在本環境成立:Kolla 化的 Docker 設了 `bridge: none`(沒有預設的 `docker0`,真相到 [Day 28 地雷 1](../runbook/sprint5-day28-ceilometer-metering.md#mine-1) 才完整揭露),所以 kind 自建的 network 從 `172.17` 開始分配。**一般主機的 `172.17` 是 `docker0`,kind 通常會拿到 `172.18+`**——那時這條規則靜默不中,症狀和本章地雷 1 一模一樣(`i/o timeout`)。要可攜就別寫死,先查真網段再帶入:
+
+    ```bash
+    KIND_CIDR=$(docker network inspect kind -f '{{(index .IPAM.Config 0).Subnet}}')
+    sudo iptables -t nat -A POSTROUTING -s "$KIND_CIDR" -o eth0 -j MASQUERADE
+    ```
 
 ### 4. ORC → clusterctl init
 

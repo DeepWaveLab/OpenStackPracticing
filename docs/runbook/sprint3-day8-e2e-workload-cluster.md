@@ -74,7 +74,7 @@ kolla-ansible deploy -i ~/all-in-one --tags magnum   # regen conf + 重啟容器
 
 ### 2. 用「Azure-correct」template 開 cluster
 
-Template 必帶三個 lab 專屬 label——每一個都是用地雷換來的([地雷 2](#mine-2)、[地雷 3](#mine-3)):
+Template 必帶三個 lab 專屬 label,每一個都是用地雷換來的:`kube_tag` 釘選 K8s 版本、`fixed_subnet_cidr=10.6.0.0/24`(不可與 API 的 `10.0.0.4` 同段,[地雷 2](#mine-2))、`octavia_provider=amphora`(本 Octavia 沒啟用 amphorav2,[地雷 3](#mine-3)):
 
 ```bash
 openstack coe cluster template create k8s-v1.34.8-azure \
@@ -82,8 +82,8 @@ openstack coe cluster template create k8s-v1.34.8-azure \
   --master-lb-enabled --master-flavor m1.medium --flavor m1.medium \
   --network-driver calico --docker-storage-driver overlay2 --coe kubernetes \
   --label kube_tag=v1.34.8 \
-  --label fixed_subnet_cidr=10.6.0.0/24 \   # 地雷 2:不可與 API 的 10.0.0.4 同段
-  --label octavia_provider=amphora          # 地雷 3:我們 Octavia 沒啟用 amphorav2
+  --label fixed_subnet_cidr=10.6.0.0/24 \
+  --label octavia_provider=amphora
 
 openstack coe cluster create k8s-lab --cluster-template k8s-v1.34.8-azure \
   --keypair k8s-admin --master-count 1 --node-count 1
@@ -113,8 +113,30 @@ metadata: {name: cinder, annotations: {storageclass.kubernetes.io/is-default-cla
 provisioner: cinder.csi.openstack.org
 volumeBindingMode: Immediate
 EOF
-kubectl apply -f pvc+pod.yaml     # PVC 1Gi + busybox 掛載
+kubectl apply -f - <<'EOF'        # PVC 1Gi + busybox 掛載(最小可用範本)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: day8-pvc}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: cinder
+  resources: {requests: {storage: 1Gi}}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: day8-pod}
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sh", "-c", "echo deepwave-day8 > /data/hello && sleep 3600"]
+      volumeMounts: [{name: vol, mountPath: /data}]
+  volumes:
+    - name: vol
+      persistentVolumeClaim: {claimName: day8-pvc}
+EOF
 kubectl get pvc                   # Bound;openstack volume list 出現 pvc-*
+kubectl exec day8-pod -- cat /data/hello   # 回 deepwave-day8 = volume 掛載+持久化成功
 # ② LoadBalancer → Octavia
 kubectl create deploy web --image nginx --replicas 2
 kubectl expose deploy web --port 80 --type LoadBalancer --name web-lb
@@ -148,6 +170,9 @@ cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned
 ### 地雷 3:`octavia_provider` 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗 {#mine-3}
 
 `Service type=LoadBalancer` 一直 pending,CCM 報 Octavia 400 `Provider 'amphorav2' is not enabled`。driver 的 CCM cloud.conf `lb-provider` 由 label `octavia_provider`(預設 `amphorav2`)決定,而本 Octavia `enabled_provider_drivers` 只有 `amphora,ovn`。修:label **`octavia_provider=amphora`**(現有 cluster 熱修:patch workload `cloud-config` secret 的 `lb-provider=amphora` + 重啟 CCM)。
+
+!!! note "後續變動"
+    這裡的 `octavia_provider=amphora` 在 [Day 22 地雷 1](../runbook/sprint4-day22-upgrade-backup.md#mine-1) 會受影響:那天全量 precheck 逼著把 `octavia_provider_drivers` 收斂成只剩 `ovn`,amphora 從此不再可選。若讀到 Day 22 後還要沿用本章的 amphora 路線,先看那段的取捨說明。
 
 ### 地雷 4:Nova disk 被 leftover VM 佔滿 → amphora `No valid host` {#mine-4}
 
