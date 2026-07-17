@@ -116,6 +116,11 @@ nav:
           - "Day 28 · 計量管線(Ceilometer)": runbook/sprint5-day28-ceilometer-metering.md
           - "Day 29 · 告警與自動擴縮(Aodh)": runbook/sprint5-day29-aodh-autoscaling.md
           - "Day 30 · 計費(CloudKitty)": runbook/sprint5-day30-cloudkitty-rating.md
+          - "Day 31 · SLA 與自癒(Masakari)": runbook/sprint5-day31-masakari-ha.md
+          - "Day 32 · 全站 TLS": runbook/sprint5-day32-full-tls.md
+          - "Day 33 · 企業身分接軌(Keycloak)": runbook/sprint5-day33-keycloak-federation.md
+          - "Day 34 · 稽核軌跡(CADF)": runbook/sprint5-day34-cadf-audit.md
+          - "Day 35 · Sprint 5 總結": runbook/sprint5-day35-sprint5-recap.md
 
   - 排錯手冊:
       - solutions/README.md

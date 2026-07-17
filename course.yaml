@@ -1,0 +1,57 @@
+# course.yaml — OpenStackPracticing 課程狀態檔
+# 本站早於 course-forge 建立;此檔於 2026-07-16 補建,先登記 Sprint 5 的地雷索引。
+# 早期 Sprint(0–26)的地雷尚未回填進本檔。
+
+course:
+  name: "OpenStackPracticing"
+  locale: zh-TW
+  repo: "DeepWaveLab/OpenStackPracticing"
+  site: "https://deepwavelab.github.io/OpenStackPracticing/"
+
+# style_approved:課程主人已於 2026-07-15 逐章審過 Day 27–30 的風格(日記腔、
+# 截圖、標題格式均給過修訂意見並修畢),風格基準視為已確立。
+style_approved: true
+
+# 地雷索引:總結頁的地雷回顧表、跨章引用皆從此取材。
+mines:
+  - { id: d27-m1, day: 27, title: "切了 driver 沒設 [oslo_limit],整個 compute API 掛掉", anchor: "sprint5-day27-multi-tenant-governance.md#mine-1" }
+  - { id: d27-m2, day: 27, title: "region 對不上,所有額度讀成 0", anchor: "sprint5-day27-multi-tenant-governance.md#mine-2" }
+  - { id: d27-m3, day: 27, title: "查詢回空,而限制正在執行", anchor: "sprint5-day27-multi-tenant-governance.md#mine-3" }
+  - { id: d27-m4, day: 27, title: "application credential 的 JSON 欄位是大寫", anchor: "sprint5-day27-multi-tenant-governance.md#mine-4" }
+  - { id: d27-m5, day: 27, title: "openstack service list --service 不存在", anchor: "sprint5-day27-multi-tenant-governance.md#mine-5" }
+  - { id: d28-m1, day: 28, title: "kolla 的 docker 沒有 iptables,-p 是死的", anchor: "sprint5-day28-ceilometer-metering.md#mine-1" }
+  - { id: d28-m2, day: 28, title: "Pushgateway 預設 9091,正好撞上 kolla 的 Prometheus", anchor: "sprint5-day28-ceilometer-metering.md#mine-2" }
+  - { id: d28-m3, day: 28, title: "--tags ceilometer 不會回頭打開別人的通知", anchor: "sprint5-day28-ceilometer-metering.md#mine-3" }
+  - { id: d28-m4, day: 28, title: "指標名稱沒有 ceilometer_ 前綴", anchor: "sprint5-day28-ceilometer-metering.md#mine-4" }
+  - { id: d28-m5, day: 28, title: "Pushgateway 永遠記得已經刪掉的機器", anchor: "sprint5-day28-ceilometer-metering.md#mine-5" }
+  - { id: d29-m1, day: 29, title: "Aodh 不讀 Keystone 服務目錄,而 kolla 不產它要的檔", anchor: "sprint5-day29-aodh-autoscaling.md#mine-1" }
+  - { id: d29-m2, day: 29, title: "Prometheus 有認證,而這條鏈上沒有地方填帳密", anchor: "sprint5-day29-aodh-autoscaling.md#mine-2" }
+  - { id: d29-m3, day: 29, title: "官方 autoscaling 範例的 alarm_url 會回 403", anchor: "sprint5-day29-aodh-autoscaling.md#mine-3" }
+  - { id: d29-m4, day: 29, title: "取樣太稀,告警卡在 insufficient data 而且不叫", anchor: "sprint5-day29-aodh-autoscaling.md#mine-4" }
+  - { id: d29-m5, day: 29, title: "CLI 的 rule 欄對 prometheus 告警顯示 null", anchor: "sprint5-day29-aodh-autoscaling.md#mine-5" }
+  - { id: d30-m1, day: 30, title: "帳單永遠 0 元,因為沒有任何租戶被計費", anchor: "sprint5-day30-cloudkitty-rating.md#mine-1" }
+  - { id: d30-m2, day: 30, title: "kolla 讓你選 Prometheus,卻不給你對應的 metrics.yml", anchor: "sprint5-day30-cloudkitty-rating.md#mine-2" }
+  - { id: d30-m3, day: 30, title: "noop 模組預設啟用,一切算 0 元", anchor: "sprint5-day30-cloudkitty-rating.md#mine-3" }
+  - { id: d30-m4, day: 30, title: "processor 每輪睡整整一小時", anchor: "sprint5-day30-cloudkitty-rating.md#mine-4" }
+  - { id: d30-m5, day: 30, title: "rating hashmap mapping create 在 2025.1 直接壞掉", anchor: "sprint5-day30-cloudkitty-rating.md#mine-5" }
+  - { id: d31-m1, day: 31, title: "mariadb_recovery 在 2025.1 改名了", anchor: "sprint5-day31-masakari-ha.md#mine-1" }
+  - { id: d31-m2, day: 31, title: "ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障", anchor: "sprint5-day31-masakari-ha.md#mine-2" }
+  - { id: d31-m3, day: 31, title: "部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫", anchor: "sprint5-day31-masakari-ha.md#mine-3" }
+  - { id: d31-m4, day: 31, title: "多機 --tags cinder 不會配負載平衡器前端", anchor: "sprint5-day31-masakari-ha.md#mine-4" }
+  - { id: d31-m5, day: 31, title: "你沒辦法用軟手段殺死一台主機", anchor: "sprint5-day31-masakari-ha.md#mine-5" }
+  - { id: d31-m6, day: 31, title: "evacuate 失敗會留下 on_maintenance,擋掉重試", anchor: "sprint5-day31-masakari-ha.md#mine-6" }
+  - { id: d31-m7, day: 31, title: "Masakari 預設只救有標記的 VM", anchor: "sprint5-day31-masakari-ha.md#mine-7" }
+  - { id: d32-m1, day: 32, title: "沒有 haproxy 就沒有地方終結 TLS", anchor: "sprint5-day32-full-tls.md#mine-1" }
+  - { id: d32-m2, day: 32, title: "VIP 用 netplan 掛會篡位成主機主 IP", anchor: "sprint5-day32-full-tls.md#mine-2" }
+  - { id: d32-m3, day: 32, title: "cephadm 的 RGW 綁 0.0.0.0,佔住 VIP 的埠", anchor: "sprint5-day32-full-tls.md#mine-3" }
+  - { id: d32-m4, day: 32, title: "開了 RGW 負載平衡卻沒告訴它後端在哪", anchor: "sprint5-day32-full-tls.md#mine-4" }
+  - { id: d32-m5, day: 32, title: "TLS 引爆了你三天前手寫的設定", anchor: "sprint5-day32-full-tls.md#mine-5" }
+  - { id: d32-m6, day: 32, title: "openrc 的 CA 要另外指定", anchor: "sprint5-day32-full-tls.md#mine-6" }
+  - { id: d33-m1, day: 33, title: "OIDC 模組硬性拒絕 http 的 IdP,直接讓 Keystone 起不來", anchor: "sprint5-day33-keycloak-federation.md#mine-1" }
+  - { id: d33-m2, day: 33, title: "Keycloak 開發模式的資料跟容器共存亡", anchor: "sprint5-day33-keycloak-federation.md#mine-2" }
+  - { id: d33-m3, day: 33, title: "Keycloak 26 的必填欄位缺失,錯誤訊息卻指向別處", anchor: "sprint5-day33-keycloak-federation.md#mine-3" }
+  - { id: d33-m4, day: 33, title: "metadata 的檔名有一套死規則", anchor: "sprint5-day33-keycloak-federation.md#mine-4" }
+  - { id: d33-m5, day: 33, title: "CLI 的錯誤不指段,兩段鏈路要拆開手打", anchor: "sprint5-day33-keycloak-federation.md#mine-5" }
+  - { id: d34-m1, day: 34, title: "kolla 不複製 api-paste.ini,deploy 全綠卻什麼都沒發生", anchor: "sprint5-day34-cadf-audit.md#mine-1" }
+  - { id: d34-m2, day: 34, title: "CADF 的四要素藏在 payload 底下", anchor: "sprint5-day34-cadf-audit.md#mine-2" }
+  - { id: d34-m3, day: 34, title: "稽核事件靠對的 notification driver 才進 log", anchor: "sprint5-day34-cadf-audit.md#mine-3" }

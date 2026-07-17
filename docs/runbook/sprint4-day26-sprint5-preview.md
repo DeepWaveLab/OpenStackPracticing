@@ -56,15 +56,15 @@ Sprint 5 用 **9 天、四個階段**回答這四個問題:
 
 | Day | 主題 | 一句話 |
 |---|---|---|
-| 27 | **多租戶治理與額度** | Keystone domains 分層、application credentials、**unified limits(2025.1 剛轉正)**、新一代權限模型現況 |
-| 28 | **計量管線(Ceilometer)** | 誰開了幾台 VM、用了幾 GB——資料流進 Day 21 建好的 Prometheus;Gnocchi 為什麼繞過,證據攤給你看 |
-| 29 | **告警與自動擴縮(Aodh)** | Aodh 盯著 Prometheus 的數字,Heat 接到告警自己長 VM——收 Day 5 的伏筆 |
-| 30 | **計費(CloudKitty)** | 訂價規則、算錢、出報表——兩個租戶各拿各的帳單;帳單畫面在 Horizon(原因見設計決定) |
-| 31 | **SLA 與自癒(Masakari)** | 回多機環境一天:VM 程序死掉自動重啟、compute 整台掛掉自動搬家 |
-| 32 | **全站 TLS** | 所有 API 換上 https;內建 CA 為什麼不能上生產 |
-| 33 | **企業身分 SSO(Federation)** | 公司的 Keycloak 帳號直接登入這朵雲——Keystone 聯邦身分與角色對應 |
-| 34 | **稽核軌跡(CADF)** | 「誰在何時對哪個資源做了什麼」——稽核事件接回 Day 21 的集中式 log |
-| 35 | **Sprint 5 總結 + 版圖課** | 前後對比;怎麼判斷一個 OpenStack 專案的生死——用四個真實案例教你驗屍 |
+| [27](sprint5-day27-multi-tenant-governance.md) ✅ | **多租戶治理與額度** | Keystone domains 分層、application credentials、**unified limits(2025.1 剛轉正)**、新一代權限模型現況 |
+| [28](sprint5-day28-ceilometer-metering.md) ✅ | **計量管線(Ceilometer)** | 誰開了幾台 VM、用了幾 GB——資料流進 Day 21 建好的 Prometheus;Gnocchi 為什麼繞過,證據攤給你看 |
+| [29](sprint5-day29-aodh-autoscaling.md) ✅ | **告警與自動擴縮(Aodh)** | Aodh 盯著 Prometheus 的數字,Heat 接到告警自己長 VM——收 Day 5 的伏筆 |
+| [30](sprint5-day30-cloudkitty-rating.md) ✅ | **計費(CloudKitty)** | 訂價規則、算錢、出報表——兩個租戶各拿各的帳單;帳單畫面在 Horizon(原因見設計決定) |
+| [31](sprint5-day31-masakari-ha.md) ✅ | **SLA 與自癒(Masakari)** | 回多機環境一天:VM 程序死掉自動重啟、compute 整台掛掉自動搬家 |
+| [32](sprint5-day32-full-tls.md) ✅ | **全站 TLS** | 所有 API 換上 https;內建 CA 為什麼不能上生產 |
+| [33](sprint5-day33-keycloak-federation.md) ✅ | **企業身分 SSO(Federation)** | 公司的 Keycloak 帳號直接登入這朵雲——Keystone 聯邦身分與角色對應 |
+| [34](sprint5-day34-cadf-audit.md) ✅ | **稽核軌跡(CADF)** | 「誰在何時對哪個資源做了什麼」——稽核事件接回 Day 21 的集中式 log |
+| [35](sprint5-day35-sprint5-recap.md) ✅ | **Sprint 5 總結 + 版圖課** | 前後對比;怎麼判斷一個 OpenStack 專案的生死——用四個真實案例教你驗屍 |
 
 ## 三個先講清楚的設計決定
 
