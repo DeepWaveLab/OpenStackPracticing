@@ -1549,6 +1549,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1696,6 +1706,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -3974,7 +4124,7 @@
 <h3 id="rgw-swift">為什麼物件儲存教 RGW,而不是 Swift<a class="headerlink" href="#rgw-swift" title="Permanent link">&para;</a></h3>
 <p>Swift 是 OpenStack 的元老級物件儲存服務,專案至今仍在維護;但 <strong>Kolla-Ansible 已在 2025 年移除了 Swift 的部署支援</strong>——整合長期乏人維護,社群選擇只保留 Ceph 路線(各部署工具的支援現況,見<a href="../../deployment-tools/">部署工具圖鑑</a>)。</p>
 <p>這反映的是整個業界的走向:物件儲存的主流實作已經是 <strong>Ceph</strong>。一套 Ceph 同時提供三種儲存——區塊(Cinder 後端)、檔案(Manila 後端)、物件(RGW),不需要為了物件儲存另外維護一套獨立系統。而 RGW 同時支援 <strong>S3 與 Swift 兩種 API</strong>,原本寫給 Swift 的應用程式指向 RGW 可以直接沿用。</p>
-<p>因此 Sprint 4 用「一天 Ceph、一天 RGW」來教物件儲存:Swift 的 API 照樣學到,還多學到 S3 與 Ceph 本身;Day 15 的 Manila 也建立在同一套 Ceph 上。</p>
+<p>因此 Sprint 4 用「一天 Ceph、一天 RGW」來教物件儲存:Swift 的 API 照樣學到,還多學到 S3 與 Ceph 本身;Day 16 的 Manila 也建立在同一套 Ceph 上。</p>
 <h3 id="_3">為什麼深層原理排在服務之後<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p>Day 19–20 的驗收標準只有一條:<strong>不靠 OpenStack CLI,你能不能讀懂這朵雲在做什麼?</strong> 解剖 token、追 request-id、用 <code>ovn-trace</code> 模擬封包——這些需要你先累積夠多「用過的東西」當解剖對象。前 18 天攢的每個服務,都是這兩天的教材。</p>
 <h3 id="_4">為什麼最後兩天要租新機器<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>

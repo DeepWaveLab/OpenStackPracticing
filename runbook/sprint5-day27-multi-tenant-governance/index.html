@@ -1419,6 +1419,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1834,6 +1844,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4496,8 +4646,17 @@
 </span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>neutron_server   enforce_scope/new_defaults = True True
 </span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>cinder_api       enforce_scope/new_defaults = True True
 </span></code></pre></div>
-<p>看起來全開了。<strong>但這個數字量到的是 oslo.policy 函式庫的預設值,不是各服務實際覆寫後的生效值</strong>——兩者未必相同,而從外部沒有可靠的方法區分。</p>
+<p>看起來全開了。<strong>但這個數字量到的是 oslo.policy 函式庫的預設值,不是各服務實際覆寫後的生效值</strong>——兩者未必相同,而這種<strong>靜態讀值</strong>分不出兩者。</p>
 <p>所以本章的判決是:<strong>列為概念討論,不宣稱已驗證。</strong> 你今天確實用到了 Secure RBAC 的一部分——步驟 4 那個 <code>--system all reader</code> 就是 system scope 加 reader 角色的實例,而且它有效(<a href="#mine-3">地雷 3</a> 就是靠它才看得見真相)。但「哪些服務真的在強制執行 scope」,這門課目前答不出來。</p>
+<div class="admonition note">
+<p class="admonition-title">這個△其實測得出來(留給想收尾的人)</p>
+<p>上面說「靜態讀值分不出兩者」是對的,但這不代表無法得知——有兩條路能把這個△變成可判決:</p>
+<ul>
+<li><strong>行為測試</strong>:拿一個 <strong>project-scoped</strong> 的 admin token 去打一個「scope 不符時會<strong>明確拒絕</strong>」的 system-scope API。若 <code>enforce_scope</code> 真的生效會被擋(403),沒生效會照過——過或擋,直接告訴你答案。<strong>但要挑對 API</strong>:本章 <a href="#mine-3">地雷 3</a> 實測過 <code>GET /v3/limits</code> 對 project token 是回 <strong>200 + 靜默過濾成空清單</strong>(既不 403 也不算「照過」),這種<strong>過濾型</strong>端點當不了判別器,得選 scope 不符會回 403 的操作。</li>
+<li><strong><code>oslopolicy-policy-generator</code></strong>:對各服務跑一次,它吐出的是<strong>生效後</strong>的 policy 值,不是函式庫預設值,正好補上靜態讀值量不到的那一半。</li>
+</ul>
+<p>本課沒有逐一跑這兩條(所以維持△),但它們的存在說明:這是「本課還沒去驗」,不是「無法得知」。</p>
+</div>
 <h2 id="_5">帶得走的東西<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>權限不是使用者的屬性,是「使用者 × 專案」的關係。</strong> 同一個帳號在 A 專案是 member、在 B 專案什麼都不是——所有分帳、告警、稽核的邊界都從這個結構長出來。</li>

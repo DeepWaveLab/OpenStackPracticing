@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/day-7-magnum-k8s-cluster/">
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint5-day32-full-tls/">
       
       
-        <link rel="prev" href="../day-6-magnum/">
+        <link rel="prev" href="../sprint5-day31-masakari-ha/">
       
       
-        <link rel="next" href="../day-8-storage-attempts/">
+        <link rel="next" href="../sprint5-day33-keycloak-federation/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Day 7 · Magnum k8s cluster - OpenStack Lab Course</title>
+        <title>Day 32 · 全站 TLS - OpenStack Lab Course</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-7-magnum-k8s-cluster" class="md-skip">
+        <a href="#day-32-tls-api-https" class="md-skip">
           跳轉到
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 7 · Magnum k8s cluster
+              Day 32 · 全站 TLS
             
           </span>
         </div>
@@ -231,6 +231,8 @@
   
   
   
+    
+  
   
     
     
@@ -238,10 +240,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
           
   
@@ -285,12 +289,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../../previous-attempts/" class="md-tabs__link">
           
   
@@ -397,8 +399,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -412,19 +416,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -442,7 +449,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -494,17 +501,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
-          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
             
   
   
@@ -948,17 +958,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
             
   
   
@@ -1391,8 +1404,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1419,18 +1434,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
             
   
   
@@ -1448,7 +1466,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1603,10 +1621,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1622,6 +1667,247 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TLS 要有人終結,而這朵雲把大門拆了
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-vip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:給這朵雲一個 VIP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-globals-tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:改 globals,把大門與 TLS 一起打開
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-ca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:產生 CA 與憑證
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:部署前檢查——四次擋下,四次都對
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5openrc-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:openrc 換 https——第一次連線會失敗
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 6:全服務回歸——TLS 會咬到你手寫的設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:沒有 haproxy 就沒有地方終結 TLS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:VIP 用 netplan 掛會篡位成主機主 IP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:cephadm 的 RGW 綁 0.0.0.0,佔住 VIP 的埠
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:開了 RGW 負載平衡卻沒告訴它後端在哪
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:TLS 引爆了你三天前手寫的設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 6:openrc 的 CA 要另外指定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2570,10 +2856,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -2591,22 +2875,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -2624,7 +2905,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2695,10 +2976,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -2747,21 +3026,18 @@
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
           
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
             
   
   
@@ -2779,7 +3055,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3298,37 +3574,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Day 7 · Magnum k8s cluster
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
         
   
   
@@ -3344,186 +3593,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        目的
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-04-20" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        最終結果（2026-04-20）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟（濃縮版，7 個 fix 都在裡）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟（濃縮版，7 個 fix 都在裡）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-fix-magnum-config-barbican" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Fix Magnum config（不用 Barbican）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fix-force_config_drive-fcos-ignition-iso-race" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-fix-ovn-metadata-agent-nova" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Fix ovn-metadata-agent 找不到 Nova
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-download-fcos-38-docker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Download FCOS 38（不是最新，最新沒 Docker）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-flavor-cluster-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. 建 flavor &amp; cluster template
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. 建 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-master-cniflannel-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 進 master 換 CNI（flannel image 死了）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#8-cloud-provider-uninitialized-taintccm-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-limitations-lab-magnum-upstream" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下一步建議
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        環境速查
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3588,20 +3657,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   
@@ -3963,44 +4029,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#tls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TLS 要有人終結,而這朵雲把大門拆了
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        目的
+        步驟
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-04-20" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        最終結果（2026-04-20）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟（濃縮版，7 個 fix 都在裡）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟（濃縮版，7 個 fix 都在裡）">
+    <nav class="md-nav" aria-label="步驟">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-fix-magnum-config-barbican" class="md-nav__link">
+  <a href="#1-vip" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Fix Magnum config（不用 Barbican）
+        步驟 1:給這朵雲一個 VIP
       
     </span>
   </a>
@@ -4008,10 +4063,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-fix-force_config_drive-fcos-ignition-iso-race" class="md-nav__link">
+  <a href="#2-globals-tls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race
+        步驟 2:改 globals,把大門與 TLS 一起打開
       
     </span>
   </a>
@@ -4019,10 +4074,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-fix-ovn-metadata-agent-nova" class="md-nav__link">
+  <a href="#3-ca" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Fix ovn-metadata-agent 找不到 Nova
+        步驟 3:產生 CA 與憑證
       
     </span>
   </a>
@@ -4030,10 +4085,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-download-fcos-38-docker" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Download FCOS 38（不是最新，最新沒 Docker）
+        步驟 4:部署前檢查——四次擋下,四次都對
       
     </span>
   </a>
@@ -4041,10 +4096,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-flavor-cluster-template" class="md-nav__link">
+  <a href="#5openrc-https" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. 建 flavor &amp; cluster template
+        步驟 5:openrc 換 https——第一次連線會失敗
       
     </span>
   </a>
@@ -4052,32 +4107,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#6-cluster" class="md-nav__link">
+  <a href="#6tls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6. 建 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-master-cniflannel-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 進 master 換 CNI（flannel image 死了）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#8-cloud-provider-uninitialized-taintccm-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）
+        步驟 6:全服務回歸——TLS 會咬到你手寫的設定
       
     </span>
   </a>
@@ -4090,10 +4123,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#known-limitations-lab-magnum-upstream" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）
+        驗收 checkpoint
       
     </span>
   </a>
@@ -4104,10 +4137,82 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步建議
+        地雷記錄
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:沒有 haproxy 就沒有地方終結 TLS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:VIP 用 netplan 掛會篡位成主機主 IP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:cephadm 的 RGW 綁 0.0.0.0,佔住 VIP 的埠
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:開了 RGW 負載平衡卻沒告訴它後端在哪
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:TLS 引爆了你三天前手寫的設定
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 6:openrc 的 CA 要另外指定
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -4115,7 +4220,29 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        環境速查
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
       
     </span>
   </a>
@@ -4139,130 +4266,268 @@
 
 
 
-<h1 id="day-7-magnum-k8s-cluster">Day 7: Magnum K8s Cluster 實建<a class="headerlink" href="#day-7-magnum-k8s-cluster" title="Permanent link">&para;</a></h1>
-<p><img align="right" alt="Magnum 官方吉祥物" src="../../assets/mascots/magnum.png" width="110" /></p>
-<h2 id="_1">目的<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>用 Magnum 從零 provision 一個 K8s cluster：FCOS VM → kubeadm → 2 nodes Ready → <code>kubectl run</code>。驗證 Magnum+Heat+Nova+Neutron+OVN 整條鏈。</p>
-<h2 id="2026-04-20">最終結果（2026-04-20）<a class="headerlink" href="#2026-04-20" title="Permanent link">&para;</a></h2>
+<h1 id="day-32-tls-api-https">Day 32: 全站 TLS——把每個 API 換上 https<a class="headerlink" href="#day-32-tls-api-https" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>前 31 天,這朵雲的每一個 API 都走明文 http:token、密碼、資料全裸奔在網路上。生產化的第一件事就是把它們全部換成 https。今天要做的表面上是「加密」,實際上你會發現這件事牽動的是<strong>整個入口架構</strong>——加密只是結果,真正動的是「大門在哪、誰來守」。本章有一半的篇幅在講四次被部署前檢查擋下的失敗,而<strong>那四次擋下全都是對的</strong>。</p>
+</blockquote>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
 <ul>
-<li><strong>Heat stack CREATE_COMPLETE</strong> ✅</li>
-<li><strong>master + worker VM 跑 K8s 1.23.3 on FCOS 38</strong> ✅</li>
-<li><strong>2 nodes Ready</strong>（透過 Calico CNI 取代壞掉的 flannel） ✅</li>
-<li><strong>kubectl get nodes 正常</strong> ✅</li>
-<li>pod workload 跑不起來（Magnum 內建 k8s-keystone-auth webhook image 壞，apiserver TokenReview call webhook 401 → SA token 無法簽發）</li>
+<li><strong>Day 21</strong>:Prometheus/Grafana 上線,但全部走 http。</li>
+<li><strong>今天</strong>:回單機環境,把 haproxy 裝回來當 TLS 終結點,全站 API 換 https,跑完整回歸。</li>
+<li><strong>今天之後</strong>:<a href="../sprint5-day33-keycloak-federation/">Day 33</a> 的企業 SSO 需要 https 的 redirect URI——今天是它的硬前提。</li>
 </ul>
-<h2 id="7-fix">步驟（濃縮版，7 個 fix 都在裡）<a class="headerlink" href="#7-fix" title="Permanent link">&para;</a></h2>
-<h3 id="1-fix-magnum-config-barbican">1. Fix Magnum config（不用 Barbican）<a class="headerlink" href="#1-fix-magnum-config-barbican" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>juju<span class="w"> </span>config<span class="w"> </span>magnum<span class="w"> </span>cert-manager-type<span class="o">=</span>x509keypair<span class="w"> </span>cluster-user-trust<span class="o">=</span><span class="nb">true</span>
+</div>
+<h2 id="tls">TLS 要有人終結,而這朵雲把大門拆了<a class="headerlink" href="#tls" title="Permanent link">&para;</a></h2>
+<p>「開 TLS」在 kolla 裡是兩個開關:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">kolla_enable_tls_internal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">kolla_enable_tls_external</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
 </span></code></pre></div>
-<h3 id="2-fix-force_config_drive-fcos-ignition-iso-race">2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race<a class="headerlink" href="#2-fix-force_config_drive-fcos-ignition-iso-race" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>juju<span class="w"> </span>config<span class="w"> </span>nova-compute<span class="w"> </span>config-flags<span class="o">=</span><span class="s1">&#39;force_config_drive=True&#39;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># ⚠️ 不是 &#39;always&#39;（Caracal bool 化了）</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># charm 會刷掉 nova.conf 的 [neutron] patch，要 re-patch（見 day-4 solution）</span>
+<p>但開關背後有個假設:<strong>TLS 由 haproxy 終結</strong>。外部請求打 haproxy 的 https 前端,haproxy 解密後轉給後端服務。看 kolla 原始碼,只有三個 role 認得 TLS 開關——<code>loadbalancer</code>(haproxy)、<code>horizon</code>、<code>cloudkitty</code>,其餘服務自己完全不管加密,全靠 haproxy 在前面擋。</p>
+<p>問題來了:本課的單機 lab 從 <a href="../sprint3-day1-kolla-aio-core/">Sprint 3</a> 起就<strong>關掉了 haproxy</strong>(單機不需要負載平衡,省資源):</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">enable_haproxy</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">enable_proxysql</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nt">kolla_internal_vip_address</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.0.0.4&quot;</span><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">← 直接就是主機 IP</span>
 </span></code></pre></div>
-<h3 id="3-fix-ovn-metadata-agent-nova">3. Fix ovn-metadata-agent 找不到 Nova<a class="headerlink" href="#3-fix-ovn-metadata-agent-nova" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>juju<span class="w"> </span>ssh<span class="w"> </span>nova-compute/2<span class="w"> </span>--<span class="w"> </span><span class="s2">&quot;</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s2">  sudo sed -i &#39;/^\[DEFAULT\]/a nova_metadata_host = 10.254.154.207\nnova_metadata_port = 8775&#39; /etc/neutron/neutron_ovn_metadata_agent.ini</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s2">  sudo sed -i &#39;s|metadata_proxy_shared_secret=.*|metadata_proxy_shared_secret=</span><span class="k">$(</span>juju<span class="w"> </span>ssh<span class="w"> </span>nova-cloud-controller/0<span class="w"> </span>--<span class="w"> </span>sudo<span class="w"> </span>grep<span class="w"> </span>metadata_proxy_shared_secret<span class="w"> </span>/etc/nova/nova.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F<span class="o">=</span><span class="w"> </span><span class="se">\&quot;</span><span class="o">{</span>print<span class="w"> </span><span class="se">\\\$</span><span class="m">2</span><span class="o">}</span><span class="se">\&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="se">\&quot;</span><span class="w"> </span><span class="se">\&quot;</span><span class="k">)</span><span class="s2">|&#39; /etc/neutron/neutron_ovn_metadata_agent.ini</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">  sudo systemctl restart neutron-ovn-metadata-agent</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s2">&quot;</span>
+<p><strong>沒有大門,就沒有地方終結 TLS。</strong> 所以今天的第一步不是開 TLS,是<strong>把大門裝回來</strong>——haproxy、proxysql、以及它們需要的 VIP。這是今天最反直覺的地方:一個關於「加密」的任務,第一個動作是重建入口架構。</p>
+<h2 id="_1">步驟<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="1-vip">步驟 1:給這朵雲一個 VIP<a class="headerlink" href="#1-vip" title="Permanent link">&para;</a></h3>
+<p>haproxy 需要一個獨立於主機主 IP 的虛擬 IP(VIP)當前端位址。在 Azure 上這要兩層設定——雲層加 secondary IP,OS 層把它接起來:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Azure 層:給網卡加一個 secondary private IP</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>az<span class="w"> </span>network<span class="w"> </span>nic<span class="w"> </span>ip-config<span class="w"> </span>create<span class="w"> </span>...<span class="w"> </span>--private-ip-address<span class="w"> </span><span class="m">10</span>.0.0.250
 </span></code></pre></div>
-<h3 id="4-download-fcos-38-docker">4. Download FCOS 38（不是最新，最新沒 Docker）<a class="headerlink" href="#4-download-fcos-38-docker" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-sSL<span class="w"> </span>-O<span class="w"> </span>https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/38.20231014.3.0/x86_64/fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2.xz
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>unxz<span class="w"> </span>fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2.xz
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">source</span><span class="w"> </span>~/openrc
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--file<span class="w"> </span>~/fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>fedora-coreos<span class="w"> </span>fedora-coreos-38
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># OS 層:把 10.0.0.250 接上 eth0</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">10</span>.0.0.250/32<span class="w"> </span>dev<span class="w"> </span>eth0
 </span></code></pre></div>
-<h3 id="5-flavor-cluster-template">5. 建 flavor &amp; cluster template<a class="headerlink" href="#5-flavor-cluster-template" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>flavor<span class="w"> </span>create<span class="w"> </span>--ram<span class="w"> </span><span class="m">2048</span><span class="w"> </span>--disk<span class="w"> </span><span class="m">15</span><span class="w"> </span>--vcpus<span class="w"> </span><span class="m">1</span><span class="w"> </span>--public<span class="w"> </span>k8s.small
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--image<span class="w"> </span>fedora-coreos-38<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--external-network<span class="w"> </span>ext_net<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--keypair<span class="w"> </span>lab_key<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--flavor<span class="w"> </span>k8s.small<span class="w"> </span>--master-flavor<span class="w"> </span>k8s.small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--network-driver<span class="w"> </span>flannel<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--docker-storage-driver<span class="w"> </span>overlay2
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># ⚠️ 不加 --volume-driver cinder（我們沒部署 cinder）</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># ⚠️ 不加 --docker-volume-size（一樣原因）</span>
+<div class="admonition danger">
+<p class="admonition-title">OS 層這一步藏著一顆會擋下整個部署的雷</p>
+<p>直覺會用 netplan 做持久化,但那會讓 <strong>10.0.0.250 篡位成主機的主 IP</strong>,ansible 於是把 VIP 當成主機位址,部署前檢查直接擋下。正確做法是用 systemd 把它掛成<strong>次要</strong> IP——細節見<a href="#mine-2">地雷 2</a>。</p>
+</div>
+<h3 id="2-globals-tls">步驟 2:改 globals,把大門與 TLS 一起打開<a class="headerlink" href="#2-globals-tls" title="Permanent link">&para;</a></h3>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">kolla_internal_vip_address</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;10.0.0.250&quot;</span><span class="w">     </span><span class="c1"># 從主機 IP 改成 VIP</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">enable_haproxy</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w">                         </span><span class="c1"># 大門裝回來</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nt">enable_proxysql</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nt">kolla_enable_tls_internal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">kolla_enable_tls_external</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nt">kolla_copy_ca_into_containers</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span><span class="w">          </span><span class="c1"># 讓容器信任自簽 CA</span>
 </span></code></pre></div>
-<h3 id="6-cluster">6. 建 cluster<a class="headerlink" href="#6-cluster" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>my-k8s<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--cluster-template<span class="w"> </span>k8s-small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--master-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 等 15-18 分鐘（Heat 建 VM + ignition + bootstrap + kubeadm）</span>
+<h3 id="3-ca">步驟 3:產生 CA 與憑證<a class="headerlink" href="#3-ca" title="Permanent link">&para;</a></h3>
+<p>kolla 有一鍵產憑證的指令,會建一個<strong>自簽的內建 CA</strong>(<code>KollaTestCA</code>)並用它簽所有服務的憑證:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kolla-ansible<span class="w"> </span>certificates<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
 </span></code></pre></div>
-<h3 id="7-master-cniflannel-image">7. 進 master 換 CNI（flannel image 死了）<a class="headerlink" href="#7-master-cniflannel-image" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">FIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>show<span class="w"> </span>my-k8s<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>master_addresses<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;[]&#39;&quot;</span><span class="k">)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/lab_key.pem<span class="w"> </span>core@<span class="nv">$FIP</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>-n<span class="w"> </span>kube-system<span class="w"> </span>delete<span class="w"> </span>ds<span class="w"> </span>kube-flannel-ds
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># 30-60 秒後 master + worker 變 Ready</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span>get<span class="w"> </span>nodes
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>subject=C = US, ST = NC, L = RTP, OU = kolla
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>issuer=CN = KollaTestCA
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>notBefore=Jul 16 08:05:09 2026 GMT
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>notAfter =Jul 16 08:05:09 2027 GMT
 </span></code></pre></div>
-<h3 id="8-cloud-provider-uninitialized-taintccm-image">8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）<a class="headerlink" href="#8-cloud-provider-uninitialized-taintccm-image" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>taint<span class="w"> </span>nodes<span class="w"> </span>my-k8s-xxx-node-0<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>node.cloudprovider.kubernetes.io/uninitialized:NoSchedule-
-</span></code></pre></div>
-<h2 id="known-limitations-lab-magnum-upstream">Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）<a class="headerlink" href="#known-limitations-lab-magnum-upstream" title="Permanent link">&para;</a></h2>
-<p>Magnum Caracal 的 <code>k8s_fedora_coreos_v1</code> driver 內嵌一堆 5 年前的 image URL：</p>
+<div class="admonition warning">
+<p class="admonition-title"><code>KollaTestCA</code> 的名字沒在開玩笑——它不能上生產</p>
+<p>這個 CA 是自簽的,沒有任何公開信任鏈:客戶端要嘛手動信任它、要嘛關掉驗證。它適合 lab 和內部測試,<strong>不能拿去對外</strong>。生產環境要用真正的 CA(公司內部 PKI,或 Let's Encrypt 這類公開 CA)簽的憑證。本課用它學會「TLS 全鏈怎麼接」,但那條鏈的信任錨點,上線前必須換掉。</p>
+</div>
+<h3 id="4">步驟 4:部署前檢查——四次擋下,四次都對<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
+<p>這是今天最有教學價值的一段。<code>prechecks</code> 連續擋下四次,而<strong>每一次都是在阻止一場真的會發生的災難</strong>:</p>
 <table>
 <thead>
 <tr>
-<th>Image</th>
-<th>現況</th>
-<th>影響</th>
+<th>次</th>
+<th>precheck 說什麼</th>
+<th>真正的問題</th>
+<th>對應地雷</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>quay.io/coreos/flannel-cni:v0.3.0</code></td>
-<td>401 Unauthorized（namespace 2022 遷走）</td>
-<td>flannel 裝不起來（已改 Calico）</td>
+<td>1</td>
+<td><code>Timeout waiting for 10.0.0.250:7480 to stop</code></td>
+<td>RGW 綁在 <code>0.0.0.0</code>,佔住了 VIP 的埠</td>
+<td><a href="#mine-3">地雷 3</a></td>
 </tr>
 <tr>
-<td><code>openstackmagnum/openstack-cloud-controller-manager:XXX</code></td>
-<td>ImagePullBackOff</td>
-<td>node 一直有 uninitialized taint（手動清）</td>
+<td>2</td>
+<td><code>Hostname has to resolve uniquely to the IP address of api_interface</code></td>
+<td>VIP 篡位成主機主 IP</td>
+<td><a href="#mine-2">地雷 2</a></td>
 </tr>
 <tr>
-<td><code>openstackmagnum/k8s-keystone-auth:XXX</code></td>
-<td>ImagePullBackOff</td>
-<td>kube-apiserver 的 TokenReview webhook call 失敗 → SA token 簽不出 → pod 的 <code>kube-api-access-*</code> volume mount 卡死 → workload 跑不起來</td>
+<td>3</td>
+<td><code>enable_ceph_rgw_loadbalancer ... no HAProxy members</code></td>
+<td>開了 RGW 負載平衡卻沒指定後端</td>
+<td><a href="#mine-4">地雷 4</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>(通過)</td>
+<td></td>
+<td></td>
 </tr>
 </tbody>
 </table>
-<p><strong>結論</strong>：cluster provisioning 層全通、K8s 本體跑，但 Magnum driver 的 default manifest 太舊，實際部署 workload 要額外手工修。</p>
-<h2 id="_2">下一步建議<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<ul>
-<li>若只需要學 OpenStack + K8s 整合：到這就夠了</li>
-<li>若要實際用 K8s on OpenStack：換 <a href="https://github.com/kubernetes-sigs/cluster-api-provider-openstack">cluster-api-provider-openstack</a></li>
-<li>或 fork magnum 把 driver image URL 改成現行版（upstream 已有 PR 討論）</li>
-</ul>
-<h2 id="_3">環境速查<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cluster uuid:    de1820ba-b8b3-4268-904b-35e142d4d8ab
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>master floating: 172.16.200.180
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>worker floating: 172.16.200.196
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>SSH:             ssh -i ~/lab_key.pem core@&lt;fip&gt;
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>kubectl path:    /srv/magnum/bin/kubectl
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>kubeconfig:      /etc/kubernetes/admin.conf (on master)
+<p>四關全過之後,<code>ok=142 failed=0</code>,才進全量部署:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>=== prechecks ===
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>localhost  : ok=142  failed=0
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>=== 全量 deploy ===
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>localhost  : ok=872  changed=342  failed=0
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>=== post-deploy(重產 openrc)===
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>localhost  : ok=10   changed=6    failed=0
 </span></code></pre></div>
-<p>拉 kubeconfig 回本機：
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>config<span class="w"> </span>my-k8s<span class="w"> </span>--dir<span class="w"> </span>~/my-k8s-config
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>~/my-k8s-config/config
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
-</span></code></pre></div></p>
+<p><strong>這四次擋下值得停下來想</strong>：如果 precheck 不擋,直接 deploy 下去——RGW 和 haproxy 搶同一個埠、ansible 對著 VIP 當主機部署、RGW 負載平衡指向空氣。每一個都會炸,而且炸得比 precheck 的錯誤訊息難懂得多。部署前檢查不是官僚流程,是<strong>把「跑到一半才爆」提前成「動手前就擋」</strong>。</p>
+<h3 id="5openrc-https">步驟 5:openrc 換 https——第一次連線會失敗<a class="headerlink" href="#5openrc-https" title="Permanent link">&para;</a></h3>
+<p><code>post-deploy</code> 重產的 openrc 已經指向 https:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>export OS_AUTH_URL=&#39;https://10.0.0.250:5000&#39;
+</span></code></pre></div>
+<p>但直接用會撞 SSL 錯誤:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>SSLError: certificate verify failed: unable to get local issuer certificate
+</span></code></pre></div>
+<p>因為 <code>KollaTestCA</code> 是自簽的,客戶端不認得。openrc 要另外帶 CA 檔——而這需要一個獨立的設定(<a href="#mine-6">地雷 6</a>):</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">kolla_admin_openrc_cacert</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">kolla_certificates_dir</span><span class="nv"> </span><span class="s">}}/ca/root.crt&quot;</span>
+</span></code></pre></div>
+<p>重跑 post-deploy 後,openrc 補上 <code>OS_CACERT</code>,API 就通了:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>export OS_CACERT=&#39;/etc/kolla/certificates/ca/root.crt&#39;
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>openstack endpoint list --service identity
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  public   https://10.0.0.250:5000
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  internal https://10.0.0.250:5000
+</span></code></pre></div>
+<h3 id="6tls">步驟 6:全服務回歸——TLS 會咬到你手寫的設定<a class="headerlink" href="#6tls" title="Permanent link">&para;</a></h3>
+<p>換了大門和協定,得確認<strong>每個服務都還活著</strong>。多數服務無痛(它們的加密由 haproxy 代勞),但有一個會爆:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>HttpException: 500 ... Unexpected API Error
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>nova-api log: The identity service for 10.0.0.4:None exists but does not
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>              have any supported versions.
+</span></code></pre></div>
+<p>Nova 掛了,而根因在 <strong>Day 27 手寫的 <code>[oslo_limit]</code> 設定</strong>——它寫死了 <code>auth_url = http://10.0.0.4:5000</code>,TLS 上線後那個 http 位址不再有效(<a href="#mine-5">地雷 5</a>)。改成 https + 補 CA:</p>
+<div class="language-ini highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">[oslo_limit]</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="na">auth_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">https://10.0.0.250:5000/v3</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="na">cafile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/etc/ssl/certs/ca-certificates.crt</span>
+</span></code></pre></div>
+<p>修完全站回歸:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>--- 容器 ---  總數 91 | 不健康:(無)
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>--- endpoints 還有非 https 的嗎 ---  (只剩 prometheus 後端,見下)
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>--- 核心讀操作 ---  server/volume/network/image/container list 全部正常
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>--- UI ---  Skyline https://…:9999 → 200 | Horizon http → 301 轉 https
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>--- Swift 往返 ---  上傳下載,hello-rgw.txt 原樣取回
+</span></code></pre></div>
+<p>91 個容器零不健康、所有面向使用者的 endpoint 都是 https、UI 把 http 自動轉向 https、連 Day 15 的物件儲存往返都還通。</p>
+<div class="admonition warning">
+<p class="admonition-title">回歸清單漏了旗艦資產:Magnum/CAPI 整合</p>
+<p>這次回歸驗了核心 list 與 Swift,但沒驗最大的受災戶——<a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 的 workload cluster。全站 http→https、VIP 從 <code>10.0.0.4</code> 換到 <code>10.0.0.250</code> 之後,cluster 內的 OCCM / Cinder CSI cloud-config、CAPO 的 clouds.yaml、magnum trustee 流程,全都還烤著建立當下的 <code>http://10.0.0.4:5000</code>——它們的下一次動作(開 LB、供裝 PVC、reconcile)會跟<a href="#mine-5">地雷 5</a> 的 <code>[oslo_limit]</code> 一樣爆。本章教訓「每個手寫覆寫都是會引爆的債」的最大案例就站在旁邊,卻不在上面的回歸清單裡。</p>
+<p><strong>誠實交代</strong>:本次回歸沒有重測這條整合(該 cluster 是否還在服役視環境而定),所以這裡標成<strong>已知債</strong>而非驗證結果。要收尾,正解不只是 patch workload <code>cloud-config</code> secret 的 <code>auth-url</code> 到新的 https VIP——<strong>因為 <code>KollaTestCA</code> 是自簽的,還得把 CA 一併餵給 cloud-config(<code>ca-file</code>)與 CAPO 的 clouds.yaml(<code>cacert</code>),否則只改 <code>auth-url</code> 只會從『連不上 http』變成 <code>x509: unknown authority</code></strong>(正是本章 openrc 要補 <code>OS_CACERT</code>、<a href="#mine-5">地雷 5</a> 要補 <code>cafile</code> 的同一件事)。補好 CA、重啟 CCM,再測一次 PVC/LB;若這個 cluster 已不再維護,就明講它從今天起半殘、需重建。</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">為什麼 Prometheus 還是 http</p>
+<p>endpoint 清單裡 prometheus 仍顯示 <code>http://10.0.0.4:9091</code>——那是<strong>後端內部位址</strong>,不是使用者入口。使用者透過 haproxy 的 <code>https://…:9091</code> 進來(TLS 在那裡終結),haproxy 到後端那一小段走內網 http。這是 TLS-終結架構的正常樣貌:<strong>加密在邊界,內網那一跳是另一個決定</strong>(要不要連內網都加密,是 <code>kolla_enable_tls_backend</code> 的課題,本課未開)。</p>
+</div>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>驗證</th>
+<th>判準</th>
+<th>本課環境的結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CA 與憑證</td>
+<td><code>KollaTestCA</code> 簽出各服務憑證</td>
+<td>一年效期,已產生</td>
+</tr>
+<tr>
+<td>部署前檢查</td>
+<td>四關全過(<code>failed=0</code>)</td>
+<td>ok=142</td>
+</tr>
+<tr>
+<td>全量部署</td>
+<td><code>failed=0</code></td>
+<td>ok=872 changed=342</td>
+</tr>
+<tr>
+<td>openrc</td>
+<td>指向 https 且帶 CA,API 可認證</td>
+<td>endpoint 全 https</td>
+</tr>
+<tr>
+<td><strong>全服務回歸</strong></td>
+<td>91 容器健康、核心操作正常</td>
+<td>零不健康</td>
+</tr>
+<tr>
+<td>endpoint 協定</td>
+<td>使用者入口全 https</td>
+<td>符合(prometheus 後端除外)</td>
+</tr>
+<tr>
+<td>UI</td>
+<td>http 自動轉 https</td>
+<td>Skyline 200、Horizon 301→https</td>
+</tr>
+<tr>
+<td>既有功能</td>
+<td>Day 15 的 Swift 往返仍通</td>
+<td><code>hello-rgw.txt</code> 原樣取回</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">地雷記錄<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:沒有 haproxy 就沒有地方終結 TLS<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:單機 lab(關掉 haproxy)直接開 <code>kolla_enable_tls_internal</code>,precheck 就擋——它要求內外 VIP 不同,而單機根本沒有 VIP。</p>
+<p><strong>根因</strong>:kolla 的 TLS 由 haproxy 終結,只有三個 role 認得 TLS 開關。沒有 haproxy,TLS 開關無處著力。</p>
+<p><strong>解法</strong>:先把 haproxy 裝回來,連帶 proxysql 與 VIP。</p>
+<p><strong>教訓</strong>:<strong>一個功能的開關,常常預設了一整套你以為早就有、其實被你關掉的架構。</strong> 「開 TLS」讀起來像一行設定,做起來是重建入口。動手前先問:這個開關假設了什麼前提?</p>
+<h3 id="mine-2">地雷 2:VIP 用 netplan 掛會篡位成主機主 IP<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:VIP 設好、部署跑起來,precheck 卻擋:<code>Hostname has to resolve uniquely to the IP address of api_interface</code>。</p>
+<p><strong>判讀關鍵</strong>:錯誤訊息完全不提 VIP,只說「主機名沒有唯一解析到 api_interface 的 IP」。查 ansible 的 fact,它認為 eth0 的主 IP 是 <code>10.0.0.250</code>(VIP),不是 <code>10.0.0.4</code>(真主機 IP)。</p>
+<p><strong>根因</strong>:用 netplan 加位址時,新位址會被當成介面的<strong>主</strong> IP。於是 ansible 把 VIP 當成了主機位址,一切錯亂。</p>
+<p><strong>解法</strong>:改用 systemd oneshot 在開機後 <code>ip addr add</code>,讓 VIP 掛成<strong>次要</strong> IP,主 IP 仍是 <code>10.0.0.4</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>inet 10.0.0.4/24   metric 100 ... eth0     ← 主
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>inet 10.0.0.250/32 ...          eth0       ← 次要
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>ansible fact address: 10.0.0.4             ← 對了
+</span></code></pre></div>
+<p><strong>教訓</strong>:<strong>同一個「加一個 IP」的動作,不同工具給的語意不同。</strong> netplan 把它當「這個介面的位址」,<code>ip addr add</code> 當「多掛一個」。VIP 這種「必須是次要」的位址,對掛法很敏感——而症狀(主機名解析錯誤)離根因(掛法)有十萬八千里。</p>
+<h3 id="mine-3">地雷 3:cephadm 的 RGW 綁 <code>0.0.0.0</code>,佔住 VIP 的埠<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:precheck 擋在 <code>Timeout when waiting for 10.0.0.250:7480 to stop</code>——它要那個埠淨空好讓 haproxy 用,但埠上有人。</p>
+<p><strong>根因</strong>:<a href="../sprint4-day15-object-storage-rgw/">Day 15</a> 的 RGW 綁在 <code>0.0.0.0:7480</code>(所有位址),自然包含了 VIP 的 <code>10.0.0.250:7480</code>。haproxy 要在那個埠開 RGW 的前端,撞車。</p>
+<p><strong>解法</strong>:把 RGW 改綁到主機 IP,騰出 VIP 的埠。而這裡有第二層坑:RGW 的綁定設定藏在<strong>兩層</strong> ceph config(<code>client.rgw</code> 全域級 vs daemon 級),<code>ceph orch apply</code> 的 <code>networks</code> 欄位在這個版本不收斂,最後是直接設 daemon 級的 <code>rgw_frontends</code> 才生效:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>ceph<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>client.rgw.&lt;daemon&gt;<span class="w"> </span>rgw_frontends<span class="w"> </span><span class="s1">&#39;beast endpoint=10.0.0.4:7480&#39;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>ceph<span class="w"> </span>orch<span class="w"> </span>restart<span class="w"> </span>rgw.kolla
+</span></code></pre></div>
+<p><strong>教訓</strong>:<strong>兩套系統同機時,「綁所有位址」是一種對未來的透支。</strong> <a href="../sprint4-day15-object-storage-rgw/">Day 15</a> 綁 <code>0.0.0.0</code> 當時毫無問題,直到今天要在同一個埠上放 haproxy 才爆。同機共存的服務,綁 IP 要綁具體位址,別綁 <code>0.0.0.0</code>。</p>
+<h3 id="mine-4">地雷 4:開了 RGW 負載平衡卻沒告訴它後端在哪<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:precheck 擋 <code>enable_ceph_rgw_loadbalancer is enabled but no HAProxy members are configured. Have you set ceph_rgw_hosts?</code>。</p>
+<p><strong>根因</strong>:把 RGW 也放進 haproxy(讓它也走 VIP + TLS)需要兩件事:開 <code>enable_ceph_rgw_loadbalancer</code>,<strong>以及</strong>用 <code>ceph_rgw_hosts</code> 告訴 haproxy 後端 RGW 在哪台哪個埠。只開前者,haproxy 不知道要往哪轉。</p>
+<p><strong>解法</strong>:補 <code>ceph_rgw_hosts</code>:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nt">ceph_rgw_hosts</span><span class="p">:</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">openstack-lab</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0.0.4</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7480</span>
+</span></code></pre></div>
+<p><strong>教訓</strong>:這顆 precheck 是<strong>正面教材</strong>——它不只說「錯了」,還直接問「你是不是忘了設 <code>ceph_rgw_hosts</code>?」。好的部署前檢查會把根因和解法一起遞給你。</p>
+<h3 id="mine-5">地雷 5:TLS 引爆了你三天前手寫的設定<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:全站換 https 後,只有 Nova 掛掉,<code>500 ... identity service for 10.0.0.4:None ... does not have any supported versions</code>。</p>
+<p><strong>根因</strong>:<a href="../sprint5-day27-multi-tenant-governance/#mine-1">Day 27</a> 為了 unified limits 手寫了一段 <code>[oslo_limit]</code>,裡面<strong>寫死</strong> <code>auth_url = http://10.0.0.4:5000</code>。TLS 上線後,那個 http 位址不再提供服務,Nova 每次查額度都失敗。</p>
+<p><strong>解法</strong>:把手寫設定裡的 auth_url 改成 https,並補 cafile。</p>
+<p><strong>教訓</strong>:這是本章最重要的一顆,因為它揭露了<strong>手寫覆寫設定的長期成本</strong>——kolla 永遠不會更新你手寫的檔。模板產生的設定會隨著 TLS 上線自動改成 https,但你三天前手寫的那一段,只有你自己記得要改。<strong>每一個手寫覆寫,都是一筆未來某次架構變動時會引爆的債。</strong> 手寫之前先想:有沒有 kolla 變數能達到同樣效果?</p>
+<h3 id="mine-6">地雷 6:openrc 的 CA 要另外指定<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:post-deploy 產的 openrc 指向 https,但用它認證撞 <code>certificate verify failed: unable to get local issuer certificate</code>。</p>
+<p><strong>根因</strong>:openrc 有了 <code>OS_AUTH_URL=https://...</code> 卻沒有 <code>OS_CACERT</code>。客戶端不認得自簽的 <code>KollaTestCA</code>,無法驗證伺服器憑證。</p>
+<p><strong>解法</strong>:設 <code>kolla_admin_openrc_cacert</code> 指向 CA 檔,重跑 post-deploy,openrc 就會補上 <code>OS_CACERT</code>。</p>
+<p><strong>教訓</strong>:自簽 CA 的世界裡,<strong>「伺服器出示憑證」和「客戶端信任那張憑證」是兩件要分別安排的事</strong>。伺服器端的 TLS 開了不代表客戶端就能連——每個客戶端都得被告知「這個 CA 可信」。這也正是 <code>KollaTestCA</code> 不能上生產的實務原因:你不可能叫全世界的客戶端手動信任你的自簽 CA。</p>
+<h2 id="_3">帶得走的東西<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>一行「開 TLS」的設定,底下是一整套入口架構。</strong> TLS 由 haproxy 終結——沒有 haproxy,加密無處著力。功能開關常預設了你以為早就有的前提。</li>
+<li><strong>部署前檢查是把「跑到一半才爆」提前成「動手前就擋」。</strong> 今天四次擋下,每一次都攔住一場真災難;好的 precheck 還會把解法一起遞給你。</li>
+<li><strong>每一個手寫覆寫設定,都是一筆未來會引爆的債。</strong> 模板產的設定會隨架構變動自動更新,手寫的那段只有你記得。手寫前先找有沒有官方變數。</li>
+<li><strong>加密在邊界終結,內網那一跳是另一個決定。</strong> 使用者入口全 https,不代表內網每一跳都加密——那是獨立的、要另外開的課題。</li>
+<li><strong>自簽 CA 教你接通全鏈,但它的信任錨點上線前必須換掉。</strong> 伺服器出示憑證與客戶端信任憑證是兩件事,而你沒法叫全世界信任你的 <code>KollaTestCA</code>。</li>
+</ul>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/admin/tls.html">Kolla-Ansible 的 TLS 指南</a></strong> —— <code>kolla_enable_tls_internal/external</code>、<code>kolla_copy_ca_into_containers</code>、backend TLS 的官方對照。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/admin/tls.html#generating-a-private-certificate-authority">Kolla-Ansible 的憑證管理</a></strong> —— <code>kolla-ansible certificates</code> 產生 CA 的流程,以及換成外部 CA 的做法。</li>
+<li><strong><a href="https://docs.openstack.org/security-guide/secure-communication.html">OpenStack 的 API 保護最佳實務</a></strong> —— TLS 終結位置、內網加密、憑證管理的安全指南;本章「加密在邊界」那一節的理論背景。</li>
+</ul>
+<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>這朵雲的每一次對話現在都加密了。<a href="../sprint5-day33-keycloak-federation/">Day 33</a> 用上今天的 https 端點,把企業的身分系統接進來:員工用公司的 Keycloak 帳號直接登入這朵雲,不必在 Keystone 裡重建一份使用者——而你會發現,連 Keycloak 自己都得靠今天這張 <code>KollaTestCA</code> 才進得來。</p>
 
 
 
@@ -4300,7 +4565,7 @@
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
           
-          <a href="../day-6-magnum/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 6 · Magnum">
+          <a href="../sprint5-day31-masakari-ha/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 31 · SLA 與自癒(Masakari)">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4310,20 +4575,20 @@
                 上一頁
               </span>
               <div class="md-ellipsis">
-                Day 6 · Magnum
+                Day 31 · SLA 與自癒(Masakari)
               </div>
             </div>
           </a>
         
         
           
-          <a href="../day-8-storage-attempts/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 8 · Storage attempts">
+          <a href="../sprint5-day33-keycloak-federation/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 33 · 企業身分接軌(Keycloak)">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 8 · Storage attempts
+                Day 33 · 企業身分接軌(Keycloak)
               </div>
             </div>
             <div class="md-footer__button md-icon">

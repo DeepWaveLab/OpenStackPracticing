@@ -1754,6 +1754,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1901,6 +1911,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4410,12 +4560,25 @@
 </span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--port<span class="w"> </span><span class="nv">$VIPPORT</span><span class="w"> </span><span class="nv">$LBFIP</span>
 </span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>seq<span class="w"> </span><span class="m">6</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>http://<span class="nv">$LBFIP</span>/<span class="p">;</span><span class="w"> </span><span class="k">done</span><span class="w">   </span><span class="c1"># web1/web2 交替 = round robin</span>
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">兩個照抄前要處理的地方:user-data 內容、member IP 別寫死</p>
+<p><strong>① <code>web-userdata.sh</code> 要做什麼</strong>:它是 member VM 開機時跑的 user-data,只需在 <code>:80</code> 起一個回自己 hostname 的 http server。最小可用範本(Ubuntu 24.04 內建 python3):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="ch">#!/bin/bash</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>hostname<span class="w"> </span>&gt;<span class="w"> </span>/root/index.html
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">cd</span><span class="w"> </span>/root<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span><span class="m">80</span>
+</span></code></pre></div>
+<p><code>curl</code> 會回各 member VM 自己的 hostname(本課的 <code>vm-web1</code>/<code>vm-web2</code>,上面輸出簡寫成 web1/web2);看到兩個名字交替出現,就證明 round-robin 通了。</p>
+<p><strong>② member 位址別照抄</strong>:<code>10.10.10.124</code> / <code>10.10.10.188</code> 是<strong>本課環境</strong> web1/web2 的 fixed IP,你的幾乎必然不同。先查自己的再代入:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>vm-web1<span class="w"> </span>-c<span class="w"> </span>addresses<span class="w"> </span>-f<span class="w"> </span>value<span class="w">   </span><span class="c1"># 取 net1 上的 fixed IP</span>
+</span></code></pre></div>
+<p>填錯的後果正是本章 health monitor 會把兩個不存在的 member 標成 ERROR,而錯誤訊息不會告訴你「因為 IP 抄錯了」。</p>
+</div>
 <h3 id="4-bonusovn-provider">4. Bonus:OVN provider 對照組<a class="headerlink" href="#4-bonusovn-provider" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lb-ovn<span class="w"> </span>--provider<span class="w"> </span>ovn<span class="w"> </span>--vip-subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--wait
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>listener<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>lb-ovn
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>pool<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>pool-ovn<span class="w"> </span>--lb-algorithm<span class="w"> </span>SOURCE_IP_PORT<span class="w"> </span>--listener<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--wait
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>create<span class="w"> </span>--subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--address<span class="w"> </span><span class="m">10</span>.10.10.124<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>pool-ovn
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># 特徵:L4 only、SOURCE_IP_PORT、無 amphora VM、規則直接進 OVN 流表</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lb-ovn<span class="w"> </span>--provider<span class="w"> </span>ovn<span class="w"> </span>--vip-subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--wait
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>listener<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>lb-ovn
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>pool<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>pool-ovn<span class="w"> </span>--lb-algorithm<span class="w"> </span>SOURCE_IP_PORT<span class="w"> </span>--listener<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--wait
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>create<span class="w"> </span>--subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--address<span class="w"> </span><span class="m">10</span>.10.10.124<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>pool-ovn
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># 特徵:L4 only、SOURCE_IP_PORT、無 amphora VM、規則直接進 OVN 流表</span>
 </span></code></pre></div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>

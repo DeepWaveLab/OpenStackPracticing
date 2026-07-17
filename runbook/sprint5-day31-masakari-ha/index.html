@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/day-7-magnum-k8s-cluster/">
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint5-day31-masakari-ha/">
       
       
-        <link rel="prev" href="../day-6-magnum/">
+        <link rel="prev" href="../sprint5-day30-cloudkitty-rating/">
       
       
-        <link rel="next" href="../day-8-storage-attempts/">
+        <link rel="next" href="../sprint5-day32-full-tls/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Day 7 · Magnum k8s cluster - OpenStack Lab Course</title>
+        <title>Day 31 · SLA 與自癒(Masakari) - OpenStack Lab Course</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-7-magnum-k8s-cluster" class="md-skip">
+        <a href="#day-31-sla" class="md-skip">
           跳轉到
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 7 · Magnum k8s cluster
+              Day 31 · SLA 與自癒(Masakari)
             
           </span>
         </div>
@@ -231,6 +231,8 @@
   
   
   
+    
+  
   
     
     
@@ -238,10 +240,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
           
   
@@ -285,12 +289,10 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../../previous-attempts/" class="md-tabs__link">
           
   
@@ -397,8 +399,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -412,19 +416,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -442,7 +449,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -494,17 +501,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
-          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
             
   
   
@@ -948,17 +958,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
             
   
   
@@ -1391,8 +1404,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1419,18 +1434,21 @@
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
             
   
   
@@ -1448,7 +1466,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1575,10 +1593,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1594,6 +1639,258 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        自癒有兩層,別搞混
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evacuate-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:重啟健檢——多機環境開機不會自己好
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-cinderevacuate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:補上 Cinder(evacuate 的前提)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:部署,然後補上被漏掉的負載平衡器
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-masakari-failover-segment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:建立 Masakari 的 failover segment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:兩道 gate——親手弄死,看它自己救回來
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗收 checkpoint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:mariadb_recovery 在 2025.1 改名了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:多機 --tags cinder 不會配負載平衡器前端
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:你沒辦法用軟手段殺死一台主機
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 6:evacuate 失敗會留下 on_maintenance,擋掉重試
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 7:Masakari 預設只救有標記的 VM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2570,10 +2867,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -2591,22 +2886,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -2624,7 +2916,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2695,10 +2987,8 @@
                 
   
   
-    
   
   
-  
     
     
       
@@ -2747,21 +3037,18 @@
     
       
       
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
         
           
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
             
   
   
@@ -2779,7 +3066,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3298,37 +3585,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Day 7 · Magnum k8s cluster
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
         
   
   
@@ -3344,186 +3604,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        目的
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-04-20" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        最終結果（2026-04-20）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟（濃縮版，7 個 fix 都在裡）
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟（濃縮版，7 個 fix 都在裡）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-fix-magnum-config-barbican" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Fix Magnum config（不用 Barbican）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-fix-force_config_drive-fcos-ignition-iso-race" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-fix-ovn-metadata-agent-nova" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Fix ovn-metadata-agent 找不到 Nova
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-download-fcos-38-docker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Download FCOS 38（不是最新，最新沒 Docker）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-flavor-cluster-template" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. 建 flavor &amp; cluster template
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. 建 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-master-cniflannel-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 進 master 換 CNI（flannel image 死了）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#8-cloud-provider-uninitialized-taintccm-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#known-limitations-lab-magnum-upstream" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下一步建議
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        環境速查
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3588,20 +3668,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
         
           
-          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
             
   
   
@@ -3966,7 +4043,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        目的
+        自癒有兩層,別搞混
       
     </span>
   </a>
@@ -3974,10 +4051,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2026-04-20" class="md-nav__link">
+  <a href="#evacuate-vm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        最終結果（2026-04-20）
+        一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
       
     </span>
   </a>
@@ -3985,22 +4062,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-fix" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟（濃縮版，7 個 fix 都在裡）
+        步驟
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟（濃縮版，7 個 fix 都在裡）">
+    <nav class="md-nav" aria-label="步驟">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-fix-magnum-config-barbican" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Fix Magnum config（不用 Barbican）
+        步驟 1:重啟健檢——多機環境開機不會自己好
       
     </span>
   </a>
@@ -4008,10 +4085,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-fix-force_config_drive-fcos-ignition-iso-race" class="md-nav__link">
+  <a href="#2-cinderevacuate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race
+        步驟 2:補上 Cinder(evacuate 的前提)
       
     </span>
   </a>
@@ -4019,10 +4096,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-fix-ovn-metadata-agent-nova" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Fix ovn-metadata-agent 找不到 Nova
+        步驟 3:部署,然後補上被漏掉的負載平衡器
       
     </span>
   </a>
@@ -4030,10 +4107,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-download-fcos-38-docker" class="md-nav__link">
+  <a href="#4-masakari-failover-segment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Download FCOS 38（不是最新，最新沒 Docker）
+        步驟 4:建立 Masakari 的 failover segment
       
     </span>
   </a>
@@ -4041,43 +4118,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#5-flavor-cluster-template" class="md-nav__link">
+  <a href="#step-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. 建 flavor &amp; cluster template
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. 建 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7-master-cniflannel-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 進 master 換 CNI（flannel image 死了）
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#8-cloud-provider-uninitialized-taintccm-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）
+        步驟 5:兩道 gate——親手弄死,看它自己救回來
       
     </span>
   </a>
@@ -4090,21 +4134,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#known-limitations-lab-magnum-upstream" class="md-nav__link">
+  <a href="#checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        下一步建議
+        驗收 checkpoint
       
     </span>
   </a>
@@ -4115,7 +4148,123 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        環境速查
+        地雷記錄
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="地雷記錄">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 1:mariadb_recovery 在 2025.1 改名了
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 4:多機 --tags cinder 不會配負載平衡器前端
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 5:你沒辦法用軟手段殺死一台主機
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 6:evacuate 失敗會留下 on_maintenance,擋掉重試
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        地雷 7:Masakari 預設只救有標記的 VM
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帶得走的東西
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
       
     </span>
   </a>
@@ -4139,130 +4288,294 @@
 
 
 
-<h1 id="day-7-magnum-k8s-cluster">Day 7: Magnum K8s Cluster 實建<a class="headerlink" href="#day-7-magnum-k8s-cluster" title="Permanent link">&para;</a></h1>
-<p><img align="right" alt="Magnum 官方吉祥物" src="../../assets/mascots/magnum.png" width="110" /></p>
-<h2 id="_1">目的<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>用 Magnum 從零 provision 一個 K8s cluster：FCOS VM → kubeadm → 2 nodes Ready → <code>kubectl run</code>。驗證 Magnum+Heat+Nova+Neutron+OVN 整條鏈。</p>
-<h2 id="2026-04-20">最終結果（2026-04-20）<a class="headerlink" href="#2026-04-20" title="Permanent link">&para;</a></h2>
+<h1 id="day-31-sla">Day 31: SLA 與自癒——讓雲自己救自己<a class="headerlink" href="#day-31-sla" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>到目前為止,VM 掛了要靠人去重開,一台 compute 主機死了上面的機器就跟著陪葬。今天讓雲自己處理這兩件事:<strong>Masakari</strong> 盯著每台 VM 與每台主機,程序死掉自動重啟、主機失效自動把 VM 搬到別台去。這是 Sprint 5 唯一回多機環境的一天,也是唯一一次你會<strong>親手把一台主機弄死</strong>,再看雲自己把它上面的機器救回來。</p>
+</blockquote>
+<p><img align="right" alt="Masakari 官方吉祥物" src="../../assets/mascots/masakari.png" width="100" /></p>
+<div class="admonition abstract">
+<p class="admonition-title">你在課程的哪裡</p>
 <ul>
-<li><strong>Heat stack CREATE_COMPLETE</strong> ✅</li>
-<li><strong>master + worker VM 跑 K8s 1.23.3 on FCOS 38</strong> ✅</li>
-<li><strong>2 nodes Ready</strong>（透過 Calico CNI 取代壞掉的 flannel） ✅</li>
-<li><strong>kubectl get nodes 正常</strong> ✅</li>
-<li>pod workload 跑不起來（Magnum 內建 k8s-keystone-auth webhook image 壞，apiserver TokenReview call webhook 401 → SA token 無法簽發）</li>
+<li><strong>Day 23</strong>:多節點環境建好,關掉一台 controller 只停 6 秒。</li>
+<li><strong>今天</strong>:回多機環境。先做重啟健檢,補上 evacuate 缺的 Cinder,部署 Masakari,驗證兩層自癒。</li>
+<li><strong>今天之後</strong>:多機環境用完即關;<a href="../sprint5-day32-full-tls/">Day 32</a> 回單機,把所有 API 換上 https。</li>
 </ul>
-<h2 id="7-fix">步驟（濃縮版，7 個 fix 都在裡）<a class="headerlink" href="#7-fix" title="Permanent link">&para;</a></h2>
-<h3 id="1-fix-magnum-config-barbican">1. Fix Magnum config（不用 Barbican）<a class="headerlink" href="#1-fix-magnum-config-barbican" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>juju<span class="w"> </span>config<span class="w"> </span>magnum<span class="w"> </span>cert-manager-type<span class="o">=</span>x509keypair<span class="w"> </span>cluster-user-trust<span class="o">=</span><span class="nb">true</span>
-</span></code></pre></div>
-<h3 id="2-fix-force_config_drive-fcos-ignition-iso-race">2. Fix force_config_drive 讓 FCOS ignition 讀 ISO 不 race<a class="headerlink" href="#2-fix-force_config_drive-fcos-ignition-iso-race" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>juju<span class="w"> </span>config<span class="w"> </span>nova-compute<span class="w"> </span>config-flags<span class="o">=</span><span class="s1">&#39;force_config_drive=True&#39;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># ⚠️ 不是 &#39;always&#39;（Caracal bool 化了）</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># charm 會刷掉 nova.conf 的 [neutron] patch，要 re-patch（見 day-4 solution）</span>
-</span></code></pre></div>
-<h3 id="3-fix-ovn-metadata-agent-nova">3. Fix ovn-metadata-agent 找不到 Nova<a class="headerlink" href="#3-fix-ovn-metadata-agent-nova" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>juju<span class="w"> </span>ssh<span class="w"> </span>nova-compute/2<span class="w"> </span>--<span class="w"> </span><span class="s2">&quot;</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s2">  sudo sed -i &#39;/^\[DEFAULT\]/a nova_metadata_host = 10.254.154.207\nnova_metadata_port = 8775&#39; /etc/neutron/neutron_ovn_metadata_agent.ini</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s2">  sudo sed -i &#39;s|metadata_proxy_shared_secret=.*|metadata_proxy_shared_secret=</span><span class="k">$(</span>juju<span class="w"> </span>ssh<span class="w"> </span>nova-cloud-controller/0<span class="w"> </span>--<span class="w"> </span>sudo<span class="w"> </span>grep<span class="w"> </span>metadata_proxy_shared_secret<span class="w"> </span>/etc/nova/nova.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span>-F<span class="o">=</span><span class="w"> </span><span class="se">\&quot;</span><span class="o">{</span>print<span class="w"> </span><span class="se">\\\$</span><span class="m">2</span><span class="o">}</span><span class="se">\&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="se">\&quot;</span><span class="w"> </span><span class="se">\&quot;</span><span class="k">)</span><span class="s2">|&#39; /etc/neutron/neutron_ovn_metadata_agent.ini</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">  sudo systemctl restart neutron-ovn-metadata-agent</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s2">&quot;</span>
-</span></code></pre></div>
-<h3 id="4-download-fcos-38-docker">4. Download FCOS 38（不是最新，最新沒 Docker）<a class="headerlink" href="#4-download-fcos-38-docker" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-sSL<span class="w"> </span>-O<span class="w"> </span>https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/38.20231014.3.0/x86_64/fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2.xz
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>unxz<span class="w"> </span>fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2.xz
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">source</span><span class="w"> </span>~/openrc
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--file<span class="w"> </span>~/fedora-coreos-38.20231014.3.0-openstack.x86_64.qcow2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>fedora-coreos<span class="w"> </span>fedora-coreos-38
-</span></code></pre></div>
-<h3 id="5-flavor-cluster-template">5. 建 flavor &amp; cluster template<a class="headerlink" href="#5-flavor-cluster-template" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>flavor<span class="w"> </span>create<span class="w"> </span>--ram<span class="w"> </span><span class="m">2048</span><span class="w"> </span>--disk<span class="w"> </span><span class="m">15</span><span class="w"> </span>--vcpus<span class="w"> </span><span class="m">1</span><span class="w"> </span>--public<span class="w"> </span>k8s.small
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--image<span class="w"> </span>fedora-coreos-38<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--external-network<span class="w"> </span>ext_net<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--keypair<span class="w"> </span>lab_key<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--flavor<span class="w"> </span>k8s.small<span class="w"> </span>--master-flavor<span class="w"> </span>k8s.small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--network-driver<span class="w"> </span>flannel<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--docker-storage-driver<span class="w"> </span>overlay2
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># ⚠️ 不加 --volume-driver cinder（我們沒部署 cinder）</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># ⚠️ 不加 --docker-volume-size（一樣原因）</span>
-</span></code></pre></div>
-<h3 id="6-cluster">6. 建 cluster<a class="headerlink" href="#6-cluster" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>my-k8s<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--cluster-template<span class="w"> </span>k8s-small<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--master-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 等 15-18 分鐘（Heat 建 VM + ignition + bootstrap + kubeadm）</span>
-</span></code></pre></div>
-<h3 id="7-master-cniflannel-image">7. 進 master 換 CNI（flannel image 死了）<a class="headerlink" href="#7-master-cniflannel-image" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">FIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>show<span class="w"> </span>my-k8s<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>master_addresses<span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;[]&#39;&quot;</span><span class="k">)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/lab_key.pem<span class="w"> </span>core@<span class="nv">$FIP</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>-n<span class="w"> </span>kube-system<span class="w"> </span>delete<span class="w"> </span>ds<span class="w"> </span>kube-flannel-ds
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># 30-60 秒後 master + worker 變 Ready</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span>get<span class="w"> </span>nodes
-</span></code></pre></div>
-<h3 id="8-cloud-provider-uninitialized-taintccm-image">8. 清 cloud-provider uninitialized taint（CCM image 壞，沒人清）<a class="headerlink" href="#8-cloud-provider-uninitialized-taintccm-image" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>/srv/magnum/bin/kubectl<span class="w"> </span>--kubeconfig<span class="w"> </span>/etc/kubernetes/admin.conf<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>taint<span class="w"> </span>nodes<span class="w"> </span>my-k8s-xxx-node-0<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>node.cloudprovider.kubernetes.io/uninitialized:NoSchedule-
-</span></code></pre></div>
-<h2 id="known-limitations-lab-magnum-upstream">Known Limitations（本 lab 跑不過去的 Magnum upstream 問題）<a class="headerlink" href="#known-limitations-lab-magnum-upstream" title="Permanent link">&para;</a></h2>
-<p>Magnum Caracal 的 <code>k8s_fedora_coreos_v1</code> driver 內嵌一堆 5 年前的 image URL：</p>
+</div>
+<h2 id="_1">自癒有兩層,別搞混<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>「VM 掛了自動復原」聽起來是一件事,其實是兩件,而且復原的手段完全不同:</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph L1["程序級:VM 死了,主機還活著"]
+        direction LR
+        A1["qemu 程序崩潰"] --&gt; A2["原地 stop + start"]
+    end
+    subgraph L2["主機級:整台 compute 失聯"]
+        direction LR
+        B1["主機斷電/失聯"] --&gt; B2["evacuate 搬到別台"]
+    end
+    L1 ~~~ L2</code></pre>
+<p><strong>程序級</strong>:主機還在,只是上面某台 VM 的 qemu 崩了——原地重啟就好,不用搬家。負責的是 <strong>instancemonitor</strong>(住在每台 compute 上)。</p>
+<p><strong>主機級</strong>:整台 compute 斷電或失聯,上面所有 VM 跟著消失——得把它們<strong>搬到活著的主機重建</strong>(evacuate)。負責的是 <strong>hostmonitor</strong>,而它需要 pacemaker 叢集當偵測底層。</p>
+<p>兩層對應 Masakari 的三個角色:</p>
 <table>
 <thead>
 <tr>
-<th>Image</th>
-<th>現況</th>
-<th>影響</th>
+<th>角色</th>
+<th>住哪</th>
+<th>做什麼</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>quay.io/coreos/flannel-cni:v0.3.0</code></td>
-<td>401 Unauthorized（namespace 2022 遷走）</td>
-<td>flannel 裝不起來（已改 Calico）</td>
+<td><strong>masakari-api / engine</strong></td>
+<td>controller</td>
+<td>收通知、編排復原流程</td>
 </tr>
 <tr>
-<td><code>openstackmagnum/openstack-cloud-controller-manager:XXX</code></td>
-<td>ImagePullBackOff</td>
-<td>node 一直有 uninitialized taint（手動清）</td>
+<td><strong>instancemonitor</strong></td>
+<td>每台 compute</td>
+<td>盯 libvirt 事件,VM 程序死了通報</td>
 </tr>
 <tr>
-<td><code>openstackmagnum/k8s-keystone-auth:XXX</code></td>
-<td>ImagePullBackOff</td>
-<td>kube-apiserver 的 TokenReview webhook call 失敗 → SA token 簽不出 → pod 的 <code>kube-api-access-*</code> volume mount 卡死 → workload 跑不起來</td>
+<td><strong>hostmonitor</strong></td>
+<td>controller</td>
+<td>盯主機存活(靠 pacemaker)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>結論</strong>：cluster provisioning 層全通、K8s 本體跑，但 Magnum driver 的 default manifest 太舊，實際部署 workload 要額外手工修。</p>
-<h2 id="_2">下一步建議<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<ul>
-<li>若只需要學 OpenStack + K8s 整合：到這就夠了</li>
-<li>若要實際用 K8s on OpenStack：換 <a href="https://github.com/kubernetes-sigs/cluster-api-provider-openstack">cluster-api-provider-openstack</a></li>
-<li>或 fork magnum 把 driver image URL 改成現行版（upstream 已有 PR 討論）</li>
-</ul>
-<h2 id="_3">環境速查<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cluster uuid:    de1820ba-b8b3-4268-904b-35e142d4d8ab
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>master floating: 172.16.200.180
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>worker floating: 172.16.200.196
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>SSH:             ssh -i ~/lab_key.pem core@&lt;fip&gt;
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>kubectl path:    /srv/magnum/bin/kubectl
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>kubeconfig:      /etc/kubernetes/admin.conf (on master)
+<div class="admonition note">
+<p class="admonition-title">今天不部署 hostmonitor</p>
+<p>hostmonitor 需要 pacemaker/corosync 叢集,那是另一套 HA 中介軟體的完整安裝。本課的 lab 規模不值得為了偵測主機存活而養一整套 pacemaker——所以今天<strong>主機級的偵測改用手動送通知</strong>代替(見<a href="#step-5">步驟 5</a>)。這不是偷懶,是<strong>把 evacuate 這個真正的動作和「怎麼偵測到主機死了」這個獨立問題拆開</strong>:偵測方式可以換(pacemaker、外部監控、手動),但收到通知之後的搬家流程是同一套。</p>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">偵測可以換,但『圍籬』(fencing)不能省</p>
+<p>上面說「偵測方式可以換」是對的,但漏了半句話:<strong>pacemaker 的另一半職責是先圍籬(fencing / STONITH)再搬家</strong>。本章 demo 之所以安全,是因為<a href="#step-5">步驟 5</a> 那道 gate 用的 <code>az vm deallocate</code> <strong>本身就是圍籬</strong>——它保證主機真的斷電,不可能一邊被 evacuate、一邊自己還在寫硬碟。</p>
+<p>真實世界最危險的情境是主機「看起來死了」其實還活著(網路分區:nova 連不到它,但它的 qemu 還在跑)。此時若只靠「偵測到就送通知」自動觸發 evacuate,而<strong>沒有先強制斷電/斷存取</strong>,同一顆 boot-from-volume 的 volume 會被兩台活著的 VM 同時掛寫——資料直接毀損,而且每個健康檢查都是綠的(<a href="../sprint5-day27-multi-tenant-governance/">「錯了不會叫」</a>的又一個實例)。所以把手動通知換成自動偵測前,<strong>圍籬是必補的前提,不是選配</strong>。</p>
+</div>
+<h2 id="evacuate-vm">一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上<a class="headerlink" href="#evacuate-vm" title="Permanent link">&para;</a></h2>
+<p>主機級復原要「把 VM 搬到別台重建」,但如果 VM 的系統碟是主機本地磁碟,<strong>主機死了硬碟也跟著死</strong>——搬過去也沒東西可開。所以 evacuate 真正能救的是 <strong>boot-from-volume</strong> 的 VM:系統碟是一顆 Cinder volume,獨立於任何 compute 存在,主機死了 volume 還在,換台機器重新掛上就能開。</p>
+<p>而 <a href="../sprint4-day23-multinode-ha/">Day 23</a> 建的多機環境<strong>沒有 Cinder</strong>——所以今天在動 Masakari 之前,得先把 Cinder 補上。這是今天的隱藏前置。</p>
+<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="1">步驟 1:重啟健檢——多機環境開機不會自己好<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<p>多機環境上次 <a href="../sprint4-day24-scale-out/">Day 24</a> 之後就關機了。全部開機後,第一件事不是部署,是<strong>確認它真的活過來了</strong>。而它不會自己活過來——兩個地方要救。</p>
+<p>先救 Galera。兩台 controller 同時關機再開,Galera 不知道誰的資料最新,不敢自己選主,整個叢集停在等待:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kolla-ansible<span class="w"> </span>mariadb-recovery<span class="w"> </span>-i<span class="w"> </span>~/multinode
 </span></code></pre></div>
-<p>拉 kubeconfig 回本機：
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>config<span class="w"> </span>my-k8s<span class="w"> </span>--dir<span class="w"> </span>~/my-k8s-config
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>~/my-k8s-config/config
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
-</span></code></pre></div></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PLAY RECAP:
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>oslab-ctrl1  : ok=27  changed=5   failed=0
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>oslab-ctrl2  : ok=31  changed=10  failed=0
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>wsrep_cluster_size    2
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>wsrep_cluster_status  Primary
+</span></code></pre></div>
+<p><code>Primary</code> + <code>size 2</code> = 叢集回來了。注意指令叫 <code>mariadb-recovery</code>(連字號)——舊版是底線,2025.1 改名了(<a href="#mine-1">地雷 1</a>)。</p>
+<p>接著會撞到今天第一顆真正的雷:ctrl1 的一票服務 unhealthy 且<strong>不自己好</strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ctrl1: neutron_server nova_conductor nova_api nova_scheduler placement_api keystone
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ctrl2: (全健康)
+</span></code></pre></div>
+<p>nova-api 的 log 只是不斷重試連資料庫:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>WARNING oslo_db.sqlalchemy.engines SQL connection failed.
+</span></code></pre></div>
+<p>根因不在這些服務,在它們共用的資料庫入口——<strong>ctrl1 的 ProxySQL 崩了</strong>,而症狀偽裝成「一堆服務連不上資料庫」。完整判讀見<a href="#mine-2">地雷 2</a>,解法是移走它損壞的統計資料庫再重啟:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/var/lib/docker/volumes/proxysql/_data/proxysql_stats.db<span class="o">{</span>,.corrupt<span class="o">}</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>proxysql
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>proxysql: Up 30 seconds (healthy)
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ctrl1 → VIP:3306 ✅ 通了
+</span></code></pre></div>
+<p>資料庫入口一通,那票服務重啟一次就全部回歸:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>nova-scheduler oslab-ctrl1 up
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>nova-conductor oslab-ctrl1 up
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>nova-compute    oslab-comp1 up / comp2 up / comp3 up
+</span></code></pre></div>
+<h3 id="2-cinderevacuate">步驟 2:補上 Cinder(evacuate 的前提)<a class="headerlink" href="#2-cinderevacuate" title="Permanent link">&para;</a></h3>
+<p>多機環境沒有 Cinder,先給它一個 LVM 後端。用 loopback 檔當 volume group(lab 沒有多的實體磁碟),並且<strong>用 systemd 讓它開機自動掛回</strong>——否則下次重啟 VG 就消失:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>truncate<span class="w"> </span>-s<span class="w"> </span>60G<span class="w"> </span>/var/lib/cinder-lvm/cinder-volumes.img
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># systemd oneshot 開機把它接成 loop device(檔略)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>sudo<span class="w"> </span>pvcreate<span class="w"> </span>/dev/loop7
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>sudo<span class="w"> </span>vgcreate<span class="w"> </span>cinder-volumes<span class="w"> </span>/dev/loop7
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Physical volume &quot;/dev/loop7&quot; successfully created.
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Volume group &quot;cinder-volumes&quot; successfully created
+</span></code></pre></div>
+<p><code>inventory</code> 的 <code>[storage]</code> 群組加入 ctrl1,globals 開 Cinder 與 Masakari:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">enable_cinder</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nt">enable_cinder_backend_lvm</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nt">enable_masakari</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="nt">enable_masakari_instancemonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nt">enable_masakari_hostmonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
+</span></code></pre></div>
+<h3 id="3">步驟 3:部署,然後補上被漏掉的負載平衡器<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>common,cinder,iscsi,masakari
+</span></code></pre></div>
+<p>部署成功,masakari 三個容器也各就各位:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ctrl1: masakari_engine, masakari_api
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>comp1: masakari_instancemonitor
+</span></code></pre></div>
+<p>但打 Cinder API 會撞牆:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Failed to establish a new connection: [Errno 111] Connection refused
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>(host=&#39;10.100.0.250&#39;, port=8776)
+</span></code></pre></div>
+<p><strong>服務起來了,VIP 上卻沒有它的入口</strong>——<code>--tags cinder</code> 不會回頭配 haproxy 的前端(<a href="#mine-4">地雷 4</a>)。補一次:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>loadbalancer
+</span></code></pre></div>
+<p>之後 VIP 上就有新前端了(<code>8776</code> cinder、<code>15868</code> masakari),測一顆 volume:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cinder-volume oslab-ctrl1@lvm-1 up
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>volume 狀態: available
+</span></code></pre></div>
+<h3 id="4-masakari-failover-segment">步驟 4:建立 Masakari 的 failover segment<a class="headerlink" href="#4-masakari-failover-segment" title="Permanent link">&para;</a></h3>
+<p>Masakari 用 <strong>segment</strong> 把「互相支援的一組 compute」圈起來——某台死了,VM 搬到同 segment 的其他台:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>create<span class="w"> </span>day31-seg<span class="w"> </span>auto<span class="w"> </span>COMPUTE
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">for</span><span class="w"> </span>h<span class="w"> </span><span class="k">in</span><span class="w"> </span>oslab-comp1<span class="w"> </span>oslab-comp2<span class="w"> </span>oslab-comp3<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>create<span class="w"> </span><span class="nv">$h</span><span class="w"> </span>COMPUTE<span class="w"> </span>SSH<span class="w"> </span>day31-seg
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="k">done</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>list<span class="w"> </span>day31-seg
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>oslab-comp1  False      ← on_maintenance,False = 正常待命
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>oslab-comp2  False
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>oslab-comp3  False
+</span></code></pre></div>
+<h3 id="step-5">步驟 5:兩道 gate——親手弄死,看它自己救回來<a class="headerlink" href="#step-5" title="Permanent link">&para;</a></h3>
+<p><strong>Gate 1(程序級)</strong>:開一台掛 <code>HA_Enabled</code> 標記的 VM,直接 <code>kill -9</code> 它的 qemu 程序:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>openstack<span class="w"> </span>server<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--property<span class="w"> </span><span class="nv">HA_Enabled</span><span class="o">=</span>True<span class="w"> </span>ha-canary
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># 在 comp1 上:sudo kill -9 &lt;qemu-pid&gt;</span>
+</span></code></pre></div>
+<p>什麼都不用做,盯著看:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>06:50:11  kill qemu PID 20730
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>06:50:12  notification: {vir_domain_event: STOPPED_FAILED}   ← libvirt 通報
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>06:50:14  masakari engine → nova stop
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>06:50:18  masakari engine → nova start
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>06:50:30  vm=ACTIVE(下一次輪詢確認)
+</span></code></pre></div>
+<p><strong>從程序被殺到 Masakari 送出重啟指令,只花 7 秒</strong>(<code>06:50:11</code> → <code>06:50:18</code>),VM 在下一次輪詢就回到 ACTIVE。那個 <code>STOPPED_FAILED</code> 是關鍵——它是 libvirt 分辨「正常關機」和「異常死亡」的依據,Masakari 只對後者出手。</p>
+<p><strong>Gate 2(主機級)</strong>:這裡有個必須先跨過的坎——<strong>你沒辦法用軟手段殺死一台主機</strong>(<a href="#mine-5">地雷 5</a>)。<code>docker stop nova_compute</code> 會被 systemd 拉回、<code>systemctl stop docker</code> 因為 live-restore 容器照跑,兩種「假死」nova 都判定主機還 <code>up</code>。只有真斷電才算數:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>-g<span class="w"> </span>&lt;多機RG&gt;<span class="w"> </span>-n<span class="w"> </span>oslab-comp1<span class="w">     </span><span class="c1"># 真的拔電源</span>
+</span></code></pre></div>
+<p>comp1 上有兩台掛了 <code>HA_Enabled</code> 的 VM:一台 boot-from-volume(<code>bfv-canary</code>)、一台本地碟。等 nova 判定主機 down,送一個主機失效通知,然後盯著 evacuate:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>07:09:28  comp1: down                    ← nova 終於判定失聯
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>07:17:55  lock → evacuate                ← Masakari 的搬家流程
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>07:18:06  bfv=comp1/REBUILD  ha=comp1/REBUILD
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE   ← 在 comp2 復活
+</span></code></pre></div>
+<p><strong>兩台 VM 都在 comp2 復活了。</strong> 而 boot-from-volume 那台,系統碟是<strong>同一顆 volume</strong> 重新掛上(<code>volume_id</code> 沒變,只有 <code>attachment_id</code> 換新)——資料原封不動。這就是為什麼 evacuate 前非補 Cinder 不可:本地碟的 VM 只能 rebuild(空白重建),boot-from-volume 的才能真的<strong>帶著資料搬家</strong>。</p>
+<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
+<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>驗證</th>
+<th>判準</th>
+<th>本課環境的結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>重啟健檢</td>
+<td>Galera <code>Primary</code>、全容器健康</td>
+<td>recovery 後 size=2 Primary;proxysql 修復後全綠</td>
+</tr>
+<tr>
+<td>Cinder</td>
+<td>volume 建立成功</td>
+<td><code>available</code></td>
+</tr>
+<tr>
+<td>Masakari 部署</td>
+<td>api/engine + instancemonitor 就位</td>
+<td>符合</td>
+</tr>
+<tr>
+<td>segment</td>
+<td>三台 compute 掛入,<code>on_maintenance=False</code></td>
+<td>符合</td>
+</tr>
+<tr>
+<td><strong>Gate 1 程序級</strong></td>
+<td>kill qemu → VM 自動回 ACTIVE</td>
+<td>STOPPED_FAILED → stop+start,<strong>7 秒送出重啟</strong></td>
+</tr>
+<tr>
+<td><strong>Gate 2 主機級</strong></td>
+<td>主機斷電 → VM 在別台復活</td>
+<td>lock/evacuate → 兩台在 comp2 ACTIVE</td>
+</tr>
+<tr>
+<td>BFV 資料保留</td>
+<td>系統碟同一顆 volume 重新掛上</td>
+<td><code>volume_id</code> 不變,<code>attachment_id</code> 更新</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">地雷 1:<code>mariadb_recovery</code> 在 2025.1 改名了<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>kolla-ansible mariadb_recovery</code> 回「is not a kolla-ansible command」,還附上一句「Did you mean <code>mariadb-recovery</code>?」。</p>
+<p><strong>根因</strong>:2025.1 把子指令的底線統一改成連字號。</p>
+<p><strong>教訓</strong>:小事,但它提醒一件大事——<strong>維運指令的名字會隨版本漂移</strong>。把 runbook 裡的指令當「這個版本當下驗證過」的快照,升版後要重驗,不要背。</p>
+<h3 id="mine-2">地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:重啟後 ctrl1 上七、八個服務全 unhealthy,log 全是 <code>SQL connection failed</code>。看起來像「資料庫掛了」,但 Galera 明明 <code>Primary</code>、ctrl2 的服務全好。</p>
+<p><strong>判讀關鍵</strong>:<strong>ctrl2 好、ctrl1 壞,而兩台連的是同一個 Galera</strong> ——那問題就不在資料庫本身,在 ctrl1 到資料庫的<strong>那一段路</strong>。那段路是 ProxySQL(本課的資料庫入口 proxy):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>proxysql: Exited (134)          ← 134 = SIGABRT,程式自己爆的
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>policy=no                        ← restart policy 是 no,崩了不會被拉起來
+</span></code></pre></div>
+<p>crash log 指向 <code>SQLite3DB::check_table_structure</code>,而它讀的是 <code>proxysql_stats.db</code>——<strong>統計資料庫在斷電時寫到一半,檔案損壞</strong>,ProxySQL 一啟動讀到它就 SIGABRT。</p>
+<p><strong>解法</strong>:統計資料庫是可拋棄的(它只存效能統計,不是設定),移走讓它重建:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/var/lib/docker/volumes/proxysql/_data/proxysql_stats.db<span class="o">{</span>,.corrupt<span class="o">}</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>proxysql
+</span></code></pre></div>
+<p><strong>教訓</strong>:兩顆嵌套的教訓。其一:<strong>「一整排服務故障」往往有單一根因</strong>,不要逐個去救那些服務,去找它們的共同依賴。其二:crash stack 會誠實指向壞掉的檔(<code>stats.db</code>),但直覺會先去怪那個 0 byte 的 <code>proxysql.db</code>——那個 0 byte 是<strong>啟動時 rename 的產物,是果不是因</strong>。看崩潰堆疊,不要看檔案大小。</p>
+<h3 id="mine-3">地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:手動修好 ProxySQL 之後,部署 Cinder,結果 Cinder 的 <code>db sync</code> 連資料庫被拒。</p>
+<p><strong>根因</strong>:kolla 部署新服務時會把該服務的資料庫帳號寫進 ProxySQL 的 users 設定,<strong>但不會重啟 ProxySQL 讓它重讀</strong>。所以新帳號躺在設定檔裡,執行中的 ProxySQL 不認得。</p>
+<p><strong>解法</strong>:部署後手動重啟兩台的 ProxySQL。</p>
+<p><strong>教訓</strong>:這是 <a href="../sprint5-day28-ceilometer-metering/#mine-3">Day 28 地雷 3</a> 的近親——<strong>一個元件的設定改了,依賴它的元件不會自動知道</strong>。在多機這種「服務入口與服務本體分離」的架構裡,改完設定要問一句:<strong>誰需要被重讀?</strong></p>
+<h3 id="mine-4">地雷 4:多機 <code>--tags cinder</code> 不會配負載平衡器前端<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:Cinder 服務全 <code>up</code>,但打 VIP 的 8776 埠 <code>Connection refused</code>。</p>
+<p><strong>根因</strong>:多機環境的 API 入口是 haproxy 的 VIP。<code>--tags cinder</code> 只部署 Cinder 服務本身,<strong>不會回頭在 haproxy 上開一個 8776 的前端</strong>——所以服務在聽,但 VIP 上沒有門。</p>
+<p><strong>解法</strong>:補一次 <code>--tags loadbalancer</code>。</p>
+<p><strong>教訓</strong>:又一顆 <code>--tags</code> 盲區(<a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22</a> 開始的家族),但這顆是<strong>多機專屬</strong>的變種:單機沒有 haproxy 前端這回事,多機才有「服務起來了,但入口沒開」的斷層。加服務到多機環境,記得問:<strong>它的 VIP 前端誰來配?</strong></p>
+<h3 id="mine-5">地雷 5:你沒辦法用軟手段殺死一台主機<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:想模擬「一台 compute 死掉」,試了兩種軟手段,nova 都不認為主機死了:</p>
+<ul>
+<li><code>docker stop nova_compute</code> → systemd 的 unit 立刻把容器拉回來,heartbeat 沒斷。</li>
+<li><code>systemctl stop docker</code> → docker 的 <strong>live-restore</strong> 讓容器在 daemon 停止後照跑,heartbeat 還是沒斷。</li>
+</ul>
+<p>nova 一路顯示 comp1 <code>up</code>,evacuate 根本不會觸發。</p>
+<p><strong>根因</strong>:這些手段都只是「停掉管理層」,而<strong>回報存活的那個程序還在跑</strong>。要讓 nova 判定主機死亡,得讓那個程序真的消失。</p>
+<p><strong>解法</strong>:真斷電。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>...<span class="w"> </span>oslab-comp1
+</span></code></pre></div>
+<p>之後 nova 才判定 <code>down</code>(還花了幾分鐘——heartbeat 逾時有寬限)。</p>
+<p><strong>教訓</strong>:這顆的價值超出 OpenStack——<strong>測試「東西壞掉」時,要壞在對的層級</strong>。你想測的是「主機沒了」,就得真的讓主機沒了;停個容器、停個 daemon,測到的是別的東西。故障演練最常見的失敗,是<strong>演了一個比你以為的更輕的故障</strong>,然後誤以為系統扛住了。</p>
+<h3 id="mine-6">地雷 6:evacuate 失敗會留下 <code>on_maintenance</code>,擋掉重試<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:第一次送主機失效通知失敗後,重送同一個通知被回 <code>409 ... the host is already under maintenance</code>。</p>
+<p><strong>根因</strong>:Masakari 一收到主機失效通知,就先把該主機標成 <code>on_maintenance=True</code>(隔離,不再往它排程)。如果復原流程失敗,這個標記<strong>不會自動清除</strong>——於是主機卡在維護狀態,重送通知被當成「這台已經在維護了」而拒收。</p>
+<p><strong>解法</strong>:重試前先手動清標記:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>update<span class="w"> </span>day31-seg<span class="w"> </span>oslab-comp1<span class="w"> </span>--on_maintenance<span class="w"> </span>False
+</span></code></pre></div>
+<p>清完再送,workflow 就跑起來了(<code>lock → evacuate → unlock</code>)。</p>
+<p><strong>教訓</strong>:<strong>自動化流程失敗後,常留下半途的狀態擋住重試</strong>。設計或操作故障復原時,「失敗後怎麼回到可重試的乾淨狀態」和「成功路徑」一樣重要——而很多工具的成功路徑很漂亮,失敗清理卻要你自己來。</p>
+<h3 id="mine-7">地雷 7:Masakari 預設只救有標記的 VM<a class="headerlink" href="#mine-7" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:沒有 <code>HA_Enabled</code> metadata 的 VM,程序死了 Masakari 不理它。</p>
+<p><strong>根因</strong>:instancemonitor 預設只對帶 <code>HA_Enabled=True</code> 的實例出手(<code>process_all_instances</code> 預設關閉)。</p>
+<p><strong>教訓</strong>:這其實是<strong>設計,不是限制</strong>——不是每台 VM 都該被自動重啟(短命的批次 VM 自動重啟反而是災難)。「哪些 VM 值得自癒」是租戶的決定,用 metadata 表達。動手驗證前先確認你的測試 VM 有這個標記,否則會對著一台「照設計不該被救」的 VM 等半天。</p>
+<h2 id="_4">帶得走的東西<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>自癒是兩層問題,手段不同:程序死了原地重啟,主機死了搬家重建。</strong> 把它們當一件事處理,會在「主機死了卻只會重啟本地不存在的程序」上卡住。</li>
+<li><strong>evacuate 能不能保住資料,取決於系統碟在哪。</strong> 本地碟只能空白重建,boot-from-volume 才能帶著同一顆 volume 搬家——這是「HA 設計要從開機方式就決定」的具體例子。</li>
+<li><strong>故障演練要壞在對的層級。</strong> 停容器、停 daemon 都不是「主機死掉」;演一個比真實更輕的故障,會得到一個假的安心。</li>
+<li><strong>一整排服務故障,先找共同依賴。</strong> 逐個救那些服務是白費力氣,它們往往死於同一個上游(這次是 ProxySQL)。</li>
+<li><strong>自動化流程失敗會留下擋路的中間狀態。</strong> 成功路徑之外,要知道怎麼把系統手動撥回可重試的乾淨狀態。</li>
+</ul>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想往下深挖,從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/masakari/2025.1/">Masakari 官方文件</a></strong> —— segment、host、instance 三種監控與復原流程的完整說明。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html">Kolla-Ansible 的 Masakari 指南</a></strong> —— kolla 這側啟用 Masakari 的官方頁(<code>enable_masakari</code> 開關的對照)。</li>
+<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/evacuate.html">Nova 的 evacuate 說明</a></strong> —— 為什麼 evacuate 需要共享儲存或 boot-from-volume;本章那個硬前提的權威出處。</li>
+<li><strong><a href="https://proxysql.com/documentation/">ProxySQL 官方文件</a></strong> —— 本課的資料庫入口;<code>proxysql.db</code> 與 <code>proxysql_stats.db</code> 的角色差異(<a href="#mine-2">地雷 2</a>)在這裡有完整背景。</li>
+</ul>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>雲會自己救自己了。多機環境今天用完即關——它的任務(演一次真的主機失效)已經完成。<a href="../sprint5-day32-full-tls/">Day 32</a> 回單機環境,做生產化的第一件事:<strong>把所有 API 從 http 換成 https</strong>,而你會發現這件「加密」的事牽動的遠不只加密。</p>
 
 
 
@@ -4300,7 +4613,7 @@
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
           
-          <a href="../day-6-magnum/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 6 · Magnum">
+          <a href="../sprint5-day30-cloudkitty-rating/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 30 · 計費(CloudKitty)">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4310,20 +4623,20 @@
                 上一頁
               </span>
               <div class="md-ellipsis">
-                Day 6 · Magnum
+                Day 30 · 計費(CloudKitty)
               </div>
             </div>
           </a>
         
         
           
-          <a href="../day-8-storage-attempts/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 8 · Storage attempts">
+          <a href="../sprint5-day32-full-tls/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 32 · 全站 TLS">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 8 · Storage attempts
+                Day 32 · 全站 TLS
               </div>
             </div>
             <div class="md-footer__button md-icon">

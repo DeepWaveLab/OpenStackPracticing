@@ -16,7 +16,7 @@
         <link rel="prev" href="../sprint5-day29-aodh-autoscaling/">
       
       
-        <link rel="next" href="../../solutions/">
+        <link rel="next" href="../sprint5-day31-masakari-ha/">
       
       
         
@@ -1419,6 +1419,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1809,7 +1819,7 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        誠實標註的缺口
+        補完:雙租戶帳單 + 儲存計費
       
     </span>
   </a>
@@ -1853,6 +1863,146 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -4081,7 +4231,7 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        誠實標註的缺口
+        補完:雙租戶帳單 + 儲存計費
       
     </span>
   </a>
@@ -4538,9 +4688,14 @@
 <td>符合(需補跑 <code>--tags horizon</code>)</td>
 </tr>
 <tr>
-<td>儲存計費</td>
-<td>見下方「誠實標註的缺口」</td>
-<td>✗ 未產生費用</td>
+<td><strong>雙租戶帳單</strong></td>
+<td>兩個租戶都有帳單、金額不同、互不汙染</td>
+<td>team-a $0.75 / team-b $0.16(補驗)</td>
+</tr>
+<tr>
+<td><strong>儲存計費</strong></td>
+<td>volume 產生實際費用</td>
+<td>team-a $0.10 / team-b $0.06(補驗)</td>
 </tr>
 </tbody>
 </table>
@@ -4634,11 +4789,51 @@
 </span></code></pre></div>
 <p>月中安裝的話,processor 得先把當月 1 號到現在的空白週期全部補跑一遍才會走到有資料的時段。本課環境是 7/14 裝的,所以它磨了 <strong>326 個週期 × 2 個租戶 = 652 次</strong>——好消息是 <code>Worker.run()</code> 是個 while 迴圈,<strong>一輪之內全部追完</strong>,只花了 4 秒。看到帳單暫時是 0,先確認它是不是還在補跑。</p>
 </div>
-<h2 id="_6">誠實標註的缺口<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 對今天的承諾是「<strong>兩個租戶各拿各的帳單;帳單畫面在 Horizon</strong>」。後者兌現了(見上方畫面),前者打了折:</p>
-<p><strong>其一:雙租戶的對比是退化案例。</strong> team-b 全程沒有任何 VM 或磁碟,所以帳單是 <code>$0.25 vs $0</code>。「CloudKitty 能分租戶計費、而且不會把 A 的用量算到 B 頭上」——這個確實證明了;但「兩個租戶都有帳單、金額各自不同、可以互相對照」<strong>沒演到</strong>。要補這個,得在 team-b 開機器再等<strong>兩到三小時</strong>——<code>period=3600</code> + <code>wait_periods=2</code> 的必然代價。</p>
-<p><strong>其二:儲存計費是紙上談兵。</strong> <code>volume_size</code> 的規則寫了、schema 也驗過,但 team-a 和 team-b 都沒有磁碟——<strong>它一毛錢都沒算過</strong>。手上那四條 <code>volume_size</code> 序列全屬於別的專案。規則正確與否,今天沒有證據。上面那張 Horizon 畫面裡只有 <code>instance</code> 一種計費項,原因就在這。</p>
-<p>兩個缺口都不影響今天的核心結論(<strong>分租戶計費的鏈路是通的,而且帳單對得上用量</strong>),但它們是缺口,不是細節。</p>
+<h2 id="_6">補完:雙租戶帳單 + 儲存計費<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>寫這章的當下有兩個缺口:team-b 沒有資源(雙租戶對比退化成 <code>$0.25 vs $0</code>)、<code>volume_size</code> 規則寫了但沒磁碟可算。這兩件事的補驗只差「時間」——<code>period=3600</code> + <code>wait_periods=2</code> 意味著新用量要兩到三小時後才結算。所以在 <a href="../sprint5-day32-full-tls/">Day 32</a> 開機做 TLS 時,順手替兩個租戶種下 VM 與 volume,讓計費週期在部署期間自己跑。三小時後收帳:</p>
+<table>
+<thead>
+<tr>
+<th>租戶</th>
+<th>計費項</th>
+<th>用量</th>
+<th>費率</th>
+<th>金額</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>team-a</td>
+<td>instance</td>
+<td>13 台時</td>
+<td>$0.05</td>
+<td>$0.65</td>
+</tr>
+<tr>
+<td>team-a</td>
+<td>volume</td>
+<td>10 GiB 時</td>
+<td>$0.01</td>
+<td>$0.10</td>
+</tr>
+<tr>
+<td>team-b</td>
+<td>instance</td>
+<td>2 台時</td>
+<td>$0.05</td>
+<td>$0.10</td>
+</tr>
+<tr>
+<td>team-b</td>
+<td>volume</td>
+<td>6 GiB 時</td>
+<td>$0.01</td>
+<td>$0.06</td>
+</tr>
+</tbody>
+</table>
+<p><strong>兩個缺口一次補齊</strong>:team-a 收 $0.75、team-b 收 $0.16——<strong>兩個租戶都有帳單、金額各自不同</strong>,不再是退化案例;而且 <code>volume</code> 這個計費項真的產生了費用($0.10 與 $0.06),儲存計費不再是紙上談兵。四筆金額全部逐項對得上費率(<code>13×0.05</code>、<code>10×0.01</code>、<code>2×0.05</code>、<code>6×0.01</code>)。</p>
+<p>這也讓今天的核心結論從「單租戶對得上」升級成完整的商業場景:<strong>兩個真實租戶、兩種計費項(機器 + 儲存)、各自的帳單、金額互不汙染。</strong> 這才是一朵雲「能當生意經營」該有的樣子。</p>
 <h2 id="_7">帶得走的東西<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>當一個系統「成功地產出空結果」時,先問它認為該處理的東西有哪些</strong>,而不是查它處理得對不對。帳單 0 元的兩個根因(沒租戶、noop 模組)都在工作清單那一層,不在計算那一層。</li>
@@ -4657,7 +4852,7 @@
 </ul>
 <h2 id="_9">下一步<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
 <p>雲會自己收錢了。階段三結束——<strong>這朵雲現在說得出誰用了多少、值多少錢</strong>。</p>
-<p><strong>Day 31</strong> 進入階段四的第一天,也是 Sprint 5 唯一要回多機環境的一天:<strong>Masakari 自癒</strong>——VM 的程序死掉自動重啟,compute 整台掛掉,VM 自動搬到別台去。(內容隨 Sprint 5 進度陸續上線)</p>
+<p><a href="../sprint5-day31-masakari-ha/">Day 31</a> 進入階段四的第一天,也是 Sprint 5 唯一要回多機環境的一天:<strong>Masakari 自癒</strong>——VM 的程序死掉自動重啟,compute 整台掛掉,VM 自動搬到別台去。</p>
 
 
 
@@ -4712,13 +4907,13 @@
         
         
           
-          <a href="../../solutions/" class="md-footer__link md-footer__link--next" aria-label="下一頁: 排錯手冊">
+          <a href="../sprint5-day31-masakari-ha/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 31 · SLA 與自癒(Masakari)">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                排錯手冊
+                Day 31 · SLA 與自癒(Masakari)
               </div>
             </div>
             <div class="md-footer__button md-icon">

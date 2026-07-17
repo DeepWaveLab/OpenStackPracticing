@@ -1704,6 +1704,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1851,6 +1861,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4225,14 +4375,14 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>magnum<span class="w">   </span><span class="c1"># regen conf + 重啟容器</span>
 </span></code></pre></div></p>
 <h3 id="2-azure-correcttemplate-cluster">2. 用「Azure-correct」template 開 cluster<a class="headerlink" href="#2-azure-correcttemplate-cluster" title="Permanent link">&para;</a></h3>
-<p>Template 必帶三個 lab 專屬 label——每一個都是用地雷換來的(<a href="#mine-2">地雷 2</a>、<a href="#mine-3">地雷 3</a>):</p>
+<p>Template 必帶三個 lab 專屬 label,每一個都是用地雷換來的:<code>kube_tag</code> 釘選 K8s 版本、<code>fixed_subnet_cidr=10.6.0.0/24</code>(不可與 API 的 <code>10.0.0.4</code> 同段,<a href="#mine-2">地雷 2</a>)、<code>octavia_provider=amphora</code>(本 Octavia 沒啟用 amphorav2,<a href="#mine-3">地雷 3</a>):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.34.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span><span class="se">\ </span><span class="w">  </span><span class="c1"># 地雷 2:不可與 API 的 10.0.0.4 同段</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora<span class="w">          </span><span class="c1"># 地雷 3:我們 Octavia 沒啟用 amphorav2</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>--cluster-template<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span>--keypair<span class="w"> </span>k8s-admin<span class="w"> </span>--master-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span>
@@ -4256,13 +4406,35 @@
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">provisioner: cinder.csi.openstack.org</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s">volumeBindingMode: Immediate</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s">EOF</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>pvc+pod.yaml<span class="w">     </span><span class="c1"># PVC 1Gi + busybox 掛載</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w">                   </span><span class="c1"># Bound;openstack volume list 出現 pvc-*</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1"># ② LoadBalancer → Octavia</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--image<span class="w"> </span>nginx<span class="w"> </span>--replicas<span class="w"> </span><span class="m">2</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>kubectl<span class="w"> </span>expose<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--type<span class="w"> </span>LoadBalancer<span class="w"> </span>--name<span class="w"> </span>web-lb
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>web-lb<span class="w">            </span><span class="c1"># EXTERNAL-IP(ext-net FIP)</span>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>curl<span class="w"> </span>http://&lt;EXTERNAL-IP&gt;/<span class="w">        </span><span class="c1"># host 內可打(Azure FIP 僅 host 內有效)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;        # PVC 1Gi + busybox 掛載(最小可用範本)</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="s">apiVersion: v1</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">kind: PersistentVolumeClaim</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="s">metadata: {name: day8-pvc}</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s">spec:</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="s">  accessModes: [&quot;ReadWriteOnce&quot;]</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="s">  storageClassName: cinder</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s">  resources: {requests: {storage: 1Gi}}</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="s">---</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="s">apiVersion: v1</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="s">kind: Pod</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="s">metadata: {name: day8-pod}</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="s">spec:</span>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="s">  containers:</span>
+</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="s">    - name: busybox</span>
+</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="s">      image: busybox</span>
+</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="s">      command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo deepwave-day8 &gt; /data/hello &amp;&amp; sleep 3600&quot;]</span>
+</span><span id="__span-5-29"><a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="s">      volumeMounts: [{name: vol, mountPath: /data}]</span>
+</span><span id="__span-5-30"><a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="s">  volumes:</span>
+</span><span id="__span-5-31"><a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="s">    - name: vol</span>
+</span><span id="__span-5-32"><a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="s">      persistentVolumeClaim: {claimName: day8-pvc}</span>
+</span><span id="__span-5-33"><a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="s">EOF</span>
+</span><span id="__span-5-34"><a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w">                   </span><span class="c1"># Bound;openstack volume list 出現 pvc-*</span>
+</span><span id="__span-5-35"><a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>day8-pod<span class="w"> </span>--<span class="w"> </span>cat<span class="w"> </span>/data/hello<span class="w">   </span><span class="c1"># 回 deepwave-day8 = volume 掛載+持久化成功</span>
+</span><span id="__span-5-36"><a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a><span class="c1"># ② LoadBalancer → Octavia</span>
+</span><span id="__span-5-37"><a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--image<span class="w"> </span>nginx<span class="w"> </span>--replicas<span class="w"> </span><span class="m">2</span>
+</span><span id="__span-5-38"><a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>kubectl<span class="w"> </span>expose<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--type<span class="w"> </span>LoadBalancer<span class="w"> </span>--name<span class="w"> </span>web-lb
+</span><span id="__span-5-39"><a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>web-lb<span class="w">            </span><span class="c1"># EXTERNAL-IP(ext-net FIP)</span>
+</span><span id="__span-5-40"><a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>curl<span class="w"> </span>http://&lt;EXTERNAL-IP&gt;/<span class="w">        </span><span class="c1"># host 內可打(Azure FIP 僅 host 內有效)</span>
 </span></code></pre></div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
@@ -4314,6 +4486,10 @@
 <p>cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned。根因:driver 的 <code>fixed_subnet_cidr</code> 預設 <strong><code>10.0.0.0/24</code></strong>,與 OpenStack API endpoint <strong><code>10.0.0.4</code></strong>(host)同段 → 節點把 10.0.0.4 當 on-link、ARP 不到真 Keystone → CCM crash → 無 providerID → 卡死。修:label <strong><code>fixed_subnet_cidr=10.6.0.0/24</code></strong>(避開 10.0.0.4,也避開 pod 10.100/svc 10.254/lb-mgmt 10.1/ext-net 172.24)。完整記錄見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/">CAPI 子網撞 API IP</a>。</p>
 <h3 id="mine-3">地雷 3:<code>octavia_provider</code> 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p><code>Service type=LoadBalancer</code> 一直 pending,CCM 報 Octavia 400 <code>Provider 'amphorav2' is not enabled</code>。driver 的 CCM cloud.conf <code>lb-provider</code> 由 label <code>octavia_provider</code>(預設 <code>amphorav2</code>)決定,而本 Octavia <code>enabled_provider_drivers</code> 只有 <code>amphora,ovn</code>。修:label <strong><code>octavia_provider=amphora</code></strong>(現有 cluster 熱修:patch workload <code>cloud-config</code> secret 的 <code>lb-provider=amphora</code> + 重啟 CCM)。</p>
+<div class="admonition note">
+<p class="admonition-title">後續變動</p>
+<p>這裡的 <code>octavia_provider=amphora</code> 在 <a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22 地雷 1</a> 會受影響:那天全量 precheck 逼著把 <code>octavia_provider_drivers</code> 收斂成只剩 <code>ovn</code>,amphora 從此不再可選。若讀到 Day 22 後還要沿用本章的 amphora 路線,先看那段的取捨說明。</p>
+</div>
 <h3 id="mine-4">地雷 4:Nova disk 被 leftover VM 佔滿 → amphora <code>No valid host</code><a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
 <p>改用 amphora 後 LB 仍失敗,Octavia amphora build 報 Nova <code>No valid host was found</code>。hypervisor <code>free_disk_gb=1</code>、<code>local_gb_used=121/122</code>:<strong>Day 2-4 遺留的 SHUTOFF VM(vm-cirros/ubuntu/web1/web2)+ 舊 LB 的 amphora 仍佔用 Nova 的 flavor-disk 配額</strong>(SHUTOFF 不佔 RAM/CPU 但佔 disk 帳)。修:刪掉 leftover(<code>openstack server delete</code> demo VM、<code>loadbalancer delete --cascade</code> 舊 lb2/lb-ovn)→ 釋放 36GB → amphora 排得進。<strong>教訓:單機 lab 要定期清 leftover,Nova disk 用 flavor 總和計帳、SHUTOFF 也算。</strong></p>
 <h2 id="sprint-1">Sprint 1 未完成項:全數補完<a class="headerlink" href="#sprint-1" title="Permanent link">&para;</a></h2>

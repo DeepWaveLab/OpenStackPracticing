@@ -1693,6 +1693,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1840,6 +1850,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4198,12 +4348,19 @@
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s1">   {&quot;op&quot;:&quot;add&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/metadata/annotations&quot;,</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s1">    &quot;value&quot;:{&quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size&quot;:&quot;1&quot;,</span>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="s1">             &quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size&quot;:&quot;3&quot;}}]&#39;</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1">#    見 sprint3 資產:image registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)——關鍵 image/args:</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1">#    image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1</span>
 </span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1">#    args: --cloud-provider=clusterapi --clusterapi-cloud-config-authoritative</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1">#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=kube-plpuz</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1">#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=&lt;你的cluster名&gt;</span>
 </span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="c1"># 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3</span>
 </span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">cluster 名別照抄,autoscaler 完整 manifest 從哪來</p>
+<p>上面的 <code>kube-plpuz</code> 是<strong>本課環境</strong>的 cluster 名(Magnum 帶隨機後綴),你的不一樣——先查再代入(patch 指令、autoscaler 的 <code>clusterName</code> args 都要換):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>cluster<span class="w"> </span>-n<span class="w"> </span>magnum-system
+</span></code></pre></div>
+<p>步驟 3 的完整 Deployment + ServiceAccount/RBAC 是 <a href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md">cluster-autoscaler 官方 <code>clusterapi</code> provider 範例</a> 的標準組態——本課只改三處:image/args 如上、autoscaler 跑在 kind mgmt(in-cluster 讀寫 MachineDeployment)、<code>--kubeconfig</code> 指向 workload cluster 的 kubeconfig secret(讓它看得到 pending pod)。這份 manifest 依你的 secret 名稱與 RBAC 而定,故不逐字附上。</p>
+</div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
 <table>

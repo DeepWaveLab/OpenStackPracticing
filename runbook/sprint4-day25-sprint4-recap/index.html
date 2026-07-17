@@ -1430,7 +1430,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        「敢」的三個證據
+        從「會動」到「敢動」,靠的就是這三件事
       
     </span>
   </a>
@@ -1534,6 +1534,16 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -1690,6 +1700,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -3760,7 +3910,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        「敢」的三個證據
+        從「會動」到「敢動」,靠的就是這三件事
       
     </span>
   </a>
@@ -3963,13 +4113,11 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_3">「敢」的三個證據<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>貫穿這個 Sprint 的方法論只有一條:<strong>沒有驗證過的能力,不算能力。</strong>三場關鍵演練都遵守同一個模式——先設計判準,再動手,讓結果可以被判決:</p>
-<ol>
-<li><strong>敢升級</strong>(<a href="../sprint4-day22-upgrade-backup/">Day 22</a>):每一步設 gate(prechecks 全綠才 deploy、image ID 真的換了才算數);還原用<strong>金絲雀</strong>判決——備份前的標記要在、備份後的標記要消失,兩個條件缺一即失敗。</li>
-<li><strong>敢關一台</strong>(<a href="../sprint4-day23-multinode-ha/">Day 23</a>):不是「應該沒問題」,是秒級探測量出 <strong>6 秒</strong>空窗,而且在單 controller 狀態下驗證了資料庫<strong>寫入</strong>——讀通可能是快取,寫通才是活著。</li>
-<li><strong>敢長大</strong>(<a href="../sprint4-day24-scale-out/">Day 24</a>):加節點全程 <code>--limit</code>,現役節點零擾動;新節點的第一份工作,就是接下 drain 演練從老節點撤下的 VM。</li>
-</ol>
+<h2 id="_3">從「會動」到「敢動」,靠的就是這三件事<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Sprint 4 要證明的不是「雲會動」,是「敢對著跑著的雲動手」。這件事沒靠嘴上保證,三場演練各留下一個可以被判決的結果——而它們守的是同一條紀律:先把判準定下來,再動手,讓結果能被判成功或失敗,而不是「看起來沒事」。沒驗證過的能力,不算能力。</p>
+<p>升級(<a href="../sprint4-day22-upgrade-backup/">Day 22</a>)每一步都卡著 gate:prechecks 全綠才 deploy、image ID 真的換掉才算數;還原則交給金絲雀判決——備份前打的標記要還在、備份後打的要消失,兩個條件缺一就算失敗。</p>
+<p>關掉一台 controller(<a href="../sprint4-day23-multinode-ha/">Day 23</a>)不是賭「應該沒問題」。秒級探測量出的是實打實的 6 秒空窗;而且趁只剩單台 controller,特意驗了資料庫的<strong>寫入</strong>——讀得通可能只是快取,寫得進去才證明它還活著。</p>
+<p>加節點(<a href="../sprint4-day24-scale-out/">Day 24</a>)全程帶 <code>--limit</code>,現役節點一點都不被驚動;新節點上工的第一件事,就是接手 drain 演練從老節點趕下來的 VM。</p>
 <h2 id="_4">地雷回顧:二十八顆,九種教訓<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>Sprint 4 十三章共記錄了 28 顆具名地雷。全部值得翻,這裡挑出最有普遍性的幾顆——它們的教訓超出 OpenStack 本身:</p>
 <table>

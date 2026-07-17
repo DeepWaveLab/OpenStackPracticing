@@ -1754,6 +1754,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1901,6 +1911,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4263,6 +4413,15 @@
 <li>今天結束時工廠是空轉的——<strong>這是正常的</strong>,還沒有人下單。</li>
 </ul>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Day 6 起需要一點 Kubernetes 基礎</p>
+<p>從今天起,課程假設你看得懂基本的 Kubernetes 操作與名詞:<code>kubectl</code>(K8s 的命令列工具)、<strong>pod</strong>(一組容器的最小部署單位)、<strong>deployment</strong>(宣告「我要幾份 pod」的控制器)、<strong>namespace</strong>(資源的分組)。這些對你全新的話,先花半小時看官方的 <a href="https://kubernetes.io/docs/tutorials/kubernetes-basics/">Learn Kubernetes Basics</a> 互動教學再回來,後面會順很多。今天還會反覆用到三個詞,先記住白話:</p>
+<ul>
+<li><strong>controller(控制器)</strong>:一支常駐程式,不斷把「現實」拉向「你宣告的目標」。</li>
+<li><strong>CRD(自訂資源)</strong>:讓 K8s 認得原本不存在的新資源型別(例如「一座 cluster」也能變成一種 K8s 資源)。</li>
+<li><strong>reconcile(調和)</strong>:controller 的核心動作——比對目標與現況,把差異補上。</li>
+</ul>
+</div>
 <h2 id="cluster-api">第一次接觸 Cluster API?先讀這段<a class="headerlink" href="#cluster-api" title="Permanent link">&para;</a></h2>
 <h3 id="k8s-cluster">問題:誰來「蓋」K8s cluster?<a class="headerlink" href="#k8s-cluster" title="Permanent link">&para;</a></h3>
 <p><img align="right" alt="Cluster API 官方標誌" src="../../assets/logos/cluster-api.svg" width="130" /></p>
@@ -4462,30 +4621,37 @@
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>capi-mgmt-control-plane<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;cat &lt;/dev/null &gt;/dev/tcp/1.1.1.1/443 &amp;&amp; echo OK&#39;</span>
 </span></code></pre></div>
 <p>持久化(VM 每天 reboot 會掉,用獨立 systemd oneshot 冪等補上):<code>/etc/systemd/system/kind-masquerade.service</code>（見 solutions 檔內完整 unit),<code>systemctl enable --now kind-masquerade</code>。</p>
+<div class="admonition note">
+<p class="admonition-title">為什麼是 <code>172.17.0.0/16</code>?別的環境要先查</p>
+<p>這條規則寫死 <code>172.17</code> 只在本環境成立:Kolla 化的 Docker 設了 <code>bridge: none</code>(沒有預設的 <code>docker0</code>,真相到 <a href="../sprint5-day28-ceilometer-metering/#mine-1">Day 28 地雷 1</a> 才完整揭露),所以 kind 自建的 network 從 <code>172.17</code> 開始分配。<strong>一般主機的 <code>172.17</code> 是 <code>docker0</code>,kind 通常會拿到 <code>172.18+</code></strong>——那時這條規則靜默不中,症狀和本章地雷 1 一模一樣(<code>i/o timeout</code>)。要可攜就別寫死,先查真網段再帶入:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">KIND_CIDR</span><span class="o">=</span><span class="k">$(</span>docker<span class="w"> </span>network<span class="w"> </span>inspect<span class="w"> </span>kind<span class="w"> </span>-f<span class="w"> </span><span class="s1">&#39;{{(index .IPAM.Config 0).Subnet}}&#39;</span><span class="k">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$KIND_CIDR</span><span class="s2">&quot;</span><span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+</span></code></pre></div>
+</div>
 <h3 id="4-orc-clusterctl-init">4. ORC → clusterctl init<a class="headerlink" href="#4-orc-clusterctl-init" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 先裝 ORC(CAPO v0.14 依賴)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://github.com/k-orc/openstack-resource-controller/releases/download/v2.2.0/install.yaml
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># clusterctl init(EXP 旗標比照 setup-capo.sh)</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_CLUSTER_RESOURCE_SET</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CLUSTER_TOPOLOGY</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>clusterctl<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--core<span class="w"> </span>cluster-api:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span>--bootstrap<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span>--control-plane<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span>--infrastructure<span class="w"> </span>openstack:v0.14.4
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># 先裝 ORC(CAPO v0.14 依賴)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://github.com/k-orc/openstack-resource-controller/releases/download/v2.2.0/install.yaml
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># clusterctl init(EXP 旗標比照 setup-capo.sh)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_CLUSTER_RESOURCE_SET</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">CLUSTER_TOPOLOGY</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>clusterctl<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--core<span class="w"> </span>cluster-api:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--bootstrap<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span>--control-plane<span class="w"> </span>kubeadm:v1.13.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>--infrastructure<span class="w"> </span>openstack:v0.14.4
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理</span>
 </span></code></pre></div>
 <h3 id="5">5. 驗證<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">for</span><span class="w"> </span>ns_dep<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>capi-system/capi-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>capi-kubeadm-bootstrap-system/capi-kubeadm-bootstrap-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>capi-kubeadm-control-plane-system/capi-kubeadm-control-plane-controller-manager<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>capo-system/capo-controller-manager<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>kubectl<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">ns_dep</span><span class="p">%/*</span><span class="si">}</span><span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deploy/<span class="si">${</span><span class="nv">ns_dep</span><span class="p">#*/</span><span class="si">}</span><span class="w"> </span>--timeout<span class="o">=</span>180s
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">done</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">for</span><span class="w"> </span>ns_dep<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>capi-system/capi-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>capi-kubeadm-bootstrap-system/capi-kubeadm-bootstrap-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span>capi-kubeadm-control-plane-system/capi-kubeadm-control-plane-controller-manager<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>capo-system/capo-controller-manager<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>kubectl<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">ns_dep</span><span class="p">%/*</span><span class="si">}</span><span class="w"> </span>rollout<span class="w"> </span>status<span class="w"> </span>deploy/<span class="si">${</span><span class="nv">ns_dep</span><span class="p">#*/</span><span class="si">}</span><span class="w"> </span>--timeout<span class="o">=</span>180s
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">done</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
 </span></code></pre></div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>

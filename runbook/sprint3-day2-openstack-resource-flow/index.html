@@ -1671,6 +1671,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1818,6 +1828,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4217,12 +4367,13 @@
 <p>看懂這張圖,之後除錯就知道去哪找log:卡在排程 → scheduler;網卡拿不到 → neutron;image 抓不到 → glance。</p>
 <h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <h3 id="1-cli-ovn">1. 每個 CLI 動作在 OVN 裡對應什麼<a class="headerlink" href="#1-cli-ovn" title="Permanent link">&para;</a></h3>
+<p>這張表看不懂沒關係——它是「Day 20 會逐一拆解」的預覽,現在先對照著看 CLI 動作背後是哪個 OVN 物件,看不懂的欄位可以先跳過。</p>
 <table>
 <thead>
 <tr>
 <th>OpenStack 資源</th>
 <th>OVN 底層</th>
-<th>Sprint 1 已學,這裡驗證</th>
+<th>Day 20 會深入,先對照著看</th>
 </tr>
 </thead>
 <tbody>
@@ -4273,8 +4424,8 @@
 </ul>
 <h3 id="3-metadata-vs-config-drive">3. metadata vs config-drive(刻意兩條路都測)<a class="headerlink" href="#3-metadata-vs-config-drive" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>cirros 用 metadata service</strong>:驗證 OVN metadata agent 整條鏈(Sprint 1 曾在這裡踩 shared secret 不同步)</li>
-<li><strong>Ubuntu 用 <code>--config-drive True</code></strong>:Sprint 1 教訓 #13(cloud-init 搶在 metadata ready 之前跑的 race),config-drive 把資料燒進 ISO 隨 VM 掛載,天生免疫</li>
+<li><strong>cirros 用 metadata service</strong>:驗證 OVN metadata agent 整條鏈(這條鏈的 shared secret 一旦不同步,VM 就拿不到 metadata)</li>
+<li><strong>Ubuntu 用 <code>--config-drive True</code></strong>:避開 cloud-init 搶在 metadata ready 之前跑的 race——config-drive 把資料燒進 ISO 隨 VM 掛載,天生免疫</li>
 </ul>
 <h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-admin-flavorimage">1. Admin 面:租戶、flavor、image<a class="headerlink" href="#1-admin-flavorimage" title="Permanent link">&para;</a></h3>
@@ -4296,36 +4447,58 @@
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--gateway<span class="w"> </span><span class="m">172</span>.24.4.1<span class="w"> </span>--no-dhcp<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--allocation-pool<span class="w"> </span><span class="nv">start</span><span class="o">=</span><span class="m">172</span>.24.4.100,end<span class="o">=</span><span class="m">172</span>.24.4.200<span class="w"> </span>ext-subnet
 </span></code></pre></div>
-<p>host 端(寫成 <code>/usr/local/sbin/ext-net-fixup.sh</code> + systemd oneshot,略——見 VM 上實檔):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ip<span class="w"> </span>addr<span class="w"> </span>replace<span class="w"> </span><span class="m">172</span>.24.4.1/24<span class="w"> </span>dev<span class="w"> </span>br-ex<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>br-ex<span class="w"> </span>up
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sysctl<span class="w"> </span>-qw<span class="w"> </span>net.ipv4.ip_forward<span class="o">=</span><span class="m">1</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">172</span>.24.4.0/24<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
+<p>host 端要補三件事——把 br-ex 的閘道位址掛回去、開 IP forwarding、給 ext-net 網段加 NAT。這三行是功能本體,存成 <code>/usr/local/sbin/ext-net-fixup.sh</code>(<code>#!/bin/bash</code> 必須是檔案第一行):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="ch">#!/bin/bash</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ip<span class="w"> </span>addr<span class="w"> </span>replace<span class="w"> </span><span class="m">172</span>.24.4.1/24<span class="w"> </span>dev<span class="w"> </span>br-ex<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>br-ex<span class="w"> </span>up
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>sysctl<span class="w"> </span>-qw<span class="w"> </span>net.ipv4.ip_forward<span class="o">=</span><span class="m">1</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>iptables<span class="w"> </span>-t<span class="w"> </span>nat<span class="w"> </span>-A<span class="w"> </span>POSTROUTING<span class="w"> </span>-s<span class="w"> </span><span class="m">172</span>.24.4.0/24<span class="w"> </span>-o<span class="w"> </span>eth0<span class="w"> </span>-j<span class="w"> </span>MASQUERADE
 </span></code></pre></div>
+<p>因為每天 auto-shutdown 後 br-ex 的位址與 NAT 規則都會消失,把它包成開機自動重跑的 systemd oneshot(延遲 30 秒等 OVS 先把 br-ex 建好,對應上面說的「boot +30s」):</p>
+<div class="language-ini highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># /etc/systemd/system/ext-net-fixup.service</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">[Unit]</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="na">After</span><span class="o">=</span><span class="s">network-online.target</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="na">Wants</span><span class="o">=</span><span class="s">network-online.target</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">[Service]</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="na">ExecStartPre</span><span class="o">=</span><span class="s">/bin/sleep 30</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/local/sbin/ext-net-fixup.sh</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="na">RemainAfterExit</span><span class="o">=</span><span class="s">yes</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="k">[Install]</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</span></code></pre></div>
+<p>啟用——<strong>先手動跑一次讓當前 session 就生效</strong>(br-ex 位址、IP forwarding、NAT 立刻掛上,後面開 VM/FIP/SSH 才通),再設定開機自動重跑:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>/usr/local/sbin/ext-net-fixup.sh
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>/usr/local/sbin/ext-net-fixup.sh<span class="w">          </span><span class="c1"># 當前這次開機就套上</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>ext-net-fixup<span class="w">            </span><span class="c1"># 之後每次開機自動重跑</span>
+</span></code></pre></div>
+<p><code>systemctl enable</code> 只寫開機 symlink、不會當下執行——少了上面那行手動執行,這次 session 的 br-ex 還是空的,驗收表前幾項會直接倒。驗收表那項「<code>ext-net-fixup.service</code> 為 enabled」就是它。</p>
 <h3 id="3-demo-routersgkeypair">3. Demo 租戶面:網路、router、SG、keypair<a class="headerlink" href="#3-demo-routersgkeypair" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># demo-openrc.sh = admin-openrc 改 OS_USERNAME/OS_PROJECT_NAME/OS_PASSWORD</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>net1
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>openstack<span class="w"> </span>subnet<span class="w"> </span>create<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span>--subnet-range<span class="w"> </span><span class="m">10</span>.10.10.0/24<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>subnet1
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>openstack<span class="w"> </span>router<span class="w"> </span>create<span class="w"> </span>r1
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>openstack<span class="w"> </span>router<span class="w"> </span><span class="nb">set</span><span class="w"> </span>r1<span class="w"> </span>--external-gateway<span class="w"> </span>ext-net
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>openstack<span class="w"> </span>router<span class="w"> </span>add<span class="w"> </span>subnet<span class="w"> </span>r1<span class="w"> </span>subnet1
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>openstack<span class="w"> </span>security<span class="w"> </span>group<span class="w"> </span>rule<span class="w"> </span>create<span class="w"> </span>--proto<span class="w"> </span>icmp<span class="w"> </span>default
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>openstack<span class="w"> </span>security<span class="w"> </span>group<span class="w"> </span>rule<span class="w"> </span>create<span class="w"> </span>--proto<span class="w"> </span>tcp<span class="w"> </span>--dst-port<span class="w"> </span><span class="m">22</span><span class="w"> </span>default
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519<span class="w"> </span>-f<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>-N<span class="w"> </span><span class="s2">&quot;&quot;</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>openstack<span class="w"> </span>keypair<span class="w"> </span>create<span class="w"> </span>--public-key<span class="w"> </span>~/.ssh/oslab_ed25519.pub<span class="w"> </span>oslab
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># demo-openrc.sh = admin-openrc 改 OS_USERNAME/OS_PROJECT_NAME/OS_PASSWORD</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>openstack<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>net1
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>openstack<span class="w"> </span>subnet<span class="w"> </span>create<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span>--subnet-range<span class="w"> </span><span class="m">10</span>.10.10.0/24<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span>subnet1
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>openstack<span class="w"> </span>router<span class="w"> </span>create<span class="w"> </span>r1
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>openstack<span class="w"> </span>router<span class="w"> </span><span class="nb">set</span><span class="w"> </span>r1<span class="w"> </span>--external-gateway<span class="w"> </span>ext-net
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>openstack<span class="w"> </span>router<span class="w"> </span>add<span class="w"> </span>subnet<span class="w"> </span>r1<span class="w"> </span>subnet1
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>openstack<span class="w"> </span>security<span class="w"> </span>group<span class="w"> </span>rule<span class="w"> </span>create<span class="w"> </span>--proto<span class="w"> </span>icmp<span class="w"> </span>default
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>openstack<span class="w"> </span>security<span class="w"> </span>group<span class="w"> </span>rule<span class="w"> </span>create<span class="w"> </span>--proto<span class="w"> </span>tcp<span class="w"> </span>--dst-port<span class="w"> </span><span class="m">22</span><span class="w"> </span>default
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519<span class="w"> </span>-f<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>-N<span class="w"> </span><span class="s2">&quot;&quot;</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>openstack<span class="w"> </span>keypair<span class="w"> </span>create<span class="w"> </span>--public-key<span class="w"> </span>~/.ssh/oslab_ed25519.pub<span class="w"> </span>oslab
 </span></code></pre></div>
 <h3 id="4-fip">4. 開機 + FIP + 驗證<a class="headerlink" href="#4-fip" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--wait<span class="w"> </span>vm-cirros
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nv">CFIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>-c<span class="w"> </span>floating_ip_address<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-cirros<span class="w"> </span><span class="nv">$CFIP</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>ping<span class="w"> </span>-c2<span class="w"> </span><span class="nv">$CFIP</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>cirros@<span class="nv">$CFIP</span><span class="w"> </span>uptime
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.small<span class="w"> </span>--image<span class="w"> </span>ubuntu-24.04<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--config-drive<span class="w"> </span>True<span class="w"> </span>--wait<span class="w"> </span>vm-ubuntu
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nv">UFIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>-c<span class="w"> </span>floating_ip_address<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-ubuntu<span class="w"> </span><span class="nv">$UFIP</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>ubuntu@<span class="nv">$UFIP</span><span class="w"> </span><span class="s2">&quot;ping -c2 8.8.8.8&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--wait<span class="w"> </span>vm-cirros
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nv">CFIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>-c<span class="w"> </span>floating_ip_address<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-cirros<span class="w"> </span><span class="nv">$CFIP</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>ping<span class="w"> </span>-c2<span class="w"> </span><span class="nv">$CFIP</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>cirros@<span class="nv">$CFIP</span><span class="w"> </span>uptime
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.small<span class="w"> </span>--image<span class="w"> </span>ubuntu-24.04<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--config-drive<span class="w"> </span>True<span class="w"> </span>--wait<span class="w"> </span>vm-ubuntu
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="nv">UFIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>-c<span class="w"> </span>floating_ip_address<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-ubuntu<span class="w"> </span><span class="nv">$UFIP</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/oslab_ed25519<span class="w"> </span>ubuntu@<span class="nv">$UFIP</span><span class="w"> </span><span class="s2">&quot;ping -c2 8.8.8.8&quot;</span>
 </span></code></pre></div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>

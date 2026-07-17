@@ -1202,6 +1202,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:用 S3 憑證打一次(認證版)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1632,6 +1643,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1779,6 +1800,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -3901,6 +4062,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#5-s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:用 S3 憑證打一次(認證版)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4021,9 +4193,9 @@
 </div>
 <h2 id="_1">第一次接觸物件儲存?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <p>前幾天的儲存都是「掛在機器上的磁碟」(區塊儲存);<strong>物件儲存</strong>是另一種正規化:沒有目錄樹、沒有掛載,只有「容器(bucket)裝物件(檔案)」,一切透過 HTTP API 存取——AWS 的 S3 就是這個模式的代名詞。適合放備份、映像檔、log、靜態網站這類「寫一次、讀多次、不需要檔案系統語意」的資料。</p>
-<p>OpenStack 世界有兩種介面歷史:自家的 <strong>Swift API</strong> 與業界事實標準 <strong>S3 API</strong>。而 Ceph 的 <strong>RGW</strong> 一個守護程序同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣(<a href="../sprint3-day12-sprint4-preview/">Day 12 講過這段歷史</a>)。</p>
+<p>OpenStack 世界有兩種介面歷史:自家的 <strong>Swift API</strong> 與業界事實標準 <strong>S3 API</strong>。而 Ceph 的 <strong>RGW</strong> 一個守護行程同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣(<a href="../sprint3-day12-sprint4-preview/">Day 12 講過這段歷史</a>)。</p>
 <h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>今天的部署有個必須先想通的分工——<strong>Kolla 的 <code>ceph-rgw</code> 角色不部署任何容器</strong>(它的原始碼註解直接寫明這件事),RGW 守護程序由 cephadm 管:</p>
+<p>今天的部署有個必須先想通的分工——<strong>Kolla 的 <code>ceph-rgw</code> 角色不部署任何容器</strong>(它的原始碼註解直接寫明這件事),RGW 守護行程由 cephadm 管:</p>
 <pre class="mermaid"><code>flowchart TB
     subgraph cephside["cephadm 負責(Day 14 的世界)"]
         RGW["RGW daemon(:7480)&lt;br/&gt;同時聽 S3 與 Swift API"]
@@ -4102,6 +4274,26 @@
 <div class="admonition tip">
 <p class="admonition-title">物件名別直接吃本機路徑</p>
 <p>上面那行 <code>openstack object create day15-test /tmp/obj.txt</code> 會<strong>拿本機路徑當物件名</strong>,於是物件真的叫 <code>/tmp/obj.txt</code>——開頭那個斜線會讓 Horizon 把它當成資料夾層級,結果物件列表看起來是空的。想要乾淨的名字就明講:<code>openstack object create --name hello-rgw.txt day15-test /tmp/obj.txt</code>(圖上那個就是)。</p>
+</div>
+<h3 id="5-s3">步驟 5:用 S3 憑證打一次(認證版)<a class="headerlink" href="#5-s3" title="Permanent link">&para;</a></h3>
+<p>上面步驟 4 走的是 Swift API,步驟 0 只驗了 S3 的<strong>匿名</strong>空清單。但這章的賣點是「既有 S3 應用不改碼搬上來」——那條路要的是一組 S3 金鑰。怎麼拿?靠 Keystone 的 <strong>EC2 credentials</strong>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 1. 拿一組 S3 相容金鑰(access / secret)</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>openstack<span class="w"> </span>ec2<span class="w"> </span>credentials<span class="w"> </span>create<span class="w">        </span><span class="c1"># 輸出的 Access / Secret 就是 S3 金鑰</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># 2. 裝 aws-cli、設金鑰與 region,再打 RGW 的 S3 端點(RGW 走 path-style 定址)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>awscli
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_access_key_id<span class="w"> </span>&lt;access&gt;
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_secret_access_key<span class="w"> </span>&lt;secret&gt;
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>default.region<span class="w"> </span>us-east-1<span class="w">     </span><span class="c1"># RGW 不挑 region 值,給個預設即可,不設會被 aws-cli 擋下</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>mb<span class="w"> </span>s3://day15-s3
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="nb">echo</span><span class="w"> </span>hello-s3<span class="w"> </span>&gt;<span class="w"> </span>/tmp/s3.txt
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/s3.txt<span class="w"> </span>s3://day15-s3/
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>s3://day15-s3/<span class="w">     </span><span class="c1"># 列出剛上傳的物件</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">這段是示範路徑,未附本課實測輸出</p>
+<p>上面這串是「拿 S3 金鑰、用 aws-cli 打通」的標準做法,回答「使用者怎麼拿到 S3 金鑰」這個問題;但它<strong>不在本課的逐項驗證裡</strong>(所以沒附輸出),照做前自行驗證。要點:金鑰來自 <code>ec2 credentials</code>(綁在你的 project 上)、endpoint 直指 RGW 的 <code>:7480</code>、RGW 用 path-style 而非 virtual-host style 定址。這條路一旦通,你的既有 S3 SDK 只改 endpoint 就能搬上這朵雲。</p>
 </div>
 <h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
 <p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>

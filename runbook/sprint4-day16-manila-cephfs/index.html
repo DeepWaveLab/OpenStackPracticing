@@ -1743,6 +1743,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1890,6 +1900,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4458,6 +4608,7 @@
 <div class="admonition warning">
 <p class="admonition-title">在本 lab 開 LoadBalancer 會撞到 Day 8 的老朋友</p>
 <p>如果你在這座 cluster 試 <code>type=LoadBalancer</code>,CCM 建 LB 時會失敗:<code>Provider 'amphorav2' is not enabled</code>。這正是 <a href="../sprint3-day8-e2e-workload-cluster/#mine-3">Day 8 的地雷 #3</a>——CCM 預設要 <code>amphorav2</code>,而我們的 Octavia 只啟用了 <code>amphora</code>。所以本課的 demo 走 <code>port-forward</code>(路徑一);要走 LoadBalancer,得依 Day 8 的解法給 cluster 帶上 <code>octavia_provider=amphora</code> 標籤。<strong>同一顆雷在不同章節重逢,正好說明它是這套 lab 架構的固有特性,不是偶發。</strong></p>
+<p>但注意時序:這條 <code>amphora</code> 指引到 <a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22 地雷 1</a> 會失效——那天全量 precheck 逼著把 <code>octavia_provider_drivers</code> 收斂成只剩 <code>ovn</code>,amphora 不再可選。若你的環境已經走過 Day 22,要走 LoadBalancer 得先回頭處理 provider(見那段的取捨說明),不能再直接帶 <code>amphora</code> label。</p>
 </div>
 <h2 id="_8">延伸閱讀<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
 <p>想往下深挖,從這幾份開始:</p>

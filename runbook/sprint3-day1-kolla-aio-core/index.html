@@ -1765,6 +1765,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1912,6 +1922,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4500,7 +4650,7 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>PLAY RECAP *********************************************************
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>localhost : ok=367  changed=214  unreachable=0    failed=0    ...
 </span></code></pre></div>
-<p>如果 deploy 中途失敗:先在 log 裡找第一個 <code>fatal:</code>,那才是真正的錯誤(後面的失敗多半是連鎖反應)。我們第一次跑就在這裡失敗——MariaDB 起不來,原因是 port 被佔(<a href="#mine-4">地雷 4</a> 有完整的診斷過程與解法);修正設定後<strong>直接重跑同一個指令</strong>就過了。deploy 是冪等的:重跑只會套用差異,沒有副作用,失敗後不需要砍掉重練。</p>
+<p>如果 deploy 中途失敗:先在 log 裡找第一個 <code>fatal:</code>,那才是真正的錯誤(後面的失敗多半是連鎖反應)。我們第一次跑就在這裡失敗——MariaDB 起不來,原因是 port 被佔(<a href="#mine-4">地雷 4</a> 有完整的診斷過程與解法);那次除了改設定,還得先把半初始化的 MariaDB 容器與 volume 清掉才重跑得過。<strong>deploy 的冪等有邊界</strong>:對 kolla 認得的資源,重跑只套用差異、可安全重來;但半途炸掉的 stateful bootstrap(像地雷 4 的 MariaDB,以及後面 Day 23 地雷 3 的 Galera)得先清殘骸再重跑,不是「重跑必過」。</p>
 <h3 id="7">步驟 7:拿到鑰匙,第一次使用你的雲<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
 <p>部署完成後,產生管理員的登入憑證檔:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>kolla-ansible<span class="w"> </span>post-deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one

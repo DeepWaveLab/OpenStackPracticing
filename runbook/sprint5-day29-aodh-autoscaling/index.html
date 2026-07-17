@@ -1419,6 +1419,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -1851,6 +1861,146 @@
     
   
     Day 30 · 計費(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · SLA 與自癒(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · 全站 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
   
 
     
@@ -4195,6 +4345,10 @@
 </span></code></pre></div>
 <p><strong>沒有 <code>server_group</code>,沒有任何自訂 metadata。</strong><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 講的「儲存層換人」在這裡露出代價:換掉 Gnocchi,也換掉了「用任意標籤圈選機群」的能力。Prometheus 路線能拿來收斂範圍的,只剩 <code>project_id</code> 與 <code>user_id</code>。</p>
 <p>所以今天的做法是:<strong>一個 scaling group 一個 project</strong>。這聽起來像將就,其實正是 <a href="../sprint5-day27-multi-tenant-governance/">Day 27</a> 蓋好的東西——租戶邊界本來就該是資源邊界。缺口與解法在這裡剛好對上。</p>
+<div class="admonition note">
+<p class="admonition-title">這個等式的前提:一個 project ≈ 一種工作負載</p>
+<p>「租戶邊界 = 資源邊界」在「一個 project 只跑一種負載」時很乾淨。但如果同一個 project 裡混了多種負載(例如又有前端又有批次),<code>project_id</code> 這個唯一能圈的維度就太粗——<strong>專案平均會把「某一種負載暴衝」稀釋掉</strong>,結果該擴的沒擴、或被別的負載帶著誤擴。真要按工作負載分別擴縮,得讓它們各自落在不同 project(或換回有 <code>server_group</code> 標籤能力的計量後端)。這是 lab 拓撲(換掉 Gnocchi)的約束,不是 Aodh 的理想模型。</p>
+</div>
 <h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <h3 id="1-aodh">步驟 1:部署 Aodh<a class="headerlink" href="#1-aodh" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_aodh: &quot;yes&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml
