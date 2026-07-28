@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/">
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/epilogue/">
       
       
-        <link rel="prev" href="../../">
+        <link rel="prev" href="../sprint5-day35-sprint5-recap/">
       
       
-        <link rel="next" href="../kolla-octavia-dhclient-noble/">
+        <link rel="next" href="../../solutions/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Kolla ProxySQL vs MariaDB port - OpenStack Lab Course</title>
+        <title>結語 · 三次嘗試,才有這一朵雲 - OpenStack Lab Course</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#kolla-ansible-aioproxysql-mariadb-3306bootstrap" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳轉到
         </a>
       
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="../../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+    <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Kolla ProxySQL vs MariaDB port
+              結語 · 三次嘗試,才有這一朵雲
             
           </span>
         </div>
@@ -214,7 +214,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -231,6 +231,8 @@
   
   
   
+    
+  
   
     
     
@@ -238,11 +240,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../../runbook/sprint3-day0-azure-vm/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
           
   
   
@@ -263,13 +267,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../solutions/" class="md-tabs__link">
           
   
   
@@ -291,7 +293,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../previous-attempts/" class="md-tabs__link">
+        <a href="../../previous-attempts/" class="md-tabs__link">
           
   
   
@@ -313,7 +315,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../sprint3-reflection/" class="md-tabs__link">
+        <a href="../../sprint3-reflection/" class="md-tabs__link">
           
   
   
@@ -355,7 +357,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+    <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -373,7 +375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -397,8 +399,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -414,19 +418,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
             
   
   
@@ -444,7 +451,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -496,17 +503,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
-          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
             
   
   
@@ -542,7 +552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day0-azure-vm/" class="md-nav__link">
+      <a href="../sprint3-day0-azure-vm/" class="md-nav__link">
         
   
   
@@ -570,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day1-kolla-aio-core/" class="md-nav__link">
+      <a href="../sprint3-day1-kolla-aio-core/" class="md-nav__link">
         
   
   
@@ -598,7 +608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+      <a href="../sprint3-day2-openstack-resource-flow/" class="md-nav__link">
         
   
   
@@ -626,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day3-cinder-lvm/" class="md-nav__link">
+      <a href="../sprint3-day3-cinder-lvm/" class="md-nav__link">
         
   
   
@@ -654,7 +664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day4-octavia/" class="md-nav__link">
+      <a href="../sprint3-day4-octavia/" class="md-nav__link">
         
   
   
@@ -682,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day5-barbican-heat/" class="md-nav__link">
+      <a href="../sprint3-day5-barbican-heat/" class="md-nav__link">
         
   
   
@@ -710,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day6-capi-management-cluster/" class="md-nav__link">
+      <a href="../sprint3-day6-capi-management-cluster/" class="md-nav__link">
         
   
   
@@ -738,7 +748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+      <a href="../sprint3-day7-magnum-capi-driver/" class="md-nav__link">
         
   
   
@@ -766,7 +776,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+      <a href="../sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
         
   
   
@@ -794,7 +804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day9-day2-operations/" class="md-nav__link">
+      <a href="../sprint3-day9-day2-operations/" class="md-nav__link">
         
   
   
@@ -822,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day10-terraform-teardown/" class="md-nav__link">
+      <a href="../sprint3-day10-terraform-teardown/" class="md-nav__link">
         
   
   
@@ -850,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day11-openstack-service-map/" class="md-nav__link">
+      <a href="../sprint3-day11-openstack-service-map/" class="md-nav__link">
         
   
   
@@ -878,7 +888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint3-day12-sprint4-preview/" class="md-nav__link">
+      <a href="../sprint3-day12-sprint4-preview/" class="md-nav__link">
         
   
   
@@ -950,17 +960,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
             
   
   
@@ -996,7 +1009,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day13-skyline/" class="md-nav__link">
+      <a href="../sprint4-day13-skyline/" class="md-nav__link">
         
   
   
@@ -1024,7 +1037,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day14-ceph-bootstrap/" class="md-nav__link">
+      <a href="../sprint4-day14-ceph-bootstrap/" class="md-nav__link">
         
   
   
@@ -1052,7 +1065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day15-object-storage-rgw/" class="md-nav__link">
+      <a href="../sprint4-day15-object-storage-rgw/" class="md-nav__link">
         
   
   
@@ -1080,7 +1093,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day16-manila-cephfs/" class="md-nav__link">
+      <a href="../sprint4-day16-manila-cephfs/" class="md-nav__link">
         
   
   
@@ -1108,7 +1121,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day17-designate-dns/" class="md-nav__link">
+      <a href="../sprint4-day17-designate-dns/" class="md-nav__link">
         
   
   
@@ -1136,7 +1149,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day18-trove-dbaas/" class="md-nav__link">
+      <a href="../sprint4-day18-trove-dbaas/" class="md-nav__link">
         
   
   
@@ -1164,7 +1177,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
         
   
   
@@ -1192,7 +1205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
         
   
   
@@ -1220,7 +1233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day21-observability/" class="md-nav__link">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
         
   
   
@@ -1248,7 +1261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day22-upgrade-backup/" class="md-nav__link">
+      <a href="../sprint4-day22-upgrade-backup/" class="md-nav__link">
         
   
   
@@ -1276,7 +1289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day23-multinode-ha/" class="md-nav__link">
+      <a href="../sprint4-day23-multinode-ha/" class="md-nav__link">
         
   
   
@@ -1304,7 +1317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day24-scale-out/" class="md-nav__link">
+      <a href="../sprint4-day24-scale-out/" class="md-nav__link">
         
   
   
@@ -1332,7 +1345,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day25-sprint4-recap/" class="md-nav__link">
+      <a href="../sprint4-day25-sprint4-recap/" class="md-nav__link">
         
   
   
@@ -1360,7 +1373,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint4-day26-sprint5-preview/" class="md-nav__link">
+      <a href="../sprint4-day26-sprint5-preview/" class="md-nav__link">
         
   
   
@@ -1422,17 +1435,20 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
             
   
   
@@ -1468,7 +1484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day27-multi-tenant-governance/" class="md-nav__link">
+      <a href="../sprint5-day27-multi-tenant-governance/" class="md-nav__link">
         
   
   
@@ -1496,7 +1512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day28-ceilometer-metering/" class="md-nav__link">
+      <a href="../sprint5-day28-ceilometer-metering/" class="md-nav__link">
         
   
   
@@ -1524,7 +1540,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day29-aodh-autoscaling/" class="md-nav__link">
+      <a href="../sprint5-day29-aodh-autoscaling/" class="md-nav__link">
         
   
   
@@ -1552,7 +1568,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day30-cloudkitty-rating/" class="md-nav__link">
+      <a href="../sprint5-day30-cloudkitty-rating/" class="md-nav__link">
         
   
   
@@ -1580,7 +1596,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day31-masakari-ha/" class="md-nav__link">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
         
   
   
@@ -1608,7 +1624,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day32-full-tls/" class="md-nav__link">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
         
   
   
@@ -1636,7 +1652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day33-keycloak-federation/" class="md-nav__link">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
         
   
   
@@ -1664,7 +1680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day34-cadf-audit/" class="md-nav__link">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
         
   
   
@@ -1692,7 +1708,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint5-day35-sprint5-recap/" class="md-nav__link">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
         
   
   
@@ -1725,192 +1741,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../runbook/epilogue/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    結語 · 三次嘗試,才有這一朵雲
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-          
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    排錯手冊
-  
-
-    
-  </span>
-  
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    排錯手冊
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    本課程(Kolla / Magnum CAPI)
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    本課程(Kolla / Magnum CAPI)
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
     
   
   
@@ -1930,7 +1760,7 @@
   <span class="md-ellipsis">
     
   
-    Kolla ProxySQL vs MariaDB port
+    結語 · 三次嘗試,才有這一朵雲
   
 
     
@@ -1948,7 +1778,7 @@
   <span class="md-ellipsis">
     
   
-    Kolla ProxySQL vs MariaDB port
+    結語 · 三次嘗試,才有這一朵雲
   
 
     
@@ -1974,21 +1804,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        症狀
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        根因
+        接下來,往哪走
       
     </span>
   </a>
@@ -1999,18 +1818,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        解法
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        通則教訓
+        最後一句
       
     </span>
   </a>
@@ -2026,6 +1834,154 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../solutions/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排錯手冊
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    排錯手冊
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
               
                 
   
@@ -2033,7 +1989,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../kolla-octavia-dhclient-noble/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kolla ProxySQL vs MariaDB port
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
         
   
   
@@ -2061,7 +2045,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../kolla-octavia-redis-jobboard/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
         
   
   
@@ -2089,7 +2073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
         
   
   
@@ -2117,7 +2101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
         
   
   
@@ -2145,7 +2129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
         
   
   
@@ -2205,20 +2189,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
         
           
-          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
             
   
   
@@ -2254,7 +2235,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
         
   
   
@@ -2282,7 +2263,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
         
   
   
@@ -2310,7 +2291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
         
   
   
@@ -2338,7 +2319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
         
   
   
@@ -2366,7 +2347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../nova-compute-missing-neutron-auth/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
         
   
   
@@ -2394,7 +2375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../neutron-security-groups-disabled-default/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
         
   
   
@@ -2422,7 +2403,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
         
   
   
@@ -2450,7 +2431,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../heat-missing-domain-setup-action/" class="md-nav__link">
+      <a href="../../solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
         
   
   
@@ -2496,20 +2477,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
             
   
   
@@ -2545,7 +2523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+      <a href="../../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
         
   
   
@@ -2593,20 +2571,17 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
         
           
-          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
             
   
   
@@ -2642,7 +2617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
+      <a href="../../solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
         
   
   
@@ -2670,7 +2645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
+      <a href="../../solutions/site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
         
   
   
@@ -2777,7 +2752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../previous-attempts/" class="md-nav__link">
+      <a href="../../previous-attempts/" class="md-nav__link">
         
   
   
@@ -2805,7 +2780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../deployment-tools/" class="md-nav__link">
+      <a href="../../deployment-tools/" class="md-nav__link">
         
   
   
@@ -2927,7 +2902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-0-azure-vm/" class="md-nav__link">
+      <a href="../day-0-azure-vm/" class="md-nav__link">
         
   
   
@@ -2955,7 +2930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-1-lxd-juju-install/" class="md-nav__link">
+      <a href="../day-1-lxd-juju-install/" class="md-nav__link">
         
   
   
@@ -2983,7 +2958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-1-juju-bootstrap/" class="md-nav__link">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
         
   
   
@@ -3011,7 +2986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-1-first-relation/" class="md-nav__link">
+      <a href="../day-1-first-relation/" class="md-nav__link">
         
   
   
@@ -3039,7 +3014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-2-openstack-charm-map/" class="md-nav__link">
+      <a href="../day-2-openstack-charm-map/" class="md-nav__link">
         
   
   
@@ -3067,7 +3042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-keystone/" class="md-nav__link">
+      <a href="../day-3-keystone/" class="md-nav__link">
         
   
   
@@ -3095,7 +3070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-mysql-innodb-cluster/" class="md-nav__link">
+      <a href="../day-3-mysql-innodb-cluster/" class="md-nav__link">
         
   
   
@@ -3123,7 +3098,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-rabbitmq/" class="md-nav__link">
+      <a href="../day-3-rabbitmq/" class="md-nav__link">
         
   
   
@@ -3151,7 +3126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-vault-tls/" class="md-nav__link">
+      <a href="../day-3-vault-tls/" class="md-nav__link">
         
   
   
@@ -3179,7 +3154,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-glance/" class="md-nav__link">
+      <a href="../day-3-glance/" class="md-nav__link">
         
   
   
@@ -3207,7 +3182,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-placement/" class="md-nav__link">
+      <a href="../day-3-placement/" class="md-nav__link">
         
   
   
@@ -3235,7 +3210,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-nova-cloud-controller/" class="md-nav__link">
+      <a href="../day-3-nova-cloud-controller/" class="md-nav__link">
         
   
   
@@ -3263,7 +3238,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-nova-compute/" class="md-nav__link">
+      <a href="../day-3-nova-compute/" class="md-nav__link">
         
   
   
@@ -3291,7 +3266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-network-stack/" class="md-nav__link">
+      <a href="../day-3-network-stack/" class="md-nav__link">
         
   
   
@@ -3319,7 +3294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-3-horizon/" class="md-nav__link">
+      <a href="../day-3-horizon/" class="md-nav__link">
         
   
   
@@ -3347,7 +3322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-4-configure-openstack/" class="md-nav__link">
+      <a href="../day-4-configure-openstack/" class="md-nav__link">
         
   
   
@@ -3375,7 +3350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-5-heat/" class="md-nav__link">
+      <a href="../day-5-heat/" class="md-nav__link">
         
   
   
@@ -3403,7 +3378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-6-magnum/" class="md-nav__link">
+      <a href="../day-6-magnum/" class="md-nav__link">
         
   
   
@@ -3431,7 +3406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-7-magnum-k8s-cluster/" class="md-nav__link">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
         
   
   
@@ -3459,7 +3434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/day-8-storage-attempts/" class="md-nav__link">
+      <a href="../day-8-storage-attempts/" class="md-nav__link">
         
   
   
@@ -3557,7 +3532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint2-day-0-azure-vm/" class="md-nav__link">
+      <a href="../sprint2-day-0-azure-vm/" class="md-nav__link">
         
   
   
@@ -3585,7 +3560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+      <a href="../sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
         
   
   
@@ -3613,7 +3588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+      <a href="../sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
         
   
   
@@ -3641,7 +3616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../runbook/sprint2-course-1-osh-infra/" class="md-nav__link">
+      <a href="../sprint2-course-1-osh-infra/" class="md-nav__link">
         
   
   
@@ -3677,7 +3652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../sprint2-course-plan/" class="md-nav__link">
+      <a href="../../sprint2-course-plan/" class="md-nav__link">
         
   
   
@@ -3772,7 +3747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../sprint3-reflection/" class="md-nav__link">
+      <a href="../../sprint3-reflection/" class="md-nav__link">
         
   
   
@@ -3800,7 +3775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../sprint2-reflection/" class="md-nav__link">
+      <a href="../../sprint2-reflection/" class="md-nav__link">
         
   
   
@@ -3828,7 +3803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reflection/" class="md-nav__link">
+      <a href="../../reflection/" class="md-nav__link">
         
   
   
@@ -3883,21 +3858,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        症狀
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        根因
+        接下來,往哪走
       
     </span>
   </a>
@@ -3908,18 +3872,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        解法
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        通則教訓
+        最後一句
       
     </span>
   </a>
@@ -3943,33 +3896,19 @@
 
 
 
-<h1 id="kolla-ansible-aioproxysql-mariadb-3306bootstrap">Kolla-Ansible AIO:proxysql 與 MariaDB 撞 3306,bootstrap 必死<a class="headerlink" href="#kolla-ansible-aioproxysql-mariadb-3306bootstrap" title="Permanent link">&para;</a></h1>
-<p><strong>Sprint 3 / Day 1(2026-07-08)· Kolla-Ansible 20.x(2025.1 Epoxy)· Ubuntu 24.04 AIO</strong></p>
-<h2 id="_1">症狀<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><code>kolla-ansible deploy</code> 在 mariadb 階段失敗:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>TASK [mariadb : Wait for first MariaDB service port liveness]
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>fatal: ... &quot;Timeout when waiting for search string MariaDB in 10.0.0.4:3306&quot;
-</span></code></pre></div>
-<ul>
-<li><code>docker ps -a</code>:<code>mariadb Exited (1)</code>,但 mariadb log 顯示 daemon 有啟動(<code>Starting mariadbd daemon</code>)後隨即退出</li>
-<li><code>ss -tlnp | grep 3306</code>:<strong>proxysql</strong> 在聽 <code>10.0.0.4:3306</code></li>
-</ul>
-<h2 id="_2">根因<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>AIO 常見設定 <code>enable_haproxy: "no"</code> + <code>kolla_internal_vip_address</code> = host IP。但 <strong>Epoxy 的 <code>enable_proxysql</code> 預設 <code>yes</code></strong>,而且它跟 <code>enable_haproxy</code> 是獨立開關 —— 結果 loadbalancer 角色照樣部了 proxysql(連 haproxy container 都會被帶起來),proxysql 綁 VIP:3306,mariadb 綁 host:3306,VIP == host IP → 同一個 socket,mariadb bind 失敗退場。</p>
-<p>單看文件不會發現:quickstart 沒提 proxysql,舊教學(Caracal 以前)只教關 haproxy。</p>
-<h2 id="_3">解法<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_proxysql: &quot;no&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span>proxysql<span class="w"> </span>haproxy<span class="w"> </span>mariadb
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>sudo<span class="w"> </span>docker<span class="w"> </span>volume<span class="w"> </span>rm<span class="w"> </span>mariadb<span class="w">          </span><span class="c1"># bootstrap 中途死掉的空 DB,砍掉重來最乾淨</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w">   </span><span class="c1"># 重跑,冪等</span>
-</span></code></pre></div>
-<p>重跑結果:<code>ok=367 changed=214 failed=0</code>。</p>
-<h2 id="_4">通則教訓<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<ol>
-<li>AIO 關 LB 時,<code>enable_haproxy</code> 和 <code>enable_proxysql</code> <strong>要成對關</strong>。</li>
-<li>kolla 升版要重讀 release notes 的「預設值變更」——這類 default 翻轉是升版最大地雷來源(同型:Sprint 1 的 22 條有一半是 charm default 變更)。</li>
-<li>debug 套路:<code>docker ps -a</code> 看誰死了 → <code>docker logs</code> 看它自己怎麼說 → <code>ss -tlnp</code> 看資源被誰佔走。三步內定位,不用翻 ansible log。</li>
-</ol>
+<h1 id="_1">結語:三次嘗試,才有這一朵雲<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>這門課從一台空白的 Azure VM 開始,到一朵能收錢、能自癒、能對稽核交代的雲結束。但它真正的起點,在課程開始之前——是<a href="../../previous-attempts/">兩次沒走完的嘗試</a>。</p>
+<p>第一次用 Juju + Charms,走了九天,核心跑得起來,卻在三個關鍵功能上被生態系卡死。第二次換 OpenStack-Helm,兩天就喊停:每個問題都要跨 K8s 和 OpenStack 兩層除錯,拆一顆雷得先拆另一顆。這兩次不是繞路——它們把地形摸熟了,第三次用 Kolla-Ansible + Magnum CAPI 走得完,是因為前面已經知道坑在哪。</p>
+<p>所以別把這門課讀成一份「照著做就會成功」的食譜。它更像一份走通之前先走壞過的紀錄:每一章結尾那句「誠實的差距」,不是免責聲明,是它的骨架。它沒有一次假裝做到了其實沒做到的事——那份克制,比任何一個綠色勾勾都更接近真實的工程長什麼樣子。</p>
+<h2 id="_2">接下來,往哪走<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>這要看你是誰。</p>
+<p>剛入門、還被一堆陌生名詞淹沒的話,先別急著自己架一朵雲。這朵雲只是載體,你真正該帶走的是那套除錯的反射——找第一張骨牌、換個身分再問一次、先設判準再動手。帶著它,回頭把 Linux、網路、Kubernetes 的底子補紮實,比硬撐著蓋一朵自己看不懂的雲有用得多。</p>
+<p>寫應用的你,現在多了一台 X 光機。PVC、負載平衡、代管資料庫、額度、SSO、帳單,底下到底是誰在動工,你看得見了。拿這雙眼睛回去讀你自己平台的文件,會讀出以前讀不到的東西。</p>
+<p>同樣在做平台的人,最好的下一步是把它 fork 下來、開成多節點,去踩課程誠實列出的那幾個坑:fencing、真的 CA、全服務稽核。那些難的地方都不在 OpenStack 本身,在它接的那個外部世界——也正是最值得練的地方。</p>
+<h2 id="_3">最後一句<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>這朵雲用的每個版本,幾年後都會被換掉;你為了讓它跑起來養成的判斷,不會。</p>
+<p>而不管你是哪一種讀者,有件事這門課用它自己的三次嘗試示範過了:第一次不會成功,第二次也不一定,而走不通的那幾次不是浪費,是在替下一次摸路。</p>
+<p>謝謝你走完這趟。現在,去蓋一朵你自己的——蓋壞了也沒關係,這門課就是這樣來的。</p>
 
 
 
@@ -4007,7 +3946,7 @@
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
           
-          <a href="../../" class="md-footer__link md-footer__link--prev" aria-label="上一頁: 排錯手冊">
+          <a href="../sprint5-day35-sprint5-recap/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 35 · Sprint 5 總結">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4017,20 +3956,20 @@
                 上一頁
               </span>
               <div class="md-ellipsis">
-                排錯手冊
+                Day 35 · Sprint 5 總結
               </div>
             </div>
           </a>
         
         
           
-          <a href="../kolla-octavia-dhclient-noble/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Octavia dhclient (Noble)">
+          <a href="../../solutions/" class="md-footer__link md-footer__link--next" aria-label="下一頁: 排錯手冊">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Octavia dhclient (Noble)
+                排錯手冊
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4069,10 +4008,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
