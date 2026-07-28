@@ -114,7 +114,7 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 
 完整的決策與教訓 → [前兩次嘗試:走過才知道的路](previous-attempts.md)
 
-## 課程路徑(Day 0 → 26)
+## 課程路徑(Day 0 → 35)
 
 每一天一份 runbook,固定格式:**原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄**。所有指令都在真實環境跑過。
 
@@ -147,6 +147,16 @@ openstack server create --flavor m1.tiny --image cirros --network net1 vm-cirros
 | [24](runbook/sprint4-day24-scale-out.md) | 橫向擴展 | 加節點三部曲、熱遷移、node drain |
 | [25](runbook/sprint4-day25-sprint4-recap.md) | Sprint 4 總結 | 前後對比、28 顆地雷、誠實的差距清單 |
 | [26](runbook/sprint4-day26-sprint5-preview.md) | 下一步的地圖:Sprint 5 預告 | 把雲當成生意經營——計量、計費、SLA、治理稽核 |
+| [27](runbook/sprint5-day27-multi-tenant-governance.md) | 多租戶治理與額度 | domain/project 階層、unified limits |
+| [28](runbook/sprint5-day28-ceilometer-metering.md) | 計量管線(Ceilometer) | 用量流進 Prometheus,每筆帶 project_id |
+| [29](runbook/sprint5-day29-aodh-autoscaling.md) | 告警與自動擴縮(Aodh) | 超標自動長機器、退載自動收回 |
+| [30](runbook/sprint5-day30-cloudkitty-rating.md) | 計費(CloudKitty) | 用量變成雙租戶帳單、逐項對帳 |
+| [31](runbook/sprint5-day31-masakari-ha.md) | SLA 與自癒(Masakari) | 主機斷電,VM 自己搬家復活 |
+| [32](runbook/sprint5-day32-full-tls.md) | 全站 TLS | haproxy 終結,每個 API 換 https |
+| [33](runbook/sprint5-day33-keycloak-federation.md) | 企業身分接軌(Keycloak) | 用公司帳號登入這朵雲 |
+| [34](runbook/sprint5-day34-cadf-audit.md) | 稽核軌跡(CADF) | 誰在何時對哪個資源做了什麼 |
+| [35](runbook/sprint5-day35-sprint5-recap.md) | Sprint 5 總結 | 會動 → 敢動 → 能當生意經營 |
+| [結語](runbook/epilogue.md) | 三次嘗試,才有這一朵雲 | 整趟旅程回望 + 你的下一步 |
 
 ## 課程壓軸:一鍵 K8s 背後發生什麼
 
