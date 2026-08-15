@@ -4333,7 +4333,7 @@
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>ha-canary<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>OS-EXT-SRV-ATTR:host<span class="w">   </span><span class="c1"># oslab-comp1</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>ha-canary<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status<span class="w">                  </span><span class="c1"># ACTIVE(全程)</span>
 </span></code></pre></div>
-<p>原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結window內收尾——所以 VM 覺得自己沒停過。</p>
+<p>原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結視窗內收尾——所以 VM 覺得自己沒停過。</p>
 <h2 id="3node-drain">演練 ③:node drain——機器退場的標準動作<a class="headerlink" href="#3node-drain" title="Permanent link">&para;</a></h2>
 <p>假想劇本:oslab-comp2 要換硬體。標準四步:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1. 停止進貨:調度器不再把新 VM 排進來(現有 VM 不受影響)</span>

@@ -877,10 +877,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-driver-30-spike" class="md-nav__link">
+  <a href="#4-driver" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Driver 決策(計畫要求的 30 分鐘 spike)
+        4. Driver 決策
       
     </span>
   </a>
@@ -4221,10 +4221,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-driver-30-spike" class="md-nav__link">
+  <a href="#4-driver" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Driver 決策(計畫要求的 30 分鐘 spike)
+        4. Driver 決策
       
     </span>
   </a>
@@ -4586,7 +4586,7 @@
 <p>kind 的官方標誌就是一艘<strong>瓶中船</strong>——把 K8s 之船裝進(Docker 的)瓶子裡,看一眼就懂它在做什麼。</p>
 <h3 id="3-capo-v014-orc">3. CAPO v0.14 的新依賴:ORC<a class="headerlink" href="#3-capo-v014-orc" title="Permanent link">&para;</a></h3>
 <p>CAPO v0.12 起把「OpenStack 資源的實際 CRUD」拆給獨立的 <strong>ORC(openstack-resource-controller,<code>k-orc/openstack-resource-controller</code>)</strong>。CAPO 產生 ORC 的 CRD(如 <code>Image</code>、<code>Network</code>),ORC 去呼叫 OpenStack。<strong>所以 <code>clusterctl init</code> 裝 CAPO 前,必須先 <code>kubectl apply</code> ORC</strong>,漏了 CAPO 會因缺 CRD 起不來。這是 v0.14 世代最容易漏的一步。</p>
-<h3 id="4-driver-30-spike">4. Driver 決策(計畫要求的 30 分鐘 spike)<a class="headerlink" href="#4-driver-30-spike" title="Permanent link">&para;</a></h3>
+<h3 id="4-driver">4. Driver 決策<a class="headerlink" href="#4-driver" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>

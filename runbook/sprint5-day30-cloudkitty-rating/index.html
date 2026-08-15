@@ -4757,7 +4757,7 @@
 <p><strong>教訓</strong>:<strong>「這個選項存在」不等於「這條路是通的」。</strong> kolla 讓你把 collector 設成 prometheus,語法檢查會過、部署會成功——但配套的計量規則要你自己補,而它不會提醒你。遇到「換了後端」這類設定時,養成一個習慣:<strong>問一句「這個後端需要的其他檔案,是誰負責產生?」</strong></p>
 <h3 id="mine-3">地雷 3:<code>noop</code> 模組預設啟用,一切算 0 元<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
 <p><strong>症狀</strong>:帳單 0 元(是的,今天有兩顆不同的雷都長這樣)。</p>
-<p><strong>根因</strong>:CloudKitty 出廠時啟用的計費模組是 <code>noop</code>——它不計價。<code>hashmap</code> 預設關閉。</p>
+<p><strong>根因</strong>:CloudKitty 預設啟用的計費模組是 <code>noop</code>——它不計價。<code>hashmap</code> 預設關閉。</p>
 <p><strong>解法</strong>:<code>openstack rating module enable hashmap</code>,並確認:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>openstack<span class="w"> </span>rating<span class="w"> </span>module<span class="w"> </span>list
 </span></code></pre></div>
