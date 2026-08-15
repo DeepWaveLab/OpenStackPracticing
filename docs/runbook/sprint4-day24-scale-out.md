@@ -107,7 +107,7 @@ openstack server show ha-canary -f value -c OS-EXT-SRV-ATTR:host   # oslab-comp1
 openstack server show ha-canary -f value -c status                  # ACTIVE(全程)
 ```
 
-原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結window內收尾——所以 VM 覺得自己沒停過。
+原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結視窗內收尾——所以 VM 覺得自己沒停過。
 
 ## 演練 ③:node drain——機器退場的標準動作
 

@@ -114,10 +114,6 @@ juju status placement
 
 ---
 
-## Gotchas
-
-（待補 — 等部署完成觀察）
-
 ## Replay
 
 ```bash

@@ -392,7 +392,7 @@ openstack role add --user $CKUSER --project team-a rating
 
 **症狀**:帳單 0 元(是的,今天有兩顆不同的雷都長這樣)。
 
-**根因**:CloudKitty 出廠時啟用的計費模組是 `noop`——它不計價。`hashmap` 預設關閉。
+**根因**:CloudKitty 預設啟用的計費模組是 `noop`——它不計價。`hashmap` 預設關閉。
 
 **解法**:`openstack rating module enable hashmap`,並確認:
 

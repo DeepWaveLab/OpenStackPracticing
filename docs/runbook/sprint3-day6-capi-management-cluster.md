@@ -110,7 +110,7 @@ kind 的官方標誌就是一艘**瓶中船**——把 K8s 之船裝進(Docker �
 
 CAPO v0.12 起把「OpenStack 資源的實際 CRUD」拆給獨立的 **ORC(openstack-resource-controller,`k-orc/openstack-resource-controller`)**。CAPO 產生 ORC 的 CRD(如 `Image`、`Network`),ORC 去呼叫 OpenStack。**所以 `clusterctl init` 裝 CAPO 前,必須先 `kubectl apply` ORC**,漏了 CAPO 會因缺 CRD 起不來。這是 v0.14 世代最容易漏的一步。
 
-### 4. Driver 決策(計畫要求的 30 分鐘 spike)
+### 4. Driver 決策
 
 | | **vexxhost `magnum-cluster-api`(採用)** | magnum-capi-helm(StackHPC,備案) |
 |---|---|---|
