@@ -1,96 +1,61 @@
-# Day 25: Sprint 4 總結——從會動的雲,到敢動的雲
+# Day 25：Sprint 4 總結——服務、排錯與維護
 
-> Sprint 3 的終點,是一朵**會動**的雲:九個服務、一鍵開出 K8s。Sprint 4 的終點,是一朵**敢動**的雲:敢升級、敢備份還原、敢關掉一台 controller、敢在營運中長出新節點。這中間差的不是服務數量,是**可驗證性**——每個「敢」字背後,都是一次真的做過的演練。
+接到「VM 連不到外面」或「這台主機下週要維修」的要求時，你現在有不只一種檢查方法。問題是該從哪裡開始，以及目前的結果能支持多大的結論。這一章回到這些實際情境，整理 Sprint 4 各段的用途。
 
-!!! abstract "你在課程的哪裡"
-    - **今天**:不動手,盤點。十二天走過的路、雲的前後對比、二十八顆地雷,以及誠實的清單——它離生產環境還差哪幾步。
-    - **今天之後**:文末有三條延伸路——包括下一個 Sprint 的地圖。
+## 回到一開始的問題
 
-## 十二天走過的路
+最初我們問的是：OpenStack 還能提供哪些服務，底層容量又由誰準備？前半段在單機環境加入物件儲存、共享檔案、DNS 與資料庫；後半段改用獨立多節點 lab，觀察 API 入口、資料庫 quorum 與 compute 容量。
 
-四個階段,每個階段回答一種問題:
+下圖依問題串起章節。這些結果來自兩個環境，不能理解成最後一套多節點雲已經裝好前面全部服務：
 
-```mermaid
-flowchart TB
-    A["階段一 · 服務擴充<br/>Day 13–18<br/>雲還能提供什麼?"] --> B["階段二 · 拆解原理<br/>Day 19–20<br/>它憑什麼會動?"]
-    B --> C["階段三 · 維運實務<br/>Day 21–22<br/>怎麼讓它一直動?"]
-    C --> D["階段四 · 水平擴展<br/>Day 23–24<br/>怎麼擴展?"]
-```
+![服務擴充、請求與封包追蹤、觀測與還原、入口與容量四段的章節對應](../assets/diagrams/os-s4d25-review.svg)
 
-| Day | 主題 | 最重要的一件事 |
-|---|---|---|
-| [13](sprint4-day13-skyline.md) | Skyline | 一個 flag 的增量部署;兩代 UI 並存 |
-| [14](sprint4-day14-ceph-bootstrap.md) | Ceph | RAID 放大到機房尺度;cephadm 與 Kolla 同機共存 |
-| [15](sprint4-day15-object-storage-rgw.md) | RGW | S3 + Swift 雙 API 一次到手;物件儲存入列 |
-| [16](sprint4-day16-manila-cephfs.md) | Manila | 共享檔案系統;延伸到 K8s 的 RWX 掛載 |
-| [17](sprint4-day17-designate-dns.md) | Designate | DNS 代管;FIP 自動長出記錄 |
-| [18](sprint4-day18-trove-dbaas.md) | Trove | 代管 MySQL 資料庫服務 |
-| [19](sprint4-day19-api-request-lifecycle.md) | 請求鏈 | server create 徒手追到 qemu 進程 |
-| [20](sprint4-day20-ovn-packet-trace.md) | 封包路徑 | ovn-trace 看見 NAT 改寫的那一刻 |
-| [21](sprint4-day21-observability.md) | 可觀測性 | 四大黃金訊號;Prometheus/Grafana 上線 |
-| [22](sprint4-day22-upgrade-backup.md) | 更新與備份 | 金絲雀判決的還原演練 |
-| [23](sprint4-day23-multinode-ha.md) | 多節點 | 關掉一台 controller,API 只停 6 秒 |
-| [24](sprint4-day24-scale-out.md) | 橫向擴展 | 加節點三部曲;placement 水位 16→18 |
+服務能部署是一個結果，故障時能否使用、維護時能否遷移，則需要各自的測試。
 
-## 這朵雲的前後對比
+## 遇到儲存需求時
 
-| | Sprint 3 結束時 | Sprint 4 結束時 |
-|---|---|---|
-| 機器 | 1 台 | 單機 lab + 多節點環境(2 控制 + 3 運算) |
-| 服務 | 9 個核心服務 | 18 個(+Skyline、Swift API、Manila、Designate、Trove…) |
-| 儲存形態 | 區塊(LVM) | 區塊 + 物件(RGW/S3)+ 共享檔案(CephFS)三態到齊 |
-| 看得見嗎 | 只有 log | Prometheus 指標 + Grafana 儀表板 + 集中式 log |
-| 高可用 | 「生產環境請多節點」(免責聲明) | 實測:單 controller 失效,API 空窗 6 秒 |
-| 升級與備份 | 沒做過 | 系列內更新 + 備份還原演練,各走過一輪 |
-| 擴容 | 理論 | 第五台節點營運中加入,使用者無感 |
+程式要透過 HTTP 上傳備份，可以回到 [Day 15 的 RGW](sprint4-day15-object-storage-rgw.md)；多個用戶端需要共同讀寫檔案，則回到 [Day 16 的 Manila 與 CephFS](sprint4-day16-manila-cephfs.md)。兩者都能使用 Ceph，卻有不同的存取介面與授權方式。
 
-## 從「會動」到「敢動」,靠的就是這三件事
+選擇時也要看示範範圍：本課 RGW 保留了 Swift 路徑的實測結果，S3 設定是未驗證選讀；Manila 的主機掛載有操作流程，Kubernetes CSI 則只保留部分歷史結果，缺少完整 manifests。不能把兩段都當成已提供可從零重建的安裝腳本。單機單 OSD 的 Ceph 也沒有提供跨主機副本保護。
 
-Sprint 4 要證明的不是「雲會動」,是「敢對著跑著的雲動手」。這件事沒靠嘴上保證,三場演練各留下一個可以被判決的結果——而它們守的是同一條紀律:先把判準定下來,再動手,讓結果能被判成功或失敗,而不是「看起來沒事」。沒驗證過的能力,不算能力。
+## 遇到建立失敗或連線問題時
 
-升級([Day 22](sprint4-day22-upgrade-backup.md))每一步都卡著 gate:prechecks 全綠才 deploy、image ID 真的換掉才算數;還原則交給金絲雀判決——備份前打的標記要還在、備份後打的要消失,兩個條件缺一就算失敗。
+[Day 19](sprint4-day19-api-request-lifecycle.md) 的 server UUID 可對上 Nova 紀錄、libvirt domain 與資料庫；[Day 21](sprint4-day21-observability.md) 再把紀錄集中查詢。request-id、資源 UUID 與佇列統計的範圍不同，找到其中一項，還不能宣稱完整追完每個服務。
 
-關掉一台 controller([Day 23](sprint4-day23-multinode-ha.md))不是賭「應該沒問題」。秒級探測量出的是實打實的 6 秒空窗;而且趁只剩單台 controller,特意驗了資料庫的**寫入**——讀得通可能只是快取,寫得進去才證明它還活著。
+網路問題則先用 [Day 20](sprint4-day20-ovn-packet-trace.md) 對上 logical port、router 與 NAT，再看 `ovn-trace` 的邏輯路徑。模擬放行後，仍可能有主機流表、介面或外部網路問題；這正是要把模擬與真正連線分開判讀的原因。
 
-加節點([Day 24](sprint4-day24-scale-out.md))全程帶 `--limit`,現役節點一點都不被驚動;新節點上工的第一件事,就是接手 drain 演練從老節點趕下來的 VM。
+## 準備更新或主機維護時
 
-## 地雷回顧:二十八顆,九種教訓
+[Day 22](sprint4-day22-upgrade-backup.md) 用 image ID 確認容器採用新映像，再以備份前後的 project 檢查還原時間點。它沒有涵蓋持續變動的 VM 磁碟與控制平面資料庫之間的完整災難復原。
 
-Sprint 4 十三章共記錄了 28 顆具名地雷。全部值得翻,這裡挑出最有普遍性的幾顆——它們的教訓超出 OpenStack 本身:
+[Day 23](sprint4-day23-multinode-ha.md) 顯示正常關機與突然失聯是不同故障情境。兩節點 Galera 在前者可能維持服務，在後者可能無法取得多數。不能用某次 API 探測的短暫中斷結果作為所有故障的服務承諾。
 
-| 教訓 | 地雷 | 出處 |
-|---|---|---|
-| 文件會過時,實測才算數 | keyring 路徑與文件不符;`mariadb-backup` 的底線寫法;copy-back 漏了 chown | [Day 16](sprint4-day16-manila-cephfs.md#mine-2)、[Day 22](sprint4-day22-upgrade-backup.md#mine-2) |
-| 預設值不是為你的環境設的 | RGW 預設 port 80 撞 Horizon;OSD autotune 吃掉幾十 GB | [Day 15](sprint4-day15-object-storage-rgw.md#mine-1)、[Day 14](sprint4-day14-ceph-bootstrap.md#mine-2) |
-| 增量檢查有盲區 | `--tags` 部署讓錯誤設定潛伏整個 Sprint | [Day 22](sprint4-day22-upgrade-backup.md#mine-1) |
-| 症狀會偽裝,先找第一張骨牌 | resolved stub 餓死偽裝成 quay.io 掛掉,連鎖炸四台 | [Day 23](sprint4-day23-multinode-ha.md#mine-2) |
-| 多數決是數學 | 兩節點 Galera 抖 3 秒即停擺——三台不是建議,是算式 | [Day 23](sprint4-day23-multinode-ha.md#mine-3) |
-| 雲下面還有雲 | ILB 後端沒有預設出網;配額連關機的 VM 都算 | [Day 23](sprint4-day23-multinode-ha.md#mine-1)、[Day 24](sprint4-day24-scale-out.md#mine-1) |
-| 沒有 DNS,什麼都起不來 | Trove guest 有心跳但 spawn 失敗的元兇是 subnet 沒 DNS | [Day 18](sprint4-day18-trove-dbaas.md#mine-1) |
-| 監控系統自己也會壞 | cadvisor 的 inotify 上限;exporter 缺口要記帳 | [Day 21](sprint4-day21-observability.md#mine-1) |
-| 快取會說謊 | Ceph 告警讀到舊值——health check 有快取 | [Day 14](sprint4-day14-ceph-bootstrap.md#mine-3) |
+到了 [Day 24](sprint4-day24-scale-out.md)，新增 compute 與遷移 VM 也分別檢查。新主機出現在 Placement，不代表既有 VM 已重新分配；總 VCPU 足夠，也不代表某台目的地主機滿足該 VM 的記憶體、CPU 與儲存需求。維護前要停用新排程，再確認所有租戶的 VM 都已移走。
 
-## 誠實的清單:離生產環境還差什麼
+## 尚未涵蓋的正式環境工作
 
-這門課的雲「敢動」,但它仍是教學環境。若要真的扛生產流量,至少還有這些課沒上:
+本段沒有演練跨系列升級，也沒有三個以上 controller 的故障域設計、多主機 Ceph 復原、完整監控告警或異地還原。這些工作都需要與實際硬體、儲存與可接受中斷時間一起規劃，不能只把單機設定複製到多台。
 
-- **三台 controller**:本課的兩台在無預警失聯時會停擺(Day 23 親眼看過)。奇數 quorum 是底線。
-- **TLS**:所有 API 目前走 HTTP。生產環境的第一件事就是 `kolla_enable_tls_internal/external`。
-- **跨系列升級**:本課只做了系列內更新;2025.1 → 2025.2(或下一個 SLURP)的 `kolla-ansible upgrade` 是另一場演練。
-- **Ceph 的真正形態**:單機單 OSD 的 Ceph 學到了架構,但三副本、故障域、多機恢復才是它存在的理由。
-- **備份的異地性**:備份檔還躺在同一台機器的 docker volume 裡;生產環境要送出去(物件儲存正好是 Day 15 學過的)。
-- **秘密管理**:passwords.yml 是明文檔案;輪替機制與 vault 整合都是課題。
+TLS、企業身分與稽核會在下一個 Sprint 繼續，但那也不是完整合規認證。若準備將這些服務交給其他團隊，先為要使用的功能建立可重複的建置、故障與還原流程，再確認每項測試涵蓋的範圍。
 
-清單不是遺憾,是地圖——你已經有能力自己走這幾段路了。
+## 想一想
 
-## 三條延伸路
+1. `ovn-trace` 通過、VM 仍連不出去，你會先補哪一類實際觀察？
+2. 要清空一台 compute，為什麼查到叢集總 VCPU 有剩餘仍不夠？
+3. 只還原 MariaDB 後，哪些資料仍需要另外核對？
 
-1. **拆掉,再長出來。**[Day 10](sprint3-day10-terraform-teardown.md) 的 Terraform 程序 + 這個 Sprint 的所有 runbook,理論上能讓你從零重建整朵雲。真的做一次,你會找到文件裡缺的每一步——那就是你自己的地雷記錄的開始。
-2. **往前升。**對照 [OpenStack 版本時間表](https://releases.openstack.org/),把 lab 從 2025.1 升到下一個系列。Day 22 的 gate 方法論(snapshot → prechecks → 逐步驗證)在跨系列升級時一樣適用,只是每一步的風險更真實。
-3. **跟著課程走下一段。**[Day 26](sprint4-day26-sprint5-preview.md) 是 Sprint 5 的預告:把雲當成生意經營——計量、計費、SLA 與治理稽核。
+## 小結
 
-## 結語
+Sprint 4 增加了服務介面，也增加了理解與維護它們的方法。選擇工具時，先把問題縮到資源、請求、封包或主機，再確認觀察能回答什麼。知道哪些部分尚未驗證，與讀懂成功輸出同樣是維護工作的一部分。
 
-第 0 天的第一個問題是「為什麼 `kvm-ok` 很重要」;第 24 天的最後一個動作,是看著一台早上才加入的節點接下從老節點撤下的工作負載。中間的每一步——每個 gate、每隻金絲雀、每顆具名的地雷——都在練同一件事:**讓「它應該可以」變成「我驗證過它可以」。**
+## 延伸閱讀
 
-這朵雲會繼續動。現在,它也敢動了。
+想再深入，可以從這幾份開始：
+
+- [Kolla-Ansible 2025.1 操作指南](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html)：準備工具更新與跨系列升級。
+- [Kolla-Ansible 新增與移除主機](https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html)：對照本課維護演練之外的移除流程。
+- [Ceph 架構](https://docs.ceph.com/en/tentacle/architecture/)：進一步理解副本、CRUSH 與故障域。
+
+## 下一步
+
+[Day 26](sprint4-day26-sprint5-preview.md) 介紹多租戶使用同一朵雲後，如何整理用量、費率、身分與操作紀錄。

@@ -1,57 +1,43 @@
-# Day 22: 更新運行中的雲,還原它的資料庫
+# Day 22：更新服務映像，演練資料庫還原
 
-> 前面九天都在替雲加新能力;從今天起,課程進入維運的日常。今天做兩件生產環境每個月都在做的事:**讓雲跟上上游的修補**(系列內更新),以及**證明雲的記憶救得回來**(備份加還原演練)。注意「證明」兩個字——沒有做過還原演練的備份,只是一個沒人打開過的保險箱。
+上游已發布修補，但你的 OpenStack 容器仍使用原先的映像。更新之前，你還需要回答另一個問題：如果控制平面資料庫必須還原，手上的備份是否真的能回到預期時間點？本章先完成 2025.1 系列內更新，再用備份前後建立的 project 判斷單機 MariaDB 還原結果。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 13–18**:加服務(Skyline、Ceph、RGW、Manila、Designate、Trove)。
-    - **Day 19–21**:拆原理、上監控(請求鏈、封包路徑、可觀測性)。
-    - **今天**:維運實務第一課——更新與備份。**Day 21 裝好的監控正好派上用場**:更新過程中系統的每個反應,你都看得見。
-    - **接下來**:Day 23–24 離開單機,走向多節點。
+## 先決定更新範圍
 
-## 版本前進的兩種方式
+**系列內更新**是在同一個 OpenStack 系列內套用修補；Kolla 通常以更新工具、拉取映像後重新 `deploy` 的方式處理。**跨系列升級**則要依目標版本的升級文件使用 `upgrade`，包含資料庫遷移等工作。兩者都要先讀 release notes，不能只用「同系列」推論絕對沒有相容性或 schema 變化。
 
-動手前先分清楚兩個常被混用的詞,因為它們的指令不一樣:
+本章只走 2025.1 的系列內更新。**image tag** 是映像名稱上的標籤，同一個 tag 可以指向後來重建的內容；**image ID** 用來辨識本機實際映像。`pull` 下載新映像，既有容器仍可使用舊映像；`deploy` 才依映像與設定差異重新建立需要更新的容器：
 
-| | 系列內更新(今天做的) | 跨系列升級 |
-|---|---|---|
-| 例子 | 2025.1 內的修補(新映像、新修正) | 2025.1 → 2025.2 |
-| 指令 | `kolla-ansible deploy` | `kolla-ansible upgrade` |
-| 資料庫 schema | 不變 | 會跑 migration |
-| 風險 | 低(同版本系列) | 中高(建議先拍 snapshot) |
+![pull 只改變本機可用映像，deploy 才讓容器採用新映像](../assets/diagrams/os-s4d22-pull-deploy.svg)
 
-OpenStack 每半年出一個版本系列,其中每年一個是 **SLURP** 版(可以隔代直升的長支援版);2025.1 就是 SLURP。但今天不跨版——**系列內更新**才是最高頻的日常:上游持續替 2025.1 重建容器映像(修 CVE、修 bug),tag 不變、內容前進。
+這個分工讓下載與服務切換分開。單機重新啟動服務仍可能中斷 API，應保留維護時段；Day 21 的指標與 log 可協助比較前後狀態，但不會自動證明每項功能正常。
 
-更新的機制是兩段式,理解這個分工是今天的第一課:
+## 步驟 1：保存設定與可還原的狀態
 
-```mermaid
-flowchart TB
-    A["kolla-ansible pull<br/>抓最新映像(不動容器)"] --> B["映像倉庫的新 image<br/>躺在本機,還沒生效"]
-    B --> C["kolla-ansible deploy<br/>比對 image ID"]
-    C --> D["有變的容器換新<br/>沒變的原地不動"]
-```
+先保存 `/etc/kolla`、inventory 與憑證金鑰，並記下當前工具版本、映像與服務狀態。這些設定不在 MariaDB 備份裡。Azure 磁碟快照也不能取代後面的資料庫備份。
 
-`pull` 只補彈藥,`deploy` 才換槍。分開的好處:拉映像的時間(可能很久)不算進服務切換的窗口。
-
-## 步驟 0:先拍 snapshot
-
-更新前的保險。**關機狀態拍的 snapshot 最一致**(沒有寫入中的資料),如果你的 lab 有自動關機,早上開機前就是最好的時機:
+若採用本課單機 Azure lab，先正常停止 VM，確保所有相關磁碟停止寫入，再分別建立 OS、資料與 Ceph 磁碟快照。下面的資源群組與磁碟名稱要從 Azure 中這台 VM 的磁碟清單取得；各磁碟用不同快照名稱：
 
 ```bash
 az snapshot create -g <資源群組> -n pre-day22-os-$(date +%Y%m%d) \
   --source <OS磁碟名> --incremental true
-# data disk 與 ceph disk 各拍一顆——三顆一起拍才互相一致
+# VM 停止寫入後，對所有相關磁碟保留同一停機區間的快照
 ```
 
-## 步驟 1:確認 kolla-ansible 本體要不要動
+停機區間內不要重啟 VM 或寫入磁碟，直到整組快照完成。執行中的多顆磁碟分別拍照，不會自動形成應用程式一致的備份。完成後才重新開機，確認服務健康，再繼續更新。
+
+## 步驟 2：確認工具版本與映像
+
+在 `~/kolla-venv` 中操作，並使用 Day 1 的 inventory。下列命令使用相對路徑 `all-in-one`，因此要在存放該檔案的家目錄執行。先確認安裝版本與上游分支：
 
 ```bash
 pip show kolla-ansible | grep Version    # 20.4.1.dev17
 git ls-remote https://opendev.org/openstack/kolla-ansible refs/heads/stable/2025.1
 ```
 
-比對安裝時的 commit 與上游 `stable/2025.1` 的 tip。本課環境兩者相同——**kolla-ansible 本體不用升**,今天的更新實體是容器映像。如果 tip 有前進,先 `pip install -U git+…@stable/2025.1` 再 `kolla-ansible install-deps`。
+套件版本號與 Git commit 是不同資訊，不能直接拿兩者比較是否相同。若需更新工具，依 2025.1 Operating Kolla 文件使用同系列套件，並更新 `install-deps` 所管理的依賴；本章不把這兩行查詢當作工具升級已完成的證據。
 
-## 步驟 2:pull——看見「同 tag,不同內容」
+接著下載服務映像：
 
 ```bash
 kolla-ansible pull -i all-in-one
@@ -61,7 +47,7 @@ kolla-ansible pull -i all-in-one
 PLAY RECAP: ok=62  changed=28  failed=0
 ```
 
-`changed=28` 表示 28 個映像抓到了新內容。挑 mariadb 對比,能看到今天最有感的一幕:
+`changed` 是 Ansible 工作回報的變更數，不能直接當成下載映像的數量。以下用 MariaDB 比較 tag 目前指向的 image ID 與執行中容器的 image ID；區塊中的註解是本課的觀察值：
 
 ```bash
 sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}} {{.CreatedSince}}" | grep mariadb-server
@@ -70,23 +56,36 @@ sudo docker inspect mariadb --format "{{.Image}}" | cut -c8-20
 # 03fdc2d535fd   ← 跑著的容器還在舊 image
 ```
 
-倉庫裡躺著**兩小時前才建好**的新映像,而運行中的容器還掛在舊的上——tag 一樣、內容不同。這就是為什麼生產環境的更新紀律是「釘 digest 或定期 pull + deploy」,而不是相信 tag。
+兩個 ID 不同，表示新映像已下載，但執行中的容器尚未切換。這也是為什麼只做 `pull` 不能算更新完成。
 
-## 步驟 3:全量 prechecks——翻出老包袱
+## 步驟 3：跑完整 prechecks，先處理 Octavia 相容性
+
+之前常用 `--tags` 只處理新服務。更新整個部署前，應檢查所有已啟用服務：
 
 ```bash
 kolla-ansible prechecks -i all-in-one
 ```
 
-本課環境在這裡踩到第一顆雷(見[地雷 1](#mine-1)):一行部署初期寫下、之後從沒被檢查過的設定,被今天的**全量** prechecks 翻了出來。原因值得記住:平常用 `--tags` 做增量部署時,**prechecks 只跑該 tag 的檢查**——其他角色的設定錯誤會一直潛伏,直到下一次全量檢查。
+若沿用 Day 4 的 Amphora 與 `octavia_network_type: "tenant"`，這組設定會遇到 OVN 的相容性檢查。此時先決定仍需不需要 Amphora，不能把 provider 改掉只為通過檢查。
 
-修正後重跑,全綠才前進:
+這條演練路線改為只啟用 OVN provider，設定如下：
+
+```yaml
+octavia_provider_drivers: "ovn:OVN provider"
+octavia_provider_agents: "ovn"
+```
+
+這會使新建 `--provider amphora` 的負載平衡器不再可用，前面依賴 Amphora 的 CAPI／Magnum 指引也不能原樣沿用。既有 Amphora LB 的管理與後續生命週期要另外處理。如果仍需要它們，應先依 Kolla 2025.1 的支援方式重新規劃 Amphora 管理網路；本課沒有提供該遷移的完整操作證據，不能把這次 provider 變更視為無影響修補。
+
+另外確認 Day 15 的 `ceph_rgw_swift_compatibility: "false"`，避免完整部署將 RGW 的 `/swift/v1` endpoint 改成不匹配的 `/v1`。處理完設定後重新跑 prechecks；以下是本課成功結果的節錄：
 
 ```text
 PLAY RECAP: ok=93  changed=0  failed=0
 ```
 
-## 步驟 4:deploy——滾動換新
+## 步驟 4：套用映像與檢查服務
+
+確認 prechecks 通過與維護時段已開始，再執行：
 
 ```bash
 kolla-ansible deploy -i all-in-one
@@ -96,7 +95,7 @@ kolla-ansible deploy -i all-in-one
 PLAY RECAP: ok=628  changed=175  failed=0
 ```
 
-驗證三件事:
+部署完成後，先檢查容器健康、MariaDB image ID 與服務目錄，再驗證本次使用的服務功能：
 
 ```bash
 sudo docker ps --format "{{.Names}} {{.Status}}" | grep -i unhealthy   # (空)
@@ -104,33 +103,31 @@ sudo docker inspect mariadb --format "{{.Image}}" | cut -c8-20         # d3fbe3d
 openstack service list | wc -l                                        # 服務數不變
 ```
 
-mariadb 容器的 image ID 從 `03fdc2d…` 變成 `d3fbe3d…`——deploy 精準地只換了有新映像的容器。
+MariaDB 的 ID 應對上步驟 2 下載的映像。沒有 `unhealthy`、服務數不變，都是初步檢查；它們不能取代建立／查詢資源或應用程式連線測試。
 
-## 備份:讓資料庫有第二條命
+## 步驟 5：建立資料庫備份與時間點標記
 
-Kolla 內建 Mariabackup 支援(熱備份,不停機)。開三步:
+**Mariabackup** 能在資料庫運作時建立實體備份。Kolla 將備份存入 Docker volume `mariadb_backup`。下面區塊列出三個動作；第一行 `enable_mariabackup` 是要寫進 `globals.yml` 的 YAML 設定，不能當成 shell 命令執行：
 
 ```bash
 # 1. globals.yml 加一行
 enable_mariabackup: "yes"
 # 2. 讓 MariaDB 拿到備份帳號與權限
 kolla-ansible reconfigure -i all-in-one -t mariadb
-# 3. 跑全量備份(注意指令是 dash,見地雷 2)
+# 3. 跑全量備份(指令使用連字號)
 kolla-ansible mariadb-backup -i all-in-one
 ```
 
-備份落在 docker volume `mariadb_backup`:
+確認備份檔存在：
 
 ```bash
 sudo ls -lh /var/lib/docker/volumes/mariadb_backup/_data/full-*/
 # mysqlbackup-13-07-2026-1783920508.qp.xbc.xbs.gz   4.1M
 ```
 
-整個控制平面的記憶——每台 VM、每條網路、每個使用者——壓縮後 4.1MB。
+這份備份包含控制平面資料庫的紀錄，不包含 VM 的磁碟內容、Ceph 物件或所有設定金鑰。備份 volume 仍在原主機上，也不是主機故障後可獨立取回的異地副本。
 
-### 金絲雀方法論:讓還原有東西可以「判決」
-
-直接還原然後看服務會不會動,只能證明「沒壞」,不能證明「真的回到了備份時間點」。所以在備份**前後**各留一個標記:
+要驗證還原時間點，接著在另一份備份前後各建立一個 project。後面的還原必須選擇兩個 project 建立動作之間產生的那份備份，不能選剛才較早的檔案：
 
 ```bash
 openstack project create day22-before-backup   # 備份前建 → 還原後應該「在」
@@ -138,18 +135,19 @@ kolla-ansible mariadb-backup -i all-in-one
 openstack project create day22-after-backup    # 備份後建 → 還原後應該「消失」
 ```
 
-還原成功的判準:before 在、after 不在。兩個都在 = 根本沒還原;兩個都不在 = 還原到錯的東西。
+下圖呈現預期差異：`before` 應留下，`after` 應消失。這比只確認 API 回應更能分辨還原到哪個時間點。
 
-## 還原演練:走完全程才算數
+![before project 在備份前建立，after project 在備份後建立，還原只保留 before](../assets/diagrams/os-s4d22-canary.svg)
 
-```mermaid
-flowchart TB
-    A["① 臨時容器<br/>mbstream 解包 + prepare"] --> B["② 停 mariadb"]
-    B --> C["③ 清空資料目錄<br/>copy-back + chown"]
-    C --> D["④ 重啟 mariadb<br/>金絲雀判決"]
-```
+這是可丟棄 lab 的還原演練。開始前停止使用者與自動化對雲的變更；備份後新增的實體 VM、volume 不會因資料庫倒退而自動一起消失，不能把這個流程直接套在持續變動的正式環境。
 
-① 準備備份(不影響運行中的資料庫):
+## 步驟 6：準備備份，再停機還原
+
+**prepare** 會套用備份內的交易紀錄，讓實體備份達到可還原狀態；**copy-back** 再把它放回 MariaDB 資料目錄。下圖標出資料庫停止服務的區間：
+
+![先解包並 prepare，停止 MariaDB 後才清空資料、copy-back 並修正擁有者](../assets/diagrams/os-s4d22-restore.svg)
+
+先將 `<日期>` 替換為步驟 5 選定的備份目錄及完整檔名。確認備份與資料庫映像版本相容，再用臨時容器解包、prepare：
 
 ```bash
 sudo docker run --rm --volumes-from mariadb --volume mariadb_backup:/backup \
@@ -161,13 +159,13 @@ sudo docker run --rm --volumes-from mariadb --volume mariadb_backup:/backup \
 # [00] completed OK!
 ```
 
-② 停資料庫(從這一刻起 API 會斷,直到 ④ 完成——這正是演練要體感的):
+確認 prepare 成功後才停止 MariaDB。從這裡起，依賴資料庫的控制平面 API 會受影響：
 
 ```bash
 kolla-ansible stop -i all-in-one -t mariadb --yes-i-really-really-mean-it
 ```
 
-③ 清空舊資料、把備份放回去——**注意最後的 chown,官方文件漏了它**(見[地雷 3](#mine-3)):
+以下動作會刪除目前 MariaDB 資料目錄，只適用於已選定備份並準備還原的演練。`--volumes-from mariadb` 讓臨時容器操作同一份資料；copy-back 後保留 `chown`，讓 MariaDB 的 `mysql` 使用者能存取檔案：
 
 ```bash
 sudo docker run --rm --volumes-from mariadb --volume mariadb_backup:/backup \
@@ -177,7 +175,7 @@ sudo docker run --rm --volumes-from mariadb --volume mariadb_backup:/backup \
   chown -R mysql:mysql /var/lib/mysql'
 ```
 
-④ 重啟、等 healthy、判決:
+重新啟動 MariaDB，等健康檢查通過，再用管理員 openrc 查 project：
 
 ```bash
 sudo docker start mariadb
@@ -186,67 +184,41 @@ openstack project list | grep day22
 #                       ← day22-after-backup 消失了(正確)
 ```
 
-**備份後做的任何變更,還原後都會消失**——這不是缺陷,是還原的定義。生產環境裡這代表:還原點的選擇,就是資料損失範圍的選擇。
+確認 `before` 存在、`after` 不存在，再檢查各服務與受影響資源。這兩個標記只驗證所選資料庫時間點，不是整朵雲所有資料一致性的完整測試。
 
-## 為什麼雲自己的資料庫要手動照顧?
+## 疑難排解
 
-一個合理的疑問:Day 18 才部署了 Trove——資料庫即服務,一行指令就有代管 MySQL、自動備份。為什麼雲自己的 MariaDB 還要這樣手工伺候?
+### 完整 prechecks 擋下原本可用的 Octavia 設定 {#mine-1}
 
-因為 **Trove 開出來的資料庫,跑在這朵雲的 VM 裡;而這朵雲自己的資料庫,是雲能開出 VM 的前提**。讓雲把自己的地基放進自己蓋的房子裡,第一次停電就會發現:要救資料庫得先有雲,要有雲得先有資料庫。這個循環依賴沒有解,所以控制平面的資料庫永遠站在產品之外,用今天這種「土辦法」照顧——每一層雲的底下,都有一層不是雲的東西。
+只跑特定 tags 時，不會完整檢查其他角色。`tenant` 型 Amphora 管理網路與 OVN 的組合必須重新評估；步驟 3 說明切成 OVN provider 的代價與仍需 Amphora 時的處理範圍。不要直接對既有 LB 宣稱已完成遷移。
 
-## 驗收 checkpoint
+### mariadb_backup 不是 CLI 接受的命令 {#mine-2}
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| pull | 有 changed(拿到新映像) | changed=28 |
-| prechecks | 全綠才准 deploy | 修正 1 項後 ok=93 failed=0 |
-| deploy | failed=0、無 unhealthy、image ID 換新 | ok=628 changed=175,mariadb 換新 |
-| 備份 | 備份檔實際存在 | 4.1MB `.qp.xbc.xbs.gz` |
-| 還原 | before 金絲雀在、after 金絲雀消失 | 判決通過 |
-| 服務 | 還原後 service list 正常 | 18 個服務全在 |
+本章使用 2025.1 CLI 的 `mariadb-backup`，中間是連字號；文件或舊範例中出現的底線寫法不能直接照用。
 
-## 地雷記錄
+### copy-back 後 MariaDB 無法讀取資料 {#mine-3}
 
-### 地雷 1:`--tags` 部署的檢查盲區 {#mine-1}
+臨時容器以 root 寫回檔案後，擁有者可能與服務使用者不同。步驟 6 已保留 `chown -R mysql:mysql /var/lib/mysql`；若啟動失敗，仍應先讀錯誤紀錄確認是否為檔案權限問題。
 
-本課環境的 globals.yml 裡躺著初期寫下的 `octavia_network_type: "tenant"`——它與 OVN 不相容(amphora 管理網走 tenant 型只支援 openvswitch),但因為之後的部署都用 `--tags` 增量進行,這行錯誤設定潛伏了整個 Sprint,直到今天的全量 prechecks 才爆出來。本次修正是把 provider 收斂到 OVN:
+## 想一想
 
-```yaml
-octavia_provider_drivers: "ovn:OVN provider"
-octavia_provider_agents: "ovn"
-```
+1. 新映像已在主機上，執行中的容器仍使用舊 ID，更新還缺哪個步驟？
+2. 還原後 before 與 after 都還在，這足以證明成功嗎？應重新核對哪個時間點？
+3. 備份後又建立了一顆 volume，還原控制平面資料庫是否代表那顆 volume 的實際資料也回到了備份當時？
 
-教訓:**`--tags` 只檢查該 tag 的世界**。定期跑一次全量 prechecks,把潛伏的設定債翻出來。
+## 小結
 
-!!! warning "和前面幾天對得起來嗎?——這裡要講清楚"
-    Day 4 讀 role 原始碼、實測 amphora round-robin 6/6 通過;Day 8 的 `web-lb`/`kubeapi`([地雷 3](sprint3-day8-e2e-workload-cluster.md#mine-3) 還特地把 label 收斂成 `amphora`,並註明「本 Octavia `enabled_provider_drivers` 只有 `amphora,ovn`」)、Day 10 的 `tf-lb` 也都是 amphora provider——所以把它說成「一直由 OVN 承擔」並不準確,那些 LB 當時確實是 amphora 在服務。
-
-    兩件事可以同時成立:**amphora 在本環境實測可跑,但 `octavia_network_type: "tenant"` 這個組合不在官方支援矩陣內,全量 precheck 站官方那邊把它擋下**。本次為了過 precheck 選了 OVN provider,代價要說明白:`octavia_provider_drivers` 收斂到只剩 `ovn` 之後,再用 `--provider amphora` 建新 LB 會被拒,[Day 8 地雷 3](sprint3-day8-e2e-workload-cluster.md#mine-3) 與 Day 16+「要走 LoadBalancer 得帶 `amphora` label」的指引在此設定下失效;先前用 amphora 建的 LB 的管理要另外評估。若你仍需要 amphora,正解是回頭把 `octavia_network_type` 換成 amphora 支援的網路型,而不是留著 `tenant`。這是「潛伏設定債爆開後,修法本身也有後果」的實例——不是改一行就沒事。
-
-### 地雷 2:指令是 `mariadb-backup`,文件內文寫的底線是舊寫法 {#mine-2}
-
-官方文件內文寫 `kolla-ansible mariadb_backup`(底線),但 2025.1 的 CLI 實際接受的是 `kolla-ansible mariadb-backup`(dash)。底線版是舊 CLI 的殘留寫法。
-
-### 地雷 3:copy-back 之後必須 chown {#mine-3}
-
-`mariabackup --copy-back` 以 root 身分寫回資料目錄,但 mariadb 容器以 `mysql` 使用者執行——不補 `chown -R mysql:mysql /var/lib/mysql`,重啟會直接失敗。官方還原文件沒有這一步,實測必要。
-
-## 帶得走的東西
-
-- **系列內更新用 `deploy`,跨系列才用 `upgrade`**;pull 補彈藥、deploy 換槍,兩段分開。
-- **同一個 tag 的內容會前進**——上游持續重建映像,別把 tag 當成不變的保證。
-- **沒還原過的備份不算備份**;金絲雀方法論讓「還原成功」變成可判決的命題。
-- **雲的地基不能放在雲裡**——控制平面資料庫永遠需要雲外的照顧方式。
+更新要分辨工具、映像與執行中容器的版本；備份還原要分辨資料庫紀錄、設定與實際資源的狀態。用 image ID 與備份前後的 project 標記，可以各自驗證一項具體結果。將這些證據與服務檢查放在一起，才知道更新或還原還有哪些部分尚未完成。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Kolla-Ansible 的 MariaDB 備份與還原指南](https://docs.openstack.org/kolla-ansible/2025.1/admin/mariadb-backup-and-restore.html)** —— 本章備份還原流程的官方出處,含增量備份的完整範例(注意本章地雷 2、3 的兩處修正)。
-- **[Operating Kolla:升級操作手冊](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html)** —— 系列內更新與跨系列升級的官方定義;哪天要跨到 2025.2,照這份走。
-- **[Mariabackup 總覽(MariaDB 官方)](https://mariadb.com/kb/en/mariabackup-overview/)** —— 熱備份為什麼可以不停機、prepare 階段在做什麼,原理都在這份。
-- **[OpenStack 版本時間表](https://releases.openstack.org/)** —— 每個系列的維護狀態與 SLURP 標記;規劃升級路徑前先看這頁。
+- [Kolla-Ansible 2025.1 Operating Kolla](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html)：對照系列內更新、跨系列升級與設定備份。
+- [Kolla-Ansible 2025.1 MariaDB 備份與還原](https://docs.openstack.org/kolla-ansible/2025.1/admin/mariadb-backup-and-restore.html)：確認全量、增量與多節點還原差異。
+- [Mariabackup 總覽](https://mariadb.com/kb/en/mariabackup-overview/)：理解 prepare 與實體備份的一致性。
+- [OpenStack 版本時間表](https://releases.openstack.org/)：規劃跨系列路線前，確認系列維護狀態與 SLURP 升級範圍。
 
 ## 下一步
 
-單機的維運課到此完整。[Day 23](sprint4-day23-multinode-ha.md) 換一個全新的環境:**四台機器的多節點部署**——單機時代被關掉的 haproxy、被略過的 VIP,在那裡全部復活,而且你會親眼看到關掉一台 controller 之後,API 只停了六秒。
+[Day 23](sprint4-day23-multinode-ha.md) 改用獨立的多節點環境，檢查 API 入口與資料庫多數決如何影響故障時的服務。

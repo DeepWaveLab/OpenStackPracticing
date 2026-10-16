@@ -1,102 +1,39 @@
-# Day 28: 計量管線——誰用了多少
-
-> Day 27 把租戶結構蓋好了,現在有了分帳的對象。今天處理分帳的**依據**:部署 Ceilometer,讓「誰開了幾台 VM、跑了多久、用了幾 GB」變成 Day 21 那座 Prometheus 裡查得到的數字。本章要先講清楚一件事——**這條管線跟 Day 21 的監控不是同一條**,把它們搞混,Day 30 的帳單就永遠算不對。
+# Day 28: 計量管線——把用量對回租戶，並確認資料仍有效
 
 ![Telemetry 官方吉祥物](../assets/mascots/telemetry.png){ align=right width="100" }
 
-!!! abstract "你在課程的哪裡"
-    - **Day 21**:Prometheus + Grafana + 集中式 log 上線,你看得見**機器**的健康。
-    - **Day 27**:domains、專案、額度就緒,有了租戶邊界。
-    - **今天**:讓雲說得出**每個租戶各用了多少**——計量資料流進 Day 21 那座 Prometheus。
-    - **今天之後**:[Day 29](sprint5-day29-aodh-autoscaling.md) 讓這些數字觸發自動反應,[Day 30](sprint5-day30-cloudkitty-rating.md) 把它們換成錢。
+Prometheus 已經能查主機 CPU 與記憶體，現在同事要問的是「team-a 用了多少」。你需要把 VM 的讀數對回 OpenStack 專案，而不是把整台主機的用量當作某個租戶的用量。這一章加入 Ceilometer，將帶有 `project_id` 的計量資料送到現有 Prometheus。讀完之後，查不到資料時，你能逐段確認來源、轉送與查詢；查得到資料時，也能判斷它是否仍代表存在的資源。
 
-## 監控與計量,不是同一件事
+## 開始之前
 
-這是今天最容易誤會、也最該先講的一段。Day 21 之後,你可能會想:Prometheus 不是已經有一堆指標了嗎?為什麼還要裝 Ceilometer?
+沿用 Day 21 的 Prometheus、Day 27 的 team-a 與 `team-a-net`。指令在 Kolla 部署主機執行；`10.0.0.4`、inventory、服務埠與 project UUID 都需對照自己的環境。下面保留歷史輸出，UUID 不可直接套用。
 
-因為那兩批資料**回答的是不同問題**:
+**Ceilometer** 蒐集 OpenStack 的資源用量與事件，資料包含專案歸屬。Day 21 的主機 exporter 指標主要用來觀察主機健康；是否帶租戶資訊要看 exporter 與設定，不能只看指標存在哪套資料庫。
 
-| | Day 21 的 exporters | 今天的 Ceilometer |
-|---|---|---|
-| 誰產生的 | node / libvirt / mysqld exporter | OpenStack 服務本身 |
-| 回答什麼 | 這台**主機**還好嗎 | 這個**租戶**用了多少 |
-| 典型指標 | 主機記憶體剩幾 GB、磁碟水位 | 這顆 VM 屬於哪個 project、開機幾小時 |
-| 帶不帶租戶身分 | **不帶** | **帶 `project_id`** |
-| 用途 | 維運告警 | 分帳、稽核、容量規劃 |
+本課選擇 Prometheus 作為後端。舊教材也可能使用 Gnocchi；那是另一種資料模型與整合方式，不能把其資源 metadata 查詢直接套用到本章。本章 publisher 實際送出的 labels 才是後續告警可用的條件，不能從「Prometheus 支援 label」推定它已收到所有 VM metadata。
 
-差別的關鍵在最後兩列。libvirt exporter 知道「這台 hypervisor 上有 12 顆 VM 在跑」,但它**不知道哪顆是誰的**——那是 OpenStack 資料庫裡的事實,只有 OpenStack 自己說得出來。
+## 資料怎麼到 Prometheus
 
-```mermaid
-flowchart TB
-    subgraph infra["Day 21:基礎設施指標"]
-        E["node / libvirt<br/>exporter"]
-    end
-    subgraph meter["Day 28:租戶計量"]
-        C["Ceilometer<br/>(帶 project_id)"]
-    end
-    infra ==> P["同一座 Prometheus<br/>(Day 21 建的)"]
-    meter ==> P
-    P ==> USE["Day 29 告警<br/>Day 30 帳單"]
-```
+Ceilometer 有兩種來源：**polling** 定期讀取 CPU、磁碟等讀數；**notification** 接收 Nova、Cinder 等服務發出的事件。**Pipeline** 決定資料交給哪個 **publisher**，也就是發送到後端的元件。
 
-**兩條路平行前進,最後匯進同一座 Prometheus。** 這是這門課的設計紅利:Day 21 的地基直接變成 Sprint 5 的計量骨幹,不用為了計費再養一顆資料庫。
+下圖從來源往下看。來源服務要開通知，Ceilometer 才收得到；Prometheus 則主動抓取 Pushgateway 的 `/metrics`。
 
-## Gnocchi 去哪了
+![服務通知與定期輪詢進入Ceilometer，publisher推送到Pushgateway，Prometheus定期抓取；標籤含project_id](../assets/diagrams/os-s5d28-pipeline.svg)
 
-翻開任何一本 OpenStack 教材,遙測都是三件套:**Ceilometer 蒐集 → Gnocchi 儲存 → Aodh 告警**。今天的課表卻只有頭尾兩位。
+**Pushgateway** 保存推送的最新值，供 Prometheus 的 **scrape（定期抓取）**讀取。這個保存動作與 VM 的生命週期分開，刪掉 VM 不會自動刪掉指標。後面會看到這為何影響計費；先把資料路徑接起來。
 
-[Day 26](sprint4-day26-sprint5-preview.md) 已經把判決攤開過:Gnocchi 在 2017 年離開 OpenStack 官方治理後逐漸沉寂,主流發行版的新一代遙測架構已經把它排除在外(截至 2026-07);而官方現行路線是 **Ceilometer → Prometheus → Aodh**,下一步的 Aetos(在 Prometheus 前面加租戶隔離與 Keystone 認證的代理)更說明方向已定。
+## 步驟 1：準備 Pushgateway 的接收端
 
-所以 Gnocchi 在這門課只以兩種身分出現:**歷史脈絡**,以及 **Aodh 部分告警型別名稱的由來**——[Day 29](sprint5-day29-aodh-autoscaling.md) 會看到 Heat 至今仍列著三種 `OS::Aodh::Gnocchi*` 資源型別,和一個 `OS::Aodh::PrometheusAlarm` 並排。那張清單本身就是這段歷史的化石。
-
-繞過 Gnocchi 有代價,而且代價在 [Day 29](sprint5-day29-aodh-autoscaling.md#architecture) 會現形:Prometheus 這條路**存不住 resource metadata**,教科書那套「幫 VM 貼標籤再用標籤圈選機群」的做法直接失效。今天先記著這件事。
-
-## 原理與架構
-
-Ceilometer 用**兩種**方式取得資料,這決定了今天要動哪些服務:
-
-```mermaid
-flowchart TB
-    subgraph src["資料來源"]
-        NOTI["各服務發的通知<br/>(開機、刪除…事件)"]
-        POLL["主動輪詢<br/>(CPU、磁碟…讀數)"]
-    end
-    NOTI ==> CN["ceilometer-notification"]
-    POLL ==> CC["ceilometer-central<br/>ceilometer-compute"]
-    CN ==> PIPE["pipeline<br/>(publisher 決定送去哪)"]
-    CC ==> PIPE
-    PIPE ==>|"push"| PG["Pushgateway :9092"]
-    PG -.->|"Prometheus 來抓"| PROM["Prometheus :9091"]
-```
-
-兩個要點決定今天的雷區:
-
-1. **通知那條路要對方配合**——Nova、Cinder、Neutron 得先「願意發通知」,而它們預設是關的。這需要動到那些服務,不是裝好 Ceilometer 就有([地雷 3](#mine-3))。
-2. **Ceilometer 是 push,Prometheus 是 pull**——兩邊方向相反,中間要塞一個 **Pushgateway** 當轉接頭。而**kolla 不會幫你部署它**,得自己起。
-
-!!! warning "Pushgateway 是個妥協,不是好設計"
-    Prometheus 官方文件明講 Pushgateway **不該拿來把 Prometheus 變成推送式系統**——它是為「短命的批次任務」設計的。用它接 Ceilometer 是目前 kolla 提供的路,但它有個會直接影響帳單正確性的副作用,見[地雷 5](#mine-5)。動手前先知道你在用什麼。
-
-## 步驟
-
-### 步驟 1:起一個 Pushgateway
-
-kolla 有 `enable_ceilometer_prometheus_pushgateway` 這個開關,但它只負責**叫 Ceilometer 把資料推去某個位址**——**那個位址上的服務要你自己準備**。
+Kolla 的 `enable_ceilometer_prometheus_pushgateway` 設定 Ceilometer 的目的地，這份部署仍需自行啟動接收服務。先檢查主機上的監聽埠；本課 Prometheus 已使用 9091，因此 Pushgateway 改用 9092。
 
 ```bash
 sudo docker run -d --name pushgateway --restart unless-stopped --network host \
   quay.io/prometheus/pushgateway:latest --web.listen-address=:9092
 ```
 
-兩個參數都是被雷炸出來的:
+這份歷史命令使用 `latest`，沒有留下固定 digest，不能用它保證重現同一版本。重建環境時應先選定並記錄測試版本。它也沒有啟用認證，且監聽所有主機介面；只應放在已限制來源的實驗網路，讀寫邊界見[疑難排解：無認證的計量入口](#mine-6)。
 
-- **`--network host`**——kolla 的 docker daemon 設了 `iptables: false` + `bridge: none`,**`-p` 埠映射是死的**([地雷 1](#mine-1))。
-- **`:9092`**——Pushgateway 預設聽 9091,而那正是 Day 21 kolla Prometheus 的埠([地雷 2](#mine-2))。
-
-!!! warning "教學用 `:latest`;生產要 pin,而且這個埠是無認證的計費輸入端點"
-    這裡刻意用 `:latest` 是為了少一個變數,但它不可重現、日後無法稽核「當時到底是哪版」——正好和 [Day 22 教的「別把 tag 當不變保證」](../runbook/sprint4-day22-upgrade-backup.md) 自打臉,生產請 pin 到 digest 或明確版本。更重的是:它跑在 **host network、完全無認證**,餵的卻是 [Day 30](sprint5-day30-cloudkitty-rating.md) 的帳單來源——完整的曝險分析見[地雷 6](#mine-6)。
-
-驗證它活著,並確認兩個服務各據一埠:
+本課 Docker 的 bridge／iptables 設定不能使用一般 `-p` 對映，因此使用主機網路；這是此部署的限制，不是所有 Kolla 環境都只能這樣做。確認服務健康與埠分布：
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" http://10.0.0.4:9092/-/healthy
@@ -109,9 +46,11 @@ sudo ss -tlnp | grep -E ":909[12]"
 *:9092         users:(("pushgateway",pid=1319183,fd=4))
 ```
 
-### 步驟 2:讓 Prometheus 去抓它
+200 表示健康端點回應；`*:9092` 表示所有主機介面都在監聽，不能解讀為只有本機可連。
 
-kolla 支援用檔案片段擴充 Prometheus 的 scrape 設定,不必改動它自己的模板:
+## 步驟 2：讓 Prometheus 抓取並保留標籤
+
+把 scrape 設定放進 Kolla 支援的片段目錄：
 
 ```bash
 sudo mkdir -p /etc/kolla/config/prometheus/prometheus.yml.d
@@ -125,10 +64,11 @@ scrape_configs:
 EOF
 ```
 
-!!! danger "`honor_labels: true` 不能省"
-    Prometheus 抓取時**預設會用自己的 `job` / `instance` 覆蓋掉指標原本的標籤**。Ceilometer 推上來的資料自帶 `job="openstack-telemetry"`,被覆蓋掉的話,後面 Day 30 的 CloudKitty 就對不到它要的東西。這一行保住原始標籤。
+`honor_labels: true` 讓來源的 `job`／`instance` 在衝突時優先保留；否則 Prometheus 會使用目標標籤，來源衝突值可能改名為 `exported_job`／`exported_instance`。後續 CloudKitty 查 `job="openstack-telemetry"`，需要這些標籤保持一致。
 
-### 步驟 3:部署 Ceilometer
+## 步驟 3：部署收集器
+
+開啟 Ceilometer 與 publisher，填入自己的 Pushgateway 位址：
 
 ```bash
 sudo tee -a /etc/kolla/globals.yml << 'EOF'
@@ -146,23 +86,29 @@ kolla-ansible deploy -i ~/all-in-one --tags ceilometer,prometheus
 PLAY RECAP: ok=49  changed=18  failed=0
 ```
 
-三個容器起來(central / compute / notification),Prometheus 也認得新目標了:
+部署後確認 central、compute、notification 三個容器，以及 Prometheus 中的 scrape target。原紀錄顯示目標健康：
 
 ```text
 job=ceilometer-pushgateway  health=up
 總 targets: 38
 ```
 
-### 步驟 4:打開通知——第一次驗收會失敗
+`up` 只能證明 Prometheus 抓得到 Pushgateway，不能證明每個 VM 的資料都有更新；Pushgateway 仍可能回傳已停止更新的值。
 
-檢查 Nova 等服務願不願意發通知:
+## 步驟 4：確認通知來源也更新了設定
+
+只部署 Ceilometer，不會重新產生 Nova、Cinder、Neutron 的設定。先查來源服務的 `oslo_messaging_notifications` driver。Nova、Cinder 使用各自的 API 容器；Neutron 的容器名是 `neutron_server`，不能沿用 `${s}_api`：
 
 ```bash
 for s in nova cinder neutron; do
   echo -n "$s: "
-  sudo docker exec ${s}_api grep -A2 "^\[oslo_messaging_notifications\]" /etc/$s/$s.conf | grep driver
+  container="${s}_api"
+  if [ "$s" = neutron ]; then container=neutron_server; fi
+  sudo docker exec "$container" grep -A2 "^\[oslo_messaging_notifications\]" /etc/$s/$s.conf | grep driver
 done
 ```
+
+原紀錄的來源狀態是：
 
 ```text
 nova:   driver = noop
@@ -170,7 +116,7 @@ cinder: driver = noop
 neutron:driver = noop
 ```
 
-**全是 `noop`——沒有人在發通知。** `--tags ceilometer` 只部署了 Ceilometer 自己,不會回頭去改別人的設定([地雷 3](#mine-3))。把會發通知的服務全部重跑一次:
+`noop` 表示不發送通知。更新這些來源服務，而不只是接收端：
 
 ```bash
 kolla-ansible deploy -i ~/all-in-one --tags nova,neutron,cinder,glance,keystone,heat
@@ -180,7 +126,7 @@ kolla-ansible deploy -i ~/all-in-one --tags nova,neutron,cinder,glance,keystone,
 PLAY RECAP: ok=190  changed=52  failed=0
 ```
 
-再驗一次:
+更新後再查對應容器中的 driver 與 topics：
 
 ```text
 nova-api        driver=messagingv2  topics=notifications
@@ -189,17 +135,19 @@ neutron-server  driver=messagingv2  topics=notifications
 glance-api      driver=messagingv2  topics=notifications
 ```
 
-### 步驟 5:產生用量,然後分租戶查
+`messagingv2` 會把通知送到訊息系統。這與 Day 34 的 API 稽核日誌是不同設定與用途，不要為了輸出稽核 log 把計量通知來源關掉。
 
-開一台 VM 在 Day 27 建的租戶裡:
+## 步驟 5：用 team-a 的 VM 確認標籤
+
+先依 Day 27 清除 application credential 變數與 `OS_SYSTEM_SCOPE`，再載入 team-a 的 openrc。Day 27 的兩台額度測試 VM 應已刪除；本章需要至少一台的剩餘額度。
 
 ```bash
-source /etc/kolla/admin-openrc.sh
+source ~/team-a-openrc.sh
 openstack server create meter-vm --flavor m1.tiny --image cirros \
   --network team-a-net --wait
 ```
 
-等一兩分鐘讓輪詢跑過,直接看 Pushgateway 收到什麼:
+等待輪詢產生樣本，再看 Pushgateway 原始資料：
 
 ```bash
 curl -s http://10.0.0.4:9092/metrics | grep -v "^#" | head
@@ -213,9 +161,9 @@ disk_device_read_requests{...} 1035
 disk_device_write_bytes{...} 7.303168e+07
 ```
 
-指標叫 **`cpu`**,不是 `ceilometer_cpu`——**名稱沒有服務前綴**,照著猜會什麼都查不到([地雷 4](#mine-4))。
+這裡的 `cpu` 是累積 CPU 時間讀數，不是百分比。`project_id` 是租戶歸屬，`resource_id` 是 VM；之後要查指定租戶時，用自己的 team-a project ID。指標名稱沒有 `ceilometer_` 前綴。
 
-最後是今天真正的驗收。**這一條查詢就是 Day 30 帳單的全部基礎**:
+先按專案計算目前看見的 cpu 時間序列數：
 
 ```bash
 PW=$(sudo grep '^prometheus_password:' /etc/kolla/passwords.yml | awk '{print $2}')
@@ -229,11 +177,9 @@ project_id=37cdb341…(Trove)   → 1 台
 project_id=d2b25822…(team-a)  → 1 台      ← Day 27 建的租戶
 ```
 
-同一條查詢在 Prometheus 的畫面上長這樣——右上角 `Result series: 3`,三個 `project_id` 各一台:
+![Prometheus依project_id分組計算cpu時間序列，原紀錄列出三組結果](../assets/screenshots/day28-prometheus-perproject.png)
 
-![Prometheus 執行 count by (project_id) (cpu),回傳三個租戶各一台](../assets/screenshots/day28-prometheus-perproject.png)
-
-**雲說得出每個租戶各有幾台機器了。** 縮到單一租戶也對:
+這個結果代表各專案有幾條符合條件的 `cpu` 序列。只有每台 VM 對應一條序列、資料沒有重複且已刪資源已清理時，才可把它當 VM 台數。下面再縮到單一 project；命令內的 UUID 請替換成自己的 team-a ID：
 
 ```bash
 curl -s -u admin:$PW --get http://10.0.0.4:9091/api/v1/query \
@@ -244,96 +190,68 @@ curl -s -u admin:$PW --get http://10.0.0.4:9091/api/v1/query \
 resource=83b15110-76b4-4f3b-9…   cpu=3.16e+09 ns
 ```
 
-那個 `project_id` label 就是 Sprint 5 後半段的命脈:**它讓 Day 29 的告警圈得出範圍、讓 Day 30 的帳單分得出租戶——全部不需要 Gnocchi。**
+這筆資料確認了 VM 讀數與專案標籤的連結。它還沒有證明資料完整、沒有重複或可直接用於收費。
 
-!!! question "為什麼今天沒有主控台畫面?"
-    前幾天每個服務都有 Skyline 或 Horizon 的頁面可看,今天沒有——**因為 Ceilometer 根本沒有介面**。
+## 在哪裡觀察 Ceilometer
 
-    這不是 kolla 沒開,是這個服務就沒有面板。看 kolla 的 horizon role 怎麼列各服務就懂了:
+本課沒有部署 Ceilometer 的網頁面板。Kolla 的 Horizon 設定中，Ceilometer 這一列只有政策檔，其他服務才有面板開關：
 
-    ```yaml
-    - { name: "ceilometer", enabled: "{{ enable_ceilometer_horizon_policy_file }}" }   # 只有政策檔
-    - { name: "cloudkitty", enabled: "{{ enable_horizon_cloudkitty }}" }               # 有面板
-    - { name: "designate",  enabled: "{{ enable_horizon_designate }}" }                # 有面板
-    ```
+```yaml
+- { name: "ceilometer", enabled: "{{ enable_ceilometer_horizon_policy_file }}" }   # 只有政策檔
+- { name: "cloudkitty", enabled: "{{ enable_horizon_cloudkitty }}" }               # 有面板
+- { name: "designate",  enabled: "{{ enable_horizon_designate }}" }                # 有面板
+```
 
-    Ceilometer 那列只有**政策檔**,沒有面板;[Day 29](sprint5-day29-aodh-autoscaling.md) 的 Aodh 更是連一列都沒有。
+因此，操作時看來源服務、Ceilometer 日誌、Pushgateway 原始資料，再到 Prometheus 查詢。Day 30 才會透過 CloudKitty 查看費用計算結果。
 
-    **這其實很合理**:Ceilometer 是一隻沒有 API 的背景收集器,它的產出就是 Prometheus 裡的時間序列——**上面那張 Prometheus 畫面就是它的介面**。真正給人看的畫面在 [Day 30](sprint5-day30-cloudkitty-rating.md):CloudKitty 把這些數字變成帳單之後,Horizon 才有東西可以顯示。
+## 疑難排解
 
-## 驗收 checkpoint
+### 容器 Up，9092 健康檢查卻連不上 {#mine-1}
 
-逐項驗證,**全部符合判準才算完成今天**:
-
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| Pushgateway | `:9092` 健康檢查回 200,與 Prometheus 的 9091 不衝突 | 兩者並存 |
-| Prometheus 目標 | `ceilometer-pushgateway` 這個 job 為 `up` | up(總 targets 38) |
-| Ceilometer 容器 | central / compute / notification 全起來 | 符合 |
-| **通知已開** | nova/cinder/neutron 的 driver 為 `messagingv2` | 重跑後符合(見地雷 3) |
-| 資料進來 | Pushgateway `/metrics` 有 `job="openstack-telemetry"` 的指標 | 48 行 |
-| **分租戶計量** | `count by (project_id) (cpu)` 查得到各租戶 | 3 個 project,含 team-a |
-
-## 地雷記錄
-
-### 地雷 1:kolla 的 docker 沒有 iptables,`-p` 是死的 {#mine-1}
-
-**症狀**:第一次用標準寫法起 Pushgateway:
+下列是此環境失敗的埠對映方式，不要跟步驟 1 同時執行：
 
 ```bash
 sudo docker run -d --name pushgateway -p 10.0.0.4:9092:9091 \
   quay.io/prometheus/pushgateway:latest
 ```
 
-容器 `Up`,健康檢查卻是:
-
 ```text
 pushgateway :9092 → HTTP 000
 ```
 
-**根因**:kolla 的 docker daemon 設了 **`iptables: false` + `bridge: none`**。埠映射(`-p`)靠的正是 docker 寫 iptables 規則——這兩個關掉,**`-p` 完全失效**,而且不會報錯,只是沒人在聽。
-
-**解法**:跟 kolla 自己的容器一樣走主機網路。
+**原因**：本課 Docker 的 `iptables: false` 與 `bridge: none` 使這條對映路徑不可用。**修法**：先移除同名失敗容器，再採主機網路版本；不要直接重跑而留下名稱衝突：
 
 ```bash
 sudo docker run -d --name pushgateway --restart unless-stopped --network host \
   quay.io/prometheus/pushgateway:latest --web.listen-address=:9092
 ```
 
-**教訓**:**在 kolla 主機上自己跑容器,一律 `--network host`**,埠用參數指定而不是用 `-p` 映射。這是 kolla 的網路設計(它把網路完全交給主機)必然的長尾效應,在這台機器上會一犯再犯。
+主機網路仍需檢查監聽位址、埠衝突與防火牆。
 
-### 地雷 2:Pushgateway 預設 9091,正好撞上 kolla 的 Prometheus {#mine-2}
+### Pushgateway 與 Prometheus 使用同一個埠 {#mine-2}
 
-已在步驟 1 預拆。Pushgateway 官方預設埠是 **9091**,而 [Day 21](sprint4-day21-observability.md) 記過 kolla 把 Prometheus 放在 **9091**(不是慣例的 9090)——兩個 9091 對撞。
+**症狀**：服務無法綁定 9091。**原因**：Pushgateway 預設埠與本課 Kolla Prometheus 相同。**修法**：依步驟 1 使用 9092，並同步修改 Ceilometer publisher 與 Prometheus scrape target。
 
-這是本課程的老主旋律了:Day 14 的監控套件、Day 15 的 port 80、今天的 9091。**在同一台機器上堆越多服務,「預設埠相撞」就從意外變成常態**——裝任何新東西之前,先 `ss -tlnp` 看一眼。
+### 收集器正常，卻沒有服務事件 {#mine-3}
 
-### 地雷 3:`--tags ceilometer` 不會回頭打開別人的通知 {#mine-3}
-
-**症狀**:Ceilometer 三個容器全部健康、log 沒有任何錯誤、pollster 也確實在跑,但通知那條路一筆資料都沒有。查下去發現 nova/cinder/neutron 的 `oslo_messaging_notifications` driver 全是 `noop`。
-
-**根因**:Ceilometer 的通知來源是**別的服務**發出來的訊息。`enable_ceilometer` 會讓 kolla 在**下次部署那些服務時**把它們的 driver 改成 `messagingv2`——但 `--tags ceilometer` 只跑 Ceilometer 自己的 role,**那些服務根本沒被碰到**,設定檔停在舊版。
-
-**解法**:把所有會發通知的服務重跑一次。
+**原因**：來源服務仍使用 `noop`，僅部署 Ceilometer 沒有更新它們。**修法**：檢查來源設定後，執行步驟 4 的部署範圍：
 
 ```bash
 kolla-ansible deploy -i ~/all-in-one --tags nova,neutron,cinder,glance,keystone,heat
 ```
 
-**教訓**:這是 [Day 22](sprint4-day22-upgrade-backup.md) 那顆「`--tags` 的檢查盲區」的同族,而且更陰險——Day 22 那顆至少會在部署時失敗,這顆**部署全綠、服務全健康、log 全乾淨,只是資料默默不來**。
+之後再確認 `messagingv2`；不要只以部署成功判定通知已送達。
 
-**通則**:當某個開關的效果**跨越服務邊界**(A 服務開了,要 B 服務配合),`--tags A` 一定不夠。開之前先問一句:**這個 flag 會改到誰的設定檔?**
+### 搜尋 ceilometer_ 沒有指標 {#mine-4}
 
-### 地雷 4:指標名稱沒有 `ceilometer_` 前綴 {#mine-4}
-
-**症狀**:VM 開好了、pollster 在跑、pipeline 的 publisher 也對:
+publisher 設定可能已正確：
 
 ```text
 publishers:
     - prometheus://10.0.0.4:9092/metrics/job/openstack-telemetry
 ```
 
-但這樣查,連續十次都是 0:
+錯誤的名稱假設卻會查到零筆：
 
 ```bash
 curl -s http://10.0.0.4:9092/metrics | grep -c "^ceilometer_"
@@ -343,19 +261,15 @@ curl -s http://10.0.0.4:9092/metrics | grep -c "^ceilometer_"
 0
 ```
 
-**根因**:**問題出在 grep,不在管線。** Ceilometer 推出來的指標就叫 `cpu`、`memory_usage`、`disk_device_read_bytes`,**沒有任何前綴**。管線從頭到尾都是好的,只有我的假設是錯的。
-
-**解法**:別假設名字,把原始輸出直接看一遍:
+**修法**：先查看原始資料，再以實際名稱與 labels 查詢：
 
 ```bash
 curl -s http://10.0.0.4:9092/metrics | grep -v "^#" | head
 ```
 
-**教訓**:這顆的教訓不是關於 Ceilometer,是關於**除錯姿勢**。「查不到」有兩種可能:東西不在,或**你問錯問題**。而錯的問題問十次還是錯的。**當一個查詢回傳空值時,先確認那個查詢本身是對的**——最快的方法是把過濾條件全部拿掉,看看原始資料長什麼樣。這一招在 [Day 29](sprint5-day29-aodh-autoscaling.md#mine-4) 會再救一次命。
+## 已刪 VM 的讀數為什麼還在 {#mine-5}
 
-### 地雷 5:Pushgateway 永遠記得已經刪掉的機器 {#mine-5}
-
-**症狀**:Prometheus 裡有一筆 `vcpus` 指標,拿它的 `resource_id` 去查:
+原紀錄用一筆指標的 resource ID 查 VM，目前認證身分查不到這個資源：
 
 ```bash
 openstack server show a0500345-2306-4b09-90d2-82b2b7c209b9
@@ -365,44 +279,43 @@ openstack server show a0500345-2306-4b09-90d2-82b2b7c209b9
 No Server found for a0500345-2306-4b09-90d2-82b2b7c209b9
 ```
 
-**這台 VM 早就被刪了,它的指標卻還在,而且會一直在。**
+`No Server found` 也可能是專案範圍或權限造成，不能單靠這一行判定 VM 已刪除。先以有權查看該專案的管理員核對正確 UUID 與歸屬，再比對實際刪除前後的記錄。以下說明的是已確認刪除時的資料生命週期。
 
-**根因**:Pushgateway 的設計就是**保存最後一次推送的值,直到被覆蓋或明確刪除**。它是為「跑完就消失的批次任務」設計的——任務死了,值還要留著給 Prometheus 抓。用在計量上,這個特性變成:**VM 刪掉之後,它最後的讀數永遠留在那裡**。
+Pushgateway 會持續曝露已保存的序列，直到對應資料被明確刪除或替換。Prometheus 每次 scrape 都會把仍曝露的值記成新的樣本，因此「VM 不再推送」和「Prometheus 不再取得樣本」是兩件事。
 
-**影響**:對 [Day 30](sprint5-day30-cloudkitty-rating.md) 的帳單來說,這代表**可能對不存在的機器持續收錢**。本課環境的帳單之所以沒被汙染,是因為 CloudKitty 用 `max_over_time(...[1h])` 這種**帶時間窗口**的查詢——窗口滑過去之後,舊資料就落在窗外了。但如果你用的是 instant query(`count(cpu)` 這種),幽靈機器會直接算進去。
+圖中最後一條箭頭會持續發生，這正是只加時間窗口不能解決的原因：
 
-**教訓**:這是整條管線最根本的設計債,而它來自一個**用途錯配**——Prometheus 官方文件明確說 Pushgateway 不該拿來當推送式監控的通用轉接頭,而 kolla 的 `enable_ceilometer_prometheus_pushgateway` 就是這樣用的。這不是 kolla 的錯,是 push 型計量硬要接上 pull 型監控的必然代價,也正是官方推 **Aetos** 想解決的問題之一。
+![VM刪除後Ceilometer停止更新，但Pushgateway仍保存最後值；Prometheus繼續抓取並產生新時間戳樣本](../assets/diagrams/os-s5d28-stale.svg)
 
-**實務上要記得**:計費查詢一律帶時間窗口,別用 instant query;定期清理 Pushgateway(`DELETE /metrics/job/openstack-telemetry/...`)也是一種辦法,但要小心別刪到還在用的。
+`max_over_time(...[1h])` 仍會看見窗口內新抓到的舊值；它不會自動排除已刪 VM。`count(cpu)` 也可能把它算進台數。不能據此聲稱 Day 30 帳單已避免這項誤差。
 
-### 地雷 6:無認證、可寫的計費輸入端點 {#mine-6}
+要把這份資料用於費用計算，必須另外管理資源刪除與 Pushgateway grouping key 的同步，並核對資料的新鮮度與租戶清單。清理前先確認 grouping key 對應範圍，避免刪到仍存在的 VM；本課沒有完成自動同步與刪除後停止計費的端到端驗證。[Pushgateway 官方說明](https://github.com/prometheus/pushgateway#about-timestamps)明確區分推送時間與抓取樣本的時間。
 
-**問題**:步驟 1 起的 Pushgateway 跑在 **host network 的 `:9092`、沒有任何認證**,而它正是 [Day 30](sprint5-day30-cloudkitty-rating.md) 帳單的資料來源。Pushgateway 的 API 本來就是「誰都能 POST 一筆指標進去」——放在計費鏈的入口,就成了破口:
+### 無認證的計量入口可被其他來源讀寫 {#mine-6}
 
-- **可讀**:任何搆得到這個埠的人 `curl .../metrics` 就拿到**全租戶的用量**(哪個 project 開了幾台、跑多久),連 `resource_id`、`project_id` 都在裡面。
-- **可寫**:同一個埠能 `POST` 假指標——**低報自己的用量少付錢、灌爆對手的帳單、注入根本不存在的幽靈機器**。帳單是拿這些數字積分出來的,汙染源頭等於偽造帳單。
+步驟 1 的服務沒有認證且監聽 `*:9092`。只要網路可達，來源就可能讀取租戶標籤或寫入指標；單機部署也不自動等於只有本機可達。這些數值會影響告警與費用，必須確認寫入者可信。
 
-**為什麼 lab 沒事、多節點會出事**:單機時 `10.0.0.4:9092` 只有本機搆得到;一旦多節點、或計算節點與租戶網路可路由到它,曝險面就打開了。對照 [Day 21](sprint4-day21-observability.md):kolla 自己的 Prometheus 是有 basic auth 的,這個轉接頭卻沒有——這個不對稱課程先前沒點破。
+要限制的來源包括需要寫入的 Ceilometer 與需要讀取的 Prometheus；可用網路限制及具認證的代理建立邊界。本課未部署這套完整保護，也沒有驗證跨租戶的讀寫隔離，不能把實驗設定直接視為計費平台的完成配置。
 
-**修法**:把 Pushgateway 綁到只有 Prometheus 搆得到的內部位址、或擋在有認證的反向代理後面;pin 住 image 版本(見步驟 1 的 note);多節點部署前把「誰能讀/寫這條計費鏈」當成威脅模型的一部分。這是 [Day 27 `[oslo_limit]` 手寫覆寫](sprint5-day27-multi-tenant-governance.md)、[Day 32 VIP unit](sprint5-day32-full-tls.md)、[Day 34 config.json 手改](sprint5-day34-cadf-audit.md) 之外,另一筆「lab 便宜省略、prod 要補」的債。
+## 想一想
 
-## 帶得走的東西
+- Pushgateway target 是 up，但沒有 VM 的新讀數。你會依資料路徑先查哪幾處？
+- 某台 VM 已刪除一週，`max_over_time(cpu[1h])` 卻仍有值。為什麼縮短窗口不一定有效？
+- Prometheus 已有密碼，但 Pushgateway 沒有。這是否足以保護計量資料？還要允許哪些來源連線？
 
-- **監控與計量回答的是不同問題,差別在「帶不帶身分」。** exporter 知道機器上有 12 顆 VM,但不知道哪顆是誰的;租戶歸屬只有 OpenStack 自己說得出來,這就是 Ceilometer 存在的理由。
-- **當一個開關的效果跨越服務邊界,`--tags A` 一定不夠。** 開之前先問:這個 flag 會改到誰的設定檔?改到別人的,就要把別人也重跑一次。
-- **查詢回空有兩種可能:東西不在,或你問錯問題。** 先把過濾條件全部拿掉看原始資料,再回頭修查詢——這比連問十次同一個錯問題快。
-- **Pushgateway 記得所有推送過的東西,包括已經不存在的資源。** push 型計量硬接 pull 型監控,這是必然的代價;計費查詢一律帶時間窗口。
-- **背景服務沒有畫面是設計,不是缺漏。** 計量給機器讀,帳單才給人看。
+## 小結
+
+Ceilometer 將用量和專案歸屬一起送出，Prometheus 才能按租戶查詢。驗證資料路徑時，來源通知、publisher、scrape 與 labels 都要確認。資料到達之後仍要檢查生命週期：Pushgateway 保留的舊值會被持續抓成新樣本，時間窗口不能代替資源刪除同步，也不能單憑有數字就認定可以正確收費。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Ceilometer 官方文件](https://docs.openstack.org/ceilometer/2025.1/)** —— 計量、pipeline、publisher 的完整概念;`polling.yaml` 與 `pipeline.yaml` 的權威說明。
-- **[Kolla-Ansible 的 Ceilometer 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html)** —— 本章 globals 設定的官方對照。
-- **[Prometheus Pushgateway:什麼時候不該用它](https://prometheus.io/docs/practices/pushing/)** —— 官方親自說明 Pushgateway 的正確用途與陷阱;本章[地雷 5](#mine-5) 的理論出處。
-- **[Aetos(遙測的下一步)](https://docs.openstack.org/aetos/latest/)** —— 在 Prometheus 前面加租戶隔離與 Keystone 認證的官方代理;[Day 26](sprint4-day26-sprint5-preview.md) 判定「方向已定」的證據之一。
+- [Ceilometer 2025.1](https://docs.openstack.org/ceilometer/2025.1/)：polling、通知與 publisher。
+- [Kolla 監控與日誌指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html)：部署設定的入口。
+- [Pushgateway 適用情境](https://prometheus.io/docs/practices/pushing/)：保存序列與資源生命週期不同的限制。
+- [Pushgateway 時間戳](https://github.com/prometheus/pushgateway#about-timestamps)：推送、曝露與 scrape 的區別。
 
 ## 下一步
 
-雲說得出誰用了多少了。[Day 29](sprint5-day29-aodh-autoscaling.md) 讓這些數字**產生後果**:Aodh 盯著它們,超標時叫 Heat 自己加機器——順便補完 Day 5 沒教的 autoscaling。
+[Day 29](sprint5-day29-aodh-autoscaling.md) 讓 Aodh 查這些序列，並在條件成立時通知 Heat 調整 VM 數量。告警條件也必須使用正確租戶與有效資料，否則會對錯誤的讀數採取動作。

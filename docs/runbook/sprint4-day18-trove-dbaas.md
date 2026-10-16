@@ -1,53 +1,29 @@
-# Day 18: Trove——代管資料庫服務
-
-> 階段一的收官戰:**資料庫即服務**。今天結束時,你的雲能像 AWS RDS 一樣——使用者下一行指令,幾分鐘後拿到一台會自己照顧自己的 MySQL。本章有一顆幾乎人人會撞的雷,而且症狀非常具有誤導性——判讀方法會完整教給你。
+# Day 18: Trove——代管資料庫服務:guest VM、datastore 與建立失敗時的判讀
 
 ![Trove 官方吉祥物](../assets/mascots/trove.png){ align=right width="100" }
 
-!!! abstract "你在課程的哪裡"
-    - **今天**:部署 Trove、準備 guest 映像檔、註冊 datastore、開出第一台代管 MySQL 並實際讀寫。
-    - **今天之後**:階段一(服務擴充)完成;Day 19 起換腦袋——不再加新服務,改為拆解既有服務的內部。
+團隊要一台 MySQL。在雲上自己開一台 VM 裝,安裝、設定、建帳號、備份、升版都得自己來;用過 AWS RDS 的人知道另一種做法:下一行指令,幾分鐘後拿到一台已經建好資料庫和帳號的 MySQL,底下的機器不用管。這種服務叫 **DBaaS**(Database as a Service,資料庫即服務),OpenStack 裡負責這件事的服務是 **Trove**。
 
-## 第一次接觸 DBaaS?先讀這段
+這一章在 Day 17 的雲上部署 Trove,開出第一台代管 MySQL,實際讀寫。第一次建立實例時,很可能等兩分鐘後看到它轉成 `ERROR`,錯誤訊息只有一句 `failed to spawn`。讀完之後,遇到這種狀況,你能從「guest 有沒有回報狀態」判斷問題出在 guest 連回控制面的那條路,還是 guest 內部,並且知道要趁失敗的 VM 被自動清掉之前先把 console log 拿到手。
 
-「在 VM 裡自己裝 MySQL」和「用 RDS」的差別,用過的人都懂:前者要自己管安裝、設定、備份、升版;後者下一張單,這些全是雲的事。**Trove 就是 OpenStack 的 RDS**。
+## 代管資料庫由哪些東西組成
 
-它的現代架構值得先認識,因為這決定了今天的雷區分布:
+使用者下一行「給我一台 MySQL」,Trove 實際做的事是:請 Nova 開一台專門跑這個資料庫的 VM,掛上 Cinder volume 當資料碟,在 VM 裡把 MySQL 跑起來,建好你要的資料庫和帳號。之後建帳號、建資料庫這類操作,也是由 Trove 轉交給 VM 裡的程式去執行。
 
-```mermaid
-flowchart TB
-    subgraph ctl["控制面(Kolla 容器)"]
-        direction LR
-        API["trove-api<br/>(收單)"] --> TM["trove-taskmanager<br/>(編排建立流程)"] ~~~ CD["trove-conductor<br/>(收 guest 回報)"]
-    end
-    TM ==>|"請 Nova 開一台 guest VM<br/>(用專屬映像檔)"| G
-    subgraph G["guest VM(使用者專屬)"]
-        direction LR
-        AGENT["trove-guestagent<br/>(住在 VM 裡的管家)"] --> DOCKER["Docker 容器:mysql:8.0<br/>(真正的資料庫)"]
-    end
-    AGENT -.->|"RabbitMQ 回報心跳與狀態"| CD
-```
+把參與的元件畫出來,上半部是主機上的控制面,下半部是每個資料庫實例各自的一台 VM:
 
-兩個要點:
+![上半部是主機上的三個 Kolla 容器:trove-api 收使用者的請求並交給 trove-taskmanager,trove-taskmanager 與 trove-conductor 都連到主機 10.0.0.4:5672 的 RabbitMQ;下半部是 taskmanager 請 Nova 開出的 guest VM,裡面的 trove-guestagent 經 RabbitMQ 收指令、回報狀態,並管理 Docker 容器 mysql:8.0,資料放在 Cinder volume 上](../assets/diagrams/os-s4d18-architecture.svg)
 
-1. **資料庫跑在 guest VM 內的 Docker 容器裡**——guest 映像檔只含作業系統 + 管家(guest-agent)+ Docker;MySQL 版本由容器映像檔決定。這個設計讓「映像檔斷代」的古老風險大幅降低(這正是我們預先查證後把風險降級的原因:官方 guest 映像檔每天自動建置,資料庫容器另行每日更新)。
-2. **guest-agent 要連得回控制面的 RabbitMQ**——這是 Trove 部署最經典的卡點。好消息:在我們的網路架構下,它**自然就通**(原理見下)。
+我們可以從圖上看到兩件事:
 
-## 原理與架構:guest 怎麼連回家
+1. **控制面有三個元件。** `trove-api` 收使用者的請求;`trove-taskmanager` 負責建立流程,包括請 Nova 開 VM;`trove-conductor` 接收 VM 裡回報的狀態。三個都跑在主機上,步驟 1 部署完會看到這三個容器。
+2. **資料庫跑在一台 VM 裡的 Docker 容器中。** 這台 VM 叫 **guest VM**,裡面除了作業系統,只有兩樣東西:Trove 的代理程式 **guest-agent**(`trove-guestagent`),以及 Docker。MySQL 本身是 guest-agent 用 Docker 拉下來啟動的容器。所以 guest 映像檔不用跟著 MySQL 版本走,要換資料庫版本,換的是容器映像檔的版本標籤。
 
-官方文件教你為 Trove 建一條專用管理網路。但回想 [Day 8](sprint3-day8-e2e-workload-cluster.md):K8s 節點(tenant 網的 VM)一直都連得到 `10.0.0.4` 的 Keystone 與 RabbitMQ——路徑是 **tenant 網 → router SNAT → 主機**。Trove 的 guest 走同一條路即可,**一個管理網路都不用建**:
+控制面和 guest-agent 之間不直接連線,而是透過 RabbitMQ(Day 1 提過,OpenStack 服務內部互傳工作和通知用的訊息佇列)傳遞:taskmanager 把「建資料庫」「建使用者」這類指令放進佇列,guest-agent 取出來執行;guest-agent 也定期把狀態送回 conductor。這表示 **guest VM 必須連得到主機上的 RabbitMQ**,步驟 4 之前會再回來看這條路怎麼走。
 
-```mermaid
-flowchart TB
-    A["guest VM(10.17.0.x,day17-net)"] ==>|"router SNAT(Day 2 的老朋友)"| B["主機 10.0.0.4"]
-    B ==> C["RabbitMQ :5672(host network)"]
-```
+## 步驟 1:部署 Trove
 
-這就是本課程「極簡路徑優先」的原則:先走已驗證的路,不夠再加料。生產環境基於隔離與安全,仍應建立專用管理網——但理解了上面這條路,再讀官方的管理網設計就只是加一層而已。
-
-## 步驟
-
-### 步驟 1:部署 Trove(就一行 flag)
+跟前幾章加服務的做法一樣,在 `globals.yml` 打開 Trove,只部署它這一組:
 
 ```bash
 echo 'enable_trove: "yes"' | sudo tee -a /etc/kolla/globals.yml
@@ -59,11 +35,11 @@ kolla-ansible deploy -i ~/all-in-one --tags trove
 PLAY RECAP: ok=24  changed=17  failed=0
 ```
 
-三個容器(api/taskmanager/conductor)healthy 即可續行。
+`failed=0` 之後,用 `docker ps` 確認 `trove_api`、`trove_taskmanager`、`trove_conductor` 三個容器都是 healthy,再進下一步。
 
-### 步驟 2:準備 guest 映像檔
+## 步驟 2:準備 guest 映像檔
 
-官方每天自動建置 guest 映像檔(1.4 GB),下載、上傳 Glance、打上 Trove 用來找映像檔的 tag:
+Trove 開 guest VM 時,要從 Glance 找一份裝好 guest-agent 和 Docker 的映像檔。Trove 專案在 tarballs.opendev.org 提供每天自動建置的 guest 映像檔(約 1.4 GB),下載後上傳到 Glance,並打上兩個 tag:Trove 開 VM 時是用 tag 找映像檔,不是用名稱,步驟 3 會設定要找哪兩個 tag。
 
 ```bash
 curl -L -o ~/trove-guest-noble.qcow2 \
@@ -74,24 +50,49 @@ openstack image create trove-guest-ubuntu-noble \
   --tag trove --tag mysql
 ```
 
-### 步驟 3:註冊 datastore
+檔名裡的 `master` 表示這份映像檔是從 Trove 的開發主線建出來的,不是 2025.1 的穩定分支。原驗證使用這個路徑當時提供的 Ubuntu 24.04(noble)映像檔,搭配 2025.1 控制面成功建立實例;這不能保證現在下載的 daily 映像仍相容。但它每天都會被新版覆蓋,今天下載的跟幾個月後下載的不一定相同。要長期使用或之後升級控制面時,照[官方 guest 映像檔建置指南](https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html)用對應分支自己建一份,版本才固定得住。
 
-告訴 Trove:「有一種叫 mysql 8.0 的資料庫,guest 映像檔用 tag 找,容器用 8.0 這個版本標籤拉」:
+## 步驟 3:註冊 datastore
+
+映像檔準備好了,還要告訴 Trove 有哪些資料庫可以開。Trove 把「一種資料庫」叫 **datastore**(例如 mysql),把它底下的每個版本叫 **datastore version**(例如 8.0)。每個 datastore version 記著兩件事:開 guest VM 時用哪些 tag 找映像檔,以及 guest-agent 要拉哪個版本的資料庫容器。
+
+先安裝 Trove 的 CLI 外掛。跟 Day 16 的 Manila 一樣,`openstack` 指令預設沒有 `database`、`datastore` 這些子命令,要另外裝(見 Day 16 的[「`openstack` 沒有 `share` 子命令」](sprint4-day16-manila-cephfs.md#mine-1)):
 
 ```bash
-pip install python-troveclient        # CLI 外掛,同型雷第 N 次
+pip install python-troveclient
 openstack datastore version create 8.0 mysql mysql "" \
   --image-tags trove,mysql --active --default --version-number 8.0
 openstack datastore version list mysql
 ```
 
-### 步驟 4:建立資料庫實例
+`datastore version create` 後面四個位置參數依序是:版本名稱 `8.0`、datastore 名稱 `mysql`、資料庫管理類型 `mysql`(guest-agent 用哪一套邏輯管理這個資料庫),最後的 `""` 是映像檔 ID,這裡留空,改用 `--image-tags trove,mysql` 讓 Trove 找帶著這兩個 tag 的映像檔,也就是步驟 2 上傳的那份。`--version-number 8.0` 決定拉哪個版本的 MySQL 容器,`--default` 讓使用者建立實例時不指定版本也會用它。
 
-網路沿用 Day 17 建立的 `day17-net`。**動手前先確認 subnet 設有 DNS nameserver**——guest 開機時要從網路拉取資料庫容器,沒有 DNS 必定失敗(完整的症狀判讀見[地雷 1](#mine-1)):
+## guest 怎麼連回 RabbitMQ
+
+建立實例之前,先看 guest VM 要往外連的兩條路。官方文件的做法是替 Trove 另外建一條**管理網路**(management network):每台 guest VM 多掛一張網卡在這條網路上,只用來跟控制面溝通,資料庫的流量則走使用者自己的網路。
+
+本課先不建管理網路,讓 guest VM 只接在 Day 17 建好的 `day17-net` 上。Day 2 看過,租戶網路的 VM 經過 router 的 SNAT 到達主機,而主機上的 RabbitMQ 就在 `10.0.0.4`,所以這條路本來就通。下面這張圖把 guest 往外的兩條路分開畫:
+
+![guest VM 10.17.0.x 裡有兩條往外的連線,都先經過 day17-r 的 router SNAT 到主機 10.0.0.4。路徑一是 guest-agent 用 IP 連主機上的 RabbitMQ :5672,不需要 DNS;路徑二是 docker pull,經主機的 MASQUERADE 從 eth0 出去,要先向外部的 DNS 8.8.8.8 查網域名稱,再從 Docker Hub 拉映像檔,DNS 解析失敗就無法下載](../assets/diagrams/os-s4d18-guest-paths.svg)
+
+照著圖上的編號看:
+
+1. **路徑 ①:guest-agent 連 RabbitMQ。** guest-agent 的設定裡寫的是 IP,所以這條路不需要 DNS。
+2. **路徑 ②:guest-agent 拉 MySQL 容器。** 容器映像檔是用網域名稱找的,guest 要先查 DNS,查不到就拉不到,MySQL 也就起不來。
+
+這兩條路需要的東西不同,所以會出現一種狀況:路徑 ① 通了,guest-agent 能回報狀態,但路徑 ② 斷了,MySQL 起不來。步驟 4 動手前先檢查的就是路徑 ② 需要的 DNS。
+
+少建一條管理網路,換來的是安全上的代價。guest-agent 要連 RabbitMQ,它的設定檔裡就有 RabbitMQ 的帳號密碼;官方文件也指出,guest VM 被攻破,這組帳密就跟著外洩,等於訊息系統被攻破。本課的做法還讓租戶網路直接連得到主機上的 RabbitMQ。正式環境要建專用的管理網路,讓租戶網路碰不到控制面,並照官方文件啟用 Trove 的訊息加密(`enable_secure_rpc_messaging`),降低跨實例訊息遭讀取或偽造的風險,不能將它視為 guest 遭入侵後的完整隔離保證。本課沒有檢查 Kolla 預設是否啟用這項加密。
+
+## 步驟 4:建立資料庫實例 {#step-4}
+
+網路沿用 Day 17 建立的 `day17-net`。動手前先確認 subnet 設有 DNS nameserver,也就是上一節路徑 ② 需要的東西。Day 17 建 subnet 時已經加了 `--dns-nameserver 8.8.8.8`,換用其他 subnet 的話更要先查:
 
 ```bash
 openstack subnet show day17-sub -f value -c dns_nameservers   # 必須非空,例如 ['8.8.8.8']
 ```
+
+結果是空的,就先用 `openstack subnet set <subnet> --dns-nameserver 8.8.8.8` 補上。接著建立實例:`--size 2` 是資料碟大小(GB,會建成一顆 Cinder volume),`--databases` 和 `--users` 讓 Trove 在 MySQL 起來後順便建好資料庫和帳號:
 
 ```bash
 NET=$(openstack network show day17-net -f value -c id)
@@ -102,23 +103,27 @@ openstack database instance create day18-db \
 watch openstack database instance show day18-db -c status -c operating_status
 ```
 
-背後發生的事:Nova 開 guest VM(掛一顆 2G 的 Cinder volume 當資料碟)→ guest-agent 開機自啟、連回 RabbitMQ → 從網路拉 `mysql:8.0` 容器 → 啟動並初始化你指定的資料庫與使用者。本課環境全程約 **2.5 分鐘**,終態:
+`watch` 會每兩秒刷新一次狀態。這段時間裡,Nova 開出 guest VM 並掛上資料碟,guest-agent 開機後連回 RabbitMQ,拉 `mysql:8.0` 容器、啟動,再建好 `demo` 資料庫和使用者。幾分鐘後會停在下面的狀態:
 
 ```text
 status: ACTIVE
 operating_status: HEALTHY
 ```
 
-### 步驟 5:驗證它是一台真的資料庫
+這裡有兩個狀態欄位。`status` 是 Trove 對整個實例的狀態,`ACTIVE` 代表建立流程走完了;`operating_status` 是 guest-agent 回報的資料庫服務狀態,`HEALTHY` 代表 MySQL 真的在跑。兩個都到位才算可以用。
 
-讀路徑(這些查詢會經 API → RabbitMQ → guest-agent → MySQL 全鏈):
+如果等了兩分鐘左右,`status` 變成 `ERROR`,先用 `openstack database instance show day18-db` 看 `fault` 欄位。訊息是 `Service not active, status: failed to spawn` 的話,這句話是 guest-agent 自己回報的:它能回報,代表路徑 ① 是通的,問題在 guest 內部,本章原有的失敗案例是路徑 ② 的 DNS 沒設;其他映像檔下載或 MySQL 啟動問題也可能產生相同狀態,還要查 guest 的紀錄。另外,Trove 會自動刪掉建立失敗的 guest VM,要看 VM 的開機訊息就得馬上動手,見[疑難排解:失敗的 guest VM 會被自動刪除](#mine-2)。
+
+## 步驟 5:驗證它是一台真的資料庫
+
+`ACTIVE` 加 `HEALTHY` 只是狀態,接下來實際操作它。先讀:下面兩個查詢會從 Trove API 經 RabbitMQ 轉給 guest-agent,再由 guest-agent 查 MySQL,所以能回結果代表整條路都通:
 
 ```bash
 openstack database db list day18-db        # demo
 openstack database user list day18-db      # demo
 ```
 
-寫路徑(叫管家真的動手):
+再寫:新建一個使用者和一個資料庫,讓 guest-agent 真的去改 MySQL 的內容:
 
 ```bash
 openstack database user create day18-db u2 <密碼>
@@ -126,70 +131,96 @@ openstack database db create day18-db demo2
 openstack database db list day18-db        # demo、demo2 都在
 ```
 
-寫得進去 = guest 裡的 MySQL 真實運作中。
+`demo2` 出現在清單裡,代表 guest 裡的 MySQL 在運作,也接受了寫入。
 
-Skyline 的「Database」頁把這台代管實例列得跟 RDS 主控台一樣:datastore、版本、配發到的位址、磁碟大小、狀態一欄到位——使用者不需要知道底下是一台 Nova VM:
+如果 Day 13 已部署 Skyline,這次只跑 Trove tag 不會更新 Skyline 的代理路由。先讓 Skyline 套用新服務設定,再開下一張頁面。下列命令是依部署模板補齊的前提,沒有獨立的本課執行輸出:
+
+```bash
+kolla-ansible deploy -i ~/all-in-one --tags skyline
+```
+
+接著從使用者的角度看。Skyline 的「Database」頁列出這台實例,欄位有 datastore、版本、配發到的位址、磁碟大小和狀態,完全沒有提到底下的 Nova VM:
 
 ![Skyline 的資料庫實例頁:day18-db,mysql 8.0、2GiB、Active](../assets/screenshots/day18-skyline-trove.png)
 
-而從使用者的角度,這就是**一台普通的 MySQL**:拿任何 MySQL client 連上去,SQL 照打——建表、寫入、查詢,跟你平常用的資料庫沒有兩樣:
+這是 Trove 的預設設計:從 Ussuri 版開始,guest VM、Cinder volume 這些底層資源都建在 Trove 自己的 service project 裡,使用者看不到,只能透過 Trove API 操作實例。
+
+最後看 MySQL 的資料連線。這條連線不經 Trove API:用戶端必須裝好 `mysql` CLI,並且能從所在網路連到實例的 MySQL 位址與 3306 port。單機 lab 的租戶私有位址不會直接開放給你的電腦;可使用已接入 `day17-net` 的用戶端,或先依既有網路章節建立可達的連線。這份素材沒有保留用戶端建置過程,因此下列 SQL 只適用於已具備這些前提的用戶端。
+
+用前面的 `openstack database instance show day18-db` 查看實例位址,填入 `<database-ip>`;登入帳號與密碼用建立實例時的 `demo` 那組。以下命令與 SQL 來自原有截圖,沒有另補結果:
+
+```bash
+mysql -h <database-ip> -u demo -p
+```
+
+```sql
+SHOW DATABASES;
+USE demo;
+CREATE TABLE notes (id INT PRIMARY KEY AUTO_INCREMENT, body VARCHAR(60), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+INSERT INTO notes (body) VALUES ('hello from a Trove-managed MySQL');
+SELECT id, body, created_at FROM notes;
+SELECT VERSION() AS mysql_version, @@hostname AS served_by;
+```
+
+下圖依序呈現查資料庫、建表、寫入、查詢的結果:
 
 ![用 mysql client 連進 day18-db:SHOW DATABASES、建表、寫入、查詢](../assets/screenshots/day18-mysql-terminal.png)
 
-最後一行的 `served_by` 洩了底:真正回答你的是 guest VM 裡那個 mysql 容器(`--datastore mysql` 拉下來的那個)。但這是實作細節——**使用者只看到一台 MySQL,這正是 DBaaS 的意義**。
+我們可以看到最後一行的 `served_by` 欄位,回答查詢的是 guest VM 裡那個 mysql 容器,也就是步驟 3 註冊、步驟 4 拉下來的那個版本。使用者不需要知道這件事,拿到的就是一台可以連的 MySQL。
 
-## 驗收 checkpoint
+## 疑難排解
 
-逐項驗證,**全部符合判準才算完成今天**:
+### 實例約兩分鐘後轉 `ERROR`,fault 是 `failed to spawn` {#mine-1}
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 控制面 | api / taskmanager / conductor healthy | 符合 |
-| 映像檔 | 官方每日版上傳 + tag,datastore 註冊 default | mysql 8.0 |
-| **實例** | `ACTIVE` + `HEALTHY` | BUILD→HEALTHY 約 2.5 分 |
-| 讀路徑 | db list / user list 走全鏈成功 | 符合 |
-| 寫路徑 | 新建 user 與 db 生效 | u2 / demo2 到位 |
-| 備份 | 見地雷 4(本課程留為開放項) | △ |
+**症狀**:`openstack database instance show` 的 `fault` 是 `Service not active, status: failed to spawn`。
 
-## 地雷記錄
+**原因**:這份失敗案例的 subnet 沒設 DNS nameserver,但 `failed to spawn` 本身不能唯一證明是 DNS。guest-agent 用 IP 連 RabbitMQ,所以還能回報狀態;但 guest 裡拉 `mysql` 容器要查網域名稱,查不到就啟動失敗。判讀方式見[步驟 4](#step-4)最後一段。
 
-### 地雷 1:subnet 沒 DNS——「有心跳但起不來」的元兇 {#mine-1}
+**修法**:`openstack subnet set day17-sub --dns-nameserver 8.8.8.8`,刪掉失敗的實例後重新建立。
 
-**症狀**:第一次建立在約兩分鐘後轉 `ERROR`,fault 訊息 `Service not active, status: failed to spawn`。
+### 失敗的 guest VM 會被自動刪除 {#mine-2}
 
-**判讀關鍵**:「failed to spawn」是 guest-agent **自己回報的**——agent 能回報 = RabbitMQ 路是通的,死因在 guest 內部。
+**症狀**:實例轉 `ERROR` 後,想用 `openstack console log show` 看 guest 的開機訊息,卻找不到那台 VM。
 
-**根因**:當時 subnet 沒設 DNS nameserver。agent 連 RabbitMQ 用 IP(不需要 DNS)所以活著;但 guest 內 `docker pull mysql` 要解析網域名——沒有 DNS,拉不到容器,spawn 失敗。
+**原因**:Trove 會自動刪除建立失敗的 guest VM,console log 跟著一起消失。
 
-**解法**:`openstack subnet set day17-sub --dns-nameserver 8.8.8.8`,重建實例,一次過。
+**修法**:用管理員身分在 Nova 的所有專案列表中找到對應的 guest VM,確認實例 ID 後立即取得 console log。Trove 實例名稱不等於 Nova server ID;先取得對應關係才能把 `openstack console log show` 指向正確的 VM。來不及的話,只剩主機上 taskmanager 的 log 可以查(`/var/log/kolla/trove/`)。
 
-**金句**:**「agent 有心跳但 spawn 失敗 → 先查 subnet 有沒有 DNS。」** 兩個症狀的組合直接指向根因,不用進 guest 就能判案。
+### `backup create` 只印出 usage {#mine-3}
 
-### 地雷 2:失敗清理會滅證 {#mine-2}
+**症狀**:照舊教學把實例名稱當第一個位置參數執行 `openstack database backup create`,指令直接印出 usage。
 
-Trove 對建立失敗的實例會自動刪除 guest VM——**連 console log 一起帶走**。發現 ERROR 時,`openstack console log show` 要趁早;晚了就只剩 taskmanager 的 log 可查(`/var/log/kolla/trove/`)。
+**原因**:新版 troveclient 改了參數格式。
 
-### 地雷 3:backup 指令的新版語法 {#mine-3}
+**修法**:寫成 `openstack database backup create --instance <實例> <備份名>`。
 
-新版 troveclient 的備份指令是 `openstack database backup create --instance <實例> <備份名>`——舊教學裡「實例當第一個位置參數」的寫法會直接吐 usage。
+### 備份卡在 guest 拉取備份工具容器 {#mine-4}
 
-### 地雷 4:備份的最後一哩(開放項) {#mine-4}
+**症狀**:備份會把資料上傳到物件儲存,也就是 Day 15 的 RGW。備份任務可以成功送出(`storage_driver: swift`),但 guest 在拉取備份工具的容器時卡住,備份沒有完成。
 
-備份功能會把資料上傳到 object-store(正是 Day 15 的 RGW,依賴鏈設計如此)。實測:備份任務成功派送(`storage_driver: swift` 正確),但 guest 內拉取**備份工具容器**時卡住——修法已知:在 `/etc/kolla/config/trove/trove-guestagent.conf` 覆寫備份容器來源後重部。本章先如實記錄現象與修法方向;完整步驟驗證後會補進本頁。
+**原因**:guest 拉不到備份工具容器的映像檔。
 
-## 階段一完成 🎉
+**修法**:方向是在 `/etc/kolla/config/trove/trove-guestagent.conf` 覆寫備份容器的來源,再重新部署 Trove。本課沒有驗證這個修法,備份與還原在本課沒有走完。
 
-六天、六塊積木:Skyline、Ceph、RGW、Manila、Designate、Trove——首頁那張「還沒拼上的積木」表,一半已經拼上了。更重要的是方法論的複利:**同型雷第 N 次出現時,你已經能在錯誤出現之前說出答案**(CLI 外掛、行首錨定、subnet DNS)。
+## 想一想
+
+- 另一個專案的使用者在自己建的網路上開 Trove 實例,兩分鐘後轉 `ERROR`,fault 是 `failed to spawn`。他問你是不是 RabbitMQ 連不上。你會怎麼回答,第一個要他查的是什麼?
+- 如果沒有收到 guest-agent 的狀態回報,還能用上一題的理由排除 RabbitMQ 連線問題嗎?接下來應先查哪一條路?
+- 主管想讓租戶自己開 Trove 實例,但不希望租戶的 VM 碰得到控制面的 RabbitMQ。這一章的網路做法要改哪裡?
+
+## 小結
+
+Trove 用一台專屬的 guest VM 承載每個資料庫實例:控制面的 api、taskmanager、conductor 跑在主機上,VM 裡的 guest-agent 透過 RabbitMQ 收指令、回報狀態,真正的 MySQL 是它拉下來的 Docker 容器。所以 guest VM 往外有兩條路,用 IP 連 RabbitMQ,用網域名稱拉容器,第二條需要 subnet 設好 DNS。之後遇到 Trove 實例建立失敗,先看 fault 是不是 guest-agent 自己回報的:是的話,路徑 ① 沒問題,往 guest 內部查,並趁 VM 被刪掉之前抓 console log。Day 13 到 Day 18 加上的 Skyline、Ceph、RGW、Manila、Designate、Trove,到這裡都已經接進這朵雲。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Trove 生產環境部署指南](https://docs.openstack.org/trove/2025.1/admin/run_trove_in_production.html)** —— 官方的管理網設計;本章「極簡路徑」的正式版對照組。
-- **[Trove guest image 建置指南](https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html)** —— 自建映像檔(本章 Plan B)的官方流程與 `trovestack` 用法。
-- **[官方 guest image 出貨處](https://tarballs.opendev.org/openstack/trove/images/)** —— 每日自動建置的映像檔就放在這;本章步驟 2 下載的來源。
-- **[Trove User Guide](https://docs.openstack.org/trove/2025.1/user/)** —— 實例、備份、設定群組的使用者操作大全。
+- **[Trove 生產環境部署指南](https://docs.openstack.org/trove/2025.1/admin/run_trove_in_production.html)** —— 官方的管理網路設計、guest 裡 RabbitMQ 帳密的安全考量與訊息加密設定;本章省略管理網路的做法可以拿來對照。
+- **[Trove guest image 建置指南](https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html)** —— 自己建 guest 映像檔的官方流程與 `trovestack` 用法,要固定映像檔版本時從這裡開始。
+- **[官方 guest image 下載處](https://tarballs.opendev.org/openstack/trove/images/)** —— 每日自動建置的映像檔放在這裡,步驟 2 從這裡下載。
+- **[Trove User Guide](https://docs.openstack.org/trove/2025.1/user/)** —— 實例、備份、設定群組的使用者操作說明。
 
 ## 下一步
 
-[Day 19](sprint4-day19-api-request-lifecycle.md) 起進入階段二:不再加新東西,改為**拆開你已經用了三個星期的東西**——一個 API 請求從 token 到 qemu 的完整生命週期。
+到這一章為止,每一天都在替這朵雲加新服務。[Day 19](sprint4-day19-api-request-lifecycle.md) 換個方向,不再加東西,改為拆開已經用了三個星期的服務:追一個 API 請求從取得 token 到 qemu 開出 VM 的完整過程。

@@ -1,117 +1,68 @@
-# Day 26: 下一步的地圖——Sprint 5 預告
+# Day 26：Sprint 5 預告——用量、費率與操作責任
 
-> Sprint 3 的雲**會動**,Sprint 4 的雲**敢動**。但有一種問題,前 25 天完全沒碰過:這朵雲一個月燒多少錢?哪個部門用掉的?憑什麼收他這個價?客戶問 SLA 怎麼回答?稽核員來了拿什麼給他看?——這些是把雲**當成生意經營**的問題,也是 Sprint 5 的全部內容。
+兩個部門開始共用這朵雲之後，問題會變成：資源算在哪個專案名下、每個部門能用多少、費用怎麼計算，以及發生異常時該從哪份紀錄追查。Sprint 4 提供了部署與維護的基礎；Sprint 5 接著處理使用者、資源歸屬與操作責任。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 13–24**:動手,雲長出 18 個服務、變成多節點、敢升級敢擴張。
-    - **Day 25**:Sprint 4 總結。
-    - **Day 26(本篇)**:下一段的地圖。不動手,講清楚 Sprint 5 要學什麼、為什麼是這些。
+## 從租戶開始，再解讀用量
 
-## 從「敢動」到「當生意經營」
+先有清楚的 project 與角色，後續用量才有歸屬。**計量（metering）** 收集資源使用資料；**計價（rating）** 依規則把資料換算成金額。計價結果仍不等於完整收款與帳務系統，這個差異會在 CloudKitty 章裡說明。
 
-一朵技術上完美的雲,放到企業裡馬上會被問四個問題:
+另外一條路徑是服務維護：用告警觸發動作、在特定故障下復原 VM，再處理 API 加密與登入身分。**SLA** 是對可用性等服務條件的約定，不能只因部署了自動復原工具就宣稱已達成。
 
-1. **誰用了多少?**——計量(metering)
-2. **怎麼換算成錢?**——計費(rating/chargeback)
-3. **對使用者承諾什麼?**——SLA 與自動復原
-4. **對稽核員交代什麼?**——身分治理、加密、稽核軌跡
+下圖呈現章節的依賴順序：
 
-Sprint 5 用 **9 天、四個階段**回答這四個問題:
+![租戶與權限先行，再學計量計價、復原加密與企業身分稽核](../assets/diagrams/os-s4d26-roadmap.svg)
 
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段一 · 治理基礎</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 27 · 先有租戶結構,才有分帳對象</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/keystone.png" width="28" style="display:block;"><span><b>27</b>&nbsp;多租戶治理與額度</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段二 · 計量與反應</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 28–29 · 看見用量,然後讓雲自己反應</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/telemetry.png" width="28" style="display:block;"><span><b>28</b>&nbsp;計量管線(Ceilometer)</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/heat.png" width="28" style="display:block;"><span><b>29</b>&nbsp;告警與自動擴縮(Aodh)</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段三 · 計費</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 30 · 用量變成帳單</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/cloudkitty.png" width="28" style="display:block;"><span><b>30</b>&nbsp;計費(CloudKitty)</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段四 · SLA 與合規</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 31–34 · 自癒、加密、企業身分、稽核</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/masakari.png" width="28" style="display:block;"><span><b>31</b>&nbsp;SLA 與自癒(Masakari)</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🔐</span><span><b>32</b>&nbsp;全站 TLS</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🪪</span><span><b>33</b>&nbsp;企業身分 SSO</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">📋</span><span><b>34</b>&nbsp;稽核軌跡(CADF)</span></div>
-  </div>
-</div>
+Day 35 會回顧這些能力的適用範圍，也練習查核官方專案與版本資訊。
 
-<p style="text-align:center;"><em>最後以 Day 35 總結收尾——含一堂「怎麼判斷 OpenStack 專案生死」的版圖課。</em></p>
+## 各章要回答的問題
 
-## 預定課表(Day 27–35)
+| 章節 | 要處理的問題 |
+|---|---|
+| [Day 27：多租戶治理](sprint5-day27-multi-tenant-governance.md) | 使用者屬於哪個 project？角色、application credential 與額度如何配合？ |
+| [Day 28：Ceilometer 計量](sprint5-day28-ceilometer-metering.md) | VM 用量怎麼收集，又如何進入 Prometheus？ |
+| [Day 29：Aodh 告警與擴縮](sprint5-day29-aodh-autoscaling.md) | 數值達到條件後，告警怎麼觸發 Heat？ |
+| [Day 30：CloudKitty 計價](sprint5-day30-cloudkitty-rating.md) | 用量、單位與費率如何形成可解釋的計價結果？ |
+| [Day 31：Masakari 復原](sprint5-day31-masakari-ha.md) | VM 程序故障與 compute 故障，各需要哪些偵測及復原前提？ |
+| [Day 32：TLS](sprint5-day32-full-tls.md) | 哪段連線受到加密，用戶端要信任哪個 CA？ |
+| [Day 33：企業身分](sprint5-day33-keycloak-federation.md) | Keycloak 身分如何透過 Keystone federation 對應到角色？ |
+| [Day 34：CADF 稽核](sprint5-day34-cadf-audit.md) | 事件如何描述誰對哪個資源做了什麼，哪些操作尚未涵蓋？ |
+| [Day 35：總結](sprint5-day35-sprint5-recap.md) | 如何依使用情境選擇這些能力，並查核專案狀態？ |
 
-| Day | 主題 | 一句話 |
-|---|---|---|
-| [27](sprint5-day27-multi-tenant-governance.md) ✅ | **多租戶治理與額度** | Keystone domains 分層、application credentials、**unified limits(2025.1 剛轉正)**、新一代權限模型現況 |
-| [28](sprint5-day28-ceilometer-metering.md) ✅ | **計量管線(Ceilometer)** | 誰開了幾台 VM、用了幾 GB——資料流進 Day 21 建好的 Prometheus;Gnocchi 為什麼繞過,證據攤給你看 |
-| [29](sprint5-day29-aodh-autoscaling.md) ✅ | **告警與自動擴縮(Aodh)** | Aodh 盯著 Prometheus 的數字,Heat 接到告警自己長 VM——收 Day 5 的伏筆 |
-| [30](sprint5-day30-cloudkitty-rating.md) ✅ | **計費(CloudKitty)** | 訂價規則、算錢、出報表——兩個租戶各拿各的帳單;帳單畫面在 Horizon(原因見設計決定) |
-| [31](sprint5-day31-masakari-ha.md) ✅ | **SLA 與自癒(Masakari)** | 回多機環境一天:VM 程序死掉自動重啟、compute 整台掛掉自動搬家 |
-| [32](sprint5-day32-full-tls.md) ✅ | **全站 TLS** | 所有 API 換上 https;內建 CA 為什麼不能上生產 |
-| [33](sprint5-day33-keycloak-federation.md) ✅ | **企業身分 SSO(Federation)** | 公司的 Keycloak 帳號直接登入這朵雲——Keystone 聯邦身分與角色對應 |
-| [34](sprint5-day34-cadf-audit.md) ✅ | **稽核軌跡(CADF)** | 「誰在何時對哪個資源做了什麼」——稽核事件接回 Day 21 的集中式 log |
-| [35](sprint5-day35-sprint5-recap.md) ✅ | **Sprint 5 總結 + 版圖課** | 前後對比;怎麼判斷一個 OpenStack 專案的生死——用四個真實案例教你驗屍 |
+## 為什麼繼續使用 Prometheus
 
-## 三個先講清楚的設計決定
+Day 21 已部署 Prometheus，接下來會沿用它，讓計量、告警與計價的資料路徑能相互對照。這是本課選用的路線，不能據此推論 Gnocchi 在所有部署中都已被取代。遇到其他教材時，要核對它使用的 Ceilometer publisher、Aodh 告警型別與 CloudKitty collector，不能只按專案名稱替換元件。
 
-### 為什麼計量儲存用 Prometheus,不是教科書上的 Gnocchi
+本課也不把直接開放 Prometheus API 當作租戶隔離。資料收集與存取控制是兩個不同問題，查詢入口要依實際權限設計。
 
-翻開任何一本 OpenStack 教材,遙測這一章都是同一組三件套:Ceilometer 蒐集、Gnocchi 儲存、Aodh 告警。課表裡卻只見前後兩位,中間的儲存層不見了——因為這條管線的中段,上游已經換人:
+## 為什麼有些畫面仍使用 Horizon
 
-```mermaid
-flowchart TB
-    subgraph OLD["教科書路線(2015 年代)"]
-        direction LR
-        C1["Ceilometer<br/>蒐集"] --> G["Gnocchi<br/>儲存"] --> A1["Aodh<br/>告警"]
-    end
-    subgraph NEW["官方現行路線(2025+)"]
-        direction LR
-        C2["Ceilometer<br/>蒐集"] --> P["Prometheus<br/>儲存"] --> A2["Aodh<br/>告警"]
-    end
-    OLD -.->|"儲存層換人了"| NEW
-```
+前面的 Skyline 與 Horizon 會繼續並存。CloudKitty 的操作示範使用 Horizon 外掛；選擇介面時看該版本支援的功能，而不是把兩個介面當成完全可互換。CLI 與 API 則用來確認畫面背後的資源與設定。
 
-Ceilometer 與 Aodh 都還照著半年一版的節奏正常前進,但 Gnocchi 在 2017 年離開 OpenStack 官方治理後逐漸沉寂——最新版本距今近一年,主流發行版的新一代遙測架構也已經把它排除在外(截至 2026-07)。取而代之的儲存層就是 Prometheus:Aodh 這幾年的主力開發正是 Prometheus 告警,CloudKitty 也官方支援直接向 Prometheus 取數,官方團隊的下一步 **Aetos**(在 Prometheus 前面加租戶隔離與 Keystone 認證的代理)更說明方向已定。
+## 哪一段需要多節點環境
 
-對這門課來說這是好消息:**Day 21 部署的 Prometheus 直接成為 Sprint 5 的計量骨幹**,不用為了計費再養一顆資料庫。Gnocchi 在 Day 28 仍會出現——作為歷史脈絡,以及 Aodh 部分告警型別命名的由來。
+多數章節沿用單機 lab。Day 31 的 compute 故障復原需要另一台可接收 VM 的 compute，因此回到 Day 23–24 的獨立多節點環境。兩邊的 endpoint、openrc 與資源不能混用；每章會先說明操作落點。
 
-### 為什麼帳單畫面要回 Horizon 看
+## 查資料前先確認版本
 
-CloudKitty 的儀表板外掛只有 Horizon 版本,**Skyline 目前沒有計費畫面**。課程從 Day 13 起把 Skyline 當主要介面,所以 Day 30 需要說清楚:這不是走回頭路,是外掛生態的成熟度差異——Horizon 累積了十年的外掛生態,Skyline 還在補。實務上兩個並存本來就常見:日常操作用 Skyline,帳務查詢回 Horizon,CLI/API 則永遠都在。
+OpenStack 專案可能更名、移出治理範圍，或在不同系列中採用不同整合方式。先看課程使用的 2025.1 文件，再查目標版本的 release notes、官方治理頁與程式碼活動。某個專案不在 OpenStack 治理名單，不等於程式已無人維護；反過來，找到舊教學也不代表仍適用。
 
-### 為什麼多機環境只回來一天
+## 想一想
 
-Sprint 5 的九天裡,只有 Masakari(Day 31)非多機不可——「compute 整台掛掉、VM 自動搬家」在單機上演不出來。其他八天全部在單機 lab 完成。所以多機環境平常保持關機,Day 31 開機一天,用完即關——這正是 Day 24 教過的容量紀律的自我實踐:**用多少、開多少、關掉不用的**。全 Sprint 預估成本約 US$90–100。
+1. 計量資料沒有 project 歸屬時，即使能畫出 CPU 圖表，還缺什麼才能分配部門費用？
+2. 自動復原演練通過，是否足以直接承諾某個 SLA？還需要量測哪些範圍？
 
-## 查資料時會撞到的過期名字
+## 小結
 
-學 OpenStack 有個特有的坑:**網路上的教學文章不會過期下架**。你搜「OpenStack 監控」會撞到 Monasca,搜「計量」滿頁都是 Gnocchi,搜「大數據」還有 Sahara——它們都曾是官方專案,文章寫得又多又好,但今天照著做只會走進死巷。這張表幫你在動手前先過濾(截至 2026-07):
+下一段從租戶結構開始，讓用量能歸屬、費率能解釋、操作能追查。各元件處理的是其中一部分；章節會保留它們之間的前提與限制，讓你能判斷一項需求還需要哪些資料或驗證。
 
-| 看到這些名字 | 現況 | 建議 |
-|---|---|---|
-| Monasca、Murano、Sahara、Senlin、Solum、Freezer | 已停止維護(RETIRED) | 文章再完整都別照做 |
-| Vitrage、Venus | 垂死(接連被列 inactive、無人接手) | 別投資學習時間 |
-| Gnocchi | 苟延(還有心跳,不建議新部署) | 讀懂概念即可,見上方設計決定 |
-| Watcher | 沉寂後於 2025 年重啟維護 | 觀察中,[Day 35](sprint5-day35-sprint5-recap.md) 的版圖課有提 |
+## 延伸閱讀
 
-反過來也有專案常被誤傳已死——Mistral、Zaqar、Adjutant 至今都還正常維護,別因為一篇舊文章就跳過它們。**Day 35 的版圖課會教你自己驗證的方法**:看哪幾個頁面、查哪些訊號,五分鐘判斷一個專案的生死,不用等別人告訴你。
+想再深入，可以從這幾份開始：
+
+- [OpenStack 2025.1 文件入口](https://docs.openstack.org/2025.1/)：依專案查找本課系列文件。
+- [CloudKitty 2025.1 文件](https://docs.openstack.org/cloudkitty/2025.1/)：先了解計價服務的輸入、規則與輸出。
+- [OpenStack 官方治理專案清單](https://governance.openstack.org/tc/reference/projects/index.html)：查專案治理歸屬，再搭配版本與程式碼資訊判斷。
 
 ## 下一步
 
-- Sprint 5 開課後,課表每一列會變成一篇完整 runbook,工法與 Sprint 4 相同:先逐日部署驗證、gate 全過,才寫教材。
-- 想先暖身 → [Day 21 · 可觀測性](sprint4-day21-observability.md)是 Sprint 5 計量骨幹的地基;[Day 11 · 服務全景圖](sprint3-day11-openstack-service-map.md)裡 Masakari、Telemetry、CloudKitty 的定位都介紹過了。
-- 想回顧上一段 → [Day 25 · Sprint 4 總結](sprint4-day25-sprint4-recap.md)。
+從 [Day 27](sprint5-day27-multi-tenant-governance.md) 建立租戶、角色與額度的對應關係。需要先複習資料收集時，回看 [Day 21](sprint4-day21-observability.md)。

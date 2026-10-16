@@ -1,34 +1,20 @@
-# Day 21: 可觀測性——替雲巡田水
+# Day 21：集中查詢服務紀錄與監控指標
 
-> 到目前為止,除錯全靠 `docker logs` 一個容器一個容器翻。今天部署一整套可觀測性:Prometheus 收指標、Grafana 畫圖、集中式 log 把散在各處的紀錄匯到一個地方。本章最實際的一課不是「怎麼裝」,而是**裝完之後,同一個除錯情境快了幾個數量級**——用 Day 19 學的 UUID 追蹤,親自感受一次。
+一台 VM 建立失敗，你拿著 Day 19 找到的 UUID，分別到 Nova、Placement、Neutron 的紀錄搜尋。當服務分散到多台主機，逐台登入就很費時。另一個問題是：還沒有人回報錯誤，如何發現磁碟快滿了，或某個服務已經停止回報？本章建立兩條資料收集路徑，讓你判斷何時看指標、何時查事件紀錄。
 
-!!! abstract "你在課程的哪裡"
-    - **階段三開始**:從「加能力」轉向「讓它活得久」。
-    - **今天**:一次部署 Prometheus + Grafana + 集中式 log(OpenSearch),並收尾一件 Day 13 埋的待辦——把 Skyline 接上監控。
-    - **今天之後**:Day 22 學升版與備份。有了觀測,升版時才看得到系統的反應。
+## 指標與 log 各自回答什麼
 
-## 該監控什麼
+**指標（metric）** 是隨時間取樣的數值，例如可用記憶體、佇列長度、API 錯誤次數。Prometheus 定期向 **exporter** 抓取指標；exporter 是把服務或主機狀態轉成 Prometheus 格式的程式。Grafana 再把數值畫成趨勢圖。
 
-![Prometheus 官方標誌](../assets/logos/prometheus.png){ align=right width="96" }
+**log** 記錄個別事件，例如某台 VM 的資源配置成功或失敗。Fluentd 收集服務紀錄，送到 OpenSearch 儲存與搜尋；OpenSearch Dashboards 或 Grafana 提供查詢介面。下圖將兩條路徑分開：
 
-裝監控之前先想清楚要盯什麼,否則 Grafana 上一堆圖卻不知道哪個重要。一朵 OpenStack 雲的關鍵訊號:
+![指標由 exporter 送至 Prometheus，事件紀錄由 Fluentd 匯入 OpenSearch](../assets/diagrams/os-s4d21-two-paths.svg)
 
-| 面向 | 盯什麼 | 為什麼 |
-|---|---|---|
-| API | 請求延遲、錯誤率 | 使用者體感的第一線 |
-| Agent | 各服務 agent 是否存活 | 一個 agent 死掉,對應功能就默默失效(想想 Day 8 的 CCM) |
-| 佇列 | RabbitMQ 佇列深度 | 積壓 = 某個 worker 跟不上或掛了 |
-| 資源 | 磁碟水位、記憶體 | 塞滿之前要先知道(Day 8 的 Nova disk 就是塞爆才發現) |
+圖中的連線方向表示資料流。Prometheus 主動抓取 exporter，Fluentd 則主動轉送 log。看到圖表空白時，先確認上游有資料，再確認介面能連到資料源。
 
-Kolla 的監控套件把這些對應的 exporter 全都內建了,你只要開開關。
+## 步驟 1：啟用收集服務
 
-## 步驟
-
-### 步驟 1:開三個開關
-
-![Grafana 官方標誌](../assets/logos/grafana.svg){ align=right width="84" }
-
-集中式 log 那個開關會連動把 OpenSearch(儲存與查詢引擎)和它的儀表板一起帶起來:
+以下沿用單機 Kolla 環境與管理員 openrc。先確認 `/var/lib/docker` 有足夠空間；OpenSearch 的索引會持續占用磁碟。設定 `enable_central_logging` 後，Kolla 會部署 OpenSearch 與 Dashboards，並設定 Fluentd：
 
 ```bash
 sudo tee -a /etc/kolla/globals.yml << 'EOF'
@@ -40,12 +26,11 @@ source ~/kolla-venv/bin/activate
 kolla-ansible deploy -i ~/all-in-one --tags prometheus,grafana,common,opensearch
 ```
 
-這一步會拉不少映像檔並啟動一票 exporter,約 10 分鐘。`failed=0` 即過。記憶體帳:本課環境部署後只多約 3 GiB(OpenSearch 的 heap 預設 1 GiB),對這台機器毫無壓力。
+`common` tag 涵蓋 Fluentd 的設定。部署結束的 `failed=0` 只代表部署工作成功；接下來還要確認 target 與索引實際有資料。
 
-### 步驟 2:驗證 Prometheus 抓到了東西
+## 步驟 2：確認 Prometheus 能抓取指標
 
-!!! warning "Prometheus 在 9091,不是慣例的 9090"
-    Kolla 把 Prometheus 放在 **9091**,而且加了 basic auth(帳號 `admin`,密碼在 `passwords.yml` 的 `prometheus_password`)。照慣例打 9090 會撲空。
+Prometheus 把每個抓取對象稱為 **target**。本章 Kolla 預設使用 `9091` 與 basic auth，帳號是 `admin`，密碼取自 `passwords.yml`。`10.0.0.4` 要對應你的單機管理位址：
 
 ```bash
 PW=$(sudo grep '^prometheus_password:' /etc/kolla/passwords.yml | awk '{print $2}')
@@ -59,9 +44,13 @@ curl -s -u admin:$PW http://10.0.0.4:9091/api/v1/targets \
 Counter({'up': 36, 'down': 1})
 ```
 
-`up` 的那些就是 node、libvirt、mysqld、各 OpenStack 服務的 exporter——全被 Prometheus 定期抓取。(那一個 `down` 是 RabbitMQ exporter,見[地雷 3](#mine-3)。)
+`up` 表示最近一次抓取成功；`down` 表示抓取失敗，還不能直接斷定被監控的服務停止。這份紀錄裡 RabbitMQ 的 target 尚未上線，處理範圍見[疑難排解：RabbitMQ target 持續 down](#mine-3)。不要把「大部分 up」當作全部監控已完成。
 
-### 步驟 3:驗證集中式 log
+若 `prometheus_cadvisor` 持續重啟並回報 `inotify_init: too many open files`，再依[疑難排解](#mine-1)調整主機限制。
+
+## 步驟 3：確認 log 已匯入 OpenSearch
+
+OpenSearch 將資料放在 **索引（index）** 中；Kolla 預設的 log 索引名稱以 `flog-` 開頭。以下先查叢集健康，再確認 log 索引存在：
 
 ```bash
 curl -s http://10.0.0.4:9200/_cluster/health?pretty | grep status
@@ -73,26 +62,27 @@ curl -s http://10.0.0.4:9200/_cat/indices | grep flog
 yellow open flog-2026.07.12  ... 3857
 ```
 
-`yellow` 在單節點是正常的(它想要副本但只有一個節點可放)。索引裡已經有幾千筆 log——fluentd 正把各容器的 log 持續匯進來。
+`yellow` 表示 primary shard 可用，但有 replica shard 尚未配置；在只有一個節點、仍要求副本時可以出現。它不是所有異常都能忽略的訊號。這份節錄同時顯示索引已有文件；之後應持續留意文件是否增加與資料是否夠新。
 
-登入 Grafana(`3000` 埠)不用手動接資料源——Kolla 已經把 Prometheus(指標)和 OpenSearch(log)兩個都自動配置好了:
+Grafana 使用 `3000` 埠。從你已建立的 SSH tunnel 或可達管理網路開啟它，使用 `admin` 與 `passwords.yml` 裡的 `grafana_admin_password` 登入。資料源頁可以確認 Prometheus 與 OpenSearch 的連線設定：
 
-![Grafana 的資料源頁:Prometheus 與 OpenSearch 都已自動接上](../assets/screenshots/day21-grafana-datasources.png)
+![Grafana 已建立 Prometheus 與 OpenSearch 資料源](../assets/screenshots/day21-grafana-datasources.png)
 
-### 步驟 4:收尾 Day 13 的待辦 —— 把 Skyline 接上監控
+看到資料源名稱不等於所有指標都存在。先從主機磁碟與記憶體、服務存活狀態，再到 API 錯誤率與佇列長度；每項都要對照相應 exporter 是否成功抓取。本章未補做各 dashboard 與告警規則的驗證。
 
-還記得 Day 13 說「Prometheus 裝好後要回來動 Skyline 一次」嗎?就是現在。Skyline 的監控頁需要 Prometheus 當資料源,重新部署一次讓它接上:
+## 步驟 4：更新 Skyline 的監控設定
+
+Day 13 部署 Skyline 時，Prometheus 還沒有啟用。現在要重新產生 Skyline 設定，讓它取得 Prometheus endpoint 與專用認證資料。先確認 Day 15 的 `ceph_rgw_swift_compatibility: "false"` 仍寫在 `globals.yml`，避免 RGW 路徑在這次重新產生設定時不一致。
 
 ```bash
 kolla-ansible deploy -i ~/all-in-one --tags skyline
 ```
 
-!!! note "會撞到一個隱性依賴（見地雷 2）"
-    這一步在本課環境第一次跑會失敗,原因是 Day 15 開了 RGW 卻沒設一個相容變數。修法一行,細節在[地雷 2](#mine-2)。修完 `failed=0`,Skyline 的監控頁就有資料了。
+部署成功後，檢查 Skyline 的監控頁是否能載入資料。如果模板回報缺少 RGW 變數，見[疑難排解](#mine-2)；這與 Prometheus 本身是否可用是不同問題。
 
-## 同一個除錯,有觀測與沒觀測差多少
+## 步驟 5：用 UUID 跨服務搜尋
 
-這是今天最值得體會的一段。回想 [Day 8](sprint3-day8-e2e-workload-cluster.md) 除 CCM 的錯——當時要一個容器一個容器 `docker logs` 慢慢翻。現在有了集中式 log,同樣的「跨服務追一個資源」變成一次查詢:
+接著建立一台測試 VM，取得 UUID，再搜尋 OpenSearch 的 `Payload` 欄位，也就是 log 訊息本文。以下假設 `day17-net`、`cirros`、`m1.tiny` 仍存在；同名 `obs-vm` 若已存在，先確認它是不是先前練習留下的資源，避免重複建立。
 
 ```bash
 # 開一台 VM,拿它的 UUID
@@ -107,6 +97,8 @@ curl -s http://10.0.0.4:9200/flog-*/_search -H 'Content-Type: application/json' 
     [print(' ', h['_source']['Payload'][:80]) for h in d['hits']['hits']]"
 ```
 
+這段範例等待 20 秒讓紀錄有時間送入索引，並非 VM 完成或 log 匯入的保證。若沒有命中，先確認 VM UUID、索引與收集延遲。本課的搜尋結果節錄如下：
+
 ```text
 命中 19 筆
   [instance: ee9d0bd4-…] Claim successful on node openstack-lab
@@ -114,33 +106,19 @@ curl -s http://10.0.0.4:9200/flog-*/_search -H 'Content-Type: application/json' 
   10.0.0.4 "PUT /allocations/ee9d0bd4-…" status: 204
 ```
 
-**一次查詢,19 筆 log,橫跨 nova 與 placement**——你直接看到這台 VM 從 claim 資源到 placement 記帳的完整軌跡。Day 8 那種「翻遍容器找線索」的除錯,現在是一行指令。這就是可觀測性的價值:它不是讓系統跑得更好,是讓**你**修得更快。
+命中的紀錄同時包含 Nova 的 instance 訊息與 Placement 的 allocations API。這說明同一個 UUID 能連結不同服務的事件，但這裡只要求傳回五筆文件，不能視為 VM 完整生命週期的全部紀錄。對單次請求，也可使用 Day 19 的 request-id 縮小範圍。
 
-同一招在 OpenSearch Dashboards 的 Discover 頁長這樣——把某台 VM 的 UUID 貼進搜尋框,所有含這個 ID 的 log 一次濾出來,黃底就是命中的 UUID,`programname` 欄一眼看出它散落在 `neutron-server`、`placement-api` 等不同服務:
+OpenSearch Dashboards 使用 `5601` 埠，預設帳號 `opensearch`，密碼為 `opensearch_dashboards_password`。首次登入先建立 index pattern `flog-*`，時間欄位選 `@timestamp`，再到 Discover 選對時間範圍，搜尋 UUID：
 
-![在 OpenSearch Dashboards 用 server UUID 過濾,跨服務的 log 全被串起來](../assets/screenshots/day21-opensearch-uuid.png)
+![Discover 以 UUID 過濾並顯示不同 programname 的服務紀錄](../assets/screenshots/day21-opensearch-uuid.png)
 
-清理:`openstack server delete obs-vm`。
+除了搜尋字串，也要看時間範圍與 `programname`。查不到時，先分辨是該服務沒有記錄這個 UUID，還是 Fluentd 尚未送入。練習結束以 `openstack server delete obs-vm` 刪除測試 VM。
 
-## 驗收 checkpoint
+## 疑難排解
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| Prometheus | targets 絕大多數 `up`(9091 + basic auth) | 36/37 up |
-| OpenSearch | cluster 回應、log 索引持續增長 | yellow、3857+ docs |
-| Grafana | 3000 埠可登入,資料源自動含 prometheus + opensearch | 符合 |
-| 集中 log 實戰 | 用 UUID 一次查詢串起跨服務 log | 19 筆命中 |
-| Skyline 尾巴 | 接上 Prometheus 後監控頁有資料 | Day 13 待辦關閉 |
+### cAdvisor 持續重啟並回報 inotify 限制 {#mine-1}
 
-## 地雷記錄
-
-### 地雷 1:cadvisor 崩潰迴圈 —— `inotify: too many open files` {#mine-1}
-
-**症狀**:`prometheus_cadvisor` 一直重啟,log 是 `inotify_init: too many open files`。
-
-**根因**:cadvisor 用 inotify 監看每個容器,而這台主機已經跑了六十幾個容器——系統的 `fs.inotify.max_user_instances` 預設值被耗盡。
-
-**解法**:提高上限。
+`inotify` 是 Linux 監看檔案變化的機制。當 cAdvisor 無法再建立監看實例，會出現 `inotify_init: too many open files`。先確認錯誤訊息，再提高對應限制並重啟該容器：
 
 ```bash
 echo 'fs.inotify.max_user_instances=1024' | sudo tee /etc/sysctl.d/99-inotify.conf
@@ -149,35 +127,35 @@ sudo sysctl -p /etc/sysctl.d/99-inotify.conf
 sudo docker restart prometheus_cadvisor
 ```
 
-**通則**:監控主機的容器一多,cadvisor 死於 inotify 幾乎是必然——先提高 sysctl。
+這是針對 inotify 限制的修法；不要只因容器數增加就認定所有重啟都由它造成。
 
-### 地雷 2:Skyline 缺變數 —— 服務間的隱性依賴 {#mine-2}
+### Skyline 模板找不到 ceph_rgw_swift_compatibility {#mine-2}
 
-**症狀**:`deploy --tags skyline` 失敗,`'ceph_rgw_swift_compatibility' is undefined`。
+只部署 Skyline role 時，不能依賴另一個 role 的預設值剛好已載入。將 `ceph_rgw_swift_compatibility: "false"` 明確寫進 `globals.yml`，再重跑步驟 4。此值要與 Day 15 的 `/swift/v1` 一致；改成 `true` 會改用 `/v1`，不能當成單純消除 undefined 的修法。
 
-**根因**:Day 15 開了 `enable_ceph_rgw`,但沒設 `ceph_rgw_swift_compatibility`。Skyline 的導覽列模板會引用這個變數來決定要不要顯示物件儲存入口——A 服務只開了半套設定,B 服務部署時才爆。
+### RabbitMQ target 持續 down {#mine-3}
 
-**解法**:`globals.yml` 補一行 `ceph_rgw_swift_compatibility: "true"`,重跑即過。
+本章尚未完成 RabbitMQ metrics 接線。Kolla 透過 RabbitMQ role 管理 `rabbitmq_prometheus` plugin；只部署 Prometheus 的 tag 不代表既有 RabbitMQ 容器已套用 plugin 設定。本課尚未驗證重新套用後 target 恢復，因此這裡仍是未完成項目。可沿用 Day 19 的 RabbitMQ 管理工具檢查佇列，但不能宣稱 Prometheus 已取得這些佇列指標。
 
-**教訓**:這是「隱性依賴」的活教材——兩個服務之間沒有明顯的關聯,直到某次部署把它們湊在一起才現形。可觀測性這一天反而暴露了儲存那一天的欠債。
+## 想一想
 
-### 地雷 3:RabbitMQ exporter 未上線(已知缺口) {#mine-3}
+1. 某個 target 是 down，但 VM 仍可建立，你會先檢查被監控服務，還是抓取 endpoint 與認證？需要什麼證據區分？
+2. 搜尋 UUID 沒有結果，為什麼不能立刻斷定 Nova 沒處理這台 VM？
+3. 同一台 VM 的紀錄有數十筆，只傳回五筆的搜尋結果能證明哪些事，又不能證明哪些事？
 
-Prometheus 有一個 target(RabbitMQ 的 metrics,埠 15692)持續 `down`,因為它需要 `rabbitmq_prometheus` plugin 持久啟用,而這要透過重新部署 rabbitmq role(由 Kolla 管理 `enabled_plugins`)才會生效。本課程將其記為已知小缺口——不影響其餘 36 個 target,RabbitMQ 本身的健康仍可從佇列深度等其他指標觀察。
+## 小結
+
+Prometheus 用數值指出狀態與趨勢，OpenSearch 用事件紀錄追查資源經過的服務。部署之後要分別確認抓取、匯入與查詢三件事；資料源出現在介面上只是其中一步。集中查詢減少逐台找檔案的工作，對紀錄內容與缺漏的判讀仍需要 Day 19 的服務分工知識。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Kolla-Ansible 的 Prometheus 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/prometheus-guide.html)** —— 本章部署的官方對照:exporter 清單、額外 scrape 目標、basic auth 使用者都在這份。
-- **[Kolla-Ansible 的集中式 log 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/central-logging-guide.html)** —— OpenSearch 的保留策略、索引設定與 Dashboards 的官方說明。
-- **[Prometheus 官方概念導覽](https://prometheus.io/docs/introduction/overview/)** —— 指標、抓取、時間序列的第一手定義;看完就懂 targets 頁在講什麼。
-- **[Google SRE Book:Monitoring Distributed Systems](https://sre.google/sre-book/monitoring-distributed-systems/)** —— 「四大黃金訊號」的出處;本章「該監控什麼」那張表的理論根據。
+- [Kolla-Ansible 2025.1 Prometheus 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/prometheus-guide.html)：查看 exporter、認證與抓取設定。
+- [Kolla-Ansible 2025.1 集中式 log 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/central-logging-guide.html)：對照索引、保留期限、Discover 與 Fluentd 設定。
+- [Kolla-Ansible 2025.1 Grafana 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/grafana-guide.html)：查登入與資料源設定。
+- [Prometheus 概念導覽](https://prometheus.io/docs/introduction/overview/)：理解時間序列與抓取模型。
 
 ## 下一步
 
-監控上線了。[Day 22](sprint4-day22-upgrade-backup.md) 進入維運最實際的兩件事:**更新**與**備份**——而且從今天起,更新過程中系統的每一個反應,你都看得見。
-
----
-
-*Prometheus 標誌取自 CNCF 官方 artwork;Grafana 標誌為 Grafana Labs 資產。均作社群教學用途。*
+[Day 22](sprint4-day22-upgrade-backup.md) 使用這些觀測資料，檢查更新與資料庫還原前後的狀態。

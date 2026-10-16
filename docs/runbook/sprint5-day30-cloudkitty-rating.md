@@ -1,58 +1,24 @@
-# Day 30: 計費——用量變成帳單
-
-> Day 27 給了分帳的對象,Day 28 給了分帳的依據,Day 29 讓數字產生後果。今天把它們變成**錢**:CloudKitty 讀 Prometheus 裡的用量,套上訂價規則,吐出每個租戶各自的帳單——全程不碰 Gnocchi。本章最值錢的一顆雷叫做「**帳單永遠 0 元,而且沒有任何錯誤**」,它的根因不是 bug,是一個沒人告訴你的開關。
+# Day 30: 計算租戶費用——選取專案、套用費率與逐期核對
 
 ![CloudKitty 官方吉祥物](../assets/mascots/cloudkitty.png){ align=right width="100" }
 
-!!! abstract "你在課程的哪裡"
-    - **Day 27–29**:租戶結構、計量管線、自動反應都就緒。
-    - **今天**:階段三——用量變帳單,兩個租戶各拿各的。
-    - **今天之後**:Day 31 進入階段四,回多機環境談 SLA 與自癒。
+Prometheus 查得到 team-a 的用量，費用摘要卻一直是 0。你可能先懷疑費率設錯，其實也可能根本沒有專案被選進計算。這一章部署 CloudKitty，沿著「選專案、取用量、套費率、存結果」逐段查驗。讀完之後，你能找到零費用出在哪個階段，也能把結果對回同一租戶、同一週期與同一計費項目。
 
-## 第一次接觸雲端計費?先讀這段
+## 先分清楚費用計算與完整帳務
 
-CloudKitty 做的事只有一句話:**定期把「誰用了多少」乘上「單價」,存成帳單**。但它把這件事拆成四個可以各自替換的零件,而今天四個都要動:
+CloudKitty 做的是 **rating**：依規則把用量轉成費用資料。它不會因此替你完成付款、發票、稅務、退款或對帳爭議處理。本章的 `$0.05` 等數值是示範費率，不代表實際貨幣或市場報價。
 
-| 零件 | 回答什麼問題 | 本課的選擇 |
-|---|---|---|
-| **fetcher** | **要對誰計費?** | Keystone(列出租戶) |
-| **collector** | 他用了多少? | **Prometheus**(kolla 預設是 gnocchi) |
-| **rating module** | 這些用量值多少錢? | **hashmap**(預設是 noop) |
-| **storage** | 帳單存哪? | **OpenSearch**(重用 Day 21 的) |
+需要 Day 21 的 Prometheus／OpenSearch、Day 28 的計量，以及 Day 27 的兩個專案。以管理員身分操作設定；先清除 application credential 與 `OS_SYSTEM_SCOPE` 殘留，再載入管理員 openrc。CLI 命令在已安裝 OpenStack 工具的虛擬環境執行，`10.0.0.4`、inventory 與 UUID 需換成自己的值。
 
-**第一個零件是今天最大的雷**。直覺會認為「雲裡有幾個專案就對幾個計費」——**不是的**,fetcher 有它自己的一套挑選規則,而預設挑出來是**零個**。
+下圖把處理過程分成四段。**Fetcher** 決定要處理哪些專案，**collector** 取回用量，**rating module** 套費率，**storage** 保存結果。
 
-另外兩個名詞今天會反覆出現:
+![Keystone fetcher選專案、Prometheus collector取用量、hashmap套費率、OpenSearch存每期結果](../assets/diagrams/os-s5d30-stages.svg)
 
-- **period(週期)**:計費的時間顆粒,預設 **3600 秒**。帳單是一小時一格算出來的。
-- **wait_periods**:等幾個週期才結算,預設 **2**。所以**帳單永遠落後現在約兩小時**——這不是故障。
+四段都設定好才會得到有意義的金額。容器健康不代表專案清單非空，也不代表已啟用計價模組。
 
-## 原理與架構
+## 步驟 1：部署 collector 與 storage {#step-1}
 
-```mermaid
-flowchart TB
-    KS["Keystone fetcher<br/>要對誰計費"] ==> PROC["cloudkitty-processor"]
-    PROM["Prometheus<br/>(Day 28 的用量)"] ==> PROC
-    PROC ==>|"套 hashmap 訂價"| RATE["每個週期<br/>× 每個租戶 = 一筆帳"]
-    RATE ==> OS["OpenSearch<br/>(Day 21 建的)"]
-```
-
-processor 每一輪做的事:**問 fetcher 有哪些租戶 → 對每個租戶,把還沒算的週期一個一個補算 → 每個週期去 Prometheus 查用量 → 乘上單價 → 存進 OpenSearch**。
-
-它送去 Prometheus 的查詢長這樣(由 `metrics.yml` 組出來):
-
-```promql
-max(max_over_time(power_state{project_id="<租戶>"}[3600s])) by (resource_id, project_id)
-```
-
-**看懂這條查詢,今天就懂一半了**:一小時的窗口內,每台機器(`resource_id`)只要出現過就算 1 台——**這正是「機器時數」的定義**,而且 `project_id` 讓它自動分租戶。[Day 28](sprint5-day28-ceilometer-metering.md) 那個 label 在這裡兌現。
-
-!!! tip "為什麼是帶窗口的查詢,而不是 `count(power_state)`"
-    [Day 28 地雷 5](sprint5-day28-ceilometer-metering.md#mine-5) 記過:Pushgateway 會**永遠記得已經刪掉的機器**。`max_over_time(...[3600s])` 有時間窗口,舊資料滑出窗外就不算;但 instant query 沒有窗口,**幽靈機器會被收錢**。CloudKitty 用的是前者,算它避開了一劫——但你自己寫查詢時要記得這件事。
-
-## 步驟
-
-### 步驟 1:三行 globals {#step-1}
+本章使用 Prometheus collector、OpenSearch storage。明確指定後端，避免沿用套件的 Gnocchi 預設：
 
 ```bash
 sudo tee -a /etc/kolla/globals.yml << 'EOF'
@@ -69,28 +35,20 @@ kolla-ansible deploy -i ~/all-in-one --tags cloudkitty
 PLAY RECAP: ok=26  changed=16  failed=0
 ```
 
-只要三行,是因為 kolla 的預設值已經幫你對好了其餘的:`cloudkitty_opensearch_url` 自動指向 Day 21 的 OpenSearch,`cloudkitty_prometheus_url` 自動指向 Day 21 的 Prometheus。
+本課 Kolla 模板能帶入既有服務位址與 Prometheus 認證，相關段落是：
 
-!!! note "kolla 的預設 collector 是 gnocchi"
-    `cloudkitty_collector_backend` 不寫的話是 **`gnocchi`**——[Day 26](sprint4-day26-sprint5-preview.md) 講的「教科書路線」在這裡是**預設值**。要走 Prometheus 必須明確指定。
+```jinja
+[collector_prometheus]
+prometheus_url = {{ cloudkitty_prometheus_url }}
+prometheus_user = admin
+prometheus_password = {{ prometheus_password }}
+```
 
-!!! quote "同一個 Prometheus,兩種待遇"
-    值得跟 [Day 29](sprint5-day29-aodh-autoscaling.md#mine-2) 對照一下。kolla 的 `cloudkitty.conf` 模板長這樣:
+這與 Day 29 的 Aodh 整合不同：CloudKitty 有專用帳密設定。部署後仍要查實際產生的設定與連線結果，不能只依同屬 OpenStack 就假設設定方式一致。
 
-    ```jinja
-    [collector_prometheus]
-    prometheus_url = {{ cloudkitty_prometheus_url }}
-    prometheus_user = admin
-    prometheus_password = {{ prometheus_password }}
-    ```
+## 步驟 2：決定收哪些指標、如何解讀
 
-    **basic auth 直接幫你接好了。** 而昨天的 Aodh,同一個 Prometheus,你得把帳密內嵌進 host 字串才進得去。這就是**整合成熟度的差異**——同一個生態系裡,不同專案跟同一個依賴的接合程度可以差這麼多。
-
-### 步驟 2:寫 `metrics.yml`(kolla 不給你)
-
-**kolla 的 cloudkitty role 沒有 `metrics.yml` 模板**,所以容器裡用的是套件內建那份——而**那份是為 gnocchi 寫的**(指標名叫 `image.size`,`extra_args` 裡是 `resource_type`、`force_granularity` 這些 gnocchi 專屬的東西)。改用 Prometheus collector,這份計量對應規則得自己寫([地雷 2](#mine-2))。
-
-先看手上有什麼原料([Day 28](sprint5-day28-ceilometer-metering.md) 推上去的指標):
+先從 `/etc/kolla/passwords.yml` 讀取自己的 `prometheus_password` 並設定 shell 變數 `PW`，沿用 Day 28 的方式；不要假設換終端機後仍保留變數。查看來源有哪些指標：
 
 ```bash
 curl -s -u admin:$PW --get http://10.0.0.4:9091/api/v1/query \
@@ -106,7 +64,7 @@ network_incoming_bytes  4 條序列
 ...
 ```
 
-挑兩個對應到雲端帳單的兩大項:
+本章挑 `power_state` 與 `volume_size`，映射成計費項目 `instance` 與 `volume`。Kolla 沒提供這條 Prometheus 路線所需的完整 `metrics.yml`，需自行寫入：
 
 ```bash
 sudo mkdir -p /etc/kolla/config/cloudkitty
@@ -136,13 +94,25 @@ metrics:
 EOF
 ```
 
-三個欄位值得說明:
+`alt_name` 是套費率時使用的名稱；`groupby` 保留 project/resource，避免把不同專案或資源合在一起。`unit` 是記錄給人看的單位名稱，不會自動換算數值。
 
-- **`alt_name`**——這是帳單上的服務名稱,**等一下訂價規則要用同一個名字**,對不上就不會計價。
-- **`mutate: NUMBOOL`**——`power_state` 的值是 1(開機中),NUMBOOL 把任何非零轉成 1,於是「一台機器一小時」就是數量 1。
-- **`groupby`** 必須包含 `project_id`——那是 `scope_key`,分租戶靠它。
+### 這份規則究竟算什麼
 
-**不要試錯部署,用 CloudKitty 自己的 schema 先驗**:
+`NUMBOOL` 會把非零值轉為 1，並不是「只接受開機狀態 1」。其他非零 power-state 也可能算入。因此這個示範不能直接宣稱是只對 RUNNING 秒數收費；正式規則要先決定哪些狀態應計費，再依資料模型篩選或映射。
+
+Collector 產生的查詢形狀如下：
+
+```promql
+max(max_over_time(power_state{project_id="<租戶>"}[3600s])) by (resource_id, project_id)
+```
+
+它對每個 resource/project 取窗口中的最大值，之後才做 NUMBOOL。只要窗口內符合非零條件，就可能計一個週期單位；這不是按精確存活秒數比例計算。例如只存在部分小時的 VM，也可能被這份規則計成一個小時週期。
+
+而 Day 28 的 Pushgateway 仍可能曝露已刪 VM 的舊值，每次 scrape 都形成新樣本。`max_over_time` 不會自動排除這些資源，所以這份練習尚未驗證資源刪除後一定停止計費。
+
+### 使用實際 collector 的 schema 驗證
+
+在已載入 `cloudkitty.conf` 的容器內驗證，才能使用 Prometheus 的 schema：
 
 ```bash
 sudo docker cp /etc/kolla/config/cloudkitty/metrics.yml cloudkitty_api:/tmp/m.yml
@@ -163,23 +133,20 @@ for k,v in collector.validate_conf(yaml.safe_load(open('/tmp/m.yml'))).items():
 ✅ volume_size@#volume | groupby = ['resource_id', 'project_id']
 ```
 
-!!! danger "一定要在 `cloudkitty_api` 容器裡驗"
-    用一個乾淨的容器跑這段驗證,會得到:
+結果顯示 collector 是 prometheus，且兩項規則通過結構驗證。若環境錯用 Gnocchi 預設，會出現不相關的必填欄位錯誤：
 
-    ```text
-    ❌ required key not provided @ data['extra_args']['resource_type']
-    ```
+```text
+❌ required key not provided @ data['extra_args']['resource_type']
+```
 
-    `resource_type` 是 **gnocchi** 的必填欄位。乾淨容器沒有 `cloudkitty.conf`,`collector` 吃到預設值 `gnocchi`,於是**拿 gnocchi 的 schema 來驗 prometheus 的設定**——錯誤訊息完全誤導。**驗證工具本身也需要正確的環境**,這個坑會讓你去改一個根本沒問題的檔案。
+結構驗證通過仍不等於費用語意正確。確認規則符合預期後，重新執行 `kolla-ansible deploy -i ~/all-in-one --tags cloudkitty` 套用。
 
-    重新部署套用:`kolla-ansible deploy -i ~/all-in-one --tags cloudkitty`
+## 步驟 3：啟用 hashmap 並設定費率
 
-### 步驟 3:訂價規則
-
-先看計費模組的現況:
+**Hashmap** 模組把選定的服務或屬性對到費率。先看模組狀態：
 
 ```bash
-pip install python-cloudkittyclient      # CLI 外掛,同型雷第 N 次
+pip install python-cloudkittyclient
 openstack rating module list
 ```
 
@@ -189,7 +156,7 @@ noop       True
 pyscripts  False
 ```
 
-**`noop` 是啟用的,`hashmap` 是關的。** `noop` 的意思正如其名——什麼都不算。不改這個,**帳單永遠 0 元,而且不會有任何錯誤**([地雷 3](#mine-3))。
+本課預設只開 noop，它不計價。啟用 hashmap，再建立與 `alt_name` 同名的服務：
 
 ```bash
 openstack rating module enable hashmap
@@ -197,9 +164,9 @@ IID=$(openstack rating hashmap service create instance -f value -c "Service ID")
 VID=$(openstack rating hashmap service create volume -f value -c "Service ID")
 ```
 
-`instance` 和 `volume` 這兩個名字**必須跟 `metrics.yml` 的 `alt_name` 一模一樣**。
+接著建立 flat 費率。這裡的示範是每個一小時週期的 instance 單位 0.05、GiB 單位 0.01；若改 `period`，必須重新確認費率及週期單位，不能直接沿用「每小時」的解讀。
 
-接著訂價——每台機器每小時 $0.05、每 GiB 每小時 $0.01。**CLI 在這一步會壞掉**([地雷 5](#mine-5)),直接打 API:
+本課 CLI 與 API 有參數不相容，使用 API 建立：
 
 ```bash
 TOKEN=$(openstack token issue -f value -c id)
@@ -216,18 +183,15 @@ done
 ✅ cost= 0.0100000000000000000000000000 | type= flat
 ```
 
-建好之後在 Horizon 的 **Admin → Rating → Hashmap → (點 service) → Service Mappings** 看得到同一筆:
+回傳值顯示兩筆 mapping 已建立。若 token 過期，重新取得；`CK` 也要使用自己的 CloudKitty endpoint。
 
-![Horizon 的 Hashmap:instance 服務的 flat 費率 0.05,以及 Create new Mapping 按鈕](../assets/screenshots/day30-horizon-hashmap-mapping.png)
+![Horizon Hashmap頁面列出instance服務的flat費率0.05](../assets/screenshots/day30-horizon-hashmap-mapping.png)
 
-!!! tip "CLI 壞了,滑鼠沒壞"
-    注意右上角那顆 **`+ Create new Mapping`**——**這一頁做得到那個壞掉的 CLI 做不到的事**。如果你不想打 curl,整個步驟 3 都可以在這裡用點的:`Create new Service` 建 `instance` / `volume`,再進來 `Create new Mapping` 填 flat + 0.05。
+Horizon 的 Service Mappings 頁也可檢查同一筆設定。API 與畫面要對到同一個服務名稱，不要重複建立 mapping 來處理查不到的情況。
 
-    這是本章少數「圖形介面比命令列可靠」的地方,值得記著。
+## 步驟 4：選出要計算費用的專案
 
-### 步驟 4:告訴 CloudKitty 要對誰計費
-
-**這是今天最重要的一步,也是最多人卡死的地方。** 到目前為止一切正常,但帳單是 0:
+有用量與費率，摘要仍可能是零：
 
 ```bash
 curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary"
@@ -237,29 +201,35 @@ curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary"
 {"results": [["2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00", 0.0, 0.0]]}
 ```
 
-零錯誤、零警告。processor 的 debug log 裡只有一行輕描淡寫的話:
+先看 processor 的 fetcher 日誌：
 
 ```text
 DEBUG cloudkitty.fetcher.keystone  Number of tenants to rate : 0
 ```
 
-**要計費的租戶有 0 個。** 根因在原始碼裡([地雷 1](#mine-1)):**CloudKitty 只對「cloudkitty 服務帳號持有 `rating` 角色」的專案計費**。kolla 建了這個角色,卻沒指派給任何專案。
-
-所以這一步的本質是:**這是「哪些專案要計費」的開關**。
+`Number of tenants to rate : 0` 表示它沒有選中任何專案。這個 fetcher 預設要求 cloudkitty 服務使用者在該專案有 `rating` 角色。以管理員確認服務使用者 ID，再替本章 domain 下兩個專案指派：
 
 ```bash
 CKUSER=$(openstack user show cloudkitty -f value -c id)
 for P in team-a team-b; do
-  openstack role add --user $CKUSER --project $P rating
+  openstack role add --user $CKUSER --project "$P" --project-domain day27-corp rating
 done
-sudo docker restart cloudkitty_processor      # 別等一小時,見地雷 4
+sudo docker restart cloudkitty_processor
 ```
+
+上面的 restart 是讓本課練習立即重新讀取專案清單；正式環境要配合處理中的工作安排重啟。重新處理後，原紀錄選到兩個專案：
 
 ```text
 Number of tenants to rate : 2
 ```
 
-### 步驟 5:驗收——逐週期對帳
+這只確認選取範圍，不表示它們都有可計價資料。
+
+## 步驟 5：按週期、專案與項目核對
+
+**Period** 是收集／計價的週期，本課是 3600 秒。**Wait periods** 預設為 2，讓近期資料先等待兩個週期再處理；實際看見結果的延遲還受週期邊界、處理進度與補算影響，不是精確固定兩小時。
+
+先查按 project 分組的摘要：
 
 ```bash
 curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary?groupby=project_id"
@@ -271,89 +241,60 @@ curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary?groupby=project_id"
               5.0, 0.2500000037252903, "d2b258226e6b4d4493d93b5411726c97"]]}
 ```
 
-**team-a:5 機器時 = $0.25。** 拆開看明細(`GET /v2/dataframes`,整理後):
+原紀錄中 team-a 的 instance 數量合計 5，費用約 0.25。摘要是區間總和，要再看 `/v2/dataframes` 的每個週期，不能拿單一時刻的 VM 台數直接比：
 
-| 週期 | 計費項 | 機器 | 小計 |
-|---|---|---|---|
-| 11:00–12:00 | instance × 1 | `83b15110`(meter-vm) | $0.05 |
-| 12:00–13:00 | instance × 4 | `83b15110`、`f621a28d`、`bf256add`、`6fc3c0f3` | $0.20 |
+| 原紀錄的週期 | instance 數量 | 套用費率 | 結果 |
+|---|---:|---:|---:|
+| 第一個小時 | 1 | 0.05 | 0.05 |
+| 下一個小時 | 4 | 0.05 | 0.20 |
+| 合計 | 5 個週期單位 | | 0.25 |
 
-11:00 那小時 team-a 只有一台;12:00 那小時有四台——多的三台正是 [Day 29](sprint5-day29-aodh-autoscaling.md) 那些自動生滅的 ASG 機器。**它們只活了幾十分鐘,帳單照樣算到了。**
+這裡的 4 是該窗口查詢得到的資源數，不等於同時有四台 VM，也不能證明每台都執行滿一小時。請先看懂本章 max／NUMBOOL 規則，再解讀它和實際執行時間的差別。
 
-最後跟 Prometheus 逐週期對帳,這才是驗收:
+圖中刻意把每期數量與費率配在一起，最後才相加：
 
-| 週期 | 租戶 | Prometheus 用量 | CloudKitty 收費 |
-|---|---|---|---|
-| 11:00–12:00 | team-a | 1 台 | 1 × $0.05 |
-| 11:00–12:00 | team-b | 0 台 | $0 |
-| 12:00–13:00 | team-a | **4 台** | **4 × $0.05** |
-| 12:00–13:00 | team-b | 0 台 | $0 |
-| | **team-a 合計** | **5 台時** | **$0.25** |
+![第一期1乘0.05得0.05，第二期4乘0.05得0.20，同項目合計0.25；不同單位不能合計qty](../assets/diagrams/os-s5d30-periods.svg)
 
-**一格一格對得上。** 而 team-b 收 $0 不是廢話——**它證明分租戶的歸屬沒有外洩**。如果 `scope_key` 壞掉,team-a 的用量會漏到 team-b 身上,兩邊都會有錢。
+`instance` 與 `volume` 的 qty 單位不同，不可把兩者的數量直接相加。費用可以按同一幣值規則彙總，但仍須能拆回來源資料。
 
-!!! warning "對帳要逐週期比,不要拿總和比單期"
-    拿「12:00 那個週期的 4 台」去比「帳單總額 5」,會得出「CloudKitty 算錯了」的結論——**5 是兩個週期的總和(1 + 4),不是單一週期的數字。** 帳單是**時間的積分**,不是某一刻的快照——這個直覺不建立起來,對帳永遠對不完。
+### 兩個專案與儲存項目的既有結果
 
-### 帳單畫面
+後續保存的核對結果同時包含兩個專案及 volume：
 
-[Day 26](sprint4-day26-sprint5-preview.md) 說過帳單畫面要回 Horizon 看(Skyline 沒有計費外掛)。位置在 **Admin → Rating → Rating Summary**:
+| 專案 | 項目 | 原紀錄用量 | 費率 | 金額 |
+|---|---|---:|---:|---:|
+| team-a | instance | 13 個一小時週期單位 | 0.05 | 0.65 |
+| team-a | volume | 10 GiB 週期單位 | 0.01 | 0.10 |
+| team-b | instance | 2 個一小時週期單位 | 0.05 | 0.10 |
+| team-b | volume | 6 GiB 週期單位 | 0.01 | 0.06 |
 
-![Horizon 的 Rating Summary:team-a 的帳單 0.25,與 Cloud Total 一致](../assets/screenshots/day30-horizon-rating-summary.png)
+team-a 合計 0.75、team-b 合計 0.16，四筆都能按費率核算。這支持這些樣本的分組與乘法結果，不足以證明完整租戶隔離、所有計費狀態或刪除同步都正確。原紀錄沒有留下這段補驗建立各資源的完整命令，這裡保留結果，沒有補造可直接重跑的輸出。
 
-畫面上的 `0.25` 跟你剛才從 API 讀到的完全一致,`Project Name` 那欄直接把 project_id 翻成 `team-a`。
+## 用 Horizon 核對畫面
 
-CloudKitty 的儀表板一共五頁,這一天做的每件事都有對應的圖形版:
+只部署 CloudKitty 不會更新 Horizon。先部署其面板設定：
 
-| 位置 | 做什麼 | 對應本章 |
-|---|---|---|
-| Admin → Rating → **Hashmap** | 建 service 與費率 | 步驟 3 |
-| Admin → Rating → **Rating Modules** | 開關 hashmap / noop / pyscripts | 步驟 3、[地雷 3](#mine-3) |
-| Admin → Rating → **Rating Summary** | 分租戶帳單(上圖) | 步驟 5 |
-| Admin → Rating → **PyScripts** | 用 Python 寫複雜計費邏輯 | 本章沒用到 |
-| **Project → Rating** | 租戶自己查帳單與報表 | — |
+```bash
+kolla-ansible deploy -i ~/all-in-one --tags horizon
+```
 
-**這是 Sprint 5 到目前為止唯一有畫面的服務。** Ceilometer 與 Aodh 連一個面板都沒有([Day 28](sprint5-day28-ceilometer-metering.md) 與 [Day 29](sprint5-day29-aodh-autoscaling.md) 各有一則說明講原因)——**計量與告警是機器在讀的,帳單才是給人看的**,這個分野很合理。
+再打開 Admin → Rating → Rating Summary：
 
-!!! danger "這個頁面差點沒出現——`--tags cloudkitty` 不會碰 Horizon"
-    kolla 的 `enable_horizon_cloudkitty` 預設跟著 `enable_cloudkitty` 一起開,照理說裝完就有。但本課環境打開頁面時**選單裡什麼都沒有**——因為[步驟 1](#step-1) 只跑了 `--tags cloudkitty`,**Horizon 從頭到尾沒被重新部署過**,設定檔還停在沒有 cloudkitty 的版本。
+![Horizon Rating Summary顯示team-a的0.25，對應同範圍API摘要](../assets/screenshots/day30-horizon-rating-summary.png)
 
-    ```bash
-    kolla-ansible deploy -i ~/all-in-one --tags horizon
-    ```
+畫面的 project 名稱與費用要對回 API 使用的範圍。Hashmap 頁管理費率，Rating Modules 頁查看模組，Rating Summary 看結果；Project → Rating 則是專案端檢視。本章沒有測完每個角色的資料存取邊界。
 
-    這是 [Day 28 地雷 3](sprint5-day28-ceilometer-metering.md#mine-3) 一字不差的翻版:**跨服務的 flag,`--tags A` 永遠不夠**。同一顆雷在這個 Sprint 已經是第三次了(Day 21 的 Skyline、Day 28 的通知、今天的 Horizon)——它會一直來,因為 kolla 的開關和它影響的服務,本來就不是同一個名字。
+## 疑難排解
 
-## 驗收 checkpoint
+### Prometheus 有用量，但沒有專案被計算 {#mine-1}
 
-逐項驗證,**全部符合判準才算完成今天**:
-
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 部署 | api / processor 容器 healthy | 符合 |
-| storage | 重用 Day 21 的 OpenSearch,不新增資料庫 | 符合 |
-| metrics.yml | 通過 CloudKitty 自己的 schema 驗證 | 兩條規則都過 |
-| 訂價 | hashmap 啟用,費率建立成功 | instance $0.05 / volume $0.01 |
-| **有租戶被計費** | `Number of tenants to rate` > 0 | 指派 rating 角色後為 2 |
-| **帳單對得上用量** | 逐週期比對 Prometheus 與 CloudKitty | 1↔1、4↔4,合計 5 台時 = $0.25 |
-| **租戶歸屬** | team-b 無用量 → 無費用(沒被汙染) | $0 |
-| Horizon 帳單頁 | Admin → Rating → Rating Summary 顯示分租戶金額 | 符合(需補跑 `--tags horizon`) |
-| **雙租戶帳單** | 兩個租戶都有帳單、金額不同、互不汙染 | team-a $0.75 / team-b $0.16(補驗) |
-| **儲存計費** | volume 產生實際費用 | team-a $0.10 / team-b $0.06(補驗) |
-
-## 地雷記錄
-
-### 地雷 1:帳單永遠 0 元,因為沒有任何租戶被計費 {#mine-1}
-
-**症狀**:部署成功、費率建好、Prometheus 有資料、processor 健康、**零錯誤**。帳單就是 0。
-
-**判讀關鍵**:把 debug 打開(`cloudkitty_logging_debug: "yes"` 後重新部署),真相只有一行:
+**症狀**：零費用且 fetcher 顯示：
 
 ```text
 DEBUG cloudkitty.fetcher.keystone  Number of tenants to rate : 0
 ```
 
-**根因**:讀原始碼就明白了:
+原始碼的篩選條件是：
 
 ```python
 # cloudkitty/fetcher/keystone.py
@@ -363,50 +304,32 @@ if not ignore_rating_role:
         tenant_list.remove(tenant)          # ← 沒有 rating 角色 → 直接移除
 ```
 
-**CloudKitty 只對「cloudkitty 服務帳號在該專案上持有 `rating` 角色」的專案計費。** kolla 把角色建出來了,但沒指派給任何專案——所以全新安裝的預設狀態就是「零個租戶」。
-
-**解法**:
+**修法**：依步驟 4 指派 rating 角色；單一專案的原操作如下，已補明確 domain：
 
 ```bash
 CKUSER=$(openstack user show cloudkitty -f value -c id)
-openstack role add --user $CKUSER --project team-a rating
+openstack role add --user $CKUSER --project team-a --project-domain day27-corp rating
 ```
 
-或者對所有專案計費:`[fetcher_keystone] ignore_rating_role = true`。
+也有 `ignore_rating_role` 設定，但它會改變要處理的範圍，不能只為消除空清單就直接對所有專案啟用。
 
-**教訓**:**這不是 bug,是設計——它是「哪些專案要計費」的 opt-in 開關**,只是沒有任何地方告訴你它存在。這是本課程「錯了不會叫」家族最貴的一顆:帳單系統靜靜地對零個客戶收零元,而每一個健康檢查都是綠的。
+### 改 Prometheus collector 後仍要求 Gnocchi 欄位 {#mine-2}
 
-**通則**:**當一個系統「成功地產出空結果」時,先問「它認為它該處理的東西有哪些」**,而不是去查「它處理得對不對」。這顆雷會把你引去查 metrics.yml、查 Prometheus、查訂價規則——而那些全都是對的,錯的是那份工作清單本身是空的。
+**原因**：collector 與 metrics 設定沒有同步，或驗證工具沒載入相同的服務設定。**修法**：依步驟 2 檢查生效的 collector、`metrics.yml` 與 schema，再重新部署。
 
-### 地雷 2:kolla 讓你選 Prometheus,卻不給你對應的 `metrics.yml` {#mine-2}
+### 有專案與資料，費用仍為零 {#mine-3}
 
-**症狀**:`cloudkitty_collector_backend: "prometheus"` 設了,部署也成功,但 CloudKitty 拿著一份寫著 `image.size`、`resource_type`、`force_granularity` 的計量規則去查 Prometheus。
-
-**根因**:kolla 的 cloudkitty role 的 `templates/` 底下只有 `cloudkitty.conf.j2`、`cloudkitty-api.json.j2`、`cloudkitty-processor.json.j2`、`wsgi-cloudkitty.conf.j2`——**沒有 `metrics.yml`**。所以容器用的是套件內建的預設,而那份是為 gnocchi 寫的。
-
-**解法**:自己寫 `/etc/kolla/config/cloudkitty/metrics.yml`(見步驟 2)。
-
-**教訓**:**「這個選項存在」不等於「這條路是通的」。** kolla 讓你把 collector 設成 prometheus,語法檢查會過、部署會成功——但配套的計量規則要你自己補,而它不會提醒你。遇到「換了後端」這類設定時,養成一個習慣:**問一句「這個後端需要的其他檔案,是誰負責產生?」**
-
-### 地雷 3:`noop` 模組預設啟用,一切算 0 元 {#mine-3}
-
-**症狀**:帳單 0 元(是的,今天有兩顆不同的雷都長這樣)。
-
-**根因**:CloudKitty 預設啟用的計費模組是 `noop`——它不計價。`hashmap` 預設關閉。
-
-**解法**:`openstack rating module enable hashmap`,並確認:
+**原因**：本課預設啟用 noop、未啟用 hashmap，或 alt_name 沒對到有費率的服務。**修法**：先列模組，再核對 service 與 mapping：
 
 ```bash
 openstack rating module list
 ```
 
-**教訓**:跟[地雷 1](#mine-1) 合起來看更有意思——**同一個症狀(0 元)有兩個完全不同的根因**,一個在「要對誰計費」,一個在「怎麼算錢」。這正是為什麼除錯要先分層:**先確認有沒有工作進來,再確認工作做得對不對。** 順序反了會繞很久。
+不要把「沒有可計費專案」與「沒有計價規則」混為同一個問題。
 
-### 地雷 4:processor 每輪睡整整一小時 {#mine-4}
+### 改了角色，processor 尚未重新處理 {#mine-4}
 
-**症狀**:指派完 `rating` 角色,等了 20 分鐘,帳單還是 0,scope 狀態表空的。
-
-**根因**:`internal_run` 的最後一行:
+本課版本在處理迴圈末尾等待 collect period：
 
 ```python
         LOG.debug("Finished processing all storage scopes with worker ...")
@@ -414,9 +337,7 @@ openstack rating module list
         time.sleep(CONF.collect.period)
 ```
 
-**`CONF.collect.period` 是 3600**。processor 跑完一輪就睡一小時——它在 14:07 那輪看到 0 個租戶,接著睡到 15:07。**我 14:08 做的設定變更,它要一小時後才會發現。**
-
-**解法**:重啟它。
+因此設定更新後可能要等下一輪。實驗中使用重啟讓它重新讀取：
 
 ```bash
 sudo docker restart cloudkitty_processor
@@ -426,13 +347,22 @@ sudo docker restart cloudkitty_processor
 14:10:22  Number of tenants to rate : 2
 ```
 
-**教訓**:注意 `[collect] period` **同時是「計費週期」和「processor 的輪詢間隔」**——兩個完全不同的概念綁在同一個參數上。想讓它反應快就得縮短計費週期,而那會改變帳單的顆粒度。**這是設計上的疙瘩,而上游自己也知道**(那行 `FIXME` 就掛在旁邊)。
+這只證明重新選到專案，還要檢查計量 scope（本章按 `project_id` 切分的處理範圍）的進度和待結算週期。不要為了讓畫面立即出數字就隨意縮短 period，因為它也改變計價週期。
 
-**實務上**:改完任何 CloudKitty 設定,**重啟 processor**,別等。
+全新的 scope 另有補算行為，沒有時間狀態時從當月開始：
 
-### 地雷 5:`rating hashmap mapping create` 在 2025.1 直接壞掉 {#mine-5}
+```python
+# cloudkitty/utils/__init__.py
+def check_time_state(timestamp=None, period=0, wait_periods=0):
+    if not timestamp:
+        return tzutils.get_month_start()
+```
 
-**症狀**:
+因此短暫零費用也可能是尚未處理到有資料的週期。查看進度後再決定是否需要介入。
+
+### mapping create 回 Unknown attribute: name {#mine-5}
+
+以下是在 python-cloudkittyclient 6.1.0 與 CloudKitty 22.0.1 組合的失敗命令：
 
 ```bash
 openstack rating hashmap mapping create --service-id $IID --type flat 0.05
@@ -443,64 +373,27 @@ openstack rating hashmap mapping create --service-id $IID --type flat 0.05
  "debuginfo": null}  (HTTP 400)
 ```
 
-**根因**:`python-cloudkittyclient` 6.1.0 送了一個 `name` 欄位,而 CloudKitty 22.0.1(2025.1)的 API 不認得。**CLI 與 API 版本不同步。**
+**原因**：客戶端送出 API 不接受的 `name`。**修法**：用步驟 3 已驗證的 API 內容或 Horizon 建立；這是此版本組合的問題，不能推成所有 2025.1 安裝都會失敗。查結果時可用 `/v2/scope`、`/v2/dataframes`、`/v2/summary`，並依伺服器支援的 API 參數操作。
 
-**解法**:兩條路都行——繞過 CLI 直接打 API(見步驟 3),或者**乾脆用 Horizon 的 Hashmap 頁點一點**(那顆 `+ Create new Mapping` 做得到 CLI 做不到的事)。同一族的還有幾個:
+## 想一想
 
-| 指令 | 症狀 |
-|---|---|
-| `openstack rating storage dataframe get` | 這版根本沒這個指令 |
-| `GET /v1/scope/state` | 405 Method Not Allowed |
-| `GET /v1/storage/dataframes?limit=2` | `Unknown argument: "limit"` |
+- 費用是 0，但 Prometheus 有數字。你會依哪個順序查專案清單、模組、mapping 與處理進度？
+- VM 只存在十分鐘，這份 max／NUMBOOL 規則一定會按六分之一小時計算嗎？
+- instance 的 qty 是 5，volume 的 qty 是 10，能否宣稱總用量是 15？要怎樣核對才有意義？
 
-**都改用 v2**:`/v2/scope`、`/v2/dataframes`、`/v2/summary`。
+## 小結
 
-**教訓**:**CLI 壞掉不代表功能壞掉。** 這幾顆都只是客戶端跟服務端版本對不上,底下的 API 好端端的。遇到 CLI 報奇怪的參數錯誤時,**先用 curl 打一次 API 確認功能本身在不在**——這個習慣今天省了很多時間,[Day 29 地雷 5](sprint5-day29-aodh-autoscaling.md#mine-5) 也是靠它。
-
-!!! note "還有一顆:全新的 scope 從「當月 1 號」開始算"
-    ```python
-    # cloudkitty/utils/__init__.py
-    def check_time_state(timestamp=None, period=0, wait_periods=0):
-        if not timestamp:
-            return tzutils.get_month_start()
-    ```
-
-    月中安裝的話,processor 得先把當月 1 號到現在的空白週期全部補跑一遍才會走到有資料的時段。本課環境是 7/14 裝的,所以它磨了 **326 個週期 × 2 個租戶 = 652 次**——好消息是 `Worker.run()` 是個 while 迴圈,**一輪之內全部追完**,只花了 4 秒。看到帳單暫時是 0,先確認它是不是還在補跑。
-
-## 補完:雙租戶帳單 + 儲存計費
-
-寫這章的當下有兩個缺口:team-b 沒有資源(雙租戶對比退化成 `$0.25 vs $0`)、`volume_size` 規則寫了但沒磁碟可算。這兩件事的補驗只差「時間」——`period=3600` + `wait_periods=2` 意味著新用量要兩到三小時後才結算。所以在 [Day 32](sprint5-day32-full-tls.md) 開機做 TLS 時,順手替兩個租戶種下 VM 與 volume,讓計費週期在部署期間自己跑。三小時後收帳:
-
-| 租戶 | 計費項 | 用量 | 費率 | 金額 |
-|---|---|---|---|---|
-| team-a | instance | 13 台時 | $0.05 | $0.65 |
-| team-a | volume | 10 GiB 時 | $0.01 | $0.10 |
-| team-b | instance | 2 台時 | $0.05 | $0.10 |
-| team-b | volume | 6 GiB 時 | $0.01 | $0.06 |
-
-**兩個缺口一次補齊**:team-a 收 $0.75、team-b 收 $0.16——**兩個租戶都有帳單、金額各自不同**,不再是退化案例;而且 `volume` 這個計費項真的產生了費用($0.10 與 $0.06),儲存計費不再是紙上談兵。四筆金額全部逐項對得上費率(`13×0.05`、`10×0.01`、`2×0.05`、`6×0.01`)。
-
-這也讓今天的核心結論從「單租戶對得上」升級成完整的商業場景:**兩個真實租戶、兩種計費項(機器 + 儲存)、各自的帳單、金額互不汙染。** 這才是一朵雲「能當生意經營」該有的樣子。
-
-## 帶得走的東西
-
-- **當一個系統「成功地產出空結果」時,先問它認為該處理的東西有哪些**,而不是查它處理得對不對。帳單 0 元的兩個根因(沒租戶、noop 模組)都在工作清單那一層,不在計算那一層。
-- **帳單是時間的積分,不是某一刻的快照。** 對帳要逐週期比,拿總和比單期一定得出「算錯了」的錯誤結論。
-- **同一個依賴,不同專案的接合程度可以差很多。** 同一座 Prometheus:CloudKitty 的模板幫你把帳密接好,Aodh 要你自己內嵌進 host 字串。遇到整合問題,先確認這條路有沒有人真的走過。
-- **CLI 壞掉不代表功能壞掉。** 客戶端與服務端版本不同步是常態;報奇怪的參數錯誤時,先用 API 或圖形介面確認功能本身在不在。
-- **「這個選項存在」不等於「這條路是通的」。** 換後端時要問:這個後端需要的其他檔案,是誰負責產生?沒人負責的,就是你。
+費用計算先決定處理哪些專案，再決定讀取與轉換哪些用量，最後才套費率。核對時保留專案、資源、週期與項目，才能辨認零費用或數量差異。這份示範驗到機器與儲存樣本的計價結果，仍缺少資源生命週期同步、完整狀態規則與正式帳務流程；有金額並不代表已能正確向客戶收費。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[CloudKitty 官方文件](https://docs.openstack.org/cloudkitty/2025.1/)** —— collector / fetcher / rating module / storage 四個零件的完整說明。
-- **[CloudKitty 的 Prometheus collector](https://docs.openstack.org/cloudkitty/2025.1/admin/configuration/collector.html)** —— `metrics.yml` 的完整 schema,以及 `query_prefix` / `range_function` 等本章沒用到的進階選項。
-- **[hashmap 計費模組](https://docs.openstack.org/cloudkitty/2025.1/user/rating/hashmap.html)** —— 本章只用了最簡單的 `flat`;分級費率(threshold)、依 flavor 差別訂價都在這份。
-- **[Kolla-Ansible 的 CloudKitty 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/rating/cloudkitty-guide.html)** —— 本章 globals 三行設定的官方對照。
+- [CloudKitty 2025.1](https://docs.openstack.org/cloudkitty/2025.1/)：rating 與各元件的用途。
+- [Collector configuration](https://docs.openstack.org/cloudkitty/2025.1/admin/configuration/collector.html)：NUMBOOL、單位、groupby、period 與 Prometheus 查詢。
+- [Hashmap rating module](https://docs.openstack.org/cloudkitty/2025.1/user/rating/hashmap.html)：費率與 mapping。
+- [Kolla CloudKitty 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/rating/cloudkitty-guide.html)：部署設定。
 
 ## 下一步
 
-雲會自己收錢了。階段三結束——**這朵雲現在說得出誰用了多少、值多少錢**。
-
-[Day 31](sprint5-day31-masakari-ha.md) 進入階段四的第一天,也是 Sprint 5 唯一要回多機環境的一天:**Masakari 自癒**——VM 的程序死掉自動重啟,compute 整台掛掉,VM 自動搬到別台去。
+[Day 31](sprint5-day31-masakari-ha.md) 回到多節點環境，用 Masakari 測試 VM 恢復。計算用量之外，還要確認故障後能恢復哪些狀態，以及自動處理之前需要哪些隔離前提。

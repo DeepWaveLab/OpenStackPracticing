@@ -1,86 +1,45 @@
-# Day 23: 多節點部署與 HA 演練
+# Day 23：多節點 API 入口與資料庫故障演練
 
-> 三個星期以來,這門課一直有個誠實的免責聲明:「單機 lab,生產環境請多節點」。今天把這句話兌現。租四台新機器,部署 2 控制 + 2 運算的真正多節點雲——然後做一件單機永遠做不到的事:**關掉一台 controller,看 API 繼續回答**。
+控制節點需要維護，但使用者仍會送出 API 請求。多放一台 controller 是否就能維持服務？這一章分別檢查 API 流量如何改走其他節點，以及資料庫是否仍允許讀寫。讀完後，你能區分「計畫性停機的接手成功」與「能承受突然失聯」。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 1–22**:所有東西都在一台機器上——夠學會每個服務,但「高可用」只能用講的。
-    - **今天**:全新環境、四台機器。inventory 的群組、haproxy、VIP……單機時代被關掉或略過的設定,今天全部啟用,而且你會知道**為什麼它們存在**。
-    - **明天**:在這個環境上回答 Sprint 4 的核心問題——怎麼擴展。
+## 先分開入口與資料狀態
 
-## 多節點改變了什麼
+Kolla inventory 的**群組**決定服務部署在哪些主機。把 control、network 與 compute 分到不同主機後，API 與 VM 執行程序便不必共用同一台機器。**VIP** 是客戶端共用的服務位址；**HAProxy** 依後端健康狀態轉送各服務的 API 請求。
 
-單機部署時,inventory 裡所有群組都指向同一台機器。多節點的本質就是**把群組拆開**:
+下圖呈現本章獨立的多節點 lab。它沒有把 Day 1–22 的單機環境直接搬過來，也不代表已部署那裡的所有加值服務：
 
-```mermaid
-flowchart TB
-    subgraph CTRL["control + network 群組"]
-        direction LR
-        C1["oslab-ctrl1<br/>API·DB·MQ·OVN"] 
-        C2["oslab-ctrl2<br/>API·DB·MQ·OVN"]
-    end
-    subgraph COMP["compute 群組"]
-        direction LR
-        P1["oslab-comp1<br/>nova-compute"]
-        P2["oslab-comp2<br/>nova-compute"]
-    end
-    VIP["VIP 10.100.0.250<br/>(所有 API 的單一入口)"] --> CTRL
-    CTRL ---|"RabbitMQ / Geneve"| COMP
-```
+![Azure ILB 將 VIP 流量送入兩台 controller，兩台 compute 執行 VM](../assets/diagrams/os-s4d23-topology.svg)
 
-拆開之後立刻出現兩個新問題,它們就是今天的主課:
+API 入口有兩個後端，不代表資料庫可以在任何故障下繼續寫入。**Galera** 是 MariaDB 使用的同步複寫叢集；**quorum** 是決定哪些成員仍可共同服務的多數條件。稍後兩種失聯情境，會得到不同結果。
 
-1. **API 有兩份了,客戶端連哪一台?** → 答案是 VIP + haproxy(單機時 `enable_haproxy: "no"` 關掉的東西,今天復活)。
-2. **資料庫有兩份了,誰說了算?** → 答案是 Galera 同步複寫 + 多數決(quorum)——今天會親眼看到它翻臉。
+## 在 Azure 上提供 VIP
 
-## 雲上的 VIP 難題:keepalived 為什麼出局
+常見實體網路部署會讓 keepalived 透過 **VRRP** 選出持有 VIP 的節點，再用 **GARP** 宣告 IP 與網卡位置。Azure 虛擬網路的位址轉送由平台控制，不能只在 guest 裡加一個漂移 VIP，就期待平台跟著轉送。
 
-教科書的答案是 haproxy + keepalived:兩台 controller 都跑 haproxy,keepalived 用 VRRP 選出 MASTER,把 VIP 掛在它身上;MASTER 倒了,BACKUP 接手 VIP,並發 GARP 廣播告訴整個網段「這個 IP 搬家了」。
+本章使用 Azure Internal Load Balancer（ILB，內部負載平衡器）提供固定入口。下面列的是已完成的環境前提，本章未提供建立 VM、ILB、NSG、NAT Gateway 的完整指令，因此本章不是從空白 Azure 訂閱開始的建置腳本。
 
-**這套在公有雲上行不通。** Azure 的虛擬網路不是真的 L2 網段——它不轉發 GARP 與 multicast,封包要送到哪張網卡由 Azure 的網路層自己決定。keepalived 把 VIP 掛上網卡,Azure 根本不會把流量送過來。
+| 元件 | 本章設定與用途 |
+|---|---|
+| ILB | frontend `10.100.0.250`，HA ports、Floating IP，TCP 1984 健康探測 |
+| controller 後端 | 兩台都執行 HAProxy；防火牆／NSG 必須允許探測與服務流量 |
+| loopback | 兩台 controller 都把 `10.100.0.250/32` 加到 loopback，使 guest 接受目的地為 VIP 的流量 |
+| keepalived | `enable_keepalived: "no"`，入口選路交由 ILB |
+| 出站連線 | subnet 使用 NAT Gateway；內部 LB 不是套件與映像下載的出站保證 |
 
-雲上的正規解法:**讓雲的負載平衡器接手 keepalived 的工作**。
+這裡 Azure 的 Floating IP 是 LB 規則的功能，和 Neutron 配給 VM 的 Floating IP 是不同設定。VIP 的 loopback 設定需要在開機後仍存在；Kolla 設定的 `ip_nonlocal_bind` 讓 HAProxy 可以綁定非本機位址，但不能取代 Azure LB 與 guest 接收路徑的設定。
 
-```mermaid
-flowchart TB
-    subgraph BM["教科書做法(bare metal)"]
-        direction LR
-        K["keepalived<br/>VRRP 選主"] --> V1["VIP 漂移<br/>GARP 廣播"]
-    end
-    subgraph AZ["本課做法(Azure)"]
-        direction LR
-        ILB["Azure Internal LB<br/>健康探測選路"] --> V2["VIP 固定<br/>haproxy 雙活"]
-    end
-    BM -.->|"同一個問題<br/>不同的解"| AZ
-```
+## 步驟 1：準備主機與 inventory
 
-本課的組合(每個零件都有明確的職責):
+以下名稱與 IP 是 lab 範例。重做時要一致替換到 hosts、inventory、VIP 與後續查詢，並從部署機確認 SSH、sudo、主機名稱解析與各節點對外下載都正常。
 
-| 零件 | 職責 | 設定 |
+| 主機 | 管理 IP | 角色 |
 |---|---|---|
-| Azure Internal LB | 把打到 VIP 的流量送給活著的 controller | frontend = 10.100.0.250、HA ports、floating IP、TCP 1984 健康探測 |
-| haproxy(雙活) | 在每台 controller 上把 API 流量分給後端 | kolla 預設,兩台都跑 |
-| `enable_keepalived: "no"` | 雲層 LB 已接手選路,keepalived 退場 | globals.yml |
-| VIP 掛 loopback | 讓 controller 願意收下目的地是 VIP 的封包 | 兩台 ctrl:`ip addr add 10.100.0.250/32 dev lo` |
-| NIC 開 IP forwarding | 讓來源是 VIP 的回包通過 Azure 的防偽檢查 | Azure NIC 屬性 |
+| oslab-ctrl1 | 10.100.0.11 | control、network、部署機 |
+| oslab-ctrl2 | 10.100.0.12 | control、network |
+| oslab-comp1 | 10.100.0.21 | compute |
+| oslab-comp2 | 10.100.0.22 | compute |
 
-kolla 幫了一個關鍵的忙:它會在 LB 節點設 `net.ipv4.ip_nonlocal_bind=1`,haproxy 因此能綁定不屬於本機的 VIP——這正是雙活模式需要的。
-
-## 環境:四台機器與它們的網路
-
-| 主機 | 私網 IP | 角色 | 規格 |
-|---|---|---|---|
-| oslab-ctrl1 | 10.100.0.11 | control + network(兼跳板、部署機) | E8s_v5 |
-| oslab-ctrl2 | 10.100.0.12 | control + network | E8s_v5 |
-| oslab-comp1 | 10.100.0.21 | compute | E8s_v5 |
-| oslab-comp2 | 10.100.0.22 | compute | E8s_v5 |
-
-只有 ctrl1 有公網 IP(SSH 跳板);其他機器一律走私網。這個決定立刻踩出今天第一顆雷:**掛在 Standard Internal LB 後端、又沒有公網 IP 的 VM,Azure 不給預設出網路徑**——ctrl2 連 apt 都跑不動(見[地雷 1](#mine-1))。解法是替 subnet 掛一顆 NAT Gateway,順便把所有節點的出網固化。
-
-成本誠實記帳:四台 E8s_v5 約 US$2.4/小時,兩天課程(含自動關機)約 US$50。
-
-## Bootstrap:四台機器的前置作業
-
-每台機器要做三件事(全部可以從 ctrl1 用 ansible 或迴圈完成):
+以下區塊前四行是 `/etc/hosts` 的內容，不能直接貼進 shell。`dummy0` 沿用 Day 1 的外部介面準備方式；最後一行是 DNS 排錯時的調整，適用條件見[疑難排解](#mine-2)：
 
 ```bash
 # 1. /etc/hosts——kolla 要求主機名稱互相解析
@@ -89,11 +48,11 @@ kolla 幫了一個關鍵的忙:它會在 LB 節點設 `net.ipv4.ip_nonlocal_bind
 10.100.0.21 oslab-comp1
 10.100.0.22 oslab-comp2
 # 2. dummy0 網卡(Azure 單網卡的標準解,同 Day 1)
-# 3. DNS 直連上游——先修掉地雷 2,別等它爆
+# 3. 若 DNS stub 逾時，確認上游可達後再調整解析路徑
 sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 ```
 
-inventory 從官方 multinode 範本出發,只改最上面的群組段:
+以官方 multinode inventory 為底，保留其餘服務群組與 children 關係，再修改主機分配：
 
 ```ini
 [control]
@@ -117,7 +76,9 @@ oslab-ctrl1
 oslab-ctrl1
 ```
 
-globals.yml 與單機的差異只有四行:
+Glance 使用本機 file 後端，因此此例只放在 ctrl1；它也因此仍是單點。把兩台 API 都啟動，不會自動同步兩份本機映像檔。
+
+在獨立多節點部署的 `globals.yml` 設定以下差異，並確認 HAProxy 已啟用。不要沿用單機的 `enable_haproxy: "no"`：
 
 ```yaml
 kolla_internal_vip_address: "10.100.0.250"   # 單機時 = 本機 IP;現在是真 VIP
@@ -126,13 +87,11 @@ network_interface: "eth0"
 neutron_external_interface: "dummy0"
 ```
 
-然後照標準流程:`kolla-genpwd` → `bootstrap-servers`(四台裝好 docker)→ `prechecks`(四台全綠)→ `deploy`。
+部署機沿用 Day 1 的同系列 Kolla 工具與依賴，對這份 inventory 執行 `kolla-genpwd`、`bootstrap-servers`、`prechecks` 與 `deploy`。本章保留的是設定差異與演練結果；缺少的 Azure 基礎設施流程不能靠這四行 YAML 取代。
 
-## deploy 途中:親眼看到 quorum 翻臉
+## 步驟 2：理解兩節點的 quorum 限制
 
-四節點全量部署約半小時。本課環境的部署在中途炸了一次,而炸法本身就是多節點最重要的一課(完整記錄在[地雷 3](#mine-3)):
-
-部署高載時,兩台 controller 之間的 Galera 心跳抖了 3 秒。對兩節點叢集來說,「對方失聯」意味著**自己只剩 1 票、拿不到多數**——Galera 立刻把自己切到 NON-PRIMARY、拒絕所有讀寫。當時正在跑的 nova 資料庫 migration 被攔腰斬斷,留下半套 schema。
+兩台等權重 Galera 成員突然互相失聯時，任一側只有原成員的一半，不能各自繼續寫入。這是避免兩邊資料分歧的保護。本課部署期間曾出現以下紀錄：
 
 ```text
 WSREP: connection to peer … timed out, no messages seen in PT3S
@@ -140,17 +99,17 @@ WSREP: New COMPONENT: primary = no, memb_num = 1
 WSREP: Received NON-PRIMARY.
 ```
 
-**這就是「生產環境要三台 controller」的完整理由**:三台叢集抖掉一台,剩下兩台仍是多數(2/3),照常服務;兩台叢集抖掉一台,剩下的那台是少數(1/2),立刻停擺。兩節點的「HA」在腦裂面前是假的——本課用兩台是成本妥協,拿到的教訓貨真價實。
+`NON-PRIMARY` 表示目前成員不足以構成可服務的 Primary component。三個等權重成員失去一個時，剩下兩個通常仍能取得多數；這還需要剩餘節點可互通且其他服務也符合各自的可用條件。
 
-修復:砍掉半套的 nova 資料庫、重跑 deploy(冪等)。最終:
+若資料庫遷移被中斷，先查 Galera 狀態、migration 位置與資料備份。不要把刪除 Nova 資料庫當成既有雲的通用修法；重新初始化只適用於已確認可丟棄的全新部署。完成修復後的部署摘要如下：
 
 ```text
 PLAY RECAP: oslab-ctrl1 ok=354 … failed=0(其餘三台皆 failed=0)
 ```
 
-## 部署驗證:VIP 這條路真的通嗎
+## 步驟 3：從客戶端方向驗證入口
 
-驗證要從**會經過 ILB 的位置**打——compute 節點沒有把 VIP 掛在 loopback,它打 VIP 一定走 Azure ILB:
+controller 本機有 VIP 的 loopback 位址，從它查 VIP 可能直接走本機。要驗證 Azure ILB，從沒有該 loopback 位址的 compute 節點發送請求：
 
 ```bash
 # 在 comp1 上
@@ -159,7 +118,9 @@ curl -s -o /dev/null -w "keystone via VIP: HTTP %{http_code} (%{time_total}s)\n"
 # keystone via VIP: HTTP 300 (0.003805s)   ← 300 是 keystone 的版本清單,正常回應
 ```
 
-控制面的每個角色都是雙份的:
+Keystone 根路徑回 HTTP 300 是版本清單回應。這能驗證到 Keystone 的入口，但還沒有驗證 Nova、資料庫寫入或所有 API。
+
+接著用這個多節點雲的管理員 openrc，確認 Nova 服務註冊：
 
 ```bash
 openstack compute service list -f value -c Binary -c Host -c State | sort
@@ -171,7 +132,7 @@ openstack compute service list -f value -c Binary -c Host -c State | sort
 # nova-scheduler oslab-ctrl2  up
 ```
 
-四台合計 81 個容器、0 個 unhealthy。開一台 VM 指定落點,確認調度器聽話:
+`up` 是服務心跳狀態，不等於 VM 已可成功排程。建立測試 VM 前，要先在此獨立環境準備 `cirros`、`m1.tiny` 與 `day23-net`。本章未提供該網路的建立指令；可按 Day 2 的網路流程準備，不能直接假設單機的同名資源會出現在這裡。
 
 ```bash
 openstack server create ha-canary --flavor m1.tiny --image cirros \
@@ -179,9 +140,11 @@ openstack server create ha-canary --flavor m1.tiny --image cirros \
 openstack server show ha-canary -f value -c OS-EXT-SRV-ATTR:host   # oslab-comp2
 ```
 
-## HA 失效演練:關掉一台 controller
+回傳的 host 對上 comp2，才確認這次指定落點的要求已完成。
 
-演練設計:在 comp1 上每秒打一次 VIP(留下時間戳記錄),然後**整台關掉 ctrl2**(優雅關機),全程觀察。
+## 步驟 4：觀察計畫性停機
+
+在 comp1 開一個終端持續探測 VIP，另從 Azure 管理端正常停止 ctrl2。下面保留探測腳本；最後一行註解只是當時動作摘要，實際 Azure 操作仍需正確資源群組與訂閱：
 
 ```bash
 # comp1 上的秒級探測
@@ -192,7 +155,7 @@ done > /tmp/vip-probe.log
 # 然後:az vm deallocate -n oslab-ctrl2
 ```
 
-ctrl2 完全關機的狀態下,雲的三種能力逐一驗證:
+這份迴圈會一直執行，觀察完成後以 Ctrl+C 結束，保留 log。測試期間同時檢查讀寫能力；下列為本課的操作摘要，其中 `flavor create …` 省略了參數，不能直接執行：
 
 ```bash
 openstack token issue        # 通——Keystone 由 ctrl1 接手
@@ -200,71 +163,58 @@ openstack server list        # 通——ha-canary 照常 ACTIVE
 openstack flavor create …    # 通——資料庫「寫入」也正常
 ```
 
-第三項最關鍵:讀能通可能只是快取,**寫能通代表資料庫真的活著**。看 Galera 倖存者的狀態:
+`token issue`、`server list` 與建立 flavor 檢查的是不同操作，不能只以 API 根路徑有回應代替。該次 Galera 狀態節錄為：
 
 ```text
 wsrep_cluster_size    1
 wsrep_cluster_status  Primary   ← 一台也能是 Primary?
 ```
 
-跟部署中的翻臉對照,這裡藏著 Galera 最重要的區別——**優雅離場與無預警失聯是兩回事**:
+正常離場時，成員可先協調移除，倖存者因此可能以新的成員集合維持 Primary。突然斷線則沒有這個前提。下圖比較兩者：
 
-| | 優雅關機(今天的演練) | 無預警失聯(部署中的 3 秒抖動) |
-|---|---|---|
-| 離場方式 | mysqld 正常關閉,先告知叢集 | 心跳逾時,對方「消失」 |
-| 叢集視角 | 成員數 2→1,倖存者是 1/1 多數 | 成員數不變,但 1/2 拿不到多數 |
-| 結果 | 照常服務(Primary) | 停擺(NON-PRIMARY) |
+![兩節點 Galera 正常離場可調整成員集合，突然分割時單側無法取得多數](../assets/diagrams/os-s4d23-quorum.svg)
 
-而斷線期間的 API 空窗,秒級探測給出了精確數字:
+因此這次結果只能支持「該次正常關機過程能接手」，不能外推成兩節點具備完整故障容忍。原有探測摘要如下：
 
 ```text
 128 次探測,6 次失敗——07:54:45 到 07:54:50
 ```
 
-**六秒**。那是 ILB 的健康探測(5 秒間隔)把 ctrl2 踢出後端池之前,仍把部分連線送過去的窗口。之後直到 ctrl2 完全關機、再到重新開機歸隊,API 沒有再掉過一拍。ctrl2 開機後,Galera 自動重新同步:`wsrep_cluster_size` 回到 2,無人工介入。
+這是固定探測間隔與逾時設定下的觀察，不能直接換算成所有客戶端的精確中斷時間。LB 探測間隔、失敗門檻、既有連線與客戶端重試都會影響體感。重新啟動 ctrl2 後，仍要確認 Galera 成員重新同步、各服務健康，再結束維護。
 
-## 驗收 checkpoint
+## 疑難排解
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 部署 | 四台 failed=0、無 unhealthy 容器 | 81 容器全健康 |
-| VIP | 從 compute 節點經 ILB 打 API 通 | HTTP 300,3.8ms |
-| 控制面冗餘 | conductor/scheduler 每台 ctrl 各一份 | 符合 |
-| 指定落點 | VM 落在指定的 compute | oslab-comp2 |
-| HA 演練 | 單 controller 下:讀 ✓ 寫 ✓ | token/list/flavor create 全通 |
-| 空窗 | 量測 failover 中斷時間 | 6 秒 |
-| 歸隊 | Galera 自動回到 size 2 | 無人工介入 |
+### 內部 LB 後端無法下載套件或映像 {#mine-1}
 
-## 地雷記錄
+內部 LB 不會自動提供完整的出站連線方式。先確認 subnet 的 NAT Gateway 或其他明確出站設計、路由與 NSG，再查 DNS。不要用「VM 有私網 IP」推論它必定可連外。
 
-### 地雷 1:Internal LB 的後端沒有預設出網 {#mine-1}
+### 多台節點在拉取映像時出現 DNS 逾時 {#mine-2}
 
-沒有公網 IP 的 VM 一旦掛進 Standard **Internal** LB 的後端池,Azure 就不再提供預設的對外連線——ctrl2 的 apt 連 mirror 都碰不到,而且症狀是「重試 N 次後失敗」,看起來像網路抖動,實際是確定性的規則。解法:subnet 掛 NAT Gateway。教訓:**在雲上,出網是要自己準備的資源,不是理所當然的預設**。
+先查最早失敗的節點與解析結果，區分上游 DNS、網路或本機 `systemd-resolved` stub 的問題。本課案例以 `/run/systemd/resolve/resolv.conf` 取代指向 stub 的設定；只有確認該檔案存在、上游可達且符合你的 DNS／split DNS 設計時才採用。這不是所有 Ubuntu 環境都必須做的前置動作。
 
-### 地雷 2:systemd-resolved 在部署高載時餓死 {#mine-2}
+### Galera 失聯後進入 NON-PRIMARY {#mine-3}
 
-大量並行拉映像時,Ubuntu 預設的 DNS stub(127.0.0.53)會間歇性逾時,症狀偽裝成「quay.io 掛了」;更麻煩的是它引發的連鎖——一台節點拉不到映像退場後,keystone 的 fernet 安全檢查會主動停下整個部署,compute 節點再跟著全炸。看到多台全倒,先找**第一張倒下的骨牌**。根治:`ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf`,繞過 stub 直連上游 DNS。
+兩節點等權重配置突然失去一側，倖存者無法取得多數。先恢復通訊並依資料庫恢復程序處理；正式架構應規劃足夠投票成員與故障域，不能用計畫性關機成功證明突然故障也可服務。步驟 2 已說明 migration 中斷時不能直接刪除既有資料庫。
 
-### 地雷 3:兩節點叢集的多數決陷阱 {#mine-3}
+## 想一想
 
-兩節點 Galera 在任何一方**無預警失聯**時(哪怕 3 秒),倖存者因為拿不到多數(1/2)會立刻自我停擺——這是防腦裂的正確行為,但代價是「兩台的 HA」只對優雅關機成立。生產環境的答案永遠是**奇數台、至少三台**。若部署途中因此炸掉 migration,留下的半套 schema 要先 `DROP DATABASE` 再重跑 deploy,否則 alembic 會卡在「表已存在」。
+1. 從 controller 本機打 VIP 成功，為什麼仍不能證明 Azure ILB 能轉送流量？
+2. 正常停止 ctrl2 後可以建立 flavor，為什麼兩節點配置仍可能在網路分割時停下？
+3. Glance 只在 ctrl1 使用 file 後端，若 ctrl1 故障，兩份 Nova API 能補上這個缺口嗎？
 
-## 帶得走的東西
+## 小結
 
-- `enable_haproxy`、VIP、inventory 群組這些單機時代關掉或略過的設定,現在你知道它們為什麼存在。
-- **公有雲上 VIP 的正規解是雲層 LB**,keepalived 屬於 bare metal;識別「這個工具假設了什麼網路能力」是跨環境部署的核心功。
-- **quorum 是數學不是玄學**:2 台叢集掉 1 台 = 少數 = 停擺;3 台掉 1 台 = 多數 = 照常。
-- **failover 有數字**:這個環境是 6 秒——由 ILB 探測間隔決定,可以調,但先量出來。
+多節點要分別檢查服務入口、後端健康、資料庫 quorum 與各服務的儲存狀態。這份 lab 展示了正常離場的接手，也保留了兩節點突然失聯的限制。HA 結論必須跟著故障方式與測試範圍，不能只由 controller 數量推定。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Kolla-Ansible 多節點部署指南](https://docs.openstack.org/kolla-ansible/2025.1/user/multinode.html)** —— inventory 群組設計與部署流程的官方版本;本章 inventory 的出發點。
-- **[Kolla-Ansible 的 HAProxy 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/high-availability/haproxy-guide.html)** —— haproxy 與 keepalived 的官方定位,以及 `enable_keepalived: "no"` 這個開關的出處。
-- **[Azure Load Balancer 的 floating IP](https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-floating-ip)** —— 本章 ILB 架構的關鍵功能:為什麼後端要把 VIP 掛在 loopback、封包怎麼送達。
-- **[Galera 的加權 quorum 機制](https://galeracluster.com/library/documentation/weighted-quorum.html)** —— 地雷 3 的理論全貌:多數怎麼算、為什麼偶數節點是反模式。
+- [Kolla-Ansible 2025.1 多節點部署](https://docs.openstack.org/kolla-ansible/2025.1/user/multinode.html)：確認 inventory 與角色配置。
+- [Kolla-Ansible HAProxy 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/high-availability/haproxy-guide.html)：查看 HAProxy 與 keepalived 設定。
+- [Azure Load Balancer Floating IP](https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-floating-ip)：對照 guest loopback 與平台轉送需求。
+- [Galera quorum 與加權投票](https://mariadb.com/docs/galera-cluster/galera-architecture/quorum-control-with-weighted-votes/)：理解 Primary component 的多數判斷。
 
 ## 下一步
 
-雲已經是複數台了,但還有最後一個問題沒回答——也是 Sprint 4 從第一天就掛著的問題:**容量不夠時怎麼擴展?**[Day 24](sprint4-day24-scale-out.md) 租第五台機器實地演練:加節點、熱遷移、清空一台機器,全程使用者無感。
+[Day 24](sprint4-day24-scale-out.md) 沿用這份多節點環境，加入 compute，並把 VM 遷移到有足夠容量的主機。

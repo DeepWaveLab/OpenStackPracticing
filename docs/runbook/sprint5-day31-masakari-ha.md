@@ -1,69 +1,47 @@
-# Day 31: SLA 與自癒——讓雲自己救自己
+# Day 31：用 Masakari 恢復失敗的 VM
 
-> 到目前為止,VM 掛了要靠人去重開,一台 compute 主機死了上面的機器就跟著陪葬。今天讓雲自己處理這兩件事:**Masakari** 盯著每台 VM 與每台主機,程序死掉自動重啟、主機失效自動把 VM 搬到別台去。這是 Sprint 5 唯一回多機環境的一天,也是唯一一次你會**親手把一台主機弄死**,再看雲自己把它上面的機器救回來。
+一台 compute 主機無法連線，上面的 VM 也失去回應。把 VM 在別台主機重新啟動之前，先要回答兩件事：來源主機真的停止執行了嗎？原本的磁碟資料還能從哪裡取得？本章回到多節點實驗環境，用 Masakari 觀察行程重啟與主機故障後疏散；讀完能判斷恢復流程的前提，以及 ACTIVE 狀態還沒有證明的事。
 
-![Masakari 官方吉祥物](../assets/mascots/masakari.png){ align=right width="100" }
+## 行程失敗與主機失敗，恢復方式不同
 
-!!! abstract "你在課程的哪裡"
-    - **Day 23**:多節點環境建好,關掉一台 controller 只停 6 秒。
-    - **今天**:回多機環境。先做重啟健檢,補上 evacuate 缺的 Cinder,部署 Masakari,驗證兩層自癒。
-    - **今天之後**:多機環境用完即關;[Day 32](sprint5-day32-full-tls.md) 回單機,把所有 API 換上 https。
+**Masakari** 接收故障通知，再呼叫 Nova 執行恢復。它的 API 收通知，engine 編排後續工作；負責觀察故障的 monitor 則是另一個元件。
 
-## 自癒有兩層,別搞混
+**Instancemonitor** 觀察 compute 上的 libvirt 事件。本章第一個實驗是某台 VM 的 qemu 行程異常結束，但主機仍可用；通知送達後，Masakari 在原主機上安排 stop／start。
 
-「VM 掛了自動復原」聽起來是一件事,其實是兩件,而且復原的手段完全不同:
+**Hostmonitor** 用來偵測主機故障，本課沒有部署它，也沒有整合其 Pacemaker／Corosync 前提。第二個實驗在確認主機停止後，由操作者人工送通知，才讓 Masakari 呼叫 Nova **evacuate**：在其他主機重建實例。這不是 Day 24 在正常運作中搬移 VM 的 live migration。
 
-```mermaid
-flowchart TB
-    subgraph L1["程序級:VM 死了,主機還活著"]
-        direction LR
-        A1["qemu 程序崩潰"] --> A2["原地 stop + start"]
-    end
-    subgraph L2["主機級:整台 compute 失聯"]
-        direction LR
-        B1["主機斷電/失聯"] --> B2["evacuate 搬到別台"]
-    end
-    L1 ~~~ L2
-```
+![上排由 instancemonitor 通知 VM 行程失敗，原機重啟；下排先隔離故障主機，再人工通知，於其他主機疏散重建](../assets/diagrams/os-s5d31-recovery.svg)
 
-**程序級**:主機還在,只是上面某台 VM 的 qemu 崩了——原地重啟就好,不用搬家。負責的是 **instancemonitor**(住在每台 compute 上)。
+所以本章驗到行程事件的自動通知，以及人工主機通知之後的恢復處理，沒有驗證完整的自動主機故障偵測。
 
-**主機級**:整台 compute 斷電或失聯,上面所有 VM 跟著消失——得把它們**搬到活著的主機重建**(evacuate)。負責的是 **hostmonitor**,而它需要 pacemaker 叢集當偵測底層。
+## 疏散之前，要先排除兩台同時執行
 
-兩層對應 Masakari 的三個角色:
+**Fencing** 是確認或強制隔離來源主機，使它不能繼續執行或存取共享資料。Nova 顯示主機 `down` 只代表心跳條件不成立，不能證明來源 qemu 已停止；網路中斷時，VM 可能仍在原機執行。
 
-| 角色 | 住哪 | 做什麼 |
-|---|---|---|
-| **masakari-api / engine** | controller | 收通知、編排復原流程 |
-| **instancemonitor** | 每台 compute | 盯 libvirt 事件,VM 程序死了通報 |
-| **hostmonitor** | controller | 盯主機存活(靠 pacemaker) |
+如果這時在別台重新啟動同一份 VM，可能造成雙重執行與共享磁碟同時寫入。本課用 Azure 的 deallocate 停止實驗 compute，並在確認解除配置完成後才送通知。真正改成自動偵測時，仍要設計與驗證 fencing，不能只把「監控報失聯」直接接到 evacuate。
 
-!!! note "今天不部署 hostmonitor"
-    hostmonitor 需要 pacemaker/corosync 叢集,那是另一套 HA 中介軟體的完整安裝。本課的 lab 規模不值得為了偵測主機存活而養一整套 pacemaker——所以今天**主機級的偵測改用手動送通知**代替(見[步驟 5](#step-5))。這不是偷懶,是**把 evacuate 這個真正的動作和「怎麼偵測到主機死了」這個獨立問題拆開**:偵測方式可以換(pacemaker、外部監控、手動),但收到通知之後的搬家流程是同一套。
+磁碟也影響能保留什麼。沒有共享儲存的本地根碟，可以由原始 image 重建實例，但原機上後來寫入的資料不會因此搬過去。共享根碟或 **boot-from-volume** 的實例則能使用原有儲存，前提是目的主機仍能存取它。
 
-!!! danger "偵測可以換,但『圍籬』(fencing)不能省"
-    上面說「偵測方式可以換」是對的,但漏了半句話:**pacemaker 的另一半職責是先圍籬(fencing / STONITH)再搬家**。本章 demo 之所以安全,是因為[步驟 5](#step-5) 那道 gate 用的 `az vm deallocate` **本身就是圍籬**——它保證主機真的斷電,不可能一邊被 evacuate、一邊自己還在寫硬碟。
+![本地根碟在來源主機失效後以原始 image 重建，新增資料不會自動保留；Cinder 根碟由目的主機重新掛載同一 volume](../assets/diagrams/os-s5d31-storage.svg)
 
-    真實世界最危險的情境是主機「看起來死了」其實還活著(網路分區:nova 連不到它,但它的 qemu 還在跑)。此時若只靠「偵測到就送通知」自動觸發 evacuate,而**沒有先強制斷電/斷存取**,同一顆 boot-from-volume 的 volume 會被兩台活著的 VM 同時掛寫——資料直接毀損,而且每個健康檢查都是綠的([「錯了不會叫」](../runbook/sprint5-day27-multi-tenant-governance.md)的又一個實例)。所以把手動通知換成自動偵測前,**圍籬是必補的前提,不是選配**。
+因此 Cinder 不是所有 evacuate 的必要條件；本章加它，是為了觀察同一顆 volume 跨 compute 重新掛載。這個 LVM 後端放在 controller，仍是單點，沒有因為 compute 能疏散就成為高可用儲存。
 
-## 一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
+## 開始之前
 
-主機級復原要「把 VM 搬到別台重建」,但如果 VM 的系統碟是主機本地磁碟,**主機死了硬碟也跟著死**——搬過去也沒東西可開。所以 evacuate 真正能救的是 **boot-from-volume** 的 VM:系統碟是一顆 Cinder volume,獨立於任何 compute 存在,主機死了 volume 還在,換台機器重新掛上就能開。
+需要 Day 23–24 的兩台 controller、三台 compute，以及可用的網路、image、flavor 和目的主機容量。以下 `oslab-ctrl1`、`oslab-comp1` 等是 inventory 名稱，應對應自己的環境；這套多節點環境與 Day 27–30 的單機環境分開。
 
-而 [Day 23](sprint4-day23-multinode-ha.md) 建的多機環境**沒有 Cinder**——所以今天在動 Masakari 之前,得先把 Cinder 補上。這是今天的隱藏前置。
+本課未附完整 loop device 開機掛載 unit、canary VM 建立指令與人工主機通知 payload，以下包含操作與結果摘要。重做前必須補齊這些素材，不能把含省略號的片段當成完整命令，也不能在未確認來源主機隔離時送出恢復通知。
 
-## 步驟
+## 步驟 1：先確認控制面可用
 
-### 步驟 1:重啟健檢——多機環境開機不會自己好
-
-多機環境上次 [Day 24](sprint4-day24-scale-out.md) 之後就關機了。全部開機後,第一件事不是部署,是**確認它真的活過來了**。而它不會自己活過來——兩個地方要救。
-
-先救 Galera。兩台 controller 同時關機再開,Galera 不知道誰的資料最新,不敢自己選主,整個叢集停在等待:
+先檢查 Galera 與各節點服務。若叢集已是 Primary 且成員正常，不需每次開機都執行資料庫恢復。本課曾在整組關機後無法形成正常叢集，依 Kolla 的資料庫恢復程序執行：
 
 ```bash
 source ~/kolla-venv/bin/activate
 kolla-ansible mariadb-recovery -i ~/multinode
 ```
+
+以下為當時的 Ansible 摘要及後續 Galera 查詢節錄：
 
 ```text
 PLAY RECAP:
@@ -76,34 +54,29 @@ wsrep_cluster_size    2
 wsrep_cluster_status  Primary
 ```
 
-`Primary` + `size 2` = 叢集回來了。注意指令叫 `mariadb-recovery`(連字號)——舊版是底線,2025.1 改名了([地雷 1](#mine-1))。
+`Primary` 與預期的兩個成員表示這次叢集形成成功。若仍有不同步或分割情況，要先處理資料庫，不要繼續故障演練。
 
-接著會撞到今天第一顆真正的雷:ctrl1 的一票服務 unhealthy 且**不自己好**:
+本課曾出現只有 ctrl1 的多個服務不健康、ctrl2 正常的情況：
 
 ```text
 ctrl1: neutron_server nova_conductor nova_api nova_scheduler placement_api keystone
 ctrl2: (全健康)
 ```
 
-nova-api 的 log 只是不斷重試連資料庫:
+相關 API log 都出現資料庫連線失敗：
 
 ```text
 WARNING oslo_db.sqlalchemy.engines SQL connection failed.
 ```
 
-根因不在這些服務,在它們共用的資料庫入口——**ctrl1 的 ProxySQL 崩了**,而症狀偽裝成「一堆服務連不上資料庫」。完整判讀見[地雷 2](#mine-2),解法是移走它損壞的統計資料庫再重啟:
-
-```bash
-sudo mv /var/lib/docker/volumes/proxysql/_data/proxysql_stats.db{,.corrupt}
-sudo docker restart proxysql
-```
+多個服務共用的資料庫入口是 ProxySQL，所以接著檢查 ctrl1 的代理。本課定位到統計資料庫檔案問題後，移走該檔並重啟，結果如下；只有符合[疑難排解：單一 controller 的多個服務連不上資料庫](#mine-2)時才採用該修法：
 
 ```text
 proxysql: Up 30 seconds (healthy)
 ctrl1 → VIP:3306 ✅ 通了
 ```
 
-資料庫入口一通,那票服務重啟一次就全部回歸:
+受影響服務重新連線或重啟後，Nova 服務摘要恢復正常：
 
 ```text
 nova-scheduler oslab-ctrl1 up
@@ -111,9 +84,13 @@ nova-conductor oslab-ctrl1 up
 nova-compute    oslab-comp1 up / comp2 up / comp3 up
 ```
 
-### 步驟 2:補上 Cinder(evacuate 的前提)
+這些是開始演練的基本條件，不是應用正常的完整證明。
 
-多機環境沒有 Cinder,先給它一個 LVM 後端。用 loopback 檔當 volume group(lab 沒有多的實體磁碟),並且**用 systemd 讓它開機自動掛回**——否則下次重啟 VG 就消失:
+## 步驟 2：準備獨立於 compute 的 Cinder 根碟
+
+Day 23 的多節點環境沒有 Cinder。本課在 ctrl1 用檔案加 loop device 建立 LVM VG，作為實驗儲存。這是把檔案當區塊裝置的做法，不適合作為正式高可用儲存設計。
+
+下面摘要省略了目錄建立、loop device 掛載及 systemd unit；`/dev/loop7` 是當時已確認的裝置，自己的環境不能直接照抄。必須先確認 loop device 對應到指定檔案且沒有其他資料，再執行會初始化裝置的 PV／VG 指令：
 
 ```bash
 sudo truncate -s 60G /var/lib/cinder-lvm/cinder-volumes.img
@@ -122,12 +99,14 @@ sudo pvcreate /dev/loop7
 sudo vgcreate cinder-volumes /dev/loop7
 ```
 
+本課建立結果如下：
+
 ```text
 Physical volume "/dev/loop7" successfully created.
 Volume group "cinder-volumes" successfully created
 ```
 
-`inventory` 的 `[storage]` 群組加入 ctrl1,globals 開 Cinder 與 Masakari:
+把 ctrl1 加入 inventory 的 `[storage]`，在 globals 開啟 Cinder 與 Masakari，並明確關閉尚未整合的 hostmonitor：
 
 ```yaml
 enable_cinder: "yes"
@@ -137,42 +116,48 @@ enable_masakari_instancemonitor: "yes"
 enable_masakari_hostmonitor: "no"
 ```
 
-### 步驟 3:部署,然後補上被漏掉的負載平衡器
+## 步驟 3：部署服務，也部署 VIP 前端
+
+使用多節點 inventory，先部署服務角色：
 
 ```bash
 kolla-ansible deploy -i ~/multinode --tags common,cinder,iscsi,masakari
 ```
 
-部署成功,masakari 三個容器也各就各位:
+以下是部分容器分布摘要；實際受保護的每台 compute 都要確認 instancemonitor 是否可用，不能只確認 comp1：
 
 ```text
 ctrl1: masakari_engine, masakari_api
 comp1: masakari_instancemonitor
 ```
 
-但打 Cinder API 會撞牆:
+接著部署 loadbalancer，讓 VIP 有新服務入口：
+
+```bash
+kolla-ansible deploy -i ~/multinode --tags loadbalancer
+```
+
+這個步驟不能因 Cinder 容器已經啟動就省略。本課在尚未補前端時曾看到：
 
 ```text
 Failed to establish a new connection: [Errno 111] Connection refused
 (host='10.100.0.250', port=8776)
 ```
 
-**服務起來了,VIP 上卻沒有它的入口**——`--tags cinder` 不會回頭配 haproxy 的前端([地雷 4](#mine-4))。補一次:
-
-```bash
-kolla-ansible deploy -i ~/multinode --tags loadbalancer
-```
-
-之後 VIP 上就有新前端了(`8776` cinder、`15868` masakari),測一顆 volume:
+前端配置完成後，Cinder 服務與測試 volume 的結果如下：
 
 ```text
 cinder-volume oslab-ctrl1@lvm-1 up
 volume 狀態: available
 ```
 
-### 步驟 4:建立 Masakari 的 failover segment
+`available` 只代表該 volume 建立完成；還要以 boot-from-volume 的測試實例確認 compute 能存取儲存。若新服務的 db sync 被拒，再查 ProxySQL 是否載入新帳號，不要把所有資料庫拒絕都視為密碼錯誤。
 
-Masakari 用 **segment** 把「互相支援的一組 compute」圈起來——某台死了,VM 搬到同 segment 的其他台:
+## 步驟 4：登記恢復群組與測試 VM
+
+Masakari 的 **failover segment** 管理一組主機及其恢復策略。本章選 `auto`；實際目的主機還由 Nova 排程與資源、儲存、網路條件決定，不能只靠 segment 名單就假設容量或相容性足夠。
+
+以下是本課登記三台 compute 的命令；執行環境需已有提供 `openstack segment` 的 Masakari CLI 外掛，本課未留存安裝步驟：
 
 ```bash
 openstack segment create day31-seg auto COMPUTE
@@ -182,22 +167,32 @@ done
 openstack segment host list day31-seg
 ```
 
+主機清單中的 **`on_maintenance`** 表示 Masakari 的維護狀態，這時是 False：
+
 ```text
 oslab-comp1  False      ← on_maintenance,False = 正常待命
 oslab-comp2  False
 oslab-comp3  False
 ```
 
-### 步驟 5:兩道 gate——親手弄死,看它自己救回來 {#step-5}
+它不是電源隔離證明，也不能單獨代表 Nova 一定會接受新排程。
 
-**Gate 1(程序級)**:開一台掛 `HA_Enabled` 標記的 VM,直接 `kill -9` 它的 qemu 程序:
+本課另準備了可破壞的 `ha-canary` 與 `bfv-canary`，後者從 Cinder volume 開機。建立過程未完整收錄；測試前應先確認所在 compute、磁碟來源與可用容量，並寫入自己能辨認的測試資料，供恢復後比對。以下是替行程實驗的 VM 加 metadata：
 
 ```bash
 openstack server set --property HA_Enabled=True ha-canary
 # 在 comp1 上:sudo kill -9 <qemu-pid>
 ```
 
-什麼都不用做,盯著看:
+**`HA_Enabled=True`** 是本課恢復策略使用的實例標記。Masakari engine 的 `[instance_failure] process_all_instances` 預設 False，因此只恢復有對應標記的實例；主機故障的範圍由另外的 `[host_failure] evacuate_all_instances` 控制。不要把兩種事件的設定當成同一個開關。
+
+## 步驟 5：分開讀兩次恢復結果 {#step-5}
+
+### VM 行程失敗，原主機仍在
+
+本課終止測試 VM 的 qemu 行程，instancemonitor 收到 libvirt 的異常停止事件後通知 Masakari。破壞性操作只應針對已用 VM UUID 核對的測試行程；不能猜 PID，也不能終止其他租戶的 VM。
+
+以下保留當時的事件順序：
 
 ```text
 06:50:11  kill qemu PID 20730
@@ -207,15 +202,17 @@ openstack server set --property HA_Enabled=True ha-canary
 06:50:30  vm=ACTIVE(下一次輪詢確認)
 ```
 
-**從程序被殺到 Masakari 送出重啟指令,只花 7 秒**(`06:50:11` → `06:50:18`),VM 在下一次輪詢就回到 ACTIVE。那個 `STOPPED_FAILED` 是關鍵——它是 libvirt 分辨「正常關機」和「異常死亡」的依據,Masakari 只對後者出手。
+重點是 `STOPPED_FAILED` 之後出現 stop／start，最後查到 ACTIVE。這不是正常關機的測試，也不能從這一次時間戳推導恢復時間保證；ACTIVE 仍需搭配連線、檔案與應用檢查。
 
-**Gate 2(主機級)**:這裡有個必須先跨過的坎——**你沒辦法用軟手段殺死一台主機**([地雷 5](#mine-5))。`docker stop nova_compute` 會被 systemd 拉回、`systemctl stop docker` 因為 live-restore 容器照跑,兩種「假死」nova 都判定主機還 `up`。只有真斷電才算數:
+### compute 停止後，人工通知再疏散
+
+這次要測整台 compute 無法執行 VM，而不是只停一個容器。在自己的可破壞實驗環境，以下為本課對來源 compute 執行的動作；resource group 與 VM 名稱都要先確認：
 
 ```bash
-az vm deallocate -g <多機RG> -n oslab-comp1     # 真的拔電源
+az vm deallocate -g <多機RG> -n oslab-comp1     # 停止並解除配置實驗 compute
 ```
 
-comp1 上有兩台掛了 `HA_Enabled` 的 VM:一台 boot-from-volume(`bfv-canary`)、一台本地碟。等 nova 判定主機 down,送一個主機失效通知,然後盯著 evacuate:
+**先確認 Azure 已完成 deallocate，再確認 Nova 對來源主機的狀態。** 本課之後人工送主機失效通知，未提供完整通知命令與 payload，所以不能宣稱照目前片段就完成自動偵測與復原。收到通知後留下的流程摘要如下：
 
 ```text
 07:09:28  comp1: down                    ← nova 終於判定失聯
@@ -224,136 +221,85 @@ comp1 上有兩台掛了 `HA_Enabled` 的 VM:一台 boot-from-volume(`bfv-canary
 07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE   ← 在 comp2 復活
 ```
 
-**兩台 VM 都在 comp2 復活了。** 而 boot-from-volume 那台,系統碟是**同一顆 volume** 重新掛上(`volume_id` 沒變,只有 `attachment_id` 換新)——資料原封不動。這就是為什麼 evacuate 前非補 Cinder 不可:本地碟的 VM 只能 rebuild(空白重建),boot-from-volume 的才能真的**帶著資料搬家**。
+兩台實例最後都在 comp2 顯示 ACTIVE。Boot-from-volume 的 `volume_id` 保持相同、attachment 改變，表示目的主機重新掛上同一顆 volume；這不等於驗證所有資料原封不動，也沒有證明應用沒有中斷。本地根碟的實例由 image 重建，原機上的新增資料不會隨這個動作恢復。
 
-## 驗收 checkpoint
+後續應比較事前寫入的測試資料、檢查應用啟動與實際連線，並確認來源主機重新加入時不會重複啟動舊實例。本課沒有留下完整資料比對與主機重新加入的驗證結果，不能把演練直接視為正式復原程序。
 
-逐項驗證,**全部符合判準才算完成今天**:
+## 疑難排解
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 重啟健檢 | Galera `Primary`、全容器健康 | recovery 後 size=2 Primary;proxysql 修復後全綠 |
-| Cinder | volume 建立成功 | `available` |
-| Masakari 部署 | api/engine + instancemonitor 就位 | 符合 |
-| segment | 三台 compute 掛入,`on_maintenance=False` | 符合 |
-| **Gate 1 程序級** | kill qemu → VM 自動回 ACTIVE | STOPPED_FAILED → stop+start,**7 秒送出重啟** |
-| **Gate 2 主機級** | 主機斷電 → VM 在別台復活 | lock/evacuate → 兩台在 comp2 ACTIVE |
-| BFV 資料保留 | 系統碟同一顆 volume 重新掛上 | `volume_id` 不變,`attachment_id` 更新 |
+### mariadb_recovery 不是有效子命令 {#mine-1}
 
-## 地雷記錄
+本課 Kolla 2025.1 使用 `mariadb-recovery`，拼字帶連字號。依目前版本的 help 與官方文件操作；不要只因服務不健康就直接執行 recovery。
 
-### 地雷 1:`mariadb_recovery` 在 2025.1 改名了 {#mine-1}
+### 單一 controller 的多個服務連不上資料庫 {#mine-2}
 
-**症狀**:`kolla-ansible mariadb_recovery` 回「is not a kolla-ansible command」,還附上一句「Did you mean `mariadb-recovery`?」。
-
-**根因**:2025.1 把子指令的底線統一改成連字號。
-
-**教訓**:小事,但它提醒一件大事——**維運指令的名字會隨版本漂移**。把 runbook 裡的指令當「這個版本當下驗證過」的快照,升版後要重驗,不要背。
-
-### 地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障 {#mine-2}
-
-**症狀**:重啟後 ctrl1 上七、八個服務全 unhealthy,log 全是 `SQL connection failed`。看起來像「資料庫掛了」,但 Galera 明明 `Primary`、ctrl2 的服務全好。
-
-**判讀關鍵**:**ctrl2 好、ctrl1 壞,而兩台連的是同一個 Galera** ——那問題就不在資料庫本身,在 ctrl1 到資料庫的**那一段路**。那段路是 ProxySQL(本課的資料庫入口 proxy):
+若 Galera 狀態正常、另一台 controller 也可使用，先查失敗節點的 ProxySQL。這些觀察縮小檢查範圍，仍不足以排除所有資料庫問題。本課的代理狀態是：
 
 ```text
 proxysql: Exited (134)          ← 134 = SIGABRT,程式自己爆的
 policy=no                        ← restart policy 是 no,崩了不會被拉起來
 ```
 
-crash log 指向 `SQLite3DB::check_table_structure`,而它讀的是 `proxysql_stats.db`——**統計資料庫在斷電時寫到一半,檔案損壞**,ProxySQL 一啟動讀到它就 SIGABRT。
-
-**解法**:統計資料庫是可拋棄的(它只存效能統計,不是設定),移走讓它重建:
+當時 crash log 指向讀取 `proxysql_stats.db` 的錯誤，因而採用移走統計檔的處理。這不是通用 SQL 連線修法；先確認該實例已停止、檔案確為統計資料且路徑正確，再保留原檔並重啟：
 
 ```bash
 sudo mv /var/lib/docker/volumes/proxysql/_data/proxysql_stats.db{,.corrupt}
 sudo docker restart proxysql
 ```
 
-**教訓**:兩顆嵌套的教訓。其一:**「一整排服務故障」往往有單一根因**,不要逐個去救那些服務,去找它們的共同依賴。其二:crash stack 會誠實指向壞掉的檔(`stats.db`),但直覺會先去怪那個 0 byte 的 `proxysql.db`——那個 0 byte 是**啟動時 rename 的產物,是果不是因**。看崩潰堆疊,不要看檔案大小。
+不要移走包含實際設定的資料庫；若沒有同樣的 crash 證據，先查網路、使用者設定與代理 log。
 
-### 地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫 {#mine-3}
+### 新服務 db sync 被 ProxySQL 拒絕 {#mine-3}
 
-**症狀**:手動修好 ProxySQL 之後,部署 Cinder,結果 Cinder 的 `db sync` 連資料庫被拒。
+本課手動修復代理後，曾出現檔案已更新、執行中的 ProxySQL 卻尚未接受新服務帳號的情況。先比對設定與執行狀態，再依部署方式載入或重啟代理；不能推論 Kolla 每次部署新服務都必然漏掉重啟。處理後重新驗證資料庫連線與服務同步。
 
-**根因**:kolla 部署新服務時會把該服務的資料庫帳號寫進 ProxySQL 的 users 設定,**但不會重啟 ProxySQL 讓它重讀**。所以新帳號躺在設定檔裡,執行中的 ProxySQL 不認得。
+### Cinder 已啟動，VIP 的 8776 埠仍拒絕連線 {#mine-4}
 
-**解法**:部署後手動重啟兩台的 ProxySQL。
+檢查 HAProxy 是否已有 Cinder 前端。本課使用服務 tags 後還需套用步驟 3 的 loadbalancer 設定；同類問題也可能發生在有 HAProxy 的單機環境，不是多節點專屬。
 
-**教訓**:這是 [Day 28 地雷 3](sprint5-day28-ceilometer-metering.md#mine-3) 的近親——**一個元件的設定改了,依賴它的元件不會自動知道**。在多機這種「服務入口與服務本體分離」的架構裡,改完設定要問一句:**誰需要被重讀?**
+### 停 Docker 後，Nova 仍顯示主機 up {#mine-5}
 
-### 地雷 4:多機 `--tags cinder` 不會配負載平衡器前端 {#mine-4}
+本課曾因 systemd 重啟 `nova_compute`，或 Docker live-restore 讓容器繼續執行，而無法用停止管理元件模擬主機故障。應確認測試真正停掉的是哪一層，不代表軟體永遠不能停止主機。
 
-**症狀**:Cinder 服務全 `up`,但打 VIP 的 8776 埠 `Connection refused`。
-
-**根因**:多機環境的 API 入口是 haproxy 的 VIP。`--tags cinder` 只部署 Cinder 服務本身,**不會回頭在 haproxy 上開一個 8776 的前端**——所以服務在聽,但 VIP 上沒有門。
-
-**解法**:補一次 `--tags loadbalancer`。
-
-**教訓**:又一顆 `--tags` 盲區([Day 22](sprint4-day22-upgrade-backup.md#mine-1) 開始的家族),但這顆是**多機專屬**的變種:單機沒有 haproxy 前端這回事,多機才有「服務起來了,但入口沒開」的斷層。加服務到多機環境,記得問:**它的 VIP 前端誰來配?**
-
-### 地雷 5:你沒辦法用軟手段殺死一台主機 {#mine-5}
-
-**症狀**:想模擬「一台 compute 死掉」,試了兩種軟手段,nova 都不認為主機死了:
-
-- `docker stop nova_compute` → systemd 的 unit 立刻把容器拉回來,heartbeat 沒斷。
-- `systemctl stop docker` → docker 的 **live-restore** 讓容器在 daemon 停止後照跑,heartbeat 還是沒斷。
-
-nova 一路顯示 comp1 `up`,evacuate 根本不會觸發。
-
-**根因**:這些手段都只是「停掉管理層」,而**回報存活的那個程序還在跑**。要讓 nova 判定主機死亡,得讓那個程序真的消失。
-
-**解法**:真斷電。
+以下是當時 deallocate 的縮寫；省略號不是合法參數，請以步驟 5 的完整參數形式核對自己的資源：
 
 ```bash
 az vm deallocate ... oslab-comp1
 ```
 
-之後 nova 才判定 `down`(還花了幾分鐘——heartbeat 逾時有寬限)。
+### 重送主機通知回 already under maintenance {#mine-6}
 
-**教訓**:這顆的價值超出 OpenStack——**測試「東西壞掉」時,要壞在對的層級**。你想測的是「主機沒了」,就得真的讓主機沒了;停個容器、停個 daemon,測到的是別的東西。故障演練最常見的失敗,是**演了一個比你以為的更輕的故障**,然後誤以為系統扛住了。
-
-### 地雷 6:evacuate 失敗會留下 `on_maintenance`,擋掉重試 {#mine-6}
-
-**症狀**:第一次送主機失效通知失敗後,重送同一個通知被回 `409 ... the host is already under maintenance`。
-
-**根因**:Masakari 一收到主機失效通知,就先把該主機標成 `on_maintenance=True`(隔離,不再往它排程)。如果復原流程失敗,這個標記**不會自動清除**——於是主機卡在維護狀態,重送通知被當成「這台已經在維護了」而拒收。
-
-**解法**:重試前先手動清標記:
+恢復流程失敗後可能留下 `on_maintenance=True`，再次送通知因而被拒。先查原通知、工作狀態、來源主機隔離及目的實例是否已建立，排除仍在執行或重複恢復，再決定是否清除標記重試。本課使用過：
 
 ```bash
 openstack segment host update day31-seg oslab-comp1 --on_maintenance False
 ```
 
-清完再送,workflow 就跑起來了(`lock → evacuate → unlock`)。
+這只改 Masakari 的維護狀態，不會完成 fencing，也不應當成強迫任何失敗流程繼續的方法。
 
-**教訓**:**自動化流程失敗後,常留下半途的狀態擋住重試**。設計或操作故障復原時,「失敗後怎麼回到可重試的乾淨狀態」和「成功路徑」一樣重要——而很多工具的成功路徑很漂亮,失敗清理卻要你自己來。
+### VM 異常停止後沒有執行恢復 {#mine-7}
 
-### 地雷 7:Masakari 預設只救有標記的 VM {#mine-7}
+先查 libvirt 事件、monitor 是否送出通知，再看 Masakari 的實例恢復設定與 metadata。預設 `process_all_instances=False` 時，缺少 `HA_Enabled=True` 會排除該實例；限制來自恢復策略，不是看到 monitor 容器就代表所有 VM 都會重啟。
 
-**症狀**:沒有 `HA_Enabled` metadata 的 VM,程序死了 Masakari 不理它。
+## 想一想
 
-**根因**:instancemonitor 預設只對帶 `HA_Enabled=True` 的實例出手(`process_all_instances` 預設關閉)。
+- Nova 顯示來源主機 down，但來源 VM 可能仍能存取共享儲存。這時能立即 evacuate 嗎？還缺哪個前提？
+- 本地根碟與 boot-from-volume 的 VM 都回 ACTIVE，為什麼兩者保留的資料可能不同？同一個 volume ID 又能證明到哪裡？
+- 行程故障自動重啟成功，能不能推論整台主機故障也會自動被偵測？本章主機通知由誰發出？
 
-**教訓**:這其實是**設計,不是限制**——不是每台 VM 都該被自動重啟(短命的批次 VM 自動重啟反而是災難)。「哪些 VM 值得自癒」是租戶的決定,用 metadata 表達。動手驗證前先確認你的測試 VM 有這個標記,否則會對著一台「照設計不該被救」的 VM 等半天。
+## 小結
 
-## 帶得走的東西
-
-- **自癒是兩層問題,手段不同:程序死了原地重啟,主機死了搬家重建。** 把它們當一件事處理,會在「主機死了卻只會重啟本地不存在的程序」上卡住。
-- **evacuate 能不能保住資料,取決於系統碟在哪。** 本地碟只能空白重建,boot-from-volume 才能帶著同一顆 volume 搬家——這是「HA 設計要從開機方式就決定」的具體例子。
-- **故障演練要壞在對的層級。** 停容器、停 daemon 都不是「主機死掉」;演一個比真實更輕的故障,會得到一個假的安心。
-- **一整排服務故障,先找共同依賴。** 逐個救那些服務是白費力氣,它們往往死於同一個上游(這次是 ProxySQL)。
-- **自動化流程失敗會留下擋路的中間狀態。** 成功路徑之外,要知道怎麼把系統手動撥回可重試的乾淨狀態。
+Masakari 將故障通知接到 Nova 的恢復動作；行程仍有可用主機時可以原機重啟，整台 compute 停止時則需要疏散。這次主機演練用人工通知，並先以 deallocate 確認來源停止。恢復能否保留資料，取決於儲存來源與隔離條件；VM 回 ACTIVE 後仍須確認應用、資料與來源主機重新加入的安全條件。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Masakari 官方文件](https://docs.openstack.org/masakari/2025.1/)** —— segment、host、instance 三種監控與復原流程的完整說明。
-- **[Kolla-Ansible 的 Masakari 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html)** —— kolla 這側啟用 Masakari 的官方頁(`enable_masakari` 開關的對照)。
-- **[Nova 的 evacuate 說明](https://docs.openstack.org/nova/2025.1/admin/evacuate.html)** —— 為什麼 evacuate 需要共享儲存或 boot-from-volume;本章那個硬前提的權威出處。
-- **[ProxySQL 官方文件](https://proxysql.com/documentation/)** —— 本課的資料庫入口;`proxysql.db` 與 `proxysql_stats.db` 的角色差異([地雷 2](#mine-2))在這裡有完整背景。
+- [Kolla-Ansible 2025.1 Masakari 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html)：API、engine 與 monitor 開關。
+- [Masakari 2025.1 設定參考](https://docs.openstack.org/masakari/2025.1/configuration/config.html)：實例與主機故障的恢復範圍。
+- [Nova 2025.1 evacuate 指南](https://docs.openstack.org/nova/2025.1/admin/evacuate.html)：來源主機停止、從 image／volume 重建與共享儲存條件。
+- [ProxySQL 文件](https://proxysql.com/documentation/)：代理設定與統計資料的管理。
 
 ## 下一步
 
-雲會自己救自己了。多機環境今天用完即關——它的任務(演一次真的主機失效)已經完成。[Day 32](sprint5-day32-full-tls.md) 回單機環境,做生產化的第一件事:**把所有 API 從 http 換成 https**,而你會發現這件「加密」的事牽動的遠不只加密。
+[Day 32](sprint5-day32-full-tls.md) 回到單機環境，為 API 的 VIP 入口啟用 TLS，並檢查改址後的用戶端信任與手動覆寫設定。

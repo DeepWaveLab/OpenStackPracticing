@@ -1,26 +1,15 @@
-# Day 24: 橫向擴展——加節點、熱遷移、容量水位
+# Day 24：加入 compute，遷移 VM 並準備主機維護
 
-> Sprint 4 開場時掛起的核心問題,今天正面回答:**Nova 和 Magnum 的機器是誰準備的?**答案是維運者——而「準備一台機器」在成熟的部署工具下,是三行指令的事。今天租第五台機器現場加入雲,然後演練機器的整個生命週期:接收工作、搬走工作、清空退場。
+一台 compute 需要換硬體，上面的 VM 卻仍在服務。你可以先加入新主機，再把工作負載移過去；前提是 Nova 能使用新主機，目的地主機也容得下原有 VM。本章沿用 Day 23 的多節點環境，讀完能用服務註冊、Placement 資源與遷移結果判斷是否已準備好維護。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 8–9**:Magnum 的 autoscaler 會自己長 K8s worker——但它長出來的 VM,用的是**雲已經有的**容量。
-    - **Day 23**:雲變成四台,控制面有了冗餘。
-    - **今天**:回答「雲層自己的容量怎麼長」。這是課程主線的最後一塊動手拼圖。
-    - **明天**:Sprint 4 總結。
+## 先看雲還有多少可排程資源
 
-## 今天的三場演練
+Magnum 或 CAPI 建立 worker VM 時，使用的是 Nova 已管理的 compute 容量。新增 Kubernetes worker 並不會替底層 OpenStack 增加實體主機。
 
-```mermaid
-flowchart TB
-    A["① 加節點<br/>第五台機器入列"] --> B["② 熱遷移<br/>VM 不關機搬家"]
-    B --> C["③ node drain<br/>清空一台機器"]
-    C --> D["容量規劃<br/>(把數字變成方法)"]
-```
-
-三場演練共用同一個觀測工具:**placement 的容量水位**。開始前先記下現況:
+**Placement** 記錄可供排程的資源。**resource provider** 是提供資源的實體，在這個 lab 中對應 compute 主機；**inventory** 記錄總量與限制，**allocation** 記錄已分配給工作負載的用量。先安裝 Placement CLI 外掛，再看 VCPU inventory：
 
 ```bash
-pip install osc-placement   # resource provider 系列指令需要這個外掛(見地雷 2)
+pip install osc-placement   # resource provider 系列指令需要這個外掛
 openstack resource provider list -f value -c uuid -c name | while read u n; do
   T=$(openstack resource provider inventory list "$u" -f value | awk '/VCPU/{print $3}')
   echo "$n: $T vCPU"
@@ -29,25 +18,29 @@ done
 # oslab-comp2: 8 vCPU        ← 叢集總量 16 vCPU
 ```
 
-## 演練 ①:加節點
+這個查詢依欄位位置讀取 total，先確認你的輸出格式一致。它顯示的是 VCPU 總量，不是剩餘容量；要判斷能否接下一台 VM，還必須看已配置量、保留量、allocation ratio，以及記憶體、磁碟和資源限制。
 
-### 租機的第一課發生在雲的外面
+下圖把本章三個動作接起來。新主機註冊成功後，既有 VM 不會自動重新平均分配：
 
-替 lab 租第五台時撞上 Azure 的 vCPU 配額——而且發現一個容易記錯的規則:**deallocated(已關機釋放)的 VM 依然佔用配額**。舊的單機 lab 雖已關機,16 核照算,剩餘配額只夠 2 核(見[地雷 1](#mine-1))。
+![新增 compute 後確認可排程，再遷移 VM，最後讓舊主機進入維護](../assets/diagrams/os-s4d24-lifecycle.svg)
 
-所以第五台是 E2s_v5(2 vCPU)——比其他 compute 小四倍。這個妥協反而讓教學更誠實:**真實世界的雲本來就是異質的**(不同代的硬體、不同規格的節點),等一下 placement 會如實呈現這件事。
+## 步驟 1：準備新主機
 
-### 新節點的前置(把 Day 23 的雷全部先修掉)
+本章新節點叫 `oslab-comp3`，管理位址 `10.100.0.23`，使用較小的 2 vCPU 規格。這個例子用來觀察異質容量；不代表任何規格都能接收任意 VM。新機仍須符合 KVM、CPU 相容性、網路、磁碟與 Kolla 支援條件。
+
+先確認 Azure 的區域與 VM family 配額。deallocated 的 VM 仍計入 vCPU quota；停止計費和釋放配額是兩件事，詳見[疑難排解](#mine-1)。本章沿用已準備好的 Azure VM，不另提供其建立流程。
+
+新舊節點必須互相解析主機名稱，外部介面與管理網路配置也要一致。以下為前置作業摘要；DNS 調整僅在確認 stub 問題後採用，條件同 [Day 23 的 DNS 排錯](sprint4-day23-multinode-ha.md#mine-2)：
 
 ```bash
 # oslab-comp3(10.100.0.23)上:
 # 1. /etc/hosts 全叢集互相解析(新節點一行也要加回舊節點)
 # 2. dummy0 網卡
-# 3. DNS 直連上游(Day 23 地雷 2 的預防)
+# 3. 確認 DNS stub 故障後才考慮改用上游
 sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 ```
 
-inventory 只加一行:
+接著把新主機加入現有 multinode inventory 的 compute 群組，保留其他群組：
 
 ```ini
 [compute]
@@ -56,7 +49,9 @@ oslab-comp2
 oslab-comp3     # ← 新成員
 ```
 
-### 三部曲:`--limit` 讓現役節點毫髮無傷
+## 步驟 2：只對新 compute 部署
+
+在原部署機使用同一份 Kolla 設定與 inventory，依序準備主機、拉取映像、部署 compute：
 
 ```bash
 kolla-ansible bootstrap-servers -i multinode --limit oslab-comp3   # 裝 docker、建 kolla 使用者
@@ -68,11 +63,9 @@ kolla-ansible deploy -i multinode --limit oslab-comp3              # 部署 comp
 oslab-comp3 : ok=104  changed=62  failed=0
 ```
 
-`--limit` 是這裡的關鍵:整個過程**只碰新節點**,現役的四台連一個容器都沒重啟。
+`--limit` 限制此次選取的 inventory 主機。這是官方新增 compute 的做法，但不能擴大解讀為所有 Ansible 動作都絕對不會經過其他節點：角色可能透過 delegation 在控制端執行整合工作。新增 controller 的範圍要求也不同，不能直接套用。
 
-### 你沒做的那件事:cell discovery
-
-教科書會說新 compute 節點要跑 `nova-manage cell_v2 discover_hosts` 註冊進 cell。注意剛剛的流程裡**完全沒有這一步**——kolla 的 nova-cell 角色在 deploy 時代跑了。直接驗收:
+Nova 使用 **cell** 組織 compute 與其資料庫、訊息通道；新主機還需要被映射到 cell，排程器才知道它在哪裡。Kolla 的 nova-cell 角色會處理主機探索工作，不過是否成功仍要由結果確認：
 
 ```bash
 openstack compute service list -f value -c Binary -c Host -c State | grep nova-compute
@@ -84,20 +77,13 @@ openstack resource provider list -f value -c name
 # oslab-comp1 / oslab-comp2 / oslab-comp3
 ```
 
-容量水位的變化:
+`nova-compute up` 與 resource provider 出現是必要檢查，還要實際驗證工作負載能落到新主機。本例原有兩台各 8 VCPU，新增主機回報 2 VCPU；總量的增加不代表每一台 VM 都能放進它。
 
-| 節點 | 加入前 | 加入後 |
-|---|---|---|
-| oslab-comp1 | 8 vCPU | 8 vCPU |
-| oslab-comp2 | 8 vCPU | 8 vCPU |
-| oslab-comp3 | — | **2 vCPU** |
-| **叢集總量** | **16** | **18** |
+## 步驟 3：遷移既有 VM
 
-從租機到 placement 看見新容量,全程**沒有動過任何現有服務、沒有一秒 API 中斷**——使用者視角:雲就是默默變大了。這就是 Day 8「機器從哪來」的最終答案:維運者把裸機變成 placement 裡的數字,之後的一切(Nova 調度、Magnum autoscaler)都消費這個數字。
+**live migration（熱遷移）** 在 VM 持續執行時搬移其狀態。若 VM 使用 compute 本機磁碟，**block migration** 還要搬移磁碟內容，因此會額外占用網路與目的地儲存。
 
-## 演練 ②:熱遷移——VM 不關機搬家
-
-汰換硬體、重新平衡負載,都靠這一招。本課環境沒有共享儲存,所以磁碟要跟著搬(block migration):
+開始前確認來源與目的地在支援的 cell、CPU 與 hypervisor 相容、遷移網路可達，且目的地資源足夠。本例使用 Day 23 建立的 `ha-canary`，從 comp2 遷往 comp1：
 
 ```bash
 openstack server show ha-canary -f value -c OS-EXT-SRV-ATTR:host   # oslab-comp2
@@ -107,29 +93,33 @@ openstack server show ha-canary -f value -c OS-EXT-SRV-ATTR:host   # oslab-comp1
 openstack server show ha-canary -f value -c status                  # ACTIVE(全程)
 ```
 
-原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結視窗內收尾——所以 VM 覺得自己沒停過。
+兩次 host 查詢可確認落點改變，最後的 ACTIVE 顯示查詢當下的狀態。它不能證明應用程式完全沒有中斷。熱遷移會逐步複製記憶體與變更頁面，最後仍有短暫切換；要評估使用者影響，必須同時觀察應用連線，而本章沒有這項探測結果。
 
-## 演練 ③:node drain——機器退場的標準動作
+## 步驟 4：讓主機停止接收新 VM，再清空
 
-假想劇本:oslab-comp2 要換硬體。標準四步:
+維護前先 **disable nova-compute**，避免新的排程繼續送進主機；這不會自動搬走既有 VM。把所有租戶的 VM 逐一遷移成功後，才可以停機維護。
+
+第二台測試 VM 名稱是 `drain-canary`，本章未提供它的建立命令。以下是已有該 VM 且它位於 comp2 的演練範例；重做時先以管理員身分列出 comp2 上所有租戶的 VM，選擇實際要搬移的資源，不能假設這個名稱已存在。清空檢查必須加上 `--all-projects`，避免只列出當前專案而漏掉其他租戶的 VM：
 
 ```bash
-# 1. 停止進貨:調度器不再把新 VM 排進來(現有 VM 不受影響)
+# 1. 停止接收新的排程
 openstack compute service set --disable \
   --disable-reason "maintenance: hardware replacement" oslab-comp2 nova-compute
 
-# 2. 清空存貨:把上面的 VM 逐一熱遷走
+# 2. 逐一遷移該主機上的 VM
 openstack server migrate drain-canary --live-migration --block-migration \
   --host oslab-comp3 --wait
 
 # 3. 確認清空
-openstack server list --host oslab-comp2 -f value | wc -l    # 0
+openstack server list --all-projects --host oslab-comp2 -f value -c ID | wc -l    # 0
 
-# 4. (維護完成後)重新開張
+# 4. 維護完成且健康檢查通過後重新啟用
 openstack compute service set --enable oslab-comp2 nova-compute
 ```
 
-演練後的水位,講了一個完整的故事:
+上面最後一步只適用於維護完成且已確認主機健康的情況；若要永久移除節點，保持 disabled，另依 Kolla 官方移除主機流程清理服務與 inventory。遷移失敗時不要繼續停機。
+
+以下為本課的用量節錄，顯示第二台 VM 曾被遷入新節點：
 
 ```text
 oslab-comp1: used=1   ← ha-canary(演練②搬來的)
@@ -137,57 +127,46 @@ oslab-comp2: used=0   ← 被清空、已歸隊
 oslab-comp3: used=1   ← drain-canary(新節點接下真實工作)
 ```
 
-注意 drain-canary 的落點:**今天早上才加入的 comp3,已經在承接從老節點撤下來的工作負載**。加節點→接工作→老節點退場,這條循環就是雲的新陳代謝。
+comp2 的用量歸零是其中一項證據；實際清空還要確認全租戶 VM 清單與遷移狀態。不能只看 CPU 用量為零就移除主機。
 
-## 把數字變成方法:容量規劃
+## 預留維護需要的容量
 
-三場演練都在讀 placement 的數字;生產環境的容量規劃就是圍繞這些數字的紀律:
+Placement 的 `allocation_ratio` 決定資源可配置量相對於實際量的比例，`reserved` 則扣除預留資源。比例不是效能保證，也不能讓不相容的 CPU、NUMA、PCI 裝置或儲存條件變得相容。
 
-| 概念 | 內容 | 本課環境的對應 |
-|---|---|---|
-| allocation ratio | vCPU 常見超賣(如 4:1),記憶體幾乎不超賣(1:1) | placement inventory 的 `allocation_ratio` 欄位 |
-| 預留(reserved) | 每台主機留給系統本身的資源 | `reserved_host_memory_mb` 等 |
-| N+1 headroom | 隨時保有「清空最大一台」所需的空位——否則 drain 演練做不了 | 今天若三台全滿,演練③會卡在第 2 步 |
-| host aggregate / AZ | 把節點分池(SSD 池、GPU 池、機櫃容錯域),調度時指定 | 本課的 `--availability-zone nova:主機` 是它的最簡形式 |
+規劃 **N+1** 容量時，要問的是：「失去其中一台後，剩餘且相容的節點是否仍容得下它的工作負載？」不是只把整個叢集的閒置 VCPU 相加。host aggregate 可替主機分組與加上排程屬性，availability zone 則提供使用者可選的區域；本章 `nova:主機名` 是管理員指定落點的方式，並未展示建立 aggregate 或獨立故障域。
 
-**Magnum 的視角**(Day 9 的伏筆收回):workload cluster 的 autoscaler 覺得「隨時可以長」,是因為它信任雲層有容量。autoscaler 觸發 → Magnum 開 VM → Nova 找 placement 要資源——如果水位見底,長不出來的錯誤會出現在這條鏈的最末端。**看 placement 水位,就是在看所有上層彈性的天花板。**
+當 Magnum 要增加 worker，Nova 最後仍必須找到符合所有需求的資源。遇到 No valid host，除了總量，也要回頭檢查租戶配額、資源分組與主機限制。
 
-## 驗收 checkpoint
+## 疑難排解
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 加節點 | 三部曲 failed=0、現役節點零擾動 | ok=104 failed=0 |
-| cell discovery | 不跑 nova-manage,新節點自動註冊 | 三台 nova-compute up |
-| placement | 總量增加、異質規格如實呈現 | 16→18 vCPU,comp3=2 |
-| 熱遷移 | 換主機、全程 ACTIVE | comp2→comp1 ✓ |
-| drain | disable→清空→歸隊完整走完 | comp2 歸零後 re-enable |
-| 新節點承載 | 撤下的工作落在新節點 | drain-canary 在 comp3 |
+### VM 已 deallocate，Azure 仍回報配額不足 {#mine-1}
 
-## 地雷記錄
+Azure vCPU 配額包含 allocated 與 deallocated 的 VM，且同時檢查區域總量與 VM family。確認哪些 VM 可刪除或提出配額申請；即使配額充足，區域實際可用容量仍是另一項限制。
 
-### 地雷 1:配額連關機的 VM 一起算 {#mine-1}
+### CLI 沒有 resource provider 子命令 {#mine-2}
 
-Azure 的 regional vCPU 配額把 **deallocated 的 VM 也計入**——「先關掉舊環境再租新機」不會釋放配額,只有刪除 VM(磁碟可留)才會。規劃多環境並行的 lab 時,把「配額」當成一種你雲底下的雲的容量水位來管理;撞牆時的訊息(`QuotaExceeded`)會告訴你目前用量與需要的新上限。
+在執行 OpenStack CLI 的同一個虛擬環境安裝 `osc-placement`。先單獨確認查詢成功，再放進 shell pipeline；否則錯誤訊息或空輸出可能被後續指令誤讀成容量資料。
 
-### 地雷 2:placement 指令要另裝外掛 {#mine-2}
+## 想一想
 
-`openstack resource provider …` 系列不在預設的 openstackclient 裡,需要 `pip install osc-placement`。沒裝時 CLI 會輸出「你是不是要找…」的相似指令清單——**在腳本裡這段文字會被當成正常輸出往下傳**,產生一串難以理解的垃圾。寫自動化時,先驗證外掛存在。
+1. 新 compute 顯示 up，也出現在 Placement，為什麼仍要再測試能否承接 VM？
+2. 管理員自己的專案查不到 comp2 上的 VM，能否據此停止該主機？
+3. 叢集還有 8 個閒置 VCPU，但分散在數台不符合 VM CPU／記憶體條件的主機上，是否代表可以完成維護遷移？
 
-## 帶得走的東西
+## 小結
 
-- **「機器怎麼準備」的完整答案**:裸機 → 前置(hosts/DNS/dummy0)→ `--limit` 三部曲 → placement 出現新數字。之後的一切調度都是消費這個數字。
-- **`--limit` 是加節點的安全邊界**:現役節點連容器都不重啟。
-- **drain 四步**(disable → migrate → verify → enable)是機器退場的標準動作;做得了 drain 的前提是平時留有 N+1 空位。
-- **placement 水位是所有上層彈性的天花板**——包括 Magnum autoscaler 的。
+新增 compute 要確認主機準備、服務註冊、cell 與資源配置；主機維護則先停止新排程，再遷移並核對所有租戶的 VM。可用總量、相容條件與應用中斷各有不同的檢查方式。把它們分開，才能判斷新增容量是否真的能用，以及主機是否已可離線。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[Kolla-Ansible:新增與移除主機](https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html)** —— 本章三部曲的官方出處,也涵蓋今天沒演的「移除節點」完整流程。
-- **[Nova 熱遷移操作指南](https://docs.openstack.org/nova/2025.1/admin/live-migration-usage.html)** —— 熱遷移的前提條件、模式選擇(共享儲存 vs block migration)與監看方式。
-- **[Placement 服務文件](https://docs.openstack.org/placement/2025.1/)** —— resource provider、inventory、allocation 的完整模型;容量規劃表格裡每個概念的權威定義。
+- [Kolla-Ansible 2025.1 新增與移除主機](https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html)：比較 compute 與 controller 的處理範圍。
+- [Nova 2025.1 熱遷移設定](https://docs.openstack.org/nova/2025.1/admin/configuring-migrations.html)：確認 CPU、網路、儲存與安全前提。
+- [Nova 2025.1 熱遷移操作](https://docs.openstack.org/nova/2025.1/admin/live-migration-usage.html)：查遷移模式與結果監看。
+- [Placement 2025.1 文件](https://docs.openstack.org/placement/2025.1/)：理解 inventory 與 allocation。
+- [Azure vCPU quota](https://learn.microsoft.com/en-us/azure/virtual-machines/quotas)：區分配額與平台容量。
 
 ## 下一步
 
-十二天的動手全部完成。[Day 25](sprint4-day25-sprint4-recap.md) 收束整個 Sprint:這朵雲從哪裡出發、現在長什麼樣子、路上埋掉的每一顆雷——以及誠實的清單:它離生產環境還差哪幾步。
+[Day 25](sprint4-day25-sprint4-recap.md) 回顧儲存、排錯與維護情境，並整理這些 lab 尚未涵蓋的範圍。

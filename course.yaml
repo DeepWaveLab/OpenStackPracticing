@@ -57,3 +57,27 @@ mines:
   - { id: d34-m2, day: 34, title: "CADF 的四要素藏在 payload 底下", anchor: "sprint5-day34-cadf-audit.md#mine-2" }
   - { id: d34-m3, day: 34, title: "稽核事件靠對的 notification driver 才進 log", anchor: "sprint5-day34-cadf-audit.md#mine-3" }
   - { id: d34-m4, day: 34, title: "改生成後的 config.json,下次 deploy 會打回原形", anchor: "sprint5-day34-cadf-audit.md#mine-4" }
+
+scan_overrides:
+  secrets_allowlist:
+    # Public DNS resolvers used as lab destinations.
+    - 1.1.1.1
+    - 8.8.8.8
+    # SSH targets use documentation or private addresses, not email accounts.
+    - azureuser@203.0.113.10
+    - ubuntu@172.24.4.111
+    # Reserved test domain used as the DNS zone contact.
+    - admin@oslab.test
+    # Historical request and resource identifiers are not authentication secrets.
+    - 30b85aef-a444-465d-8cb6-e97dc924b8f4
+    - 206aa8b3-a51a-4868-9145-4798420394f4
+    - e279e342-5ad3-4001-810c-045bc9a98de1
+    - a0500345-2306-4b09-90d2-82b2b7c209b9
+    - dd3cfe9a-0301-470c-bef5-c8620dc4e3f5
+
+publication:
+  status: published
+  date: "2026-10-16"
+  branch: gh-pages
+  commit: "967c25618fd7c81b29345f04aea04bc3b909b243"
+  source_branch: "codex/course-rewrite-openstack"

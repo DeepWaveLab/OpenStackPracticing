@@ -1,61 +1,51 @@
-# Day 34: 稽核軌跡——誰在何時對哪個資源做了什麼
+# Day 34：從 Nova 的稽核事件追查 VM 操作
 
-> 稽核員來的時候會問一個問題:「這台 VM 是誰刪的?」如果答案是翻遍各服務的 log 手動拼湊,那不叫稽核,叫考古。今天讓每個 API 請求自動變成一筆標準格式的 **CADF 稽核事件**,流回 [Day 21](sprint4-day21-observability.md) 建的 OpenSearch——最後,「誰在什麼時候對哪個資源做了什麼」變成一次查詢就能回答的事。
+一台 VM 不見了，同事想知道誰送出了刪除要求。Nova 的一般 log 能協助排錯，但如果每次都要從不同訊息找使用者、URL 與結果，查詢很難一致。本章把 Nova API 的請求記成 CADF 事件，再送進 Day 21 的 OpenSearch；讀完能判讀請求者、操作、資源與回應，並知道這些紀錄還不能證明什麼。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 21**:集中式 log(OpenSearch)上線,能用 UUID 跨服務追一個資源。
-    - **Day 33**:員工能用公司帳號進雲了——現在他們的每個動作都該留下紀錄。
-    - **今天**:把 keystonemiddleware 的 audit 中介軟體插進 nova,產生 CADF 事件,接回 OpenSearch。
-    - **今天之後**:[Day 35](sprint5-day35-sprint5-recap.md) 是 Sprint 5 總結,不動手。
+## 先分清楚事件記錄的範圍
 
-## CADF:稽核事件的通用格式
+**CADF**（Cloud Auditing Data Federation）是描述雲端稽核事件的標準格式。這裡先看四個欄位：
 
-稽核不能各服務各記各的格式——那樣跨服務查詢就成了惡夢。**CADF**(Cloud Auditing Data Federation)是雲稽核事件的標準格式,它規定每一筆事件必須回答四件事:
+| 欄位 | 要判讀的內容 |
+|---|---|
+| `initiator` | 發出請求的身分，例如 user ID、來源 IP |
+| `action` | 操作類型，例如 read、create、delete |
+| `target` | 請求所針對的服務或資源 |
+| `outcome` | 這筆事件的結果，例如 pending、success、failure |
 
-| CADF 要素 | 回答 | 例子 |
-|---|---|---|
-| **initiator** | 誰做的 | user id、來源 IP、user-agent |
-| **action** | 做了什麼 | `read`、`create`、`delete` |
-| **target** | 對哪個資源 | `/v2.1/servers/<uuid>` |
-| **outcome** | 結果如何 | `success`、`failure`、`pending` |
+時間由 `eventTime` 表達。欄位有一致名稱，才方便查詢；但要保留完整事件、對照 request／response，不能只看 `action=delete` 就認定 VM 已經刪完。OpenStack API 常先接受非同步要求，再由背景服務執行。
 
-只要每個服務都吐這個格式,稽核查詢就跟服務無關——問「誰刪了這台 VM」和問「誰改了這條網路」是同一種查法。今天的任務就是讓 nova 開始吐 CADF。
+**本章只接 Nova API。** 它不涵蓋所有 OpenStack 服務、VM 裡的命令或所有背景工作，也沒有驗證防竄改保存、保存期限與稽核告警。以下設定與結果來自本課實驗，但缺完整 `config.json` 持久化修改及 OpenSearch 查詢指令，應當作整合與判讀練習，不能直接視為完整部署程序。
 
-## 這條鏈要接四段
+## 事件從哪裡進 OpenSearch
 
-```mermaid
-flowchart TB
-    A["nova API 請求"] --> B["audit 中介軟體<br/>(產生 CADF 事件)"]
-    B --> C["notification<br/>driver=log"]
-    C --> D["nova-api.log"]
-    D --> E["fluentd → OpenSearch<br/>(Day 21 的)"]
-```
+**Middleware** 是 API 處理請求時經過的中介程式。`keystonemiddleware.audit` 讀取已驗證的身分與 API 資訊，產生 CADF 事件；**notification driver** 決定事件送去哪裡。本課選 `log`，讓事件先寫進 `nova-api.log`，再由 Day 21 的 Fluentd 收到 OpenSearch。
 
-每一段的接法都有個要注意的點:audit 中介軟體要插進 nova 的請求管線(而它的設定檔 kolla 預設**不會複製進容器**)、CADF 事件要走 `log` driver 才會進服務 log(Day 28 開的 driver 不寫 log)、最後 fluentd 那段是 Day 21 已經接好的,今天白撿。
+![Nova API 經 audit middleware 產生事件，專用 log driver 寫入 nova-api.log，Fluentd 收集後送到 OpenSearch](../assets/diagrams/os-s5d34-events.svg)
 
-## 步驟
+圖中有兩個可以分開檢查的地方：Nova log 是否出現事件，以及 OpenSearch 是否收到同一類事件。開始前須有 Day 21 的收集管線與查詢權限；如果連一般 Nova log 都查不到，應先修復那一段。
 
-### 步驟 1:讓 CADF 事件走 log driver
+## 步驟 1：讓稽核使用自己的通知目的地
 
-CADF 事件是透過 notification 送出的。但 [Day 28](sprint5-day28-ceilometer-metering.md) 開的 notification driver 是 `messagingv2`——它把通知送進 RabbitMQ 給 Ceilometer,**不寫進 log**。要讓稽核事件進服務 log(才能被 fluentd 撿走),得加一個 `log` driver:
+Day 28 的服務通知用 `messagingv2` 送到 RabbitMQ，供計量使用。稽核不需要取代它，可以在 Nova 的設定覆寫中指定獨立的通知 driver：
 
 ```ini
 [audit_middleware_notifications]
 driver = log
 ```
 
-兩種 driver 可以並存——Ceilometer 繼續從 RabbitMQ 拿計量,稽核事件另外寫進 log。
+這表示 audit middleware 的事件走 log；服務原本的計量通知仍可走 messagingv2。不要把它誤讀成所有通知都同時複製到兩個目的地。
 
-### 步驟 2:把 audit 中介軟體插進 nova 的請求管線
+## 步驟 2：確認 audit filter 真的進入 Nova
 
-nova 的 API 請求會流經一串中介軟體(pipeline)。audit 要插在**身分確認之後**——因為得先知道請求者是誰,才填得出 CADF 的 initiator:
+Nova 的 API **pipeline** 是請求依序經過的處理元件。Audit 要放在 `authtoken` 之後，才能使用它驗證後的身分資訊。本課順序節錄如下，省略號表示其他既有元件，不能把整行當成完整配置：
 
 ```text
 ... authtoken audit keystonecontext osapi_compute_app_v21
              ↑ 插在 authtoken(確認身分)之後
 ```
 
-filter 定義用容器內建的 `nova_api_audit_map.conf`(它定義了 URL 對應到哪種 action):
+`api-paste.ini` 裡的 filter 則指定如何載入 middleware，以及 URL 與 action 的映射檔：
 
 ```ini
 [filter:audit]
@@ -64,19 +54,34 @@ audit_map_file = /etc/nova/nova_api_audit_map.conf
 service_name = nova
 ```
 
-!!! danger "這裡有一顆會讓你部署全綠、卻什麼都沒發生的雷"
-    直覺會把改好的 `api-paste.ini` 放進標準 override 目錄然後 deploy。**deploy 會全綠,audit 卻毫無動靜**——因為 kolla 的 nova-api 根本不複製 `api-paste.ini` 進容器。完整判讀與正解見[地雷 1](#mine-1)。
+`audit_map_file` 必須在容器內存在，並且符合服務路徑。本課使用 `/etc/nova/nova_api_audit_map.conf`；自己的映像檔若路徑不同，需明確配置並確認。
 
-### 步驟 3:確認 CADF 事件真的生出來了
+接著檢查 Kolla 是否會把自訂檔案送進容器。Kolla 的 `config.json` 定義啟動時要複製的設定檔；本課最初的摘要是：
 
-觸發幾個操作(list、show),看 nova-api 的 log:
+```text
+config.json COPY: nova.conf, nova-api-uwsgi.ini, ca-certificates
+```
+
+清單沒有 `api-paste.ini`，因此只把檔案放在主機的 override 目錄不會生效。本課增加複製項目並重啟後，留下以下結果：
+
+```text
+config.json COPY: ..., api-paste.ini, nova_api_audit_map.conf
+容器內 filter:audit 段數: 1
+pipeline: authtoken audit ...
+```
+
+這證明當時的容器載入了 filter，卻沒有提供完整、能跨 deploy 保存的修改程序。生成的 `config.json` 下次可能被重新產生；正式採用前須把變更納入受版本管理的部署模板或自訂映像，並驗證重新部署後仍有效。本章沒有完成這項持久化驗證。
+
+## 步驟 3：在 Nova log 看 request 與 response
+
+對已存在的測試 VM 執行 list／show 類操作後，本課 log 出現兩種事件：
 
 ```text
 INFO oslo.messaging.notification.audit.http.request  ...
 INFO oslo.messaging.notification.audit.http.response ...
 ```
 
-每個 API 呼叫都有一對 request/response 事件。挑一筆解開,確認 CADF 四要素齊全(注意要素藏在 `payload` 底下,不是頂層——見[地雷 2](#mine-2)):
+request 是收到要求時的事件，response 記錄 API 回應。以下為其中一筆的欄位節錄：
 
 ```text
 typeURI    : http://schemas.dmtf.org/cloud/audit/1.0/event
@@ -88,27 +93,32 @@ eventTime  : 2026-07-16T12:58:09
 對誰(target) : /v2.1/servers/9d978419-...
 ```
 
-!!! tip "稽核照出了你沒注意的東西"
-    看那個 `agent=cluster-api-provider-openstack`——**這個操作不是人做的,是 Magnum 的 CAPI driver 在背景輪詢**([Day 7](sprint3-day7-magnum-capi-driver.md) 裝的那個)。你沒下任何指令,但稽核忠實地記下了它。這正是稽核的價值:**它記錄的是「實際發生了什麼」,而不是「你以為發生了什麼」**——連自動化元件的一舉一動都無所遁形。
+`action=read` 表示讀取，`outcome=pending` 表示這筆不是已完成結果。`initiator.user` 可用來對照 Keystone 身分；`agent=cluster-api-provider-openstack` 是用戶端送來的 user-agent，顯示可能來自 CAPO，但該字串本身可由用戶端設定，不能單獨證明操作者身分。
 
-### 步驟 4:確認事件流進了 OpenSearch
+CADF 內容位於通知外層的 **`payload`**，也就是事件資料本體。抽欄位時先進入 payload，再取 action／initiator／target。若只在最外層找，可能取得空值。
 
-fluentd 這一段是 Day 21 接好的,稽核事件會自動被撿進 OpenSearch:
+## 步驟 4：確認 OpenSearch 收到稽核事件
+
+先沿用 Day 21 的 Dashboards 登入與索引查詢方式，限定 Nova API、事件類型與測試時間範圍。以下是本課查詢摘要，索引日期與數量只代表當時資料：
 
 ```text
 flog-2026.07.16 索引  →  420419 筆
 查 audit.http.request  →  命中 40 筆,programname=nova-api
 ```
 
-### 步驟 5:Gate——回答「這台 VM 是誰刪的」 {#step-5}
+找到 `audit.http.request` 與 `programname=nova-api`，能說明這類事件已經進入索引。它不證明每筆都成功收集，也不代表其他服務已啟用稽核；要再用已知測試操作檢查對應資源。
 
-這是稽核的實戰場景。開一台可拋棄的 VM,刪掉,然後**只用 OpenSearch** 反查它的一生:
+## 步驟 5：用 VM ID 查刪除要求 {#step-5}
+
+選一台可刪除的測試 VM，保存完整 UUID，再刪除並查詢。下面是本課操作摘要：`...` 省略了建立參數，UUID 也經截短，不能原樣貼上執行：
 
 ```bash
 openstack server create audit-victim ... --wait    # 5ffbfcd0-...
 openstack server delete 5ffbfcd0-...
 # 從 OpenSearch 查這個 VMID 的稽核事件
 ```
+
+在 OpenSearch 查該完整 VM UUID，並對照 action、initiator 與時間。本課留下的事件節錄是：
 
 ```text
 命中 7 筆含此 VMID 的稽核事件:
@@ -118,84 +128,46 @@ openstack server delete 5ffbfcd0-...
   ...
 ```
 
-**一次查詢,完整證據鏈攤開**：那台 VM 從被查看到被刪除的每一步、每一步是誰(user id)、什麼時候(到秒)、對哪個資源(精確到 UUID)。稽核員要的「誰刪的」,答案在這裡是 `user=1384190dc012`,時間 `12:59:14`,證據可查、可稽核、格式標準。
+這裡可辨認出使用同一 user ID 的讀取與刪除要求。它還沒有列出對應 response 的 outcome，也不是 VM 全生命週期的完整證據；若要確認刪除真的完成，還要對照 API 回應與 Nova 資源狀態或後續服務紀錄。若帳號由多個人或自動化共用，也不能只憑 user ID 判斷是哪位自然人。
 
-## 驗收 checkpoint
+查不到時，依序回到 Nova log、Fluentd 與 OpenSearch 的時間範圍／索引。Nova 沒產生事件與 OpenSearch 沒收進事件，修法不同。
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| pipeline | audit 插在 authtoken 之後 | `authtoken audit keystonecontext` |
-| CADF 事件 | 四要素齊全 | initiator/action/target/outcome 都有 |
-| log driver | 事件寫進服務 log | `notification.audit.http` 出現在 nova-api.log |
-| 進 OpenSearch | fluentd 匯入,可查詢 | 40+ 筆,programname=nova-api |
-| **稽核查詢** | 反查某 VM → 誰/何時/做什麼 | audit-victim 的 delete 軌跡可查 |
+## 疑難排解
 
-## 地雷記錄
+### deploy 成功，容器卻沒有 audit filter {#mine-1}
 
-### 地雷 1:kolla 不複製 `api-paste.ini`,deploy 全綠卻什麼都沒發生 {#mine-1}
+核對容器中的 `api-paste.ini` 與 `config.json` 複製清單。若檔案沒在清單內，放進主機 override 目錄也不會生效；步驟 2 說明本課曾成功載入的結果與持久化缺口。
 
-**症狀**:把改好的 `api-paste.ini` 放進標準 override 目錄,`deploy --tags nova` 回 `failed=0`,nova-api 也 healthy——但 audit filter 完全沒進容器,pipeline 還是舊的。
+### 原始事件有內容，抽出的欄位卻全是空值 {#mine-2}
 
-**判讀關鍵**:進容器看 `api-paste.ini`,是**部署前的舊檔**;而看 nova-api 的 `config.json`(kolla 決定複製哪些檔的清單),只有三筆:
+先確認 JSON 的層級。通知外層包含 event type 等資訊，CADF 欄位在 payload 裡；不要因為頂層查不到就斷定 middleware 沒有產生資料。
 
-```text
-config.json COPY: nova.conf, nova-api-uwsgi.ini, ca-certificates
-```
+### Nova log 與 OpenSearch 都沒有稽核事件 {#mine-3}
 
-**`api-paste.ini` 不在清單裡。** 所以放再多次 override 都不會進容器,它用的永遠是映像檔內建的那份。
+在確認 filter 已載入後，檢查 `[audit_middleware_notifications]` 是否指定 log driver。計量用的 messagingv2 不會自動把同一批事件寫入 Nova log，步驟 1 的設定是獨立目的地。
 
-**解法**:改 `config.json` 的複製清單,把 `api-paste.ini` 與 audit map 加進去,重啟容器讓 `kolla_set_configs` 重跑:
+### 重新部署後 audit 設定消失 {#mine-4}
 
-```text
-config.json COPY: ..., api-paste.ini, nova_api_audit_map.conf
-容器內 filter:audit 段數: 1
-pipeline: authtoken audit ...
-```
+生成的 `config.json` 會受 Kolla 部署模板管理，直接修改生成檔可能在下次 deploy 被覆蓋。應檢查持久化的模板或映像變更是否仍在、檔案是否仍被複製，再用測試操作確認事件；本課未提供完成這項修復的驗證結果。
 
-**教訓**:這是「`--tags` 盲區」家族([Day 22](sprint4-day22-upgrade-backup.md#mine-1) 起)最陰險的一個變種——前幾顆至少是「設定沒被套用」,這顆是**那個檔根本不在複製清單裡**,連被套用的機會都沒有。而症狀是最無害的樣子:部署全綠、服務健康、零錯誤。**「deploy 成功」只證明 kolla 做完了它認得的事,不證明你的檔進去了。** override 一個非標準檔前,先確認它在不在 `config.json` 的複製清單。
+## 想一想
 
-### 地雷 2:CADF 的四要素藏在 payload 底下 {#mine-2}
+- OpenSearch 找到 `action=delete`，但沒有 response outcome。能直接判定 VM 已經刪除完成嗎？還缺哪些資料？
+- 容器 healthy，deploy 也成功，為什麼仍可能完全沒有 CADF 事件？你會查哪份複製清單？
+- user-agent 寫 CAPO、user ID 是共用服務帳號，能據此指認某位同事嗎？
 
-**症狀**:CADF 事件生出來了,寫程式抽 `typeURI`/`action`/`initiator` 卻全部是 `None`。
+## 小結
 
-**根因**:oslo 的 notification log 是巢狀的——外層是 `message_id`/`event_type`/`payload`,**CADF 的四要素在 `payload` 底下**,不在頂層。抽頂層自然全空。
-
-**解法**:先取 `payload`,再從裡面抽 CADF 要素。
-
-**教訓**:小坑,但它代表一類問題——**「資料明明在,卻抽到全空」通常是層級抽錯,不是資料沒有**。遇到「解析結果全 None 但原始資料看起來有內容」,先把原始結構完整印一遍看清楚巢狀,別急著改抽取邏輯。
-
-### 地雷 3:稽核事件靠對的 notification driver 才進 log {#mine-3}
-
-**症狀**:audit 中介軟體插好了、CADF 事件也在產生,但 log 裡找不到、OpenSearch 更查不到。
-
-**根因**:CADF 事件透過 notification 送出,而 [Day 28](sprint5-day28-ceilometer-metering.md) 設的 driver 是 `messagingv2`——它只把通知送進 RabbitMQ(給 Ceilometer),**不寫 log**。沒有 log,fluentd 就沒東西可撿。
-
-**解法**:加一個 `log` driver 到 `[audit_middleware_notifications]`,與 messagingv2 並存。
-
-**教訓**:**「事件產生了」和「事件到得了你要的地方」是兩件事。** 中間那條路(driver → log → fluentd → OpenSearch)任何一段沒接上,前面做得再對都到不了終點。接稽核鏈時,要把每一段都當成可能斷掉的地方逐段驗——這也是為什麼[步驟 3、4、5](#step-5) 分成三次查(log 有嗎 → OpenSearch 有嗎 → 查得出來嗎),而不是一次驗到底。
-
-### 地雷 4:改在生成後的 `config.json` 上,下次 deploy 會打回原形 {#mine-4}
-
-[地雷 1](#mine-1) 的解法是改 `config.json` 的複製清單、重啟容器讓 `kolla_set_configs` 重跑。但要注意一件事:**kolla 的 `config.json` 是每次 `deploy` 由角色模板重新生成的**。如果你是直接改容器裡(生成後)的那份 `config.json`,下一次 `deploy --tags nova` 會用模板把它重新生成、把你加的兩筆清單覆蓋掉——`api-paste.ini` 與 audit map 又不進容器,**稽核靜默消失,而且症狀正是本章開頭那個「全綠卻什麼都沒發生」的重演**。
-
-要它撐過 re-deploy,得從 kolla 的**來源模板**下手,而不是改生成後的檔。這和 [Day 32 地雷 5](sprint5-day32-full-tls.md#mine-5)([oslo_limit] 被 TLS 引爆)、[Day 28 地雷 6](sprint5-day28-ceilometer-metering.md#mine-6)(手寫計費端點)同屬「手寫覆寫是會引爆的債」——上正式環境前,把這筆列進你的手寫債清單、確認它撐得過下一次全量部署。
-
-## 帶得走的東西
-
-- **稽核的價值是「一次查詢回答誰/何時/做什麼」,而 CADF 是讓這件事跨服務通用的格式。** 各服務各記各的,稽核就退化成考古。
-- **稽核記錄的是實際發生的事,不是你以為的事。** 它照出了背景輪詢的 CAPI driver——連你沒下的指令、沒注意的自動化都留痕。
-- **「deploy 成功」不證明你的檔進去了。** kolla 只複製 `config.json` 清單裡的檔;override 非標準檔前先確認它在清單上,否則會得到「全綠卻沒效果」這種最難查的結果。
-- **事件產生 ≠ 事件到得了目的地。** 稽核鏈是多段接力,要逐段驗證,別假設中間那條路是通的。
-- **解析全 None,先懷疑層級抽錯,不是資料沒有。** 巢狀結構把資料藏深一層,是「明明有卻抽不到」的常見原因。
+本章在 Nova API 插入 audit middleware，讓標準化事件經服務 log 與 Fluentd 進入 OpenSearch。查詢時把請求者、操作、資源與 outcome 一起讀，並區分 API 收到要求與背景工作完成。此實驗只涵蓋 Nova，設定跨部署保存、其他服務與稽核保存制度仍需另行設計及驗證。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[keystonemiddleware 的 audit 中介軟體](https://docs.openstack.org/keystonemiddleware/2025.1/audit.html)** —— filter 設定、audit map 檔格式、notification driver 的官方說明。
-- **[pycadf——OpenStack 的 CADF 實作](https://docs.openstack.org/pycadf/latest/)** —— CADF 事件模型在 OpenStack 裡怎麼實作與運作;本章那張四要素表對應的程式碼源頭。
-- **[Keystone 的事件通知說明](https://docs.openstack.org/keystone/2025.1/admin/event_notifications.html)** —— OpenStack 的通知有 Basic 與 CADF 兩種格式,以及各資源會發哪些事件;稽核要記什麼的官方對照。
+- [keystonemiddleware 2025.1 audit 指南](https://docs.openstack.org/keystonemiddleware/2025.1/audit.html)：pipeline、audit map 與獨立通知 driver。
+- [Kolla-Ansible stable/2025.1 Nova API 設定模板](https://github.com/openstack/kolla-ansible/blob/stable/2025.1/ansible/roles/nova/templates/nova-api.json.j2)：檢查容器實際載入哪些設定檔。
+- [pycadf 文件](https://docs.openstack.org/pycadf/latest/)：CADF 事件模型與 OpenStack 實作。
 
 ## 下一步
 
-這朵雲現在會為自己的每個動作留下正式紀錄了。Sprint 5 的動手部分到此結束——五天內,雲學會了自癒、加密、接軌企業身分、留下稽核軌跡。[Day 35](sprint5-day35-sprint5-recap.md) 盤點這一整段:從「把雲當生意經營」的第一個問題,到最後這條可查詢的稽核軌跡,以及一堂「怎麼判斷一個 OpenStack 專案生死」的版圖課。
+[Day 35](sprint5-day35-sprint5-recap.md) 把租戶、計量、復原與安全整合起來，回顧哪些能力已經驗到，哪些還需要額外的營運設計。

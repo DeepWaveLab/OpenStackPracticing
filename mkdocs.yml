@@ -1,9 +1,11 @@
 site_name: OpenStack Lab Course
-site_description: OpenStack 實作課程 —— runbook、踩雷解法與反思
+site_description: OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全
 site_url: https://deepwavelab.github.io/OpenStackPracticing/
 
 theme:
   name: material
+  logo: assets/logos/openstack.svg
+  favicon: assets/logos/openstack-mark.svg
   language: zh-TW
   palette:
     - scheme: default
@@ -104,7 +106,7 @@ nav:
           - "Day 16 · Manila 共享檔案": runbook/sprint4-day16-manila-cephfs.md
           - "Day 17 · Designate DNS": runbook/sprint4-day17-designate-dns.md
           - "Day 18 · Trove 資料庫服務": runbook/sprint4-day18-trove-dbaas.md
-          - "Day 19 · server create 的完整路徑": runbook/sprint4-day19-api-request-lifecycle.md
+          - "Day 19 · server create 的請求路徑": runbook/sprint4-day19-api-request-lifecycle.md
           - "Day 20 · 封包怎麼流(OVN)": runbook/sprint4-day20-ovn-packet-trace.md
           - "Day 21 · 可觀測性": runbook/sprint4-day21-observability.md
           - "Day 22 · 更新與備份還原": runbook/sprint4-day22-upgrade-backup.md
@@ -116,13 +118,13 @@ nav:
           - "Day 27 · 多租戶治理與額度": runbook/sprint5-day27-multi-tenant-governance.md
           - "Day 28 · 計量管線(Ceilometer)": runbook/sprint5-day28-ceilometer-metering.md
           - "Day 29 · 告警與自動擴縮(Aodh)": runbook/sprint5-day29-aodh-autoscaling.md
-          - "Day 30 · 計費(CloudKitty)": runbook/sprint5-day30-cloudkitty-rating.md
-          - "Day 31 · SLA 與自癒(Masakari)": runbook/sprint5-day31-masakari-ha.md
-          - "Day 32 · 全站 TLS": runbook/sprint5-day32-full-tls.md
+          - "Day 30 · 計價與費用明細(CloudKitty)": runbook/sprint5-day30-cloudkitty-rating.md
+          - "Day 31 · 主機故障與 VM 恢復(Masakari)": runbook/sprint5-day31-masakari-ha.md
+          - "Day 32 · API 入口 TLS": runbook/sprint5-day32-full-tls.md
           - "Day 33 · 企業身分接軌(Keycloak)": runbook/sprint5-day33-keycloak-federation.md
           - "Day 34 · 稽核軌跡(CADF)": runbook/sprint5-day34-cadf-audit.md
           - "Day 35 · Sprint 5 總結": runbook/sprint5-day35-sprint5-recap.md
-      - "結語 · 三次嘗試,才有這一朵雲": runbook/epilogue.md
+      - "結語 · 從 API 操作找到下一個問題": runbook/epilogue.md
 
   - 排錯手冊:
       - solutions/README.md
@@ -183,3 +185,6 @@ nav:
       - "Sprint 3 回顧(本課程)": sprint3-reflection.md
       - "Sprint 2 回顧(OSH,2 天喊停)": sprint2-reflection.md
       - "Sprint 1 回顧(Juju,9 天)": reflection.md
+
+extra_css:
+  - assets/stylesheets/branding.css

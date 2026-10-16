@@ -1,21 +1,15 @@
-# 親手蓋一朵雲 — OpenStack 實作課程
+# OpenStack 實作課程
 
-> 從 Azure 一台空白 VM 開始,把一朵雲從零蓋起來——直到它能像 AWS 的 EKS 一樣,一行指令長出一整座 Kubernetes。
+從 Azure 上的實驗 VM 開始，用 Kolla-Ansible 部署 OpenStack，依序練習虛擬機、網路、儲存與 Kubernetes 叢集服務，再延伸到多節點維運、租戶治理、計量、計價與安全。
 
-**📖 課程網站:https://deepwavelab.github.io/OpenStackPracticing/**
+[閱讀課程網站](https://deepwavelab.github.io/OpenStackPracticing/)
 
-## 這是什麼
+課程主線包含 Day 0–35 與結語。讀者需具備 Linux 命令列與基本網路知識；Day 6 起使用 Kubernetes，Day 28 起會讀 Prometheus 查詢。章節以問題、操作與輸出解讀串接，保留實測版本與尚未驗證的限制。
 
-一份「做出來的」OpenStack 教材:12 個章節的實作課程,所有指令都在真實環境跑過、所有輸出都是實測。虛擬機、虛擬網路、雲端硬碟、負載平衡——公有雲的能力不是魔法,是一套叫 OpenStack 的開源軟體,這門課帶你親手把它蓋起來。
-
-| 內容 | 說明 |
-|---|---|
-| **課程主線(Day 0–11)** | Kolla-Ansible 部署 → 資源全流程 → Cinder / Octavia / Barbican / Heat → Magnum + Cluster API → 端到端開出 workload K8s → Day-2 維運 → Terraform,固定格式:原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄 |
-| **排錯手冊** | 15 條官方文件查不到、動手才會撞到的整合地雷與解法(症狀 → 根因 → 解法) |
-| **前兩次嘗試** | 這條路試了三次才走通:Juju + Charms(9 天)與 OpenStack-Helm(2 天)的完整失敗紀錄與教訓 |
-| **部署工具圖鑑** | Charms / Kolla-Ansible / OSH / RHOSO / Sunbeam 各家陣營比較,含向上游實測的服務支援矩陣與晶片架構支援表 |
-
-沒碰過 OpenStack 也能讀:每章開頭有「第一次接觸?」白話導讀,每個服務都對標 AWS / GCP / Azure(Cinder = EBS、Magnum = EKS)。
+- `docs/index.md`：課程順序、先備知識與全部章節連結。
+- `docs/runbook/`：教學主線及早期部署紀錄。
+- `docs/solutions/`：依症狀查找的疑難排解。
+- `docs/deployment-tools.md`：部署工具與適用情境。
 
 ## 本機預覽
 
@@ -34,7 +28,7 @@ mkdocs serve          # http://127.0.0.1:8000
 ├── requirements-docs.txt # mkdocs-material 釘版
 └── docs/
     ├── index.md          # 首頁
-    ├── runbook/          # 課程章節(sprint3-day*)與歷史紀錄(day-*、sprint2-*)
+    ├── runbook/          # 課程章節(sprint3/4/5-day*、epilogue)與歷史紀錄
     ├── solutions/        # 排錯手冊
     ├── assets/           # 官方吉祥物、logo、OpenStack Map
     ├── previous-attempts.md / deployment-tools.md

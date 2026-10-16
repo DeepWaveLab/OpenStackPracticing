@@ -1,99 +1,38 @@
-# Day 1: 用 Kolla-Ansible 部署 OpenStack 核心服務
-
-> 今天結束時,你會擁有一朵**能登入、能用的 OpenStack 雲**:五個核心服務跑在 33 個容器裡,網頁儀表板打得開,CLI 查得到服務清單。
-
-!!! abstract "你在課程的哪裡"
-    - **昨天(Day 0)**:準備好一台支援巢狀虛擬化的 Azure VM,目前是一台乾淨的 Ubuntu 24.04。
-    - **今天**:安裝部署工具 Kolla-Ansible,用它部出 OpenStack 核心(Keystone / Glance / Nova / Neutron / Horizon)。
-    - **今天之後**:Day 2 開始「使用」這朵雲(開 VM);之後每天增量加一個服務上去。
-    - 今天**刻意不裝** Cinder(儲存服務)——留到 Day 3,順便學「對已上線的環境增量加服務」這個重要工作流。
-
-## 第一次接觸 Kolla-Ansible?先讀這段
+# Day 1: 用 Kolla-Ansible 部署 OpenStack 核心服務——設定檔、單機部署與失敗後的重跑
 
 ![Kolla-Ansible 的官方吉祥物:無尾熊](../assets/mascots/kolla-ansible.png){ align=right width="110" }
 
-### 要解決的問題:OpenStack 很難「裝」
+Day 0 留下的是一台乾淨的 Ubuntu 24.04 VM,上面什麼都還沒裝。這一章結束時,同一台主機上會跑著一朵能用的 OpenStack 雲:在命令列打 `openstack service list` 會列出服務清單,在瀏覽器裡能用管理員帳號登入網頁儀表板 Horizon。
 
-OpenStack 不是一個程式,是**十幾個服務的集合**——每個服務要自己的設定檔、資料庫、訊息佇列連線,彼此還要知道對方的位址和密碼。全部手動裝,光把設定串對就要好幾天,而且無法重現。所以實務上**沒有人手動裝 OpenStack**,一定用部署工具。
+要走到這一步,得把 OpenStack 的五個核心服務裝起來:Keystone(帳號與認證)、Glance(VM 映像檔)、Nova(開 VM)、Neutron(網路)、Horizon(網頁儀表板)。儲存服務 Cinder 這一章先不裝,留到 Day 3 示範怎麼對已經在運作的雲加一個服務。讀完之後,部署失敗或想改設定時,你會知道該改設定檔重跑,還是要先清掉半途留下的東西才能重跑。
 
-### Kolla 與 Kolla-Ansible 是什麼
+## 為什麼不手動裝
 
-兩個名字很像,分工不同:
+OpenStack 不是一個程式,而是十幾個服務的集合。以 Nova 為例,它要有自己的設定檔、自己的資料庫帳號、一條連到訊息佇列 RabbitMQ 的連線(服務內部各元件靠它互傳工作和通知),還要知道 Keystone 的位址和自己在 Keystone 裡的密碼,才能驗證每個請求。其他服務也都一樣。全部手動裝,光是把這些位址和密碼一個個填對就要好幾天,而且換一台機器就得再來一次。所以實務上不會手動裝 OpenStack,而是交給部署工具。
 
-- **Kolla**:把每個 OpenStack 服務預先打包成 **Docker image**(放在 `quay.io/openstack.kolla/`)。你不用自己編譯或安裝任何 OpenStack 軟體。
-- **Kolla-Ansible**:一組 **Ansible 劇本**(自動化腳本),負責把這些 image 拉到主機、生成每個服務的設定檔、按正確順序啟動、把它們串成一朵雲。
+這門課用的部署工具是 Kolla-Ansible。名字裡的兩個部分分別來自兩個專案:
 
-你要做的事只有三件:**填一份設定檔(`globals.yml`)→ 產生密碼 → 執行部署指令**。剩下的交給工具。
+- **Kolla** 把每個 OpenStack 服務預先打包成 Docker image(容器映像檔,裡面裝好了執行一個服務需要的所有軟體),放在 `quay.io/openstack.kolla/`。你不用自己編譯或安裝任何 OpenStack 軟體。
+- **Kolla-Ansible** 是一組 Ansible 劇本。Ansible 是一套自動化工具,照著劇本(playbook)上寫的步驟一步步在主機上執行。Kolla-Ansible 的劇本負責把 image 拉到主機、替每個服務產生設定檔、按正確順序啟動,把它們串成一朵雲。
 
-```mermaid
-flowchart LR
-    subgraph you["你提供的(今天的主要工作)"]
-        G["globals.yml<br/>(這朵雲長什麼樣)"]
-        P["passwords.yml<br/>(所有服務的密碼)"]
-        I["inventory<br/>(部到哪些主機)"]
-    end
-    KA["kolla-ansible deploy"]
-    subgraph result["部署結果"]
-        C["33 個 Docker 容器<br/>keystone / glance / nova /<br/>neutron / horizon / mariadb / rabbitmq …"]
-    end
-    G --> KA
-    P --> KA
-    I --> KA
-    KA -->|"拉 image、生成設定、依序啟動"| C
-```
+你要提供的只有三份檔案,剩下的交給 `kolla-ansible deploy`:
 
-### 今天會遇到的名詞
+![左邊是三份輸入檔:globals.yml 描述這朵雲長什麼樣、passwords.yml 存每個服務的密碼、inventory 列出要部到哪些主機;三者連同 quay.io 上的 Kolla image 一起交給中間的 kolla-ansible deploy,它拉 image、產生設定檔、依序啟動,右邊是主機上的 Docker 跑著 keystone、glance_api、nova_api 等共 33 個容器](../assets/diagrams/s3d1-kolla-inputs.svg)
 
-| 名詞 | 白話解釋 |
-|---|---|
-| **AIO**(all-in-one) | 所有服務裝在同一台主機。學習用標準做法;生產環境會拆多台 |
-| **inventory** | Ansible 的「主機名單」。AIO 情境就是一份現成的單機名單檔 |
-| **globals.yml** | Kolla-Ansible 唯一的主設定檔。預設全部是註解,你只需要加上自己要改的幾行 |
-| **VIP**(virtual IP) | 多主機部署時,一個「飄在多台主機之間」的服務入口 IP。單機部署沒有 HA,VIP 直接填主機自己的 IP |
-| **venv** | Python 虛擬環境。把 kolla-ansible 和它的依賴隔離在一個資料夾裡,不污染系統 Python |
+我們可以從圖上看到兩件事:
 
-## 原理與架構
-
-### 1. Kolla-Ansible 的部署模型:三個特徵
-
-裝之前先建立正確的心智模型,之後除錯會輕鬆很多:
-
-1. **每個服務一個容器**:`docker ps` 會看到 `nova_api`、`keystone`、`mariadb`……一個容器出問題,看那個容器的 log 就好,邊界非常清楚。
-2. **所有容器共用主機網路**(host network mode):容器不做網路隔離,服務就像直接跑在主機上一樣佔用 port。好處是網路路徑單純;代價是 port 衝突要自己留意——我們部署時就撞過一次([地雷 4:port 3306 被佔走](#mine-4))。
-3. **設定在部署當下生成、寫死**:服務之間互連需要的資訊(資料庫帳密、訊息佇列位址、認證端點)全部由 kolla-ansible 在執行 `deploy` 的當下計算好、寫進每個服務的設定檔。**之後想改任何設定,就改 `globals.yml` 再重跑部署指令**——工具是冪等的(重跑只會套用差異),這是它可靠的來源。
-
-!!! note "與前一次嘗試的對照(選讀)"
-    [前兩次嘗試](../previous-attempts.md)中的 Juju/Charm 走的是相反哲學:服務之間靠「relation」在**執行期動態協商**連線資訊,理論優雅,但協商過程是黑箱、出錯難查。Kolla 的「部署期一次算好」土法但透明——設定檔就在那裡,打開看就知道服務拿到了什麼。
-
-### 2. 版本選擇:OpenStack 2025.1(Epoxy)
-
-OpenStack 每半年發布一版,版名按字母排序(……Dalmatian、**Epoxy**、Flamingo……)。本課選 **2025.1 Epoxy**:發布滿一年、文件與社群經驗最豐富的近期穩定版。對應關係:kolla-ansible **20.x** ↔ OpenStack **2025.1**,而我們直接從 git 的 `stable/2025.1` 分支安裝,不用去猜 pip 版號區間。Ubuntu 24.04 主機在官方支援矩陣內。
-
-### 3. 部署前的三個網路決定
-
-`globals.yml` 裡真正需要思考的其實只有網路。這三個決定每個都跟「我們跑在 Azure 上」有關:
-
-| 設定 | 本課的值 | 為什麼 |
-|---|---|---|
-| `network_interface` | `eth0` | 管理流量、API、隧道流量走哪張網卡。單機單網卡,就是 `eth0`。(VM 上另一張 `enP*` 是 Azure 加速網路的配件,不要碰) |
-| `neutron_external_interface` | `dummy0` | Kolla 要求給「對外網路」一張**沒有 IP 的專用網卡**。Azure VM 只有一張真網卡,標準解法是造一張**虛擬的 dummy 網卡**充當。代價:對外網路只在主機內部有效(Azure 網路不允許 L2 廣播,Day 0 已解釋)——所以之後從 Mac 看任何東西都走 SSH tunnel |
-| `kolla_internal_vip_address` + `enable_haproxy: "no"` | `10.0.0.4`(主機自己的 IP) | 單機沒有高可用需求,關掉負載平衡層(haproxy),VIP 直接填主機 IP。生產多節點時這裡會是真的浮動 VIP |
-
-另外兩行:`neutron_plugin_agent: "ovn"` 選 OVN 當網路後端(現代預設,Day 2 會深入它),`nova_compute_virt_type: "kvm"` 用硬體虛擬化加速(Day 0 已用 `kvm-ok` 驗證過,不寫也是預設值,寫出來是課程用意)。
+1. **三份輸入裡,真正要動腦的只有 `globals.yml`。** 密碼由一個指令自動產生,單機用的 inventory 直接複製官方範例。這一章大部分的篇幅都在決定 `globals.yml` 裡那幾行。
+2. **每個服務跑在自己的容器裡。** 部署完之後 `docker ps` 會看到 `keystone`、`nova_api`、`mariadb` 這些名字。哪個服務出問題,就看那個容器的 log,邊界很清楚。
 
 ## 開始之前
 
-確認你有:
+這一章需要 Day 0 建好的 Azure VM:Ubuntu 24.04、16 vCPU、128 GB 記憶體,`kvm-ok` 確認過支援巢狀虛擬化,而且你能 SSH 進去。VM 要能連到外網,deploy 時要從 quay.io 下載約 30 個 image。除非特別註明「在 Mac 上」,以下所有指令都在 VM 上執行。
 
-- [x] Day 0 建好的 Azure VM(Ubuntu 24.04、16 vCPU / 128 GB、`kvm-ok` 通過),且能 SSH 進去
-- [x] VM 能連外網(要從 quay.io 拉約 30 個 image)
-- 以下**所有指令都在 VM 上執行**(SSH 進去後),除非特別註明「在 Mac 上」
+## 步驟 1:安裝 Kolla-Ansible
 
-## 步驟
+先決定裝哪一版。OpenStack 每半年發布一版,版名依字母順序排(……Dalmatian、Epoxy、Flamingo……)。本課用 **2025.1 Epoxy**:發布滿一年,文件和社群經驗都夠多。kolla-ansible 的 **20.x** 對應 OpenStack 2025.1,所以下面直接從 git 的 `stable/2025.1` 分支安裝,不用自己猜 pip 的版號範圍。Ubuntu 24.04 在這一版的官方支援清單內。
 
-### 步驟 1:安裝 Kolla-Ansible
-
-Kolla-Ansible 是 Python 套件,我們把它裝進獨立的 venv,避免跟系統 Python 打架。先裝系統層的編譯依賴,再建 venv:
+Kolla-Ansible 是 Python 套件,我們把它裝進一個獨立的 **venv**(Python 虛擬環境:一個資料夾,裡面有自己的 Python 和套件),避免跟系統的 Python 互相干擾。先裝系統層的編譯依賴,再建 venv:
 
 ```bash
 sudo apt-get install -y git python3-venv python3-dev libffi-dev gcc libssl-dev
@@ -102,7 +41,7 @@ source ~/kolla-venv/bin/activate
 ```
 
 !!! warning "之後每次操作都要先進 venv"
-    今天以及未來每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`,提示符出現 `(kolla-venv)` 前綴才算進來了。忘記的話,指令會拿系統的 Python 環境執行,冒出來的錯誤訊息會跟真正的原因毫無關聯、極難聯想——我們就吃過一次虧,過程記錄在[地雷 1:沒進 venv 的靈異錯誤](#mine-1)。
+    這一章以及之後每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`,提示符前面出現 `(kolla-venv)` 才算進來了。沒進 venv 時,錯誤訊息常常指向一個看起來毫不相關的地方,很難聯想到真正的原因,實際的例子見[疑難排解：沒進 venv,`install-deps` 靜默失敗](#mine-1)。
 
 接著在 venv 內安裝 kolla-ansible 本體(從 stable 分支)與它需要的 Ansible:
 
@@ -112,7 +51,7 @@ pip install "ansible-core>=2.16,<2.18"
 pip install git+https://opendev.org/openstack/kolla-ansible@stable/2025.1
 ```
 
-裝完先驗證版本,確認拿到的是 20.x(對應 OpenStack 2025.1):
+裝完先確認版本,拿到的應該是 20.x:
 
 ```bash
 kolla-ansible --version
@@ -122,24 +61,24 @@ kolla-ansible --version
 kolla-ansible 20.4.0
 ```
 
-kolla-ansible 還需要一批 Ansible collection(可以想成它的外掛),用內建指令安裝:
+kolla-ansible 還需要一批 Ansible collection(Ansible 的擴充套件,裡面裝的是劇本會用到的模組),用內建指令安裝:
 
 ```bash
 kolla-ansible install-deps
 ```
 
-最後補裝兩個 Python 模組。這一步官方文件沒寫,但不做的話,稍後的 prechecks 會分別因為缺 Docker SDK 和缺 dbus 模組而失敗(我們就是這樣發現的,詳見[地雷 2](#mine-2) 與[地雷 3](#mine-3));其中 dbus-python 是原始碼編譯套件,要先裝系統標頭檔:
+最後補裝兩個 Python 模組。官方文件沒有列出這一步,但少了它們,步驟 5 的 prechecks 會分別因為缺 Docker SDK 和缺 dbus 模組而失敗(見疑難排解的[「缺 docker 模組」](#mine-2)與[「缺 dbus 模組」](#mine-3))。其中 dbus-python 要從原始碼編譯,所以先裝系統的標頭檔:
 
 ```bash
 sudo apt-get install -y pkg-config libdbus-1-dev libdbus-glib-1-dev
 pip install docker dbus-python
 ```
 
-工具裝好了,下一步準備它要吃的設定檔。
+工具裝好了,下一步準備它要讀的設定檔。
 
-### 步驟 2:準備設定檔骨架
+## 步驟 2:準備設定檔骨架
 
-Kolla-Ansible 約定所有設定放在 `/etc/kolla/`。把官方範例複製過去,並把單機用的 inventory(主機名單)複製到家目錄:
+Kolla-Ansible 預設從 `/etc/kolla/` 讀設定。把官方範例複製過去,再把單機用的 inventory 複製到家目錄。**inventory** 是 Ansible 的主機名單,寫著要部到哪些主機、每台主機扮演什麼角色。這一章所有服務都裝在同一台主機上,這種部署方式叫 **AIO**(all-in-one),官方直接提供一份叫 `all-in-one` 的名單,裡面只有本機 `localhost`。正式環境會把控制服務和跑 VM 的主機拆開,名單也會長得不一樣:
 
 ```bash
 sudo mkdir -p /etc/kolla && sudo chown $USER:$USER /etc/kolla
@@ -157,17 +96,32 @@ ls /etc/kolla/
 globals.yml  passwords.yml
 ```
 
-`globals.yml` 現在幾乎全是註解(這是特色:只寫你要改的),`passwords.yml` 全是空值(下一步生成)。
+打開 `globals.yml` 會發現它幾乎全是註解:每個選項都有預設值,你只要寫出想改的那幾行。`passwords.yml` 則是一份只有欄位名、沒有值的清單,步驟 4 再填滿。
 
-### 步驟 3:造一張 dummy 網卡
+## 對外網路需要一張沒有 IP 的網卡
 
-原理章說過:Kolla 需要一張**沒有 IP 的網卡**給對外網路,而 Azure VM 只有一張真網卡。解法是造一張虛擬的 dummy 網卡。先立即生效:
+填 `globals.yml` 之前,有一件事要先處理。之後在這朵雲裡開的 VM,要透過 Neutron 的**對外網路**(external network)跟雲外面溝通,Kolla 要你指定一張網卡專門給它用,設定名稱是 `neutron_external_interface`。這張網卡不能有 IP:Neutron 會把整張網卡接到自己管理的虛擬交換器上,從此這張網卡變成虛擬交換器的一個連接埠,不再是主機自己收發資料用的網卡。如果把主機原本在用、有 IP 的網卡交給 Neutron,主機靠這張網卡的連線(包括你的 SSH)就會斷掉。
+
+問題是 Azure VM 只有一張真正的網卡 `eth0`,它已經有 IP,而且你靠它 SSH 進來。(用 `ip link` 還會看到一張 `enP` 開頭的網卡,那是 Azure 加速網路附帶的,不要動它。)標準的做法是造一張 **dummy 網卡**:Linux 核心提供的虛擬網卡,不接任何實體線路,剛好可以當成「沒有 IP 的那一張」交給 Neutron。
+
+把兩張網卡各自的用途畫出來:
+
+![Azure VM 裡有兩個設定:network_interface 指向 eth0(10.0.0.4),承載 API、服務之間的管理流量與隧道流量,eth0 連到外面的 Azure VNet;neutron_external_interface 指向 dummy0,沒有 IP、不接任何線,所以對外網路只在主機內部有效](../assets/diagrams/s3d1-nics.svg)
+
+我們可以從圖上看到兩件事:
+
+1. **只有 `eth0` 連到 VM 外面。** 服務之間的溝通、你下的 API 請求,都走 `eth0`,設定名稱是 `network_interface`。
+2. **dummy0 沒有通到任何地方。** 所以 Neutron 的對外網路只在這台主機內部有效,而 Azure 的虛擬網路本來也不轉送 VM 之間的 L2 廣播(Neutron 對外網路需要的那種同一網段內的廣播),就算接上也出不去。雲外面因此連不進這朵雲裡的 VM(VM 往外連要靠 Day 2 在主機上補的 NAT);這不是設定錯誤,是在公有雲上跑 OpenStack 實驗環境的既定限制,正式環境的對外網路會接到真正的實體網路。
+
+## 步驟 3:造一張 dummy 網卡
+
+先讓 dummy 網卡立即生效:
 
 ```bash
 sudo ip link add dummy0 type dummy && sudo ip link set dummy0 up
 ```
 
-但 `ip link` 的效果重開機就消失,所以同時寫成 systemd-networkd 設定讓它**開機自動重建**(這台 VM 每晚會自動關機,這步不做明天就壞):
+`ip link` 建的網卡重開機就會消失,而 Day 0 設了每晚自動關機,所以要同時寫成 systemd-networkd(Ubuntu 管理網路設定的系統服務)的設定,讓它開機時自動重建。少了這一步,隔天開機後 Neutron 會找不到 dummy0:
 
 ```bash
 sudo tee /etc/systemd/network/10-dummy0.netdev <<EOF
@@ -185,7 +139,7 @@ ConfigureWithoutCarrier=yes
 EOF
 ```
 
-驗證網卡存在且是 UP:
+確認網卡存在且已啟用:
 
 ```bash
 ip -br link show dummy0
@@ -195,9 +149,19 @@ ip -br link show dummy0
 dummy0           UNKNOWN        aa:bb:cc:dd:ee:ff <BROADCAST,NOARP,UP,LOWER_UP>
 ```
 
-### 步驟 4:填 globals.yml、產生密碼
+第二欄的 `UNKNOWN` 是正常的:dummy 網卡沒有實體線路可以回報連線狀態。要看的是角括號裡有 `UP`。
 
-把我們在原理章決定好的七行設定**附加到 `globals.yml` 檔尾**。原檔全部是註解所以不會衝突,而且之後 `git diff` 或肉眼一看就知道自己改了什麼:
+## 步驟 4:填 globals.yml、產生密碼
+
+接下來要附加到 `globals.yml` 的有七行,下一小節還會再補一行。先一行行看這七行在決定什麼:
+
+- `kolla_base_distro: "ubuntu"`:用 Ubuntu 為基底的 image。
+- `network_interface: "eth0"` 和 `neutron_external_interface: "dummy0"`:上一節那張圖的兩條線。
+- `kolla_internal_vip_address` 和 `enable_haproxy: "no"`:這兩行要一起看。多台主機的部署會在 API 服務前面放一層負載平衡器 haproxy,並準備一個 **VIP**(virtual IP):一個不固定屬於某台主機、可以在主機之間移轉的位址,所有服務都透過它找到彼此。這一章只有一台主機,不需要負載平衡,所以關掉 haproxy,VIP 直接填主機自己的 IP。
+- `neutron_plugin_agent: "ovn"`:Neutron 實際建立虛擬網路、虛擬路由器時,交給 OVN(Open Virtual Network,一套虛擬網路軟體)去做。Kolla 的預設值是 `openvswitch`,不寫這一行就會裝成另一套 Open vSwitch agent;本課選 OVN,Day 2 會用到它建立的網路,Day 20 再追進 OVN 內部看封包怎麼走。
+- `nova_compute_virt_type: "kvm"`:Nova 開 VM 時用硬體虛擬化加速。Day 0 用 `kvm-ok` 確認過這台 VM 支援巢狀虛擬化。這行不寫也是預設值,寫出來是為了讓設定檔一眼看得出這個前提。
+
+把這七行**附加到 `globals.yml` 檔尾**。原檔全是註解,不會衝突,之後打開檔案拉到最後,就能看到自己改了什麼:
 
 ```bash
 tee -a /etc/kolla/globals.yml <<EOF
@@ -211,48 +175,74 @@ nova_compute_virt_type: "kvm"
 EOF
 ```
 
-> `kolla_internal_vip_address` 請填**你的 VM 的私有 IP**(`ip -4 addr show eth0` 可查);本課環境是 `10.0.0.4`。
+> `kolla_internal_vip_address` 請填**你的 VM 的私有 IP**(`ip -4 addr show eth0` 可查),不一定是上面的 `10.0.0.4`。
 
-接著一個指令生成所有服務的隨機密碼(填滿 `passwords.yml`):
+### 關 haproxy 時,proxysql 也要一起關
+
+這七行還少了一行。Kolla 預設會啟用 **proxysql**(`enable_proxysql` 預設是 `yes`),它站在資料庫 MariaDB 前面,負責把資料庫連線分給後面的 MariaDB 節點,而它跟 haproxy 是兩個獨立的開關:關了 haproxy,proxysql 還是開著。
+
+麻煩在於 Kolla 的容器不做網路隔離,全部共用主機的網路(host network mode),每個服務就像直接跑在主機上一樣佔用 port。proxysql 聽的是 VIP 上的 3306,MariaDB 聽的是主機 IP 上的 3306。下面這張圖比較多台主機和單機兩種情況:
+
+![左邊是多節點:proxysql 聽 VIP:3306、mariadb 聽主機 IP:3306,位址不同,兩個程式各聽各的;右邊是單機:VIP 填成主機自己的 IP,proxysql 和 mariadb 都要聽 10.0.0.4:3306,只能有一個程式聽這個位址,mariadb 綁不上 port,容器 Exited (1)](../assets/diagrams/s3d1-port-3306.svg)
+
+左邊兩個位址不同,相安無事。右邊因為 VIP 填的就是主機 IP,兩個程式要聽同一個 IP 和 port,MariaDB 起不來,deploy 會卡在等 MariaDB 的那一步直到逾時。所以單機部署關 haproxy 時,proxysql 也要一起關。附加完上面七行之後,再補這一行:
+
+```bash
+echo 'enable_proxysql: "no"' >> /etc/kolla/globals.yml
+```
+
+如果漏了,症狀和完整的修法見[疑難排解：MariaDB 起不來](#mine-4)。
+
+### 設定在部署時產生
+
+Kolla-Ansible 在執行部署的當下,才把資料庫帳密、訊息佇列位址、認證端點這些服務互連需要的資訊算出來,寫進每個服務的設定檔。這帶來一個工作習慣:**改設定要改 Kolla 的輸入,再重跑部署指令**,不要直接去改主機上產生出來的設定檔,下次部署會把它蓋掉。輸入有兩個地方:整朵雲的選項(裝哪些服務、用哪張網卡、VIP)寫在 `globals.yml`;某個服務設定檔裡的單一選項,例如 `nova.conf` 的某一行,寫在 `/etc/kolla/config/` 底下同名的檔案(例如 `/etc/kolla/config/nova.conf`),部署時 Kolla 會把它合併進產生的設定檔。部署指令是**冪等**的(重跑只會套用和現況不同的部分,已經正確的東西不會被重做),所以重跑是安全的。設定檔就放在主機上,想知道某個服務拿到了什麼,打開看就知道。
+
+接著一個指令產生所有服務的隨機密碼,填滿 `passwords.yml`:
 
 ```bash
 kolla-genpwd
 ```
 
-驗證密碼真的生出來了(隨便抽查一個,應該看到隨機字串而不是空白):
+抽查一個,應該看到一串隨機字串而不是空白:
 
 ```bash
 grep keystone_admin_password /etc/kolla/passwords.yml
 ```
 
-設定齊了:雲長什麼樣(globals)、密碼(passwords)、部到哪(inventory)。可以開始部署。
+三份輸入都齊了:這朵雲長什麼樣(`globals.yml`)、密碼(`passwords.yml`)、部到哪(`all-in-one`)。可以開始部署。
 
-### 步驟 5:bootstrap 與 prechecks
+## 步驟 5:bootstrap 與 prechecks
 
-部署分三段跑,不要一次到位——每段都有明確的驗證點。第一段 `bootstrap-servers` 幫主機裝好 Docker engine 等基礎(約 3 分鐘):
+部署不要一次到位,而是分成幾段指令,每段跑完都先確認結果再往下:
+
+![由左到右四段指令:bootstrap-servers 裝 Docker engine 等主機基礎,prechecks 做部署前健檢(port、設定矛盾),deploy 拉 image、產生設定、依序啟動容器,post-deploy 產生管理員憑證 admin-openrc.sh;前三段跑完都看 PLAY RECAP 的 failed=0,最後一段用 openstack service list 確認](../assets/diagrams/s3d1-deploy-stages.svg)
+
+照著圖由左到右看:四段都是 Ansible 劇本,結尾都會印同一種摘要;前三段負責把服務部署起來,第四段不部署服務,只產生登入用的憑證,用它下第一個 OpenStack 指令就是最後的確認。分段跑的好處是出錯時範圍小:prechecks 抓到的問題都還沒動到任何服務。
+
+第一段 `bootstrap-servers` 替主機裝好 Docker engine 等基礎(約 3 分鐘):
 
 ```bash
 kolla-ansible bootstrap-servers -i ~/all-in-one
 ```
 
-第二段 `prechecks` 做部署前健檢(port 有沒有被佔、設定有沒有矛盾):
+第二段 `prechecks` 做部署前健檢,例如 port 有沒有被佔、設定有沒有互相矛盾:
 
 ```bash
 kolla-ansible prechecks -i ~/all-in-one
 ```
 
-兩段結尾都會印 Ansible 的 `PLAY RECAP`,**判準只有一個:`failed=0`**:
+兩段結尾都會印 Ansible 的 **`PLAY RECAP`**:每台主機一行,統計這次執行有幾個步驟成功(`ok`)、幾個改了東西(`changed`)、幾個失敗(`failed`)。判斷過了沒有,只看 `failed=0`:
 
 ```text
 PLAY RECAP *********************************************************
 localhost : ok=45   changed=8    unreachable=0    failed=0    ...
 ```
 
-prechecks 沒過就不要繼續——它抓到的每個問題,到 deploy 階段都會變成更難查的失敗。如果你看到 `No module named 'docker'` 或 `No module named 'dbus'`,回到步驟 1 最後補裝模組那段([地雷 2](#mine-2)、[地雷 3](#mine-3) 有完整說明)。
+這裡只有 `localhost` 一行,因為 `all-in-one` 名單裡只有本機。prechecks 沒過就不要繼續,它抓到的每個問題,到 deploy 階段都會變成更難查的失敗。如果看到 `No module named 'docker'` 或 `No module named 'dbus'`,回到步驟 1 最後補裝模組的那段(疑難排解的[「缺 docker 模組」](#mine-2)、[「缺 dbus 模組」](#mine-3))。
 
-### 步驟 6:deploy(約 25 分鐘)
+## 步驟 6:deploy(約 25–30 分鐘)
 
-正式部署。這一步要拉 30 個 image 並依序啟動所有服務,第一次跑約 25 分鐘——**用 `nohup` 放到背景跑**,SSH 斷線也不會中斷(25 分鐘內斷線機率不低,別賭):
+正式部署。這一步要拉約 30 個 image,並依序啟動所有服務,第一次跑(含下載 image)約 25–30 分鐘。中途 SSH 斷線的話,前景執行的指令會跟著中斷,所以用 `nohup` 放到背景跑,輸出寫進 log 檔:
 
 ```bash
 nohup bash -c "source ~/kolla-venv/bin/activate && kolla-ansible deploy -i ~/all-in-one" \
@@ -260,16 +250,18 @@ nohup bash -c "source ~/kolla-venv/bin/activate && kolla-ansible deploy -i ~/all
 tail -f ~/kolla-deploy.log
 ```
 
-`tail -f` 讓你即時看進度(`Ctrl+C` 只會停止觀看,不影響背景部署)。結尾一樣看 `PLAY RECAP` 的 `failed=0`。本課實測:
+`nohup` 後面的指令自己先 `source` 一次 venv,不依賴你目前的終端機有沒有進 venv。`tail -f` 讓你即時看進度,按 `Ctrl+C` 只會停止觀看,不影響背景的部署。結尾一樣看 `PLAY RECAP` 的 `failed=0`,完整跑完會像這樣:
 
 ```text
 PLAY RECAP *********************************************************
 localhost : ok=367  changed=214  unreachable=0    failed=0    ...
 ```
 
-如果 deploy 中途失敗:先在 log 裡找第一個 `fatal:`,那才是真正的錯誤(後面的失敗多半是連鎖反應)。我們第一次跑就在這裡失敗——MariaDB 起不來,原因是 port 被佔([地雷 4](#mine-4) 有完整的診斷過程與解法);那次除了改設定,還得先把半初始化的 MariaDB 容器與 volume 清掉才重跑得過。**deploy 的冪等有邊界**:對 kolla 認得的資源,重跑只套用差異、可安全重來;但半途炸掉的 stateful bootstrap(像地雷 4 的 MariaDB,以及後面 Day 23 地雷 3 的 Galera)得先清殘骸再重跑,不是「重跑必過」。
+如果 deploy 中途失敗,先在 log 裡找**第一個** `fatal:`,那才是真正的錯誤,後面的失敗多半是它引起的連鎖反應。
 
-### 步驟 7:拿到鑰匙,第一次使用你的雲
+找到原因、改好 `globals.yml` 之後,通常直接重跑 deploy 就好。但冪等有它的範圍:對 Kolla 認得的資源,重跑只套用差異,可以放心重來;可是像 MariaDB 這種要在第一次啟動時初始化資料的服務,如果初始化做到一半就失敗,留下來的容器和 volume 處於半完成的狀態,重跑不會替你清掉。這時要先刪掉那個容器和 volume,再重跑。疑難排解裡的[「MariaDB 起不來」](#mine-4)就是一個實際的例子。
+
+## 步驟 7:第一次使用你的雲
 
 部署完成後,產生管理員的登入憑證檔:
 
@@ -277,7 +269,7 @@ localhost : ok=367  changed=214  unreachable=0    failed=0    ...
 kolla-ansible post-deploy -i ~/all-in-one
 ```
 
-這會生出 `/etc/kolla/admin-openrc.sh`——內容是一組環境變數(帳號、密碼、API 位址),OpenStack CLI 靠它知道要連哪朵雲、用什麼身分。裝 CLI、載入憑證、下第一個指令:
+這會產生 `/etc/kolla/admin-openrc.sh`,內容是一組環境變數(帳號、密碼、API 位址),OpenStack CLI 靠它知道要連哪朵雲、用什麼身分。裝 CLI、載入憑證、下第一個指令:
 
 ```bash
 pip install python-openstackclient
@@ -299,9 +291,16 @@ openstack service list
 +----------------------------------+-----------+----------------+
 ```
 
-看到服務清單 = 你的雲活著。(眼尖的話:Heat 也在——Epoxy 預設啟用,我們沒特別裝,Day 5 直接用。)
+看到這 7 個服務,代表 Keystone 在運作,而且其他服務都向它登記好了。我們可以從清單上看到幾件事:
 
-最後開網頁儀表板 Horizon。因為對外網路出不了主機(Azure 限制),**在 Mac 上**開一條 SSH tunnel:
+- `Type` 欄就是每個服務的職責:keystone 管身分認證(identity)、glance 管映像檔(image)、nova 管運算(compute)、neutron 管網路(network)。
+- **placement** 不在開場那五個服務裡。它記錄每台主機還剩多少 CPU、記憶體,Nova 決定把 VM 開在哪台主機時要問它。Kolla 部署 Nova 時會一起帶上它。
+- **heat** 和 **heat-cfn** 是編排服務 Heat(用一份範本檔一次建立 VM、網路等多項資源),Kolla 預設就會啟用,Day 5 會直接用到。
+- **Horizon 不在清單上**,因為它是網頁介面,不提供 API 給其他服務呼叫。
+
+服務清單只代表「登記了」,不代表每個元件都活著。還可以再確認三件事:`openstack compute service list` 裡 Nova 的 scheduler、conductor、compute 三個元件狀態都是 `up`;`openstack network agent list` 裡的 OVN agent 都是 Alive;`docker ps` 列出的 33 個容器都是 `Up`,沒有 `Exited` 或 `Restarting`。
+
+最後打開網頁儀表板 Horizon。Horizon 聽在 VM 的私有 IP 上,而 Day 0 的 NSG 只對你的 IP 開了 SSH,所以要**在 Mac 上**開一條 SSH tunnel(透過 SSH 連線轉送某個 port),把 Mac 的 8080 port 轉到 VM 上 Horizon 的 80 port:
 
 ```bash
 # 在 Mac 上執行;<VM公網IP> 換成你 Day 0 拿到的
@@ -314,51 +313,41 @@ ssh -L 8080:<VM私有IP>:80 azureuser@<VM公網IP>
 grep keystone_admin_password /etc/kolla/passwords.yml
 ```
 
-登入看到 Horizon 儀表板,今天就完成了。
-
 ![horizon-overview](../assets/screenshots/horizon-overview.png)
 
-*登入後的 Horizon Overview:配額圓餅圖顯示這朵雲目前的資源用量——你的第一個雲端儀表板。*
+*登入後的 Horizon Overview:配額圓餅圖顯示這朵雲目前的資源用量。圖中的用量和左側的 Volumes、Container Infra 選單,是之後幾天加上的服務和資源;剛部署完時,你的畫面上不會有這些。*
 
+## 疑難排解
 
-## 驗收 checkpoint
+照官方文件操作、或漏掉本章某一步時,會遇到下面四個問題,依出現順序排列。
 
-逐項執行,**全部符合才算完成今天**。「本課環境的結果」欄是我們實測的參考值,你的數字可以略有出入,但判準必須成立:
+### 沒進 venv,`install-deps` 靜默失敗 {#mine-1}
 
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| deploy 的 PLAY RECAP | `failed=0` | ok=367 / changed=214 |
-| `openstack service list` | 核心服務全部註冊 | 7 個服務(多出來的 Heat 是 Epoxy 預設附贈) |
-| `openstack compute service list` | nova 的 scheduler / conductor / compute 狀態全是 `up` | 3 個元件全 `up` |
-| `openstack network agent list` | OVN agent 全部 Alive | 全 Alive |
-| `docker ps` | 每個容器都是 `Up`,沒有 `Exited` 或 `Restarting` | 33 個容器 |
-| Horizon | 走 SSH tunnel 打得開登入頁、admin 登得進去 | 正常 |
+**症狀**:bootstrap-servers 報 `role openstack.kolla.baremetal` 解析錯誤,看起來像是劇本本身壞了。
 
-部署耗時參考:我們第一次跑到第 12 分鐘因 [地雷 4](#mine-4) 失敗;修正後重跑(此時 image 已在本地)約 25 分鐘完成。你如果一次順利通過,含拉 image 約 25–30 分鐘。
+**原因**:沒有 activate venv,而是直接用完整路徑呼叫 `~/kolla-venv/bin/kolla-ansible install-deps`。install-deps 要靠 PATH 找到 venv 裡的 `ansible-galaxy`,沒進 venv 就找不到,collection 根本沒裝進去,到了 bootstrap-servers 才出錯。
 
-## 地雷記錄
+**修法**:kolla 相關的指令一律在 `source ~/kolla-venv/bin/activate` 之後執行,然後重跑 `kolla-ansible install-deps`。
 
-我們部署時實際撞到的四個問題,依出現順序排列。正文各步驟提到「地雷 N」時,指的就是這裡的對應條目。
+### prechecks 報 `No module named 'docker'`(缺 docker 模組) {#mine-2}
 
-### 地雷 1:沒進 venv,`install-deps` 靜默失敗 {#mine-1}
+**原因**:bootstrap-servers 裝的是 Docker **engine**,也就是主機上跑容器的服務。kolla-ansible 在 venv 裡操作 Docker 時用的是 Docker 的 **Python SDK**,那是另一個東西,要自己裝。
 
-沒 activate venv、直接用完整路徑呼叫 `~/kolla-venv/bin/kolla-ansible install-deps` 會找不到 `ansible-galaxy`(它是靠 PATH 找的)。**教訓:kolla 指令一律在 `source ~/kolla-venv/bin/activate` 之後跑。** 後遺症狀很誤導:bootstrap-servers 報 `role openstack.kolla.baremetal` 解析錯誤——真因是 collection 根本沒裝進去。
+**修法**:在 venv 裡 `pip install docker`。
 
-### 地雷 2:prechecks 報 `No module named 'docker'` {#mine-2}
+### prechecks 報 `No module named 'dbus'`(缺 dbus 模組) {#mine-3}
 
-bootstrap-servers 裝的是 Docker **engine**(主機上的服務),venv 裡的 Docker **Python SDK** 是另一回事,要自己 `pip install docker`。
+**原因**:`dbus-python` 要從原始碼編譯,系統上沒有 dbus 的標頭檔時,直接 pip 裝會編譯失敗。
 
-### 地雷 3:prechecks 報 `No module named 'dbus'` {#mine-3}
+**修法**:先 `apt install pkg-config libdbus-1-dev libdbus-glib-1-dev`,再 `pip install dbus-python`。
 
-`dbus-python` 是原始碼編譯套件,直接 pip 裝會編譯失敗——要先 `apt install pkg-config libdbus-1-dev libdbus-glib-1-dev` 再 `pip install dbus-python`。
+### MariaDB 起不來,port 3306 被 proxysql 佔走 {#mine-4}
 
-### 地雷 4:MariaDB 起不來,port 3306 被 proxysql 佔走 {#mine-4}
+**症狀**:deploy 卡在 `Wait for first MariaDB service port liveness` 直到逾時;`docker ps -a` 看到 `mariadb Exited (1)`;`ss -tlnp | grep 3306` 發現聽 3306 的是 **proxysql**。
 
-**症狀**:deploy 卡在 `Wait for first MariaDB service port liveness` 直到 timeout;`docker ps -a` 看到 `mariadb Exited (1)`;`ss -tlnp | grep 3306` 發現聽 3306 的是 **proxysql**。
+**原因**:Kolla 的 `enable_proxysql` 預設是 `yes`,而且它跟 `enable_haproxy` 是**獨立的開關**。關了 haproxy、把 VIP 設成主機 IP 之後,proxysql 綁 VIP:3306、mariadb 綁主機 IP:3306,兩者是同一個 IP 和 port(見步驟 4 的對照圖)。
 
-**根因**:Epoxy 把 `enable_proxysql` 預設為 `yes`(MariaDB 的前端負載平衡),而且它跟 `enable_haproxy` 是**獨立開關**。我們關了 haproxy 並把 VIP 設成主機 IP 之後,proxysql 綁 VIP:3306、mariadb 綁主機:3306——同一個 IP:port,相撞。
-
-**解法**:
+**修法**:關掉 proxysql,並清掉初始化到一半的 MariaDB,再重跑 deploy。如果步驟 4 已經補過 `enable_proxysql` 那一行,下面第一行就跳過,免得 `globals.yml` 出現重複的設定:
 
 ```bash
 echo 'enable_proxysql: "no"' >> /etc/kolla/globals.yml
@@ -367,7 +356,17 @@ sudo docker volume rm mariadb     # DB 還沒資料,砍掉讓它重新初始化�
 kolla-ansible deploy -i ~/all-in-one   # 冪等,直接重跑
 ```
 
-**教訓**:單機部署關 haproxy 時,**proxysql 要一起關**。詳細分析見排錯手冊:[Kolla ProxySQL vs MariaDB port](../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict.md)。
+單機部署關 haproxy 時,proxysql 要一起關。更完整的分析見排錯手冊:[Kolla ProxySQL vs MariaDB port](../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict.md)。
+
+## 想一想
+
+- 部署完隔天,你想把 Nova 的某個設定改掉。你會直接進 `nova_compute` 容器改設定檔,還是有別的做法?為什麼?
+- 一位同學的 deploy 在 MariaDB 那一步失敗,他找到原因、改好 `globals.yml` 之後重跑,卻還是在同一個地方失敗。你會請他先檢查什麼?
+- 另一位同學在自己的實體機上部署,那台機器有兩張網卡:第一張有 IP,他靠它 SSH 連進去;第二張接了網路線,但沒有設定 IP。`network_interface` 和 `neutron_external_interface` 各該填哪一張?他還需要照步驟 3 造一張 dummy0 嗎?
+
+## 小結
+
+Kolla-Ansible 把 OpenStack 的每個服務放進各自的容器,你只要提供 `globals.yml`、`passwords.yml` 和 inventory 三份輸入,它就在部署當下產生所有服務的設定並依序啟動。單機部署要多做兩個決定:用一張沒有 IP 的 dummy 網卡給 Neutron 的對外網路,以及把 VIP 設成主機 IP 時,haproxy 和 proxysql 要一起關。之後改設定,改 `globals.yml` 或 `/etc/kolla/config/` 底下的覆寫檔,再重跑部署;重跑失敗時,先從 log 裡第一個 `fatal:` 找原因,再想想是不是有服務初始化到一半,得先把它的容器和 volume 清掉。
 
 ## 延伸閱讀
 
@@ -380,4 +379,4 @@ kolla-ansible deploy -i ~/all-in-one   # 冪等,直接重跑
 
 ## 下一步
 
-雲部好了,但現在是「空的」——沒有租戶、沒有 image、沒有網路。[Day 2](sprint3-day2-openstack-resource-flow.md) 我們扮演管理員和租戶,把開出第一台 VM 需要的所有資源從零建立起來。
+雲部好了,但裡面是空的:沒有租戶、沒有 image、沒有網路。[Day 2](sprint3-day2-openstack-resource-flow.md) 我們分別扮演管理員和租戶(使用這朵雲的團隊或客戶,各自有獨立的資源),把開出第一台 VM 需要的資源從零建立起來。

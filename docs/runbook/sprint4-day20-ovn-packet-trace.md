@@ -1,24 +1,18 @@
-# Day 20: 封包怎麼流過這朵雲的網路
+# Day 20：從 OVN 規則追查 VM 的封包
 
-> Day 2 的網路對你來說可能還帶著一點魔法:建個網路、接個 router、掛個 floating IP,VM 就能上網了。今天把魔法拆光——用 OVN 的原生工具讀出邏輯拓樸、看安全群組怎麼變成規則、用 `ovn-trace` 讓一個封包「在紙上」走完全程,親眼看到它在哪一刻被 NAT 改寫。全程不發一個真封包、不用 tcpdump。
+VM 已經是 ACTIVE，安全群組也放行了，連線卻仍然失敗。Day 19 的 server UUID 能追到運算服務，接下來要沿著網路規則查：封包進了哪個 switch、選了哪條路由、來源 IP 又在哪裡被改寫？本章用 Day 18 的 Trove guest 作例子，讀完能判斷 OVN 的邏輯規則是否符合預期，以及還有哪些實際連線條件必須另外檢查。
 
-!!! abstract "你在課程的哪裡"
-    - **Day 2**:你從使用者視角建了網路、router、FIP,VM 通了。
-    - **今天**:潛到 Neutron 底下的 **OVN**,看那些資源實際上變成了什麼、封包怎麼流。**不部署任何東西**。
-    - **今天之後**:階段二結束——你已經能不靠 `openstack` CLI 讀懂這朵雲的運算面與網路面。
+## 先分清楚要查哪一層
 
-## 先建立地圖:Neutron 與 OVN 的對應
+Neutron 接收我們建立 network、router、安全群組的要求；OVN 把這些設定轉為主機實際使用的網路規則。OVN 的 **logical switch** 是邏輯交換器，對應 Neutron network；**logical router** 是邏輯路由器，連接不同網段。
 
-你在 Day 2 用 Neutron 建的東西,底下都變成了 OVN 的邏輯物件。對應關係很乾淨:
+設定先進入 NB（Northbound）資料庫。`ovn-northd` 讀取 NB，產生 SB（Southbound）資料庫中的 **logical flow**，也就是封包逐級比對的條件與動作。各主機的 `ovn-controller` 再把它們轉成 Open vSwitch 使用的 OpenFlow 規則。下圖把兩次轉換與查看工具分開：
 
-| 你在 Neutron 建的 | 變成 OVN 的 | 工具 |
-|---|---|---|
-| network | logical switch | `ovn-nbctl show` |
-| router | logical router | `ovn-nbctl lr-list` |
-| security group rule | logical flow(ACL) | `ovn-sbctl lflow-list` |
-| floating IP | NAT 規則(dnat_and_snat) | `ovn-nbctl lr-nat-list` |
+![Neutron 設定經 NB、northd、SB，再由各主機的 ovn-controller 轉成 OpenFlow](../assets/diagrams/os-s4d20-ovn-layers.svg)
 
-OVN 有兩個資料庫:**NB(northbound)** 存「你想要的樣子」(邏輯拓樸),**SB(southbound)** 存「怎麼實現」(編譯後的 flow)。工具落點(都在既有容器內,不用安裝):
+所以 `ovn-nbctl` 適合看拓樸與 NAT，`ovn-sbctl` 適合看 logical flow。`ovn-trace` 是另一支讀取 SB 的程式，不是 `ovn-sbctl` 的子命令。
+
+以下在執行 Kolla 容器的主機操作。沿用 Day 17–18 的 `day17-net`、`day17-r` 與 Trove guest；若已刪除這些資源，就改選目前仍存在的網路與 VM。先定義兩個查詢工具：
 
 ```bash
 NB="sudo docker exec ovn_nb_db ovn-nbctl"
@@ -26,11 +20,15 @@ SB="sudo docker exec ovn_sb_db ovn-sbctl"
 # ovn-trace 也在 ovn_sb_db 容器;ovs-ofctl 在 openvswitch_vswitchd
 ```
 
-## 拆解點一:邏輯拓樸
+## 步驟 1：對上 VM、switch 與 router
+
+先列出 NB 裡的邏輯拓樸。每個 VM port 會帶有 MAC 與 IP，router port 則標示它連到哪個網段：
 
 ```bash
 $NB show
 ```
+
+下列為本課實測節錄，省略號與箭頭是說明標記，並非可直接複製的識別碼：
 
 ```text
 switch (aka day17-net)
@@ -43,11 +41,15 @@ router (aka day17-r)
     port lrp-43d94f…  networks: ["172.24.4.125/24"]     ← 外網那一側
 ```
 
-一眼就看懂結構:**每個 Neutron 網路 = 一個 logical switch**;router 靠 `router-port` 接進 switch。你的 VM 是 switch 上的一個 port(帶著它的 MAC 與 IP)。這張圖就是 Day 2 那些指令的成果,只是換成 OVN 的語言。
+`day17-net` 裡的 Trove port 使用 `10.17.0.159`；同一個 switch 的 router port 接到 `day17-r`。router 另一側是外部網路。對照圖中的兩個 router port，稍後的 trace 就能看出封包從哪裡進、往哪裡出：
 
-## 拆解點二:NAT 規則在哪
+![Trove guest 經 day17-net 與 day17-r 到外部網路；主機 MASQUERADE 位於 OVN 之外](../assets/diagrams/os-s4d20-topology.svg)
 
-Day 18 的 Trove guest 能連回主機的 RabbitMQ,靠的是 router 上的 SNAT。把它挖出來:
+圖中的 IP 是既有輸出的例子。執行自己的查詢時，要取完整的 router 名稱與 port 名稱，不能使用含 `…` 的節錄值。
+
+## 步驟 2：查來源 IP 在哪裡改寫
+
+**SNAT** 會改寫封包的來源 IP。將下列 `<router-uuid>` 換成上一個完整輸出中 `neutron-` 後面的 router UUID：
 
 ```bash
 $NB lr-nat-list neutron-<router-uuid>
@@ -58,11 +60,11 @@ TYPE   EXTERNAL_IP     LOGICAL_IP
 snat   172.24.4.125    10.17.0.0/24
 ```
 
-這一條就是答案:凡是從 `10.17.0.0/24`(day17-net)出去的封包,源 IP 會被改寫成 `172.24.4.125`(router 的外網位址)。**這正是 Day 18 沒建管理網卻能通的原因**——三天前的實測,在這裡找到了規則層的解釋。(floating IP 則會是 `dnat_and_snat` 型別,做雙向改寫。)
+這條規則讓 `10.17.0.0/24` 的出站流量使用 router 外部位址 `172.24.4.125`。Day 18 guest 連到主機 RabbitMQ 時，這是路徑中的一段；它仍需要正確路由與防火牆放行。Floating IP 則通常對應 `dnat_and_snat`，同時處理目的與來源位址的轉換。
 
-## 拆解點三:安全群組 = logical flow
+## 步驟 3：讀安全群組相關的 logical flow
 
-安全群組規則不是存在某張表裡等人查,而是被**編譯成封包要通過的邏輯關卡**(flow)。看 day17-net 的 pipeline:
+封包會依序通過多個 **table**，每個 table 比對條件後執行動作；這一整串處理順序稱為 pipeline。ACL（存取控制規則）在其中決定流量是否放行。先看與 ACL 有關的幾行：
 
 ```bash
 $SB lflow-list day17-net | grep ls_in_acl | head -4
@@ -73,21 +75,23 @@ table=7 (ls_in_acl_hint), priority=7, match=(ct.new && !ct.est), action=(...)
 table=7 (ls_in_acl_hint), priority=5, match=(!ct.trk), action=(...)
 ```
 
-`ct.*` 是連線追蹤(conntrack)——OVN 用它實現「有狀態」的安全群組:放行一個出站連線,回程封包自動放行。你在 Day 2/Day 4 加的每一條 security group rule,最後都落在這種 flow 裡。
+`ct` 是 conntrack，也就是連線追蹤。`ct.new`、`ct.est` 分別描述新連線與已建立的連線。這兩行來自 `ls_in_acl_hint`，是在替後續 ACL 判斷整理連線狀態，還不能直接讀成某一條 Neutron 安全群組規則。追查特定允許或拒絕條件時，需要繼續看後續 ACL table 與封包走到的動作。
 
-## 拆解點四:ovn-trace —— 讓封包在紙上走一遍
+## 步驟 4：模擬封包經過的規則
 
-這是今天的主角。`ovn-trace` 不發真封包,而是**模擬**一個封包餵進 OVN pipeline,把它經過的每一級 table、每一個動作全部印出來。模擬 Trove VM 對外送封包:
+`ovn-trace` 根據 SB 裡的規則模擬封包，不會真的送封包。以下示範 `ovn-trace` 的呼叫方式；這個版本的命令尚未重新執行驗證。先從完整拓樸輸出取得 VM 的 logical port、MAC、IP，以及 router 內側 port 的 MAC，再替換相應欄位：
 
 ```bash
-$SB ovn-trace day17-net '
-  inport=="trove-a802f2…" &&
+sudo docker exec ovn_sb_db ovn-trace day17-net '
+  inport=="<vm-logical-port>" &&
   eth.src==fa:16:3e:f1:17:de && eth.dst==fa:16:3e:27:b2:65 &&
   ip4.src==10.17.0.159 && ip4.dst==8.8.8.8 && ip.ttl==64
 '
 ```
 
-輸出很長,但精華在封包進入 router 之後這幾行:
+`inport` 是 VM 的 logical port；`eth.src` 是 VM MAC，`eth.dst` 是同網段 router 的 MAC；IP 目的位址則是要測試的遠端位址。`<vm-logical-port>` 必須換成完整名稱。其他 IP 與 MAC 也應以自己的拓樸為準。
+
+本課 trace 結果的節錄如下。它顯示預期的 SNAT 路徑；其中 table 編號、優先權與省略內容不是跨版本固定值：
 
 ```text
 ingress(dp="day17-r", inport="lrp-25feab")
@@ -98,11 +102,15 @@ ingress(dp="day17-r", inport="lrp-25feab")
      output;                          ← 從外網埠送出
 ```
 
-你**看到了 NAT 發生的確切那一級**(`lr_out_snat`)、規則的優先權、以及改寫後的位址。這比 tcpdump 強大的地方在於:它是靜態分析,封包還沒真的送出,你就知道它會怎麼被處理。
+`ct_snat(172.24.4.125)` 是來源位址改寫，`output` 是從選定的 logical port 送出。下圖把節錄中的動作放回處理順序：
 
-## 拆解點五:邏輯 flow → 實體 OpenFlow
+![封包經 switch ACL 與 router 路由，再於 lr_out_snat 改寫來源 IP](../assets/diagrams/os-s4d20-trace-path.svg)
 
-上面那些「邏輯 flow」是給人看的抽象;OVN 的 `northd` 會把它們編譯成 **OpenFlow**——OVS 真正執行的規則。看實體流表:
+如果某個分支出現 `drop;`，先查該 table 的比對條件，以及模擬封包的 MAC、port、連線狀態是否正確。若模擬走到 `output;`，只能說這組輸入在邏輯規則中走得通；實際主機是否已套用規則、實體鏈路、MTU，以及圖中的主機 MASQUERADE，仍要另外確認。
+
+## 步驟 5：確認主機已有 OpenFlow 規則
+
+**br-int** 是主機上的整合橋接器，連接 VM 的虛擬介面。`ovn-controller` 將 SB 的 logical flow 轉成 br-int 上的 OpenFlow；以下只計算輸出的行數，並不能逐條證明某個 VM 的規則正確：
 
 ```bash
 sudo docker exec openvswitch_vswitchd ovs-ofctl dump-flows br-int | wc -l
@@ -112,46 +120,26 @@ sudo docker exec openvswitch_vswitchd ovs-ofctl dump-flows br-int | wc -l
 2021
 ```
 
-兩千多條。這就是完整的翻譯鏈:**你的一條 security group rule → OVN logical flow(northd 編譯)→ br-int 上的 OpenFlow → 網卡上的封包處理**。四層抽象,一路對得起來。
+這份輸出證明當時 br-int 有流表內容。要追特定封包，仍應回到它的 port、位址與 match 條件，不能用總行數作為通訊成功的判準。
 
-## 帶得走的除錯法:trace 找 drop
+## 想一想
 
-`ovn-trace` 最實用的場景是回答「**為什麼這個封包不通?**」。模擬一個你認為該通(或不該通)的封包,看輸出——
+1. `ovn-trace` 顯示 `output;`，但 VM 仍連不到外部服務，為什麼不能直接排除主機上的網路問題？
+2. NB 的 router 已有 SNAT 規則，卻在主機上找不到對應的處理行為，接下來應留意哪兩個轉換步驟？
+3. `ls_in_acl_hint` 出現 `ct.est`，足以證明你新加的 TCP 443 安全群組規則已生效嗎？
 
-- 如果封包在某一級出現 **`drop;`**,那一級的 table 就是它死掉的地方(通常是 ACL,也就是安全群組沒放行)。
-- 如果一路走到 `output;`,那 OVN 這層是通的,問題在更下面(實體網路、MTU 之類)。
+## 小結
 
-**不用開 VM、不用抓封包,靜態就能判斷一個封包通不通、卡在哪一層。** 這是排除 OpenStack 網路問題最快的一張牌。
-
-## 驗收 checkpoint
-
-今天沒有部署,驗收標準是「能不能徒手讀懂網路」:
-
-| 驗證 | 判準 | 本課環境的結果 |
-|---|---|---|
-| 拓樸 | `ovn-nbctl show` 讀出 switch/router,對應得上 Neutron 資源 | 4 switch / 3 router |
-| NAT | `lr-nat-list` 找到 SNAT 規則,對上 Day 18 的路徑 | `10.17.0.0/24 → 172.24.4.125` |
-| ACL | `lflow-list` 看到安全群組的 ct flow | 符合 |
-| **ovn-trace** | 模擬封包,看到 `ct_snat` 改寫源 IP 的確切一級 | 符合 |
-| 編譯 | `ovs-ofctl` 證實邏輯 flow → 實體 OpenFlow | 2021 條 |
-
-## 階段二完成 🎉
-
-兩天,兩個面向:
-
-- **Day 19（運算面）**:一個 API 請求 → token → RPC → qemu 進程。
-- **Day 20（網路面）**:一個封包 → logical switch → router NAT → OpenFlow。
-
-合起來就是這個階段的畢業標準:**不靠 `openstack` CLI,你也能讀懂這朵雲在做什麼、以及它不動時卡在哪。** 而且最漂亮的是——今天 `ovn-trace` 印出的那條 SNAT,正好解釋了三天前 Day 18 為什麼一個管理網都不用建就通了。前後串成一條線,這就是把東西「用過」再「拆開」的價值。
+追查網路時，先用 NB 對上 port、switch、router 與 NAT，再用 SB 的 logical flow 和 `ovn-trace` 看特定封包的處理路徑。邏輯模擬縮小了要查的範圍；實際通訊還包含主機流表、介面與外部網路。本章將兩者分開，讓「規則允許」與「真的連得到」各有對應的證據。
 
 ## 延伸閱讀
 
-想往下深挖,從這幾份開始:
+想再深入，可以從這幾份開始：
 
-- **[ovn-architecture 手冊](https://www.ovn.org/support/dist-docs/ovn-architecture.7.html)** —— OVN 的正典:NB/SB 資料庫、northd、logical pipeline 的完整定義。
-- **[ovn-trace 手冊](https://www.ovn.org/support/dist-docs/ovn-trace.8.html)** —— 本章主角工具的完整選項;模擬封包欄位的語法都在這。
-- **[Neutron 的 OVN 文件](https://docs.openstack.org/neutron/2025.1/ovn/index.html)** —— Neutron 資源怎麼對應到 OVN 物件的官方版;本章那張對應表的出處。
+- [OVN architecture](https://www.ovn.org/support/dist-docs/ovn-architecture.7.html)：對照 NB、SB、northd 與 ovn-controller 的分工。
+- [ovn-trace 手冊](https://www.ovn.org/support/dist-docs/ovn-trace.8.html)：查 microflow 欄位、連線追蹤假設與模擬限制。手冊對應網站目前版本，table 細節應再對照部署的 OVN 版本。
+- [Neutron 2025.1 的 OVN 文件](https://docs.openstack.org/neutron/2025.1/ovn/index.html)：回到 Neutron 資源與 OVN 的整合方式。
 
 ## 下一步
 
-拆解告一段落,回到動手。[Day 21](sprint4-day21-observability.md) 進入階段三——可觀測性:Prometheus、Grafana、集中式 log,以及最實際的一課「有觀測和沒觀測,除錯速度差幾個數量級」。
+[Day 21](sprint4-day21-observability.md) 將分散的服務紀錄集中起來，並用 Prometheus 與 Grafana 觀察服務和主機狀態。
