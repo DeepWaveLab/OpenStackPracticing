@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-24" class="md-skip">
+        <a href="#day-24-compute-vm" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1186,7 +1186,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1382,7 +1382,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        今天的三場演練
+        先看雲還有多少可排程資源
       
     </span>
   </a>
@@ -1393,79 +1393,51 @@
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        演練 ①:加節點
+        步驟 1：準備新主機
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="演練 ①:加節點">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：只對新 compute 部署
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：遷移既有 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：讓主機停止接收新 VM，再清空
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        租機的第一課發生在雲的外面
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#day-23" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        新節點的前置(把 Day 23 的雷全部先修掉)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-limit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        三部曲:--limit 讓現役節點毫髮無傷
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cell-discovery" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你沒做的那件事:cell discovery
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        演練 ②:熱遷移——VM 不關機搬家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3node-drain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        演練 ③:node drain——機器退場的標準動作
+        預留維護需要的容量
       
     </span>
   </a>
@@ -1476,41 +1448,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        把數字變成方法:容量規劃
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:配額連關機的 VM 一起算
+        VM 已 deallocate，Azure 仍回報配額不足
       
     </span>
   </a>
@@ -1521,7 +1471,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:placement 指令要另裝外掛
+        CLI 沒有 resource provider 子命令
       
     </span>
   </a>
@@ -1534,10 +1484,21 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        小結
       
     </span>
   </a>
@@ -1812,7 +1773,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1840,7 +1801,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1868,7 +1829,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1988,7 +1949,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4029,7 +3990,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        今天的三場演練
+        先看雲還有多少可排程資源
       
     </span>
   </a>
@@ -4040,79 +4001,51 @@
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        演練 ①:加節點
+        步驟 1：準備新主機
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="演練 ①:加節點">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-compute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：只對新 compute 部署
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：遷移既有 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：讓主機停止接收新 VM，再清空
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        租機的第一課發生在雲的外面
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#day-23" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        新節點的前置(把 Day 23 的雷全部先修掉)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-limit" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        三部曲:--limit 讓現役節點毫髮無傷
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cell-discovery" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        你沒做的那件事:cell discovery
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        演練 ②:熱遷移——VM 不關機搬家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3node-drain" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        演練 ③:node drain——機器退場的標準動作
+        預留維護需要的容量
       
     </span>
   </a>
@@ -4123,41 +4056,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        把數字變成方法:容量規劃
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:配額連關機的 VM 一起算
+        VM 已 deallocate，Azure 仍回報配額不足
       
     </span>
   </a>
@@ -4168,7 +4079,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:placement 指令要另裝外掛
+        CLI 沒有 resource provider 子命令
       
     </span>
   </a>
@@ -4181,10 +4092,21 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        小結
       
     </span>
   </a>
@@ -4230,26 +4152,12 @@
 
 
 
-<h1 id="day-24">Day 24: 橫向擴展——加節點、熱遷移、容量水位<a class="headerlink" href="#day-24" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>Sprint 4 開場時掛起的核心問題,今天正面回答:<strong>Nova 和 Magnum 的機器是誰準備的?</strong>答案是維運者——而「準備一台機器」在成熟的部署工具下,是三行指令的事。今天租第五台機器現場加入雲,然後演練機器的整個生命週期:接收工作、搬走工作、清空退場。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 8–9</strong>:Magnum 的 autoscaler 會自己長 K8s worker——但它長出來的 VM,用的是<strong>雲已經有的</strong>容量。</li>
-<li><strong>Day 23</strong>:雲變成四台,控制面有了冗餘。</li>
-<li><strong>今天</strong>:回答「雲層自己的容量怎麼長」。這是課程主線的最後一塊動手拼圖。</li>
-<li><strong>明天</strong>:Sprint 4 總結。</li>
-</ul>
-</div>
-<h2 id="_1">今天的三場演練<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TB
-    A["① 加節點&lt;br/&gt;第五台機器入列"] --&gt; B["② 熱遷移&lt;br/&gt;VM 不關機搬家"]
-    B --&gt; C["③ node drain&lt;br/&gt;清空一台機器"]
-    C --&gt; D["容量規劃&lt;br/&gt;(把數字變成方法)"]</code></pre>
-<p>三場演練共用同一個觀測工具:<strong>placement 的容量水位</strong>。開始前先記下現況:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>osc-placement<span class="w">   </span><span class="c1"># resource provider 系列指令需要這個外掛(見地雷 2)</span>
+<h1 id="day-24-compute-vm">Day 24：加入 compute，遷移 VM 並準備主機維護<a class="headerlink" href="#day-24-compute-vm" title="Permanent link">&para;</a></h1>
+<p>一台 compute 需要換硬體，上面的 VM 卻仍在服務。你可以先加入新主機，再把工作負載移過去；前提是 Nova 能使用新主機，目的地主機也容得下原有 VM。本章沿用 Day 23 的多節點環境，讀完能用服務註冊、Placement 資源與遷移結果判斷是否已準備好維護。</p>
+<h2 id="_1">先看雲還有多少可排程資源<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>Magnum 或 CAPI 建立 worker VM 時，使用的是 Nova 已管理的 compute 容量。新增 Kubernetes worker 並不會替底層 OpenStack 增加實體主機。</p>
+<p><strong>Placement</strong> 記錄可供排程的資源。<strong>resource provider</strong> 是提供資源的實體，在這個 lab 中對應 compute 主機；<strong>inventory</strong> 記錄總量與限制，<strong>allocation</strong> 記錄已分配給工作負載的用量。先安裝 Placement CLI 外掛，再看 VCPU inventory：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>osc-placement<span class="w">   </span><span class="c1"># resource provider 系列指令需要這個外掛</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>openstack<span class="w"> </span>resource<span class="w"> </span>provider<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>uuid<span class="w"> </span>-c<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>u<span class="w"> </span>n<span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nv">T</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>resource<span class="w"> </span>provider<span class="w"> </span>inventory<span class="w"> </span>list<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$u</span><span class="s2">&quot;</span><span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;/VCPU/{print $3}&#39;</span><span class="k">)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$n</span><span class="s2">: </span><span class="nv">$T</span><span class="s2"> vCPU&quot;</span>
@@ -4257,33 +4165,35 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># oslab-comp1: 8 vCPU</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># oslab-comp2: 8 vCPU        ← 叢集總量 16 vCPU</span>
 </span></code></pre></div>
-<h2 id="1">演練 ①:加節點<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
-<h3 id="_2">租機的第一課發生在雲的外面<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
-<p>替 lab 租第五台時撞上 Azure 的 vCPU 配額——而且發現一個容易記錯的規則:<strong>deallocated(已關機釋放)的 VM 依然佔用配額</strong>。舊的單機 lab 雖已關機,16 核照算,剩餘配額只夠 2 核(見<a href="#mine-1">地雷 1</a>)。</p>
-<p>所以第五台是 E2s_v5(2 vCPU)——比其他 compute 小四倍。這個妥協反而讓教學更誠實:<strong>真實世界的雲本來就是異質的</strong>(不同代的硬體、不同規格的節點),等一下 placement 會如實呈現這件事。</p>
-<h3 id="day-23">新節點的前置(把 Day 23 的雷全部先修掉)<a class="headerlink" href="#day-23" title="Permanent link">&para;</a></h3>
+<p>這個查詢依欄位位置讀取 total，先確認你的輸出格式一致。它顯示的是 VCPU 總量，不是剩餘容量；要判斷能否接下一台 VM，還必須看已配置量、保留量、allocation ratio，以及記憶體、磁碟和資源限制。</p>
+<p>下圖把本章三個動作接起來。新主機註冊成功後，既有 VM 不會自動重新平均分配：</p>
+<p><img alt="新增 compute 後確認可排程，再遷移 VM，最後讓舊主機進入維護" src="../../assets/diagrams/os-s4d24-lifecycle.svg" /></p>
+<h2 id="1">步驟 1：準備新主機<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>本章新節點叫 <code>oslab-comp3</code>，管理位址 <code>10.100.0.23</code>，使用較小的 2 vCPU 規格。這個例子用來觀察異質容量；不代表任何規格都能接收任意 VM。新機仍須符合 KVM、CPU 相容性、網路、磁碟與 Kolla 支援條件。</p>
+<p>先確認 Azure 的區域與 VM family 配額。deallocated 的 VM 仍計入 vCPU quota；停止計費和釋放配額是兩件事，詳見<a href="#mine-1">疑難排解</a>。本章沿用已準備好的 Azure VM，不另提供其建立流程。</p>
+<p>新舊節點必須互相解析主機名稱，外部介面與管理網路配置也要一致。以下為前置作業摘要；DNS 調整僅在確認 stub 問題後採用，條件同 <a href="../sprint4-day23-multinode-ha/#mine-2">Day 23 的 DNS 排錯</a>：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># oslab-comp3(10.100.0.23)上:</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># 1. /etc/hosts 全叢集互相解析(新節點一行也要加回舊節點)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># 2. dummy0 網卡</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># 3. DNS 直連上游(Day 23 地雷 2 的預防)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># 3. 確認 DNS stub 故障後才考慮改用上游</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/resolv.conf<span class="w"> </span>/etc/resolv.conf
 </span></code></pre></div>
-<p>inventory 只加一行:</p>
+<p>接著把新主機加入現有 multinode inventory 的 compute 群組，保留其他群組：</p>
 <div class="language-ini highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[compute]</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="na">oslab-comp1</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="na">oslab-comp2</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="na">oslab-comp3     # ← 新成員</span>
 </span></code></pre></div>
-<h3 id="-limit">三部曲:<code>--limit</code> 讓現役節點毫髮無傷<a class="headerlink" href="#-limit" title="Permanent link">&para;</a></h3>
+<h2 id="2-compute">步驟 2：只對新 compute 部署<a class="headerlink" href="#2-compute" title="Permanent link">&para;</a></h2>
+<p>在原部署機使用同一份 Kolla 設定與 inventory，依序準備主機、拉取映像、部署 compute：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kolla-ansible<span class="w"> </span>bootstrap-servers<span class="w"> </span>-i<span class="w"> </span>multinode<span class="w"> </span>--limit<span class="w"> </span>oslab-comp3<span class="w">   </span><span class="c1"># 裝 docker、建 kolla 使用者</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>kolla-ansible<span class="w"> </span>pull<span class="w"> </span>-i<span class="w"> </span>multinode<span class="w"> </span>--limit<span class="w"> </span>oslab-comp3<span class="w">                </span><span class="c1"># 預拉映像</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>multinode<span class="w"> </span>--limit<span class="w"> </span>oslab-comp3<span class="w">              </span><span class="c1"># 部署 compute 角色</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>oslab-comp3 : ok=104  changed=62  failed=0
 </span></code></pre></div>
-<p><code>--limit</code> 是這裡的關鍵:整個過程<strong>只碰新節點</strong>,現役的四台連一個容器都沒重啟。</p>
-<h3 id="cell-discovery">你沒做的那件事:cell discovery<a class="headerlink" href="#cell-discovery" title="Permanent link">&para;</a></h3>
-<p>教科書會說新 compute 節點要跑 <code>nova-manage cell_v2 discover_hosts</code> 註冊進 cell。注意剛剛的流程裡<strong>完全沒有這一步</strong>——kolla 的 nova-cell 角色在 deploy 時代跑了。直接驗收:</p>
+<p><code>--limit</code> 限制此次選取的 inventory 主機。這是官方新增 compute 的做法，但不能擴大解讀為所有 Ansible 動作都絕對不會經過其他節點：角色可能透過 delegation 在控制端執行整合工作。新增 controller 的範圍要求也不同，不能直接套用。</p>
+<p>Nova 使用 <strong>cell</strong> 組織 compute 與其資料庫、訊息通道；新主機還需要被映射到 cell，排程器才知道它在哪裡。Kolla 的 nova-cell 角色會處理主機探索工作，不過是否成功仍要由結果確認：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>compute<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>Binary<span class="w"> </span>-c<span class="w"> </span>Host<span class="w"> </span>-c<span class="w"> </span>State<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>nova-compute
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># nova-compute oslab-comp1 up</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># nova-compute oslab-comp2 up</span>
@@ -4292,167 +4202,69 @@
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>openstack<span class="w"> </span>resource<span class="w"> </span>provider<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>name
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># oslab-comp1 / oslab-comp2 / oslab-comp3</span>
 </span></code></pre></div>
-<p>容量水位的變化:</p>
-<table>
-<thead>
-<tr>
-<th>節點</th>
-<th>加入前</th>
-<th>加入後</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>oslab-comp1</td>
-<td>8 vCPU</td>
-<td>8 vCPU</td>
-</tr>
-<tr>
-<td>oslab-comp2</td>
-<td>8 vCPU</td>
-<td>8 vCPU</td>
-</tr>
-<tr>
-<td>oslab-comp3</td>
-<td>—</td>
-<td><strong>2 vCPU</strong></td>
-</tr>
-<tr>
-<td><strong>叢集總量</strong></td>
-<td><strong>16</strong></td>
-<td><strong>18</strong></td>
-</tr>
-</tbody>
-</table>
-<p>從租機到 placement 看見新容量,全程<strong>沒有動過任何現有服務、沒有一秒 API 中斷</strong>——使用者視角:雲就是默默變大了。這就是 Day 8「機器從哪來」的最終答案:維運者把裸機變成 placement 裡的數字,之後的一切(Nova 調度、Magnum autoscaler)都消費這個數字。</p>
-<h2 id="2vm">演練 ②:熱遷移——VM 不關機搬家<a class="headerlink" href="#2vm" title="Permanent link">&para;</a></h2>
-<p>汰換硬體、重新平衡負載,都靠這一招。本課環境沒有共享儲存,所以磁碟要跟著搬(block migration):</p>
+<p><code>nova-compute up</code> 與 resource provider 出現是必要檢查，還要實際驗證工作負載能落到新主機。本例原有兩台各 8 VCPU，新增主機回報 2 VCPU；總量的增加不代表每一台 VM 都能放進它。</p>
+<h2 id="3-vm">步驟 3：遷移既有 VM<a class="headerlink" href="#3-vm" title="Permanent link">&para;</a></h2>
+<p><strong>live migration（熱遷移）</strong> 在 VM 持續執行時搬移其狀態。若 VM 使用 compute 本機磁碟，<strong>block migration</strong> 還要搬移磁碟內容，因此會額外占用網路與目的地儲存。</p>
+<p>開始前確認來源與目的地在支援的 cell、CPU 與 hypervisor 相容、遷移網路可達，且目的地資源足夠。本例使用 Day 23 建立的 <code>ha-canary</code>，從 comp2 遷往 comp1：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>ha-canary<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>OS-EXT-SRV-ATTR:host<span class="w">   </span><span class="c1"># oslab-comp2</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>migrate<span class="w"> </span>ha-canary<span class="w"> </span>--live-migration<span class="w"> </span>--block-migration<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--host<span class="w"> </span>oslab-comp1<span class="w"> </span>--wait
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>ha-canary<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>OS-EXT-SRV-ATTR:host<span class="w">   </span><span class="c1"># oslab-comp1</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>ha-canary<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status<span class="w">                  </span><span class="c1"># ACTIVE(全程)</span>
 </span></code></pre></div>
-<p>原理一句話:libvirt 把 VM 的記憶體分批複製到目的地,來源繼續運行、持續補傳「又變髒的頁」,直到剩餘量小到能在毫秒級凍結視窗內收尾——所以 VM 覺得自己沒停過。</p>
-<h2 id="3node-drain">演練 ③:node drain——機器退場的標準動作<a class="headerlink" href="#3node-drain" title="Permanent link">&para;</a></h2>
-<p>假想劇本:oslab-comp2 要換硬體。標準四步:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1. 停止進貨:調度器不再把新 VM 排進來(現有 VM 不受影響)</span>
+<p>兩次 host 查詢可確認落點改變，最後的 ACTIVE 顯示查詢當下的狀態。它不能證明應用程式完全沒有中斷。熱遷移會逐步複製記憶體與變更頁面，最後仍有短暫切換；要評估使用者影響，必須同時觀察應用連線，而本章沒有這項探測結果。</p>
+<h2 id="4-vm">步驟 4：讓主機停止接收新 VM，再清空<a class="headerlink" href="#4-vm" title="Permanent link">&para;</a></h2>
+<p>維護前先 <strong>disable nova-compute</strong>，避免新的排程繼續送進主機；這不會自動搬走既有 VM。把所有租戶的 VM 逐一遷移成功後，才可以停機維護。</p>
+<p>第二台測試 VM 名稱是 <code>drain-canary</code>，本章未提供它的建立命令。以下是已有該 VM 且它位於 comp2 的演練範例；重做時先以管理員身分列出 comp2 上所有租戶的 VM，選擇實際要搬移的資源，不能假設這個名稱已存在。清空檢查必須加上 <code>--all-projects</code>，避免只列出當前專案而漏掉其他租戶的 VM：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># 1. 停止接收新的排程</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>openstack<span class="w"> </span>compute<span class="w"> </span>service<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--disable<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--disable-reason<span class="w"> </span><span class="s2">&quot;maintenance: hardware replacement&quot;</span><span class="w"> </span>oslab-comp2<span class="w"> </span>nova-compute
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># 2. 清空存貨:把上面的 VM 逐一熱遷走</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># 2. 逐一遷移該主機上的 VM</span>
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>openstack<span class="w"> </span>server<span class="w"> </span>migrate<span class="w"> </span>drain-canary<span class="w"> </span>--live-migration<span class="w"> </span>--block-migration<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span>--host<span class="w"> </span>oslab-comp3<span class="w"> </span>--wait
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># 3. 確認清空</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>openstack<span class="w"> </span>server<span class="w"> </span>list<span class="w"> </span>--host<span class="w"> </span>oslab-comp2<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w">    </span><span class="c1"># 0</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>openstack<span class="w"> </span>server<span class="w"> </span>list<span class="w"> </span>--all-projects<span class="w"> </span>--host<span class="w"> </span>oslab-comp2<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>ID<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w">    </span><span class="c1"># 0</span>
 </span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 4. (維護完成後)重新開張</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 4. 維護完成且健康檢查通過後重新啟用</span>
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>openstack<span class="w"> </span>compute<span class="w"> </span>service<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--enable<span class="w"> </span>oslab-comp2<span class="w"> </span>nova-compute
 </span></code></pre></div>
-<p>演練後的水位,講了一個完整的故事:</p>
+<p>上面最後一步只適用於維護完成且已確認主機健康的情況；若要永久移除節點，保持 disabled，另依 Kolla 官方移除主機流程清理服務與 inventory。遷移失敗時不要繼續停機。</p>
+<p>以下為本課的用量節錄，顯示第二台 VM 曾被遷入新節點：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>oslab-comp1: used=1   ← ha-canary(演練②搬來的)
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>oslab-comp2: used=0   ← 被清空、已歸隊
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>oslab-comp3: used=1   ← drain-canary(新節點接下真實工作)
 </span></code></pre></div>
-<p>注意 drain-canary 的落點:<strong>今天早上才加入的 comp3,已經在承接從老節點撤下來的工作負載</strong>。加節點→接工作→老節點退場,這條循環就是雲的新陳代謝。</p>
-<h2 id="_3">把數字變成方法:容量規劃<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>三場演練都在讀 placement 的數字;生產環境的容量規劃就是圍繞這些數字的紀律:</p>
-<table>
-<thead>
-<tr>
-<th>概念</th>
-<th>內容</th>
-<th>本課環境的對應</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>allocation ratio</td>
-<td>vCPU 常見超賣(如 4:1),記憶體幾乎不超賣(1:1)</td>
-<td>placement inventory 的 <code>allocation_ratio</code> 欄位</td>
-</tr>
-<tr>
-<td>預留(reserved)</td>
-<td>每台主機留給系統本身的資源</td>
-<td><code>reserved_host_memory_mb</code> 等</td>
-</tr>
-<tr>
-<td>N+1 headroom</td>
-<td>隨時保有「清空最大一台」所需的空位——否則 drain 演練做不了</td>
-<td>今天若三台全滿,演練③會卡在第 2 步</td>
-</tr>
-<tr>
-<td>host aggregate / AZ</td>
-<td>把節點分池(SSD 池、GPU 池、機櫃容錯域),調度時指定</td>
-<td>本課的 <code>--availability-zone nova:主機</code> 是它的最簡形式</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Magnum 的視角</strong>(Day 9 的伏筆收回):workload cluster 的 autoscaler 覺得「隨時可以長」,是因為它信任雲層有容量。autoscaler 觸發 → Magnum 開 VM → Nova 找 placement 要資源——如果水位見底,長不出來的錯誤會出現在這條鏈的最末端。<strong>看 placement 水位,就是在看所有上層彈性的天花板。</strong></p>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>加節點</td>
-<td>三部曲 failed=0、現役節點零擾動</td>
-<td>ok=104 failed=0</td>
-</tr>
-<tr>
-<td>cell discovery</td>
-<td>不跑 nova-manage,新節點自動註冊</td>
-<td>三台 nova-compute up</td>
-</tr>
-<tr>
-<td>placement</td>
-<td>總量增加、異質規格如實呈現</td>
-<td>16→18 vCPU,comp3=2</td>
-</tr>
-<tr>
-<td>熱遷移</td>
-<td>換主機、全程 ACTIVE</td>
-<td>comp2→comp1 ✓</td>
-</tr>
-<tr>
-<td>drain</td>
-<td>disable→清空→歸隊完整走完</td>
-<td>comp2 歸零後 re-enable</td>
-</tr>
-<tr>
-<td>新節點承載</td>
-<td>撤下的工作落在新節點</td>
-<td>drain-canary 在 comp3</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:配額連關機的 VM 一起算<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p>Azure 的 regional vCPU 配額把 <strong>deallocated 的 VM 也計入</strong>——「先關掉舊環境再租新機」不會釋放配額,只有刪除 VM(磁碟可留)才會。規劃多環境並行的 lab 時,把「配額」當成一種你雲底下的雲的容量水位來管理;撞牆時的訊息(<code>QuotaExceeded</code>)會告訴你目前用量與需要的新上限。</p>
-<h3 id="mine-2">地雷 2:placement 指令要另裝外掛<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><code>openstack resource provider …</code> 系列不在預設的 openstackclient 裡,需要 <code>pip install osc-placement</code>。沒裝時 CLI 會輸出「你是不是要找…」的相似指令清單——<strong>在腳本裡這段文字會被當成正常輸出往下傳</strong>,產生一串難以理解的垃圾。寫自動化時,先驗證外掛存在。</p>
-<h2 id="_5">帶得走的東西<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>「機器怎麼準備」的完整答案</strong>:裸機 → 前置(hosts/DNS/dummy0)→ <code>--limit</code> 三部曲 → placement 出現新數字。之後的一切調度都是消費這個數字。</li>
-<li><strong><code>--limit</code> 是加節點的安全邊界</strong>:現役節點連容器都不重啟。</li>
-<li><strong>drain 四步</strong>(disable → migrate → verify → enable)是機器退場的標準動作;做得了 drain 的前提是平時留有 N+1 空位。</li>
-<li><strong>placement 水位是所有上層彈性的天花板</strong>——包括 Magnum autoscaler 的。</li>
-</ul>
+<p>comp2 的用量歸零是其中一項證據；實際清空還要確認全租戶 VM 清單與遷移狀態。不能只看 CPU 用量為零就移除主機。</p>
+<h2 id="_2">預留維護需要的容量<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>Placement 的 <code>allocation_ratio</code> 決定資源可配置量相對於實際量的比例，<code>reserved</code> 則扣除預留資源。比例不是效能保證，也不能讓不相容的 CPU、NUMA、PCI 裝置或儲存條件變得相容。</p>
+<p>規劃 <strong>N+1</strong> 容量時，要問的是：「失去其中一台後，剩餘且相容的節點是否仍容得下它的工作負載？」不是只把整個叢集的閒置 VCPU 相加。host aggregate 可替主機分組與加上排程屬性，availability zone 則提供使用者可選的區域；本章 <code>nova:主機名</code> 是管理員指定落點的方式，並未展示建立 aggregate 或獨立故障域。</p>
+<p>當 Magnum 要增加 worker，Nova 最後仍必須找到符合所有需求的資源。遇到 No valid host，除了總量，也要回頭檢查租戶配額、資源分組與主機限制。</p>
+<h2 id="_3">疑難排解<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">VM 已 deallocate，Azure 仍回報配額不足<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>Azure vCPU 配額包含 allocated 與 deallocated 的 VM，且同時檢查區域總量與 VM family。確認哪些 VM 可刪除或提出配額申請；即使配額充足，區域實際可用容量仍是另一項限制。</p>
+<h3 id="mine-2">CLI 沒有 resource provider 子命令<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>在執行 OpenStack CLI 的同一個虛擬環境安裝 <code>osc-placement</code>。先單獨確認查詢成功，再放進 shell pipeline；否則錯誤訊息或空輸出可能被後續指令誤讀成容量資料。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ol>
+<li>新 compute 顯示 up，也出現在 Placement，為什麼仍要再測試能否承接 VM？</li>
+<li>管理員自己的專案查不到 comp2 上的 VM，能否據此停止該主機？</li>
+<li>叢集還有 8 個閒置 VCPU，但分散在數台不符合 VM CPU／記憶體條件的主機上，是否代表可以完成維護遷移？</li>
+</ol>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>新增 compute 要確認主機準備、服務註冊、cell 與資源配置；主機維護則先停止新排程，再遷移並核對所有租戶的 VM。可用總量、相容條件與應用中斷各有不同的檢查方式。把它們分開，才能判斷新增容量是否真的能用，以及主機是否已可離線。</p>
 <h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html">Kolla-Ansible:新增與移除主機</a></strong> —— 本章三部曲的官方出處,也涵蓋今天沒演的「移除節點」完整流程。</li>
-<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/live-migration-usage.html">Nova 熱遷移操作指南</a></strong> —— 熱遷移的前提條件、模式選擇(共享儲存 vs block migration)與監看方式。</li>
-<li><strong><a href="https://docs.openstack.org/placement/2025.1/">Placement 服務文件</a></strong> —— resource provider、inventory、allocation 的完整模型;容量規劃表格裡每個概念的權威定義。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html">Kolla-Ansible 2025.1 新增與移除主機</a>：比較 compute 與 controller 的處理範圍。</li>
+<li><a href="https://docs.openstack.org/nova/2025.1/admin/configuring-migrations.html">Nova 2025.1 熱遷移設定</a>：確認 CPU、網路、儲存與安全前提。</li>
+<li><a href="https://docs.openstack.org/nova/2025.1/admin/live-migration-usage.html">Nova 2025.1 熱遷移操作</a>：查遷移模式與結果監看。</li>
+<li><a href="https://docs.openstack.org/placement/2025.1/">Placement 2025.1 文件</a>：理解 inventory 與 allocation。</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/quotas">Azure vCPU quota</a>：區分配額與平台容量。</li>
 </ul>
 <h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
-<p>十二天的動手全部完成。<a href="../sprint4-day25-sprint4-recap/">Day 25</a> 收束整個 Sprint:這朵雲從哪裡出發、現在長什麼樣子、路上埋掉的每一顆雷——以及誠實的清單:它離生產環境還差哪幾步。</p>
+<p><a href="../sprint4-day25-sprint4-recap/">Day 25</a> 回顧儲存、排錯與維護情境，並整理這些 lab 尚未涵蓋的範圍。</p>
 
 
 

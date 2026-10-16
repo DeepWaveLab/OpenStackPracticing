@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-11-openstack" class="md-skip">
+        <a href="#day-11-openstack-11-openstack-map" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -925,18 +925,7 @@
   <a href="#openstack" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OpenStack 是一盒積木,你不必全部都用
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#openstack-map" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        官方全景圖:OpenStack Map
+        OpenStack 是一組各自獨立的服務
       
     </span>
   </a>
@@ -947,19 +936,19 @@
   <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這門課用過的服務(11 個)
+        這門課用過的 11 個服務
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="這門課用過的服務(11 個)">
+    <nav class="md-nav" aria-label="這門課用過的 11 個服務">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#openstack_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        悄悄出場的配角
+        不是 OpenStack 專案、但一起被部署的元件
       
     </span>
   </a>
@@ -972,44 +961,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#openstack-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這次沒用到的服務:剩下的版圖
+        OpenStack Map:照資源類型找服務
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="這次沒用到的服務:剩下的版圖">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        這門課還沒用到的服務
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="這門課還沒用到的服務">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        後面會部署的服務
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一梯隊:常見到值得認識
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第二梯隊:特定場景才需要
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第三梯隊:知道存在即可
+        這門課不會教的服務
       
     </span>
   </a>
@@ -1018,6 +1007,39 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        要加一個服務時:Day 3 的流程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1025,7 +1047,7 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一張圖總結:這朵雲的現況
+        延伸閱讀
       
     </span>
   </a>
@@ -1355,7 +1377,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1746,7 +1768,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1774,7 +1796,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1802,7 +1824,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1922,7 +1944,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -3963,18 +3985,7 @@
   <a href="#openstack" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OpenStack 是一盒積木,你不必全部都用
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#openstack-map" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        官方全景圖:OpenStack Map
+        OpenStack 是一組各自獨立的服務
       
     </span>
   </a>
@@ -3985,19 +3996,19 @@
   <a href="#11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這門課用過的服務(11 個)
+        這門課用過的 11 個服務
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="這門課用過的服務(11 個)">
+    <nav class="md-nav" aria-label="這門課用過的 11 個服務">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#openstack_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        悄悄出場的配角
+        不是 OpenStack 專案、但一起被部署的元件
       
     </span>
   </a>
@@ -4010,44 +4021,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#openstack-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這次沒用到的服務:剩下的版圖
+        OpenStack Map:照資源類型找服務
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="這次沒用到的服務:剩下的版圖">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        這門課還沒用到的服務
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="這門課還沒用到的服務">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        後面會部署的服務
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一梯隊:常見到值得認識
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第二梯隊:特定場景才需要
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第三梯隊:知道存在即可
+        這門課不會教的服務
       
     </span>
   </a>
@@ -4056,6 +4067,39 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        要加一個服務時:Day 3 的流程
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
   
 </li>
       
@@ -4063,7 +4107,7 @@
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        一張圖總結:這朵雲的現況
+        延伸閱讀
       
     </span>
   </a>
@@ -4098,59 +4142,22 @@
 
 
 
-<h1 id="day-11-openstack">Day 11: 後日談——OpenStack 服務全景圖<a class="headerlink" href="#day-11-openstack" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>正課到 Day 10 已經結束,這一篇不用動手。它是一張<strong>地圖</strong>:把視野從「這門課用過的服務」拉開到 OpenStack 的完整版圖——你會清楚看到自己這十天走過了哪裡、還有哪些大陸沒踏上,以及下一步值得去哪。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 0–10</strong>:從一台裸 VM 到 K8s-as-a-Service,你部署並實際使用了 <strong>11 個 OpenStack 服務</strong>。</li>
-<li><strong>今天</strong>:不部署任何東西。盤點用過的、認識沒用過的,建立「整個 OpenStack 生態」的完整心智圖。</li>
-<li><strong>今天之後</strong>:想繼續擴充這朵雲的話,文末有依價值排序的建議清單。</li>
-</ul>
-</div>
-<h2 id="openstack">OpenStack 是一盒積木,你不必全部都用<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h2>
-<p>先建立一個常被誤解的觀念:<strong>OpenStack 不是一個「裝了就全有」的產品,而是幾十個獨立專案的集合</strong>。每個專案管一種資源、可以獨立啟用。實務上沒有任何一朵雲會全裝——公有雲業者可能用二十個,企業私有雲常常只用六七個。</p>
-<p>這也是為什麼 Kolla-Ansible 的 <code>globals.yml</code> 裡全是 <code>enable_xxx</code> 開關:你在 Day 3(Cinder)、Day 4(Octavia)、Day 5(Barbican)、Day 7(Magnum)做的事,本質上就是「從積木盒裡再拿一塊出來拼上去」。</p>
-<p><img align="right" alt="Kolla-Ansible" src="../../assets/mascots/kolla-ansible.png" width="88" /></p>
-<p>順帶一提:OpenStack 社群給每個專案都畫了<strong>官方吉祥物</strong>,連我們用了十天的部署工具 Kolla-Ansible 都有——一隻無尾熊(Kolla 的名字就是從 koala 來的)。這一篇會讓每個服務的吉祥物跟著登場,<strong>記臉比記名字快</strong>。</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph core["核心四件(幾乎沒有雲不裝)"]
-        KS["Keystone 認證"]
-        GL["Glance 映像檔"]
-        NV["Nova 運算"]
-        NE["Neutron 網路"]
-    end
-    subgraph used["本課程加上去的"]
-        CI["Cinder 區塊儲存"]
-        OC["Octavia 負載平衡"]
-        BA["Barbican 秘密管理"]
-        HE["Heat 編排"]
-        MA["Magnum K8s 服務"]
-    end
-    subgraph unused["這次沒用到的大陸"]
-        SW["Swift 物件儲存"]
-        DE["Designate DNS"]
-        MN["Manila 共享檔案系統"]
-        IR["Ironic 裸機"]
-        TEL["Ceilometer 家族 計量監控"]
-        MORE["…還有二十幾個"]
-    end
-    core --&gt; used
-    core -.-&gt;|"隨時可以 enable_* 加上"| unused</code></pre>
-<h2 id="openstack-map">官方全景圖:OpenStack Map<a class="headerlink" href="#openstack-map" title="Permanent link">&para;</a></h2>
-<p>上面是本課程視角的簡圖;OpenInfra Foundation 其實有維護一張<strong>官方版全景圖</strong>(類似 CNCF Landscape 的角色),每半年左右更新一次:</p>
-<p><a href="https://www.openstack.org/software/"><img alt="OpenStack Map(官方,版本 2026.04.01)" src="../../assets/openstack-map.png" /></a></p>
-<p><em>(點圖可到 openstack.org/software 看互動版)</em></p>
-<p>這張圖值得多看三十秒:</p>
-<ul>
-<li><strong>中間主體</strong>就是本篇要盤點的服務版圖——你用過的 11 個全在裡面(Shared Services 那排:Keystone/Placement/Glance/Barbican,一天內就能對出來)。</li>
-<li><strong>下方「Lifecycle Management」格子藏著本課程的彩蛋</strong>:Kolla-Ansible、OpenStack-Charms、OpenStack-Helm 三個部署工具並排站在一起——正好就是<a href="../../previous-attempts/">三次嘗試</a>各自走過的路線。官方把它們畫在同一格,我們用三個 Sprint 親身比完了。</li>
-<li><strong>右側「Operations Tooling」</strong>(Ceilometer/Watcher/CloudKitty/Tempest)是本課完全沒碰的維運面,對照下面第二梯隊的表。</li>
-</ul>
-<h2 id="11">這門課用過的服務(11 個)<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
-<p>每一個都實際部署、實際操作過。每個專案都有官方吉祥物——記臉比記名字快。「AWS 對應」欄幫你把學到的知識映射到公有雲的世界:</p>
+<h1 id="day-11-openstack-11-openstack-map">Day 11: OpenStack 服務全景圖——用過的 11 個服務、OpenStack Map 與加服務的流程<a class="headerlink" href="#day-11-openstack-11-openstack-map" title="Permanent link">&para;</a></h1>
+<p><img align="right" alt="Kolla-Ansible 的官方吉祥物:無尾熊" src="../../assets/mascots/kolla-ansible.png" width="96" /></p>
+<p>Day 10 結束時,你手上有一朵能開 VM、掛硬碟、開負載平衡器、開 Kubernetes 叢集的雲。雲一能用,同事就會來提需求:想要一個像 S3 的地方放備份檔;希望新開的 VM 自動有個域名,不用每次記 IP;月底想知道每個部門各用了多少,好拆帳。你打開 Kolla-Ansible 的 <code>globals.yml</code> 範本,看到一長串 <code>enable_*</code> 開關,卻不確定哪一個對應哪一個需求。</p>
+<p>這一章不動手部署。我們先把這朵雲裡已經有的服務整理一次,再用 OpenStack 官方的服務地圖,把同事的三個需求逐一對到負責的服務。讀完之後,拿到一個雲端需求,你能說出它歸 OpenStack 哪個服務管、這門課有沒有教、在哪一天,以及要加上去時先查什麼。</p>
+<h2 id="openstack">OpenStack 是一組各自獨立的服務<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h2>
+<p>回想 Day 3 加 Cinder 的那一步:在 <code>globals.yml</code> 加上 <code>enable_cinder: "yes"</code>,重跑 <code>kolla-ansible deploy</code>,雲就多了區塊儲存。其他服務完全沒受影響,Nova 照樣開 VM。</p>
+<p>這是因為 OpenStack 本身就是由許多獨立的<strong>專案</strong>組成的。每個專案負責一種資源,有自己的 API、自己的資料庫、自己的容器,通常也有自己的名字:管 VM 的叫 Nova,管網路的叫 Neutron,管區塊儲存的叫 Cinder。社群把它們放在同一個名字底下發布,但部署時每個都可以單獨開或關。<code>globals.yml</code> 裡那一長串 <code>enable_*</code>,就是逐一列出 Kolla-Ansible 會部署的專案。</p>
+<p>下面把 Day 10 這朵雲裡跑著的東西畫成一張圖。由上往下分五層:最上面是你操作的介面,往下是建在其他服務之上的平台、管各種資源的服務、每個服務都要用的共用服務,最底下一層灰色的元件不屬於 OpenStack,卻是整朵雲運作的前提。</p>
+<p><img alt="Day 10 這朵雲由上往下五層:介面是 Horizon;平台是 Heat 和 Magnum;資源是 Nova、Neutron、Cinder、Octavia;共用服務是 Keystone(以橘框強調)、Placement、Glance、Barbican;最底層灰色的是不屬於 OpenStack 專案的 MariaDB、RabbitMQ、Memcached、Redis、OVN" src="../../assets/diagrams/os-s3d11-course-cloud.svg" /></p>
+<p>從圖上可以看出兩件事:</p>
+<ol>
+<li><strong>越往上的服務,依賴的服務越多。</strong> Magnum 開一個 Kubernetes 叢集,要靠 Nova 開節點、Neutron 接網路、Octavia 替叢集的 API 開負載平衡器、Barbican 存憑證。所以 Magnum 這一層出的問題,原因常常在下面一層:Day 8 的 <code>Service type=LoadBalancer</code> 一直 pending,最後查到的是 Octavia 沒有啟用叢集要求的 provider,也就是 Octavia 實際建立負載平衡器用的 driver,例如 amphora(Day 8 的<a href="../sprint3-day8-e2e-workload-cluster/#mine-3">「LoadBalancer 一直 pending,CCM 報 <code>Provider 'amphorav2' is not enabled</code>」</a>)。</li>
+<li><strong>共用服務那一層每個請求都會經過。</strong> 橘框的 Keystone 負責驗證身分與權限,你下的每一個 <code>openstack</code> 指令都要先向它拿 token,其他服務收到請求時也會回頭找它確認。</li>
+</ol>
+<h2 id="11">這門課用過的 11 個服務<a class="headerlink" href="#11" title="Permanent link">&para;</a></h2>
+<p>上圖從介面到共用服務共 11 個 OpenStack 服務,每一個都實際部署、操作過。下表依出場順序整理,「AWS 對應」欄列出公有雲上功能相近的服務,方便你把這裡學到的對到其他雲上。每個專案的官方吉祥物也放在表裡,之後在文件或部署輸出裡看到名字,比較容易想起它是做什麼的。</p>
 <table>
 <thead>
 <tr>
@@ -4181,7 +4188,7 @@
 <td><strong>Placement</strong></td>
 <td>資源帳本(哪台主機還有多少 CPU/RAM/disk)</td>
 <td>(EC2 內部機制)</td>
-<td>Day 1 部署;Day 9 調 <code>disk_allocation_ratio</code> 就是在跟它打交道</td>
+<td>Day 1 部署;Day 9 調 <code>disk_allocation_ratio</code> 就是在調它的可分配量</td>
 </tr>
 <tr>
 <td><img alt="Nova" src="../../assets/mascots/nova.png" width="64" /></td>
@@ -4202,14 +4209,14 @@
 <td><strong>Horizon</strong></td>
 <td>網頁儀表板</td>
 <td>Console</td>
-<td>Day 1 部署;課程刻意以 CLI 為主,它當觀景窗</td>
+<td>Day 1 部署;課程以 CLI 為主,Horizon 用來對照查看</td>
 </tr>
 <tr>
 <td><img alt="Heat" src="../../assets/mascots/heat.png" width="64" /></td>
 <td><strong>Heat</strong></td>
-<td>宣告式編排(藍圖蓋資源)</td>
+<td>宣告式編排(用範本建一組資源)</td>
 <td>CloudFormation</td>
-<td>Day 1 隨預設部署、Day 5 實戰 HOT stack</td>
+<td>Day 1 隨預設部署、Day 5 實際寫 HOT stack</td>
 </tr>
 <tr>
 <td><img alt="Cinder" src="../../assets/mascots/cinder.png" width="64" /></td>
@@ -4228,7 +4235,7 @@
 <tr>
 <td><img alt="Barbican" src="../../assets/mascots/barbican.png" width="64" /></td>
 <td><strong>Barbican</strong></td>
-<td>秘密/憑證保險箱</td>
+<td>秘密與憑證的儲存</td>
 <td>Secrets Manager / KMS</td>
 <td>Day 5 部署 + secret 往返;Day 7 起存放 cluster 憑證</td>
 </tr>
@@ -4241,51 +4248,67 @@
 </tr>
 </tbody>
 </table>
-<blockquote>
-<p>Placement 沒有吉祥物——它是後來從 Nova 拆出來的內部服務,連吉祥物都沒分到,很符合它「重要但沒人注意」的個性。</p>
-</blockquote>
-<h3 id="_1">悄悄出場的配角<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
-<p>這些不是 OpenStack 專案,但雲少了它們動不了——Kolla 幫你一起部了:</p>
+<p>Placement 那一列沒有吉祥物圖。它原本是 Nova 裡面的一部分,後來才拆成獨立的服務。</p>
+<h3 id="openstack_1">不是 OpenStack 專案、但一起被部署的元件<a class="headerlink" href="#openstack_1" title="Permanent link">&para;</a></h3>
+<p>圖上最底下那一層灰色元件,都是 Kolla-Ansible 一起替你部署的開源軟體,但它們不是 OpenStack 專案,有各自的社群和版本。出問題時,它們的症狀常常出現在 OpenStack 服務上,所以要知道它們各自負責什麼:</p>
 <table>
 <thead>
 <tr>
 <th>元件</th>
-<th>角色</th>
-<th>課程中的戲份</th>
+<th>負責什麼</th>
+<th>在課程中出現的地方</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>MariaDB</td>
 <td>所有服務的資料庫</td>
-<td>Day 1 撞過它一次:port 被 ProxySQL 佔走、整個部署卡住(<a href="../sprint3-day1-kolla-aio-core/#mine-4">Day 1 的地雷 4</a>)</td>
+<td>Day 1 部署時被 ProxySQL 佔走 port,整個部署卡住(Day 1 的<a href="../sprint3-day1-kolla-aio-core/#mine-4">「MariaDB 起不來,port 3306 被 proxysql 佔走」</a>)</td>
 </tr>
 <tr>
 <td>RabbitMQ</td>
-<td>服務內部的訊息佇列(API 收單 → worker 幹活)</td>
-<td>默默工作,沒出過事</td>
+<td>服務內部的訊息佇列(API 收到請求,交給背後的 worker 執行)</td>
+<td>課程中沒有出過問題</td>
 </tr>
 <tr>
 <td>Memcached</td>
 <td>Keystone token 快取</td>
-<td>默默工作</td>
+<td>課程中沒有出過問題</td>
 </tr>
 <tr>
 <td>Redis</td>
-<td>Octavia 的任務佇列(jobboard)</td>
-<td>Day 4 的地雷:不開它 LB 永遠 PENDING</td>
+<td>Octavia 用來記錄進行中任務的資料庫</td>
+<td>Day 4 沒開它,LB 一直停在 PENDING(Day 4 的<a href="../sprint3-day4-octavia/#mine-3">「LB 卡在 PENDING_CREATE,amphora 沒有開機」</a>)</td>
 </tr>
 <tr>
 <td>OVN</td>
-<td>Neutron 底下真正做網路的 SDN</td>
-<td>Day 2 的邏輯 router/switch、Day 4 的 o-hm0 都是它</td>
+<td>Neutron 底下實際轉送封包的軟體網路</td>
+<td>Day 2 的邏輯 router/switch、Day 4 的 o-hm0 都由它實作</td>
 </tr>
 </tbody>
 </table>
-<p>另外三個<strong>完全不是 OpenStack</strong> 的主角也值得點名,免得混淆:<strong>kind / Cluster API / CAPO</strong> 是 Kubernetes 生態的專案(Day 6),<strong>Terraform</strong> 是 HashiCorp 的工具(Day 10)。本課程的價值之一就是看清這兩個生態怎麼接起來。</p>
-<h2 id="_2">這次沒用到的服務:剩下的版圖<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>沒用到 ≠ 不重要。以下按「你之後最可能需要的程度」分組:</p>
-<h3 id="_3">第一梯隊:常見到值得認識<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>另外還有兩組工具也不屬於 OpenStack:Day 6 的 kind、Cluster API、CAPO 是 Kubernetes 社群的專案,Day 10 的 Terraform 是 HashiCorp 的工具。它們從外面呼叫 OpenStack 的 API,不在雲的裡面。</p>
+<h2 id="openstack-map">OpenStack Map:照資源類型找服務<a class="headerlink" href="#openstack-map" title="Permanent link">&para;</a></h2>
+<p>回到開場的三個需求。要知道它們歸哪個服務管,最直接的工具是 OpenInfra Foundation 維護的 <strong>OpenStack Map</strong>:一張把所有官方服務依資源類型分格排好的圖。下面這張是 2026.04.01 版,中間的大框是 OpenStack 本身,左右兩側是用戶端工具和維運工具,最下面是部署工具。</p>
+<p><a href="https://www.openstack.org/software/"><img alt="OpenStack Map 2026.04.01 版:中間大框由上往下是 Web Frontends、Workload Provisioning/Application Lifecycle/Orchestration、Compute 與 Storage、Networking 與 Hardware Lifecycle、Shared Services;左側是 Client Tools 與 Integration Enablers;右側是 Operations Tooling(Monitoring、Resource Optimization、Billing、Testing);最下方是 Lifecycle Management,列出 Kolla-Ansible、OpenStack-Charms、OpenStack-Helm 等部署工具" src="../../assets/openstack-map.png" /></a></p>
+<p><em>(點圖可到 openstack.org/software 看互動版)</em></p>
+<p>照著圖上的位置看:</p>
+<ul>
+<li><strong>中間大框的格子名稱就是資源類型。</strong> Compute 分 VM 和容器,Storage 分 Object、Block、File 三種,Networking 分 SDN、負載平衡、DNS。這門課用過的 Nova、Cinder、Neutron、Octavia 都在這幾格裡。Networking 右邊的 Hardware Lifecycle 管實體硬體:Bare Metal 是 Ironic,Accelerators 是 Cyborg。</li>
+<li><strong>最下排的 Shared Services</strong> 就是上一節圖裡的共用服務那一層:Keystone、Placement、Glance、Barbican。</li>
+<li><strong>右側的 Operations Tooling</strong> 是維運用的服務:監控、資源最佳化建議、計費、測試。這門課到 Day 10 都還沒碰到。</li>
+<li><strong>左側的 Integration Enablers</strong> 是讓 OpenStack 和其他系統接起來的專案:Container Services 的 Kuryr 把容器網路接到 Neutron,NFV 的 Tacker 給電信業部署虛擬化網路功能。</li>
+<li><strong>最下方的 Lifecycle Management</strong> 列的是部署工具。Kolla-Ansible 旁邊的 OpenStack-Charms 和 OpenStack-Helm,正是這門課之前<a href="../../previous-attempts/">兩次嘗試</a>用過的工具。</li>
+</ul>
+<p>有了分類,開場的三個需求就可以照「需求 → 分類 → 服務」的順序對下去:</p>
+<p><img alt="三列需求對到服務:像 S3 的地方放備份檔,對到 Storage 的 Object,負責的是 Swift API,本課由 Ceph RGW 提供(以橘框強調),在 Day 14–15;新開的 VM 自動有域名,對到 Networking 的 DNS,是 Designate,在 Day 17;每個部門用了多少、分帳,對到 Operations Tooling 的 Billing,是 CloudKitty 加上 Ceilometer 計量,在 Day 28 和 Day 30" src="../../assets/diagrams/os-s3d11-need-to-service.svg" /></p>
+<p>第二列和第三列都很直接:域名是 DNS,在 Networking 格裡找到 Designate;分帳在 Billing 格裡找到 CloudKitty。CloudKitty 只負責把用量換算成費用,用量本身要靠 Monitoring 格裡的 Ceilometer 收集,所以這個需求要兩個服務一起上。</p>
+<p>第一列多了一個轉折。Storage 的 Object 格裡是 <strong>Swift</strong>,OpenStack 的物件儲存服務,用法就是上傳一個檔案、拿到一個網址。但 Kolla-Ansible 2025.1 的 release notes 寫明,它已經不再支援部署 Swift。這門課的做法是在 Day 14 先建一套 Ceph 儲存叢集,Day 15 用 Ceph 的 <strong>RGW</strong>(物件儲存閘道)提供物件儲存。RGW 和 Swift <strong>API 相容</strong>:它接受的請求和回應的格式跟 Swift 一樣,原本寫給 Swift 的程式,常用的物件操作大多可以直接沿用,同時也接受 S3 的 API。</p>
+<p>這一列說明 Map 能告訴你的範圍:它列出 OpenStack 有哪些服務、各自歸哪一類,但不會告訴你某一版的 Kolla-Ansible 能不能部署它。這要另外查 Kolla-Ansible 對應版本的文件和 release notes。</p>
+<h2 id="_1">這門課還沒用到的服務<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>Map 上還有很多服務是 Day 10 為止沒碰過的。其中一部分會在 Sprint 4、5 陸續加上,下面依你之後最可能用到的程度分組。</p>
+<h3 id="_2">後面會部署的服務<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>這些在日常營運一朵雲時常會被問到,Sprint 4、5 會逐一部署:</p>
 <table>
 <thead>
 <tr>
@@ -4293,124 +4316,117 @@
 <th>服務</th>
 <th>管什麼</th>
 <th>AWS 對應</th>
-<th>為什麼這次沒用 / 什麼時候會要</th>
+<th>在本課程</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><img alt="Swift" src="../../assets/mascots/swift.png" width="64" /></td>
-<td><strong>Swift</strong></td>
-<td>物件儲存(丟檔案、拿 URL)</td>
-<td>S3</td>
-<td>已於 <a href="../sprint4-day15-object-storage-rgw/">Day 15</a> 以 Ceph RGW 形式拼上(Swift API 相容)</td>
+<td><img alt="Skyline" src="../../assets/mascots/skyline.png" width="64" /></td>
+<td><strong>Skyline</strong></td>
+<td>新一代網頁儀表板</td>
+<td>Console</td>
+<td><a href="../sprint4-day13-skyline/">Day 13</a>,與 Horizon 並存</td>
 </tr>
 <tr>
-<td><img alt="Designate" src="../../assets/mascots/designate.png" width="64" /></td>
-<td><strong>Designate</strong></td>
-<td>DNS as a Service</td>
-<td>Route 53</td>
-<td>已於 <a href="../sprint4-day17-designate-dns/">Day 17</a> 拼上</td>
+<td><img alt="Swift" src="../../assets/mascots/swift.png" width="64" /></td>
+<td><strong>Swift</strong>(API)</td>
+<td>物件儲存(上傳檔案、拿到網址)</td>
+<td>S3</td>
+<td><a href="../sprint4-day15-object-storage-rgw/">Day 15</a>,由 Ceph RGW 提供 Swift API</td>
 </tr>
 <tr>
 <td><img alt="Manila" src="../../assets/mascots/manila.png" width="64" /></td>
 <td><strong>Manila</strong></td>
-<td>共享檔案系統(多 VM 同時掛同一顆)</td>
+<td>共享檔案系統(多台 VM 同時掛同一份)</td>
 <td>EFS</td>
-<td>已於 <a href="../sprint4-day16-manila-cephfs/">Day 16</a> 拼上;K8s RWX 整合是它的殺手應用</td>
+<td><a href="../sprint4-day16-manila-cephfs/">Day 16</a>,建在 Day 14 的 Ceph 上</td>
 </tr>
 <tr>
-<td><img alt="Skyline" src="../../assets/mascots/skyline.png" width="64" /></td>
-<td><strong>Skyline</strong></td>
-<td>新一代儀表板(取代 Horizon 的方向)</td>
-<td>Console</td>
-<td>已於 <a href="../sprint4-day13-skyline/">Day 13</a> 部署——與 Horizon 並存對照</td>
-</tr>
-<tr>
-<td><img alt="Prometheus" src="../../assets/logos/prometheus.png" width="40" /> <img alt="Grafana" src="../../assets/logos/grafana.svg" width="36" /></td>
-<td><strong>Prometheus + Grafana</strong>(Kolla 內建整合)</td>
-<td>監控與儀表板</td>
-<td>CloudWatch</td>
-<td>已於 <a href="../sprint4-day21-observability/">Day 21</a> 部署;這兩位來自 CNCF/上游生態,不是 OpenStack 專案</td>
-</tr>
-</tbody>
-</table>
-<p><img alt="skyline-overview" src="../../assets/screenshots/skyline-overview.png" /></p>
-<p><em>上表提到的 Skyline 長這樣:同一朵雲、新一代介面——Sprint 4 Day 13 會正式把它部起來。</em></p>
-<h3 id="_4">第二梯隊:特定場景才需要<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>服務</th>
-<th>管什麼</th>
-<th>場景</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><img alt="Ironic" src="../../assets/mascots/ironic.png" width="64" /></td>
-<td><strong>Ironic</strong></td>
-<td>裸機即服務(把實體機當 VM 一樣開)</td>
-<td>資料中心自動化;跟 Kolla 部署工具是絕配</td>
-</tr>
-<tr>
-<td><img alt="Telemetry" src="../../assets/mascots/telemetry.png" width="64" /></td>
-<td><strong>Ceilometer / Gnocchi / Aodh</strong></td>
-<td>計量、時序資料、告警三兄弟(合稱 Telemetry)</td>
-<td>要做計費(誰用了多少)或用量告警時</td>
-</tr>
-<tr>
-<td><img alt="CloudKitty" src="../../assets/mascots/cloudkitty.png" width="64" /></td>
-<td><strong>CloudKitty</strong></td>
-<td>費率與計費(把計量變帳單)</td>
-<td>對內部門拆帳、對外收費</td>
+<td><img alt="Designate" src="../../assets/mascots/designate.png" width="64" /></td>
+<td><strong>Designate</strong></td>
+<td>DNS 服務</td>
+<td>Route 53</td>
+<td><a href="../sprint4-day17-designate-dns/">Day 17</a></td>
 </tr>
 <tr>
 <td><img alt="Trove" src="../../assets/mascots/trove.png" width="64" /></td>
 <td><strong>Trove</strong></td>
-<td>資料庫即服務</td>
-<td>已於 <a href="../sprint4-day18-trove-dbaas/">Day 18</a> 拼上(一鍵開 MySQL)</td>
+<td>資料庫服務(開一個代管的 MySQL)</td>
+<td>RDS</td>
+<td><a href="../sprint4-day18-trove-dbaas/">Day 18</a></td>
+</tr>
+<tr>
+<td><img alt="Prometheus" src="../../assets/logos/prometheus.png" width="40" /> <img alt="Grafana" src="../../assets/logos/grafana.svg" width="36" /></td>
+<td><strong>Prometheus + Grafana</strong></td>
+<td>監控與儀表板</td>
+<td>CloudWatch</td>
+<td><a href="../sprint4-day21-observability/">Day 21</a>;兩者來自 OpenStack 以外的社群,由 Kolla-Ansible 整合部署</td>
+</tr>
+<tr>
+<td><img alt="Telemetry" src="../../assets/mascots/telemetry.png" width="64" /></td>
+<td><strong>Ceilometer / Aodh</strong></td>
+<td>計量(誰用了多少)與告警</td>
+<td>CloudWatch</td>
+<td><a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 計量、<a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 告警與自動擴縮</td>
+</tr>
+<tr>
+<td><img alt="CloudKitty" src="../../assets/mascots/cloudkitty.png" width="64" /></td>
+<td><strong>CloudKitty</strong></td>
+<td>費率與計費(把用量變成帳單)</td>
+<td>—</td>
+<td><a href="../sprint5-day30-cloudkitty-rating/">Day 30</a></td>
 </tr>
 <tr>
 <td><img alt="Masakari" src="../../assets/mascots/masakari.png" width="64" /></td>
 <td><strong>Masakari</strong></td>
-<td>VM 高可用(主機掛了自動在別台重生)</td>
-<td>多節點生產環境</td>
-</tr>
-<tr>
-<td><img alt="Zun" src="../../assets/mascots/zun.png" width="64" /></td>
-<td><strong>Zun</strong></td>
-<td>容器即服務(不經 K8s 直接跑容器)</td>
-<td>想要 AWS Fargate 體驗——但注意:上游已近停維,Kolla 自 2026.1 起移除支援;業界的答案是 Magnum/K8s</td>
+<td>VM 高可用(主機故障時把 VM 移到別台重開)</td>
+<td>—</td>
+<td><a href="../sprint5-day31-masakari-ha/">Day 31</a>,在多節點環境上</td>
 </tr>
 </tbody>
 </table>
-<h3 id="_5">第三梯隊:知道存在即可<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<p><strong>Blazar</strong>(資源預約)、<strong>Watcher</strong>(資源最佳化建議)、<strong>Cyborg</strong>(GPU/FPGA 加速器管理)、<strong>Tacker</strong>(電信 NFV 編排)、<strong>Venus</strong>(log 集中管理)、<strong>Mistral</strong>(工作流引擎)……電信業和超大規模部署才會見到。</p>
-<div class="admonition tip">
-<p class="admonition-title">彩蛋:其實你早就見過這些名字</p>
-<p>回去翻 Day 5 部署 Barbican 時的輸出——那一長串 <code>PLAY [Apply role cyborg] ... skipping: no hosts matched</code>、<code>PLAY [Apply role designate] ... skipping</code>、trove、watcher、cloudkitty、tacker、zun、blazar、masakari、venus、skyline……<strong>Kolla-Ansible 每次部署都會把整盒積木掃一遍,沒開的直接跳過</strong>。當時被你捲過去的雜訊,現在你知道每一行是什麼了。</p>
-</div>
-<h2 id="_6">一張圖總結:這朵雲的現況<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TB
-    subgraph deployed["已上線(Day 0–10 的成果)"]
-        direction LR
-        A["核心:Keystone / Glance / Placement /&lt;br/&gt;Nova / Neutron / Horizon"] ~~~ B["儲存:Cinder(LVM)"]
-        C["網路加值:Octavia"] ~~~ D["平台:Heat / Barbican / Magnum"]
-    end
-    deployed ==&gt;|"globals.yml 開 flag + 增量 deploy(Day 3 學過的工作流)"| next
-    subgraph next["最自然的下一步"]
-        direction LR
-        E["Manila(K8s RWX)"] ~~~ F["Prometheus / Grafana(監控)"]
-        G["Designate(DNS)"] ~~~ H["Swift 或 Ceph(物件儲存)"]
-    end</code></pre>
-<p>要加任何一塊,流程都是你在 Day 3 練過的那套:<code>globals.yml</code> 開 <code>enable_xxx</code> → <code>kolla-ansible deploy</code> 增量套用 → 驗證。這門課教的不只是十一個服務,是<strong>這個可以無限擴充的工作流</strong>。</p>
-<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p><img alt="Skyline 的總覽頁面截圖" src="../../assets/screenshots/skyline-overview.png" /></p>
+<p><em>上表第一列的 Skyline,在 Day 13 部署後長這樣:同一朵雲,換一套網頁介面。</em></p>
+<h3 id="_3">這門課不會教的服務<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>下面這些服務 Map 上都有,但只在特定場景才需要,這門課不會部署:</p>
 <ul>
-<li>想擴充這朵雲 → 這正是下一段課程的主題:<a href="../sprint3-day12-sprint4-preview/">Day 12 · Sprint 4 預告</a>。</li>
-<li>想回顧整趟旅程的決策與教訓 → <a href="../../sprint3-reflection/">Sprint 3 回顧</a>。</li>
-<li>想知道這條路線是怎麼從兩次失敗裡長出來的 → <a href="../../previous-attempts/">前兩次嘗試</a>。</li>
+<li><strong>Ironic</strong>(裸機服務):把實體伺服器當成 VM 一樣用 API 開關、裝系統,用在資料中心自動化。</li>
+<li><strong>Cyborg</strong>(加速器管理):管理 GPU、FPGA 這類加速卡,讓 VM 可以申請使用。</li>
+<li><strong>Zun</strong>(容器服務):不經過 Kubernetes,直接用 OpenStack API 跑容器。Kolla-Ansible 自 2026.1 起不再支援部署 Zun;這門課跑容器工作負載走的是 Magnum。</li>
+<li><strong>Blazar</strong>(資源預約):預先保留某段時間要用的主機或資源。</li>
+<li><strong>Watcher</strong>(資源最佳化):分析整朵雲的用量,提出搬移 VM 之類的最佳化建議。</li>
+<li><strong>Tacker</strong>(NFV 編排):電信業用來部署虛擬化網路功能。</li>
+<li><strong>Mistral</strong>(工作流程):把多個 API 呼叫串成一個可重跑的流程。</li>
 </ul>
+<p>一個服務在 Map 上,不代表它仍有人積極維護。打算投入時間學某個服務之前,先查它的維護狀態,<a href="../sprint5-day35-sprint5-recap/">Day 35</a> 會整理查的方法。</p>
+<h2 id="day-3">要加一個服務時:Day 3 的流程<a class="headerlink" href="#day-3" title="Permanent link">&para;</a></h2>
+<p>不管之後要加的是上面哪一個服務,Kolla-Ansible 加服務的流程都跟 Day 3 加 Cinder 一樣,只是前面多了查 Map 和查支援兩步。下圖由上往下是完整順序,右邊是每一步要注意的地方:</p>
+<p><img alt="加一個服務的六個步驟由上往下:1 在 Map 上找到負責的服務,先找分類再找服務;2 確認 Kolla-Ansible 能部署它,也就是這一版有沒有 enable_ 開關;3 準備 Kolla 不會替你做的前置,例如 Day 3 的 LVM volume group;4 在 globals.yml 打開開關(以橘框強調),先看它會不會連帶打開子服務;5 重跑 kolla-ansible deploy,冪等,只新增或改動需要的容器;6 驗證,服務出現在清單裡,再實際操作一次" src="../../assets/diagrams/os-s3d11-add-service.svg" /></p>
+<p>照著圖上的編號看,最容易出錯的是第 2 到第 4 步:</p>
+<ul>
+<li><strong>第 2 步</strong>擋掉的是 Swift 這種情況:Map 上有,Kolla-Ansible 這一版卻不能部署。</li>
+<li><strong>第 3 步</strong>是 Kolla-Ansible 管不到的部分。Day 3 的 LVM volume group 要先自己用 <code>pvcreate</code>、<code>vgcreate</code> 建好,Day 15 的 RGW 要先有 Day 14 的 Ceph。</li>
+<li><strong>第 4 步</strong>的開關可能會連帶打開子服務。Day 3 開了 <code>enable_cinder</code> 之後,cinder-backup 也跟著部署,但這個 lab 沒有它需要的備份後端,服務一直是 down,最後要另外設 <code>enable_cinder_backup: "no"</code>,再刪掉已經建出來的 <code>cinder_backup</code> 容器。打開一個開關之前,先查它會帶起哪些子服務。</li>
+</ul>
+<p>第 5 步的 <code>kolla-ansible deploy</code> 每次都會走過所有服務。沒有打開的服務,在部署輸出裡會看到它的 <code>PLAY [Apply role ...]</code> 後面接著 <code>skipping: no hosts matched</code>。Day 5 部署 Barbican 時捲過去的那一長串 skipping,大致對應 Kolla-Ansible 支援、但這朵雲還沒打開的服務,也就是第 2 步要查的那份清單。只是大致對應:裡面也有 prometheus、opensearch 這類不屬於 OpenStack 的角色。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>有個團隊希望在這朵雲上直接租用整台實體伺服器,不要虛擬化,好跑對效能很敏感的資料庫。照這一章的方法,你會在 Map 的哪一格找服務?這門課有沒有教到它?</li>
+<li>同事看到 Map 上 Storage 格裡的 Swift,在 Kolla-Ansible 2025.1 的 <code>globals.yml</code> 裡加了 <code>enable_swift: "yes"</code> 就準備重跑 deploy。你會先請他確認哪一件事?如果他要的是放檔案的地方,這門課的做法是什麼?</li>
+<li>某天 Octavia 新建的負載平衡器全部停在 PENDING,Octavia 的 API 卻照常回應。照第一張圖的分層,除了 Octavia 本身,你還會去看哪一層的哪個元件?</li>
+</ul>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>OpenStack 由許多各自獨立的專案組成,每個專案管一種資源,在 Kolla-Ansible 裡用一個 <code>enable_*</code> 開關決定要不要部署。到 Day 10 為止,這朵雲用了 11 個服務,底下還有 MariaDB、RabbitMQ、Redis、OVN 這些不屬於 OpenStack、但出問題時症狀會出現在 OpenStack 服務上的元件。之後拿到一個新需求,先在 OpenStack Map 上找到它屬於哪一類、哪個服務負責,再去查這一版的 Kolla-Ansible 能不能部署它;確定能部署,就照 Day 3 的流程準備前置、打開開關、重跑 deploy、驗證。</p>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>想再深入,可以從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://www.openstack.org/software/">OpenStack Map(openstack.org/software)</a></strong> —— 本章那張圖的互動版,點每個服務可以看到它的簡介與文件連結。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/index.html">Kolla-Ansible 2025.1:Projects Deployment Configuration Reference</a></strong> —— 這一版 Kolla-Ansible 能部署哪些服務、各自要怎麼設定,依運算、儲存、網路等分類列出;查「第 2 步」從這裡開始。</li>
+<li><strong><a href="https://docs.openstack.org/releasenotes/kolla-ansible/2025.1.html">Kolla-Ansible 2025.1 release notes</a></strong> —— 這一版新增、棄用、移除了哪些服務的部署支援,Swift 的移除也記在這裡。</li>
+<li><strong><a href="https://governance.openstack.org/tc/reference/projects/">OpenStack 官方專案列表</a></strong> —— OpenStack 技術委員會維護的正式專案清單,每個專案的負責團隊與 repo 都列在這裡。</li>
+</ul>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>這一章列出的「後面會部署的服務」,就是下一段課程的內容。<a href="../sprint3-day12-sprint4-preview/">Day 12</a> 是 Sprint 4 的預告,說明為什麼挑這些服務、為什麼物件儲存教 RGW 而不是 Swift。想先回顧 Sprint 3 的決策,可以看 <a href="../../sprint3-reflection/">Sprint 3 回顧</a>。</p>
 <hr />
 <p><em>本頁吉祥物圖像與 OpenStack Map 為 OpenInfra Foundation 官方資產(<a href="https://www.openstack.org/project-mascots/">Project Mascots</a>、<a href="https://www.openstack.org/software/">OpenStack Map</a>),版權屬原基金會,此處作社群教學用途。</em></p>
 

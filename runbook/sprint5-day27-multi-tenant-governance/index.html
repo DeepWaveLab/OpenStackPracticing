@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-27" class="md-skip">
+        <a href="#day-27-nova" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1549,7 +1549,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸多租戶?先讀這段
+        開始之前
       
     </span>
   </a>
@@ -1557,77 +1557,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構:額度搬家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:建立租戶結構
+        步驟 1：建立各自的專案
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2application-credentials" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#2-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:Application Credentials——不用密碼的認證
+        步驟 2：讓 CI 使用獨立憑證
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3unified-limits" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-nova-keystone" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 3:unified limits 遷移
+        步驟 3：把 Nova 額度登記到 Keystone
       
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="步驟 3：把 Nova 額度登記到 Keystone">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#4-quota-driver" class="md-nav__link">
+  <a href="#region" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 4:切換 quota driver
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:驗收——第 3 台必須被擋下
+        先補齊 region 與缺少的預設額度
       
     </span>
   </a>
@@ -1640,10 +1607,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#4-nova" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 4：讓 Nova 讀取並執行新額度
       
     </span>
   </a>
@@ -1651,22 +1618,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 5：確認額度真的限制建立請求
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:切了 driver 沒設 [oslo_limit],整個 compute API 掛掉
+        切換 driver 後 compute API 回 500
       
     </span>
   </a>
@@ -1677,7 +1655,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:region 對不上,所有額度讀成 0
+        尚未建立 VM，卻每項都顯示額度 0
       
     </span>
   </a>
@@ -1688,7 +1666,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:查詢回空,而限制正在執行
+        管理員查詢回空，Nova 卻仍執行限制
       
     </span>
   </a>
@@ -1699,7 +1677,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:application credential 的 JSON 欄位是大寫
+        解析 application credential JSON 得到 KeyError
       
     </span>
   </a>
@@ -1710,7 +1688,7 @@
   <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 5:openstack service list --service 不存在
+        service list 不接受 --service
       
     </span>
   </a>
@@ -1726,7 +1704,29 @@
   <a href="#secure-rbac" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Secure RBAC:誠實的現況
+        本章沒有驗證完整的 Secure RBAC
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
       
     </span>
   </a>
@@ -1737,17 +1737,6 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         延伸閱讀
       
     </span>
@@ -1756,7 +1745,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1845,7 +1834,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1873,7 +1862,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1901,7 +1890,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2021,7 +2010,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4062,7 +4051,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸多租戶?先讀這段
+        開始之前
       
     </span>
   </a>
@@ -4070,77 +4059,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構:額度搬家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:建立租戶結構
+        步驟 1：建立各自的專案
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2application-credentials" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#2-ci" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:Application Credentials——不用密碼的認證
+        步驟 2：讓 CI 使用獨立憑證
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3unified-limits" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-nova-keystone" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 3:unified limits 遷移
+        步驟 3：把 Nova 額度登記到 Keystone
       
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="步驟 3：把 Nova 額度登記到 Keystone">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#4-quota-driver" class="md-nav__link">
+  <a href="#region" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 4:切換 quota driver
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:驗收——第 3 台必須被擋下
+        先補齊 region 與缺少的預設額度
       
     </span>
   </a>
@@ -4153,10 +4109,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#4-nova" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 4：讓 Nova 讀取並執行新額度
       
     </span>
   </a>
@@ -4164,22 +4120,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 5：確認額度真的限制建立請求
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:切了 driver 沒設 [oslo_limit],整個 compute API 掛掉
+        切換 driver 後 compute API 回 500
       
     </span>
   </a>
@@ -4190,7 +4157,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:region 對不上,所有額度讀成 0
+        尚未建立 VM，卻每項都顯示額度 0
       
     </span>
   </a>
@@ -4201,7 +4168,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:查詢回空,而限制正在執行
+        管理員查詢回空，Nova 卻仍執行限制
       
     </span>
   </a>
@@ -4212,7 +4179,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:application credential 的 JSON 欄位是大寫
+        解析 application credential JSON 得到 KeyError
       
     </span>
   </a>
@@ -4223,7 +4190,7 @@
   <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 5:openstack service list --service 不存在
+        service list 不接受 --service
       
     </span>
   </a>
@@ -4239,7 +4206,29 @@
   <a href="#secure-rbac" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Secure RBAC:誠實的現況
+        本章沒有驗證完整的 Secure RBAC
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
       
     </span>
   </a>
@@ -4250,17 +4239,6 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         延伸閱讀
       
     </span>
@@ -4269,7 +4247,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4296,79 +4274,17 @@
 
 
 
-<h1 id="day-27">Day 27: 多租戶治理——先有租戶,才有帳單<a class="headerlink" href="#day-27" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>Sprint 5 要把雲當生意經營,而生意的第一個問題是「<strong>跟誰收錢</strong>」。今天蓋出分帳的對象:Keystone 的 domain 階層、不用密碼的 application credentials、以及 2025.1 剛轉正的 <strong>unified limits</strong>——額度從 Nova 自己的抽屜搬進 Keystone。本章有一顆雷會<strong>把整個 compute API 弄掛</strong>,還有一顆讓所有額度讀成 0,以及一顆最陰險的:<strong>查詢回空,而限制正在執行</strong>。</p>
-</blockquote>
+<h1 id="day-27-nova">Day 27: 多租戶治理——認證範圍、應用憑證與 Nova 額度<a class="headerlink" href="#day-27-nova" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Keystone 官方吉祥物" src="../../assets/mascots/keystone.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Sprint 5 開始</strong>:從「讓雲活得久」轉向「把雲當生意經營」。</li>
-<li><strong>今天</strong>:建立租戶結構與額度治理——後面四天的分帳對象、告警範圍、帳單抬頭,全部來自今天。</li>
-<li><strong>今天之後</strong>:<a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 讓雲說得出每個租戶用了多少。</li>
-</ul>
-</div>
-<h2 id="_1">第一次接觸多租戶?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>前 26 天你都是 <code>admin</code>,想開什麼開什麼。真實的雲不是這樣——它同時服務很多群互不信任的人,而 Keystone 用四層結構把他們隔開:</p>
-<table>
-<thead>
-<tr>
-<th>名詞</th>
-<th>是什麼</th>
-<th>這門課的例子</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>domain</strong></td>
-<td>最外層的隔離邊界,像一家公司</td>
-<td><code>day27-corp</code></td>
-</tr>
-<tr>
-<td><strong>project</strong></td>
-<td>domain 底下的資源容器,像一個部門</td>
-<td><code>team-a</code>(工程)、<code>team-b</code>(資料)</td>
-</tr>
-<tr>
-<td><strong>user</strong></td>
-<td>使用者,屬於某個 domain</td>
-<td><code>alice</code></td>
-</tr>
-<tr>
-<td><strong>role</strong></td>
-<td>使用者在<strong>某個 project 上</strong>的權限</td>
-<td>alice 在 team-a 是 <code>member</code></td>
-</tr>
-</tbody>
-</table>
-<p>關鍵在最後一列:<strong>權限不是使用者的屬性,是「使用者 × 專案」的關係</strong>。同一個 alice 可以在 team-a 是 member、在 team-b 什麼都不是。這個結構就是後面所有分帳、告警、稽核的骨架。</p>
-<h2 id="_2">原理與架構:額度搬家<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>「額度(quota)」這件事,OpenStack 正在做一次搬家,而 2025.1 是它轉正的版本:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph OLD["舊路線:各自為政"]
-        direction LR
-        N1["Nova 自己的&lt;br/&gt;quota 表"] ~~~ C1["Cinder 自己的&lt;br/&gt;quota 表"] ~~~ E1["Neutron 自己的&lt;br/&gt;quota 表"]
-    end
-    subgraph NEW["unified limits:集中到 Keystone"]
-        direction LR
-        K["Keystone&lt;br/&gt;registered + project limits"]
-    end
-    OLD ==&gt;|"nova-manage limits&lt;br/&gt;migrate_to_unified_limits"| NEW</code></pre>
-<p>搬家的理由很實際:額度散在各服務的資料庫裡,<strong>沒有人回答得出「這個租戶總共能用多少」</strong>。集中到 Keystone 之後,額度變成身分系統的一部分,跟角色、專案放在一起管。</p>
-<p>兩個新名詞今天會一直出現:</p>
-<ul>
-<li><strong>registered limit</strong>:全域預設。「每個專案預設可以開 10 台機器」。</li>
-<li><strong>project limit</strong>:針對特定專案的覆寫。「但 team-a 只能開 2 台」。</li>
-</ul>
-<p>而 Nova 這側靠一個叫 <strong>oslo.limit</strong> 的函式庫去 Keystone 查額度。<strong>今天三顆雷有兩顆出在這個查詢的路徑上</strong>,所以先記住它怎麼找:</p>
-<pre class="mermaid"><code>flowchart TB
-    NOVA["nova-api&lt;br/&gt;(要開機了,額度夠嗎)"] ==&gt; OL["oslo.limit"]
-    OL ==&gt;|"用 endpoint_id 反查"| EP["Keystone endpoint&lt;br/&gt;→ 得到 service + region"]
-    EP ==&gt; LIM["用 service + region&lt;br/&gt;找 registered / project limit"]</code></pre>
-<p><strong><code>service</code> 和 <code>region</code> 都對上,才查得到額度。</strong> 對不上不會報錯——它會告訴你額度是 <strong>0</strong>。</p>
-<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1">步驟 1:建立租戶結構<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<p>兩個團隊開始共用同一朵雲。工程團隊希望 CI 自動開 VM，資料團隊也需要自己的資源；你不想把管理員密碼交給兩邊，更不能讓其中一邊耗盡所有容量。先前已經會建立 VM，這一章要在建立之前加上身分與額度的判斷。讀完之後，請求被拒絕時，你能分辨是認證範圍不對、額度不足，還是 Nova 查詢額度的設定有問題。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>沿用 Kolla-Ansible 2025.1 的部署主機，在啟用 OpenStack CLI 的 shell 操作。需要管理員 openrc、可用的 <code>cirros</code> 映像及 <code>m1.tiny</code> flavor。下列歷史命令中的 <code>10.0.0.4</code>、<code>RegionOne</code>、inventory 路徑請對照自己的 Keystone endpoint、region 與部署檔替換；輸出中的 UUID 只用來辨認當時的資源，不要複製為自己的 ID。</p>
+<p>本章會切換三種身分。openrc 只是設定環境變數，不保證清掉前一種認證留下的值。每次由 application credential 切回帳號密碼前，先執行 <code>unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE</code>，再載入目標 openrc；由 system scope 切回專案前，至少清除 <code>OS_SYSTEM_SCOPE</code>。這個前提也適用後續章節。</p>
+<h2 id="1">步驟 1：建立各自的專案<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>Keystone 的 <strong>domain</strong> 管理一組使用者與專案；<strong>project</strong> 是資源歸屬與額度的對象。使用者取得哪種權限，取決於被指派的 <strong>role</strong> 及作用範圍。本章建立 <code>day27-corp</code> domain、<code>team-a</code>／<code>team-b</code> 兩個 project，讓 <code>alice</code> 在 team-a 有 member 角色。domain 本身不替 VM 建立隔離網路，還要由各服務依專案管理資源。</p>
+<p>圖中把身分歸屬與資源歸屬分開，避免把「使用者屬於 domain」誤認成「能管理這個 domain 下所有專案」。</p>
+<p><img alt="alice屬於day27-corp，在team-a獲member角色；team-a與team-b各自持有資源，應用憑證限於建立時的專案" src="../../assets/diagrams/os-s5d27-identity.svg" /></p>
+<p>alice 在 team-a 的指派不會自動給她 team-b 的權限。先以管理員建立這組關係：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>openstack<span class="w"> </span>domain<span class="w"> </span>create<span class="w"> </span>day27-corp<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;Sprint 5 多租戶示範&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>openstack<span class="w"> </span>project<span class="w"> </span>create<span class="w"> </span>--domain<span class="w"> </span>day27-corp<span class="w"> </span>team-a<span class="w"> </span>--description<span class="w"> </span><span class="s2">&quot;工程團隊&quot;</span>
@@ -4377,7 +4293,7 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--project<span class="w"> </span>team-a<span class="w"> </span>--project-domain<span class="w"> </span>day27-corp<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span>--user<span class="w"> </span>alice<span class="w"> </span>--user-domain<span class="w"> </span>day27-corp<span class="w"> </span>member
 </span></code></pre></div>
-<p>驗證 alice 拿得到 team-a 的 token:</p>
+<p>接著準備 alice 的 openrc。填入自己的 Keystone 位址與剛設定的密碼，檔案只讓自己讀取；查到 token 的 project ID，才繼續建立資源：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>~/team-a-openrc.sh<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="s">export OS_AUTH_URL=http://10.0.0.4:5000/v3</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">export OS_IDENTITY_API_VERSION=3</span>
@@ -4392,319 +4308,231 @@
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
 </span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>openstack<span class="w"> </span>token<span class="w"> </span>issue<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>project_id
 </span></code></pre></div>
-<div class="admonition tip">
-<p class="admonition-title">租戶要有自己的網路</p>
-<p>alice 開機時會撞到這個:</p>
+<p>前面章節以 admin 建立的網路，不會自動成為 team-a 的網路。下面是嘗試使用其他專案網路時留下的錯誤：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>No Network found for e279e342-5ad3-4001-810c-045bc9a98de1
 </span></code></pre></div>
-<p>前面幾天建的 <code>day17-net</code> 屬於 admin,<strong>team-a 根本看不到它</strong>。這正是租戶隔離在運作。給 team-a 建自己的:</p>
+<p>在 alice 的 team-a 身分下建立自己的網路與子網：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>team-a-net
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>subnet<span class="w"> </span>create<span class="w"> </span>team-a-sub<span class="w"> </span>--network<span class="w"> </span>team-a-net<span class="w"> </span>--subnet-range<span class="w"> </span><span class="m">10</span>.27.0.0/24<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8
 </span></code></pre></div>
-<p><code>--dns-nameserver</code> 是 <a href="../sprint4-day17-designate-dns/#mine-3">Day 17 地雷 3</a> 的肌肉記憶——建 subnet 必給 DNS。</p>
-</div>
-<h3 id="2application-credentials">步驟 2:Application Credentials——不用密碼的認證<a class="headerlink" href="#2application-credentials" title="Permanent link">&para;</a></h3>
-<p>CI 流程要操作雲,難道要把 alice 的密碼寫進 pipeline?<strong>Application credential 就是為這件事存在的</strong>:一組獨立的憑證,可以限定角色、設到期日,而且<strong>隨時可以撤銷而不影響本人的密碼</strong>。</p>
+<p>DNS 設定延續 Day 17 的<a href="../sprint4-day17-designate-dns/#mine-3">子網 DNS 檢查</a>。這一步完成後，後面的 VM 才有可選的 <code>team-a-net</code>。</p>
+<h2 id="2-ci">步驟 2：讓 CI 使用獨立憑證<a class="headerlink" href="#2-ci" title="Permanent link">&para;</a></h2>
+<p><strong>Application credential</strong> 是使用者替應用建立的認證資料，可限定既有角色、設到期日並單獨撤銷，不必把本人密碼放進 CI。它仍然是機密，而且綁定建立時的專案。本例沿用 alice 在 team-a 的權限；若你的角色配置沒有 reader，應只指定自己已持有的角色。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>openstack<span class="w"> </span>application<span class="w"> </span>credential<span class="w"> </span>create<span class="w"> </span>day27-ci<span class="w"> </span>--role<span class="w"> </span>member<span class="w"> </span>--role<span class="w"> </span>reader
 </span></code></pre></div>
-<p>真正的驗證是<strong>把所有帳密環境變數清空</strong>,只靠這組憑證認證:</p>
+<p>保存建立時顯示的 ID 與 Secret。Secret 之後不能重新查回。以下清除帳號密碼變數，改用這組憑證列 VM：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">unset</span><span class="w"> </span>OS_USERNAME<span class="w"> </span>OS_PASSWORD<span class="w"> </span>OS_PROJECT_NAME<span class="w"> </span>OS_USER_DOMAIN_NAME<span class="w"> </span>OS_PROJECT_DOMAIN_NAME
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OS_AUTH_TYPE</span><span class="o">=</span>v3applicationcredential
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OS_APPLICATION_CREDENTIAL_ID</span><span class="o">=</span>&lt;剛才的<span class="w"> </span>ID&gt;
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OS_APPLICATION_CREDENTIAL_SECRET</span><span class="o">=</span>&lt;剛才的<span class="w"> </span>Secret&gt;
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>openstack<span class="w"> </span>server<span class="w"> </span>list
 </span></code></pre></div>
-<p><strong>沒報錯 = 完全不用密碼就通過認證,並查到 team-a 的資源。</strong></p>
-<div class="admonition warning">
-<p class="admonition-title">Secret 只顯示一次</p>
-<p>建立時那串 86 字元的 secret <strong>之後再也查不到</strong>。沒存下來就只能刪掉重建。另外,用腳本抓 ID 時會踩<a href="#mine-4">地雷 4</a>——這個指令的 JSON 欄位名是大寫的。</p>
-</div>
-<h3 id="3unified-limits">步驟 3:unified limits 遷移<a class="headerlink" href="#3unified-limits" title="Permanent link">&para;</a></h3>
-<p>先看現況,<code>registered limit</code> 是空的:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openstack<span class="w"> </span>registered<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<p>請求成功代表這組憑證可以在 team-a 執行該查詢，不代表獲得全雲管理權限。用完驗證後，依開頭說明清除 application credential 相關變數，再載入 <code>/etc/kolla/admin-openrc.sh</code>；下一步是管理員的額度設定工作。</p>
+<h2 id="3-nova-keystone">步驟 3：把 Nova 額度登記到 Keystone<a class="headerlink" href="#3-nova-keystone" title="Permanent link">&para;</a></h2>
+<p><strong>Quota（額度）</strong>限制專案可申請多少資源。Unified limits 把額度數值集中存入 Keystone；本章遷移的是 Nova，沒有遷移 Cinder 或 Neutron。Nova 自 2023.2 起已推薦使用這條路線，並非到 2025.1 才出現。</p>
+<p>兩種記錄分工如下：<strong>registered limit</strong> 是某個服務／region 的預設額度；<strong>project limit</strong> 覆寫特定專案的值。Nova 透過 <strong>oslo.limit</strong> 函式庫讀取額度並執行檢查，Keystone 不直接攔截建立 VM 的請求。</p>
+<p>查詢前要確認認證的 <strong>scope（作用範圍）</strong>。專案範圍的 token 可能只看得到自己的 limit。管理全雲 limit 時，使用有 system admin 權限的管理員：載入 admin openrc 後，依下方清除專案變數並設定 <code>OS_SYSTEM_SCOPE=all</code>。此處先完成該身分切換，後面的 limit 寫入都使用它。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">unset</span><span class="w"> </span>OS_PROJECT_NAME<span class="w"> </span>OS_PROJECT_DOMAIN_NAME<span class="w"> </span>OS_PROJECT_ID<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">      </span>OS_TENANT_NAME<span class="w"> </span>OS_TENANT_ID<span class="w"> </span>OS_PROJECT_DOMAIN_ID
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OS_SYSTEM_SCOPE</span><span class="o">=</span>all
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>openstack<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Project ID&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Resource Name&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Resource Limit&quot;</span>
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>0
+<p>這段最後一行會列目前可見的專案額度；初次操作可能是空清單。原紀錄的 registered limit 查詢也沒有資料：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>registered<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 </span></code></pre></div>
-<p>Nova 提供了搬家工具,<strong>先 dry-run</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_api<span class="w"> </span>nova-manage<span class="w"> </span>limits<span class="w"> </span>migrate_to_unified_limits<span class="w"> </span>--dry-run
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>0
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>The following resource classes were found during the scan:
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>+-----------------+------------------+
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>| Resource        | Registered Limit |
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>+-----------------+------------------+
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>| class:DISK_GB   | missing          |
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>| class:MEMORY_MB | missing          |
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>| class:VCPU      | missing          |
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>+-----------------+------------------+
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>WARNING: It is strongly recommended to create registered limits for resource
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>classes missing limits in Keystone before proceeding.
+<p>Nova 提供遷移工具，先用 dry-run 查看將搬哪些資料：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_api<span class="w"> </span>nova-manage<span class="w"> </span>limits<span class="w"> </span>migrate_to_unified_limits<span class="w"> </span>--dry-run
 </span></code></pre></div>
-<p>真的執行:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_api<span class="w"> </span>nova-manage<span class="w"> </span>limits<span class="w"> </span>migrate_to_unified_limits
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>The following resource classes were found during the scan:
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>+-----------------+------------------+
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>| Resource        | Registered Limit |
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>+-----------------+------------------+
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>| class:DISK_GB   | missing          |
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>| class:MEMORY_MB | missing          |
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>| class:VCPU      | missing          |
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>+-----------------+------------------+
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>WARNING: It is strongly recommended to create registered limits for resource
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>classes missing limits in Keystone before proceeding.
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ec8ba3a754d44487879a381264baf009 servers 10
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>ec8ba3a754d44487879a381264baf009 class:VCPU 20
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>ec8ba3a754d44487879a381264baf009 class:MEMORY_MB 51200
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>ec8ba3a754d44487879a381264baf009 server_metadata_items 128
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>ec8ba3a754d44487879a381264baf009 server_injected_files 5
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>...
+<p><code>missing</code> 表示那些資源尚未有 registered limit。確認遷移範圍後，原紀錄執行了下面命令：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_api<span class="w"> </span>nova-manage<span class="w"> </span>limits<span class="w"> </span>migrate_to_unified_limits
 </span></code></pre></div>
-<p>舊 quota 搬進 Keystone 了。<strong>但這個工具留下兩個坑</strong>:<code>class:DISK_GB</code> 沒有對應的舊 quota,所以沒補齊;而且它建出來的 limit <strong>沒有 region</strong>——那顆會在<a href="#mine-2">地雷 2</a> 爆炸。</p>
-<p>補上 team-a 的專屬額度(<strong>比預設嚴格</strong>,這樣才驗得出來):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nv">NOVA_SVC</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>ID<span class="w"> </span>-c<span class="w"> </span>Type<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$2==&quot;compute&quot;{print $1}&#39;</span><span class="k">)</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nv">TEAM_A</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>project<span class="w"> </span>show<span class="w"> </span>team-a<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NOVA_SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">2</span><span class="w"> </span>servers
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NOVA_SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">4</span><span class="w"> </span>class:VCPU
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ec8ba3a754d44487879a381264baf009 servers 10
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>ec8ba3a754d44487879a381264baf009 class:VCPU 20
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>ec8ba3a754d44487879a381264baf009 class:MEMORY_MB 51200
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>ec8ba3a754d44487879a381264baf009 server_metadata_items 128
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>ec8ba3a754d44487879a381264baf009 server_injected_files 5
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>...
 </span></code></pre></div>
-<p>那行 <code>awk</code> 不是為了炫技——<code>openstack service list --service compute</code> 這個寫法<strong>不存在</strong>(<a href="#mine-5">地雷 5</a>)。</p>
-<h3 id="4-quota-driver">步驟 4:切換 quota driver<a class="headerlink" href="#4-quota-driver" title="Permanent link">&para;</a></h3>
-<p>告訴 Nova 改用新的額度來源:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/nova/nova-api.conf<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="s">[quota]</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="s">driver = nova.quota.UnifiedLimitsDriver</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="s">[oslo_limit]</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="s">auth_url = http://10.0.0.4:5000/v3</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="s">auth_type = password</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="s">user_domain_id = default</span>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="s">username = nova</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="s">password = &lt;nova_keystone_password&gt;</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="s">system_scope = all</span>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="s">endpoint_id = &lt;nova 的 public endpoint id&gt;</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="s">EOF</span>
-</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>sudo<span class="w"> </span>cp<span class="w"> </span>/etc/kolla/config/nova/nova-api.conf<span class="w"> </span>/etc/kolla/config/nova/nova-conductor.conf
+<p>輸出列出已遷移的資源與數值，但還不能直接切換 driver。這個未帶 region 的命令產生了 <code>region=None</code> 的記錄；本課 Nova endpoint 卻是 <code>RegionOne</code>。官方遷移工具另有 <code>--region-id</code> 選項，新遷移可依實際 region 使用；下面保留的是原操作及其補救程序。</p>
+<h3 id="region">先補齊 region 與缺少的預設額度<a class="headerlink" href="#region" title="Permanent link">&para;</a></h3>
+<p>以 <code>openstack service list -f value -c ID -c Type</code> 找出 compute 的 service ID，存入 <code>SVC</code>；以自己 domain 下 team-a 的 project ID 設定 <code>TEAM_A</code>。若同名專案不只一個，必須用 domain 區分，不能只憑名稱取第一筆。先確認這兩個 ID 都非空。</p>
+<p>下面的命令一次建立一個 registered limit。執行前設定 <code>R</code> 為資源名稱、<code>V</code> 為核准的預設額度，再逐項執行第一個命令：<code>servers</code> 為 10、<code>class:VCPU</code> 為 20、<code>class:MEMORY_MB</code> 為 51200 是上面遷移留下的預設值；<code>class:DISK_GB</code> 沒有可直接遷移的舊值，要依實驗容量另行決定，且至少容納兩台測試 VM 的磁碟。不要把未設定的 shell 變數送進 API。完成預設值後，第二個命令把 team-a 的台數限制設為 2：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>openstack<span class="w"> </span>registered<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span>--default-limit<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$V</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$R</span><span class="s2">&quot;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">2</span><span class="w"> </span>servers
 </span></code></pre></div>
-<p><strong><code>[oslo_limit]</code> 那一整段不能省</strong>——少了它,整個 compute API 會 500(<a href="#mine-1">地雷 1</a>)。而 <code>system_scope = all</code> 也不是裝飾:nova 這個使用者必須有 system 層級的讀權限,否則查不到別人專案的額度:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span>nova<span class="w"> </span>--user-domain<span class="w"> </span>Default<span class="w"> </span>--system<span class="w"> </span>all<span class="w"> </span>reader
+<p>這裡的 region 必須與 Nova 在 <code>[oslo_limit]</code> 使用的 endpoint 相同。既有同一組記錄時應更新它，不要重複建立。設定完成後，再補 team-a 的 VCPU 上限；下列區塊同時列出原紀錄取得 service/project ID 的方法與專案 limit 命令，已建立的 <code>servers</code> 那一筆不用再執行：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">NOVA_SVC</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>ID<span class="w"> </span>-c<span class="w"> </span>Type<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$2==&quot;compute&quot;{print $1}&#39;</span><span class="k">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nv">TEAM_A</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>project<span class="w"> </span>show<span class="w"> </span>team-a<span class="w"> </span>--domain<span class="w"> </span>day27-corp<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NOVA_SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">2</span><span class="w"> </span>servers
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NOVA_SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">4</span><span class="w"> </span>class:VCPU
 </span></code></pre></div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova
+<p>最後用 system scope 查 registered／project limit 的 service、region 與資源名稱。先處理缺漏，再切換 Nova。若查不到某項必須限制的資源，可能被當成額度 0；實際處理還受 Nova 的 <code>unified_limits_resource_strategy</code>／resource list 設定影響，不能把所有版本都視為同一種預設。</p>
+<h2 id="4-nova">步驟 4：讓 Nova 讀取並執行新額度<a class="headerlink" href="#4-nova" title="Permanent link">&para;</a></h2>
+<p>下圖是建立 VM 時的額度查詢。endpoint 不只是 API 網址，它也決定 oslo.limit 查哪個 service 與 region 的記錄。</p>
+<p><img alt="Nova透過oslo.limit用endpoint識別service與region，向Keystone取得limit，Nova依使用量接受或拒絕建立請求" src="../../assets/diagrams/os-s5d27-limits.svg" /></p>
+<p>查詢需要服務憑證及 system reader 權限。先從服務目錄找出 Nova 的 public endpoint ID，從部署密碼設定取得 <code>nova_keystone_password</code>，再填入下列覆寫檔。若檔案已含其他設定，合併這兩段，避免 <code>tee</code> 覆蓋原設定。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/nova/nova-api.conf<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="s">[quota]</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="s">driver = nova.quota.UnifiedLimitsDriver</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="s">[oslo_limit]</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="s">auth_url = http://10.0.0.4:5000/v3</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="s">auth_type = password</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="s">user_domain_id = default</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="s">username = nova</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="s">password = &lt;nova_keystone_password&gt;</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="s">system_scope = all</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="s">endpoint_id = &lt;nova 的 public endpoint id&gt;</span>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="s">EOF</span>
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>sudo<span class="w"> </span>cp<span class="w"> </span>/etc/kolla/config/nova/nova-api.conf<span class="w"> </span>/etc/kolla/config/nova/nova-conductor.conf
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>PLAY RECAP: ok=74  changed=13  failed=0
+<p>上面 <code>cp</code> 也會覆蓋既有的 nova-conductor 覆寫檔；如果該檔已含其他設定，改成合併 <code>[quota]</code> 與 <code>[oslo_limit]</code>，保留原有內容。設定同時放到 nova-api 與 nova-conductor，並給 nova 服務使用者 system reader：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span>nova<span class="w"> </span>--user-domain<span class="w"> </span>Default<span class="w"> </span>--system<span class="w"> </span>all<span class="w"> </span>reader
 </span></code></pre></div>
-<h3 id="5-3">步驟 5:驗收——第 3 台必須被擋下<a class="headerlink" href="#5-3" title="Permanent link">&para;</a></h3>
-<p>team-a 的額度是 <code>servers=2</code>。開三台,前兩台該過,第三台該死:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>limit-test-<span class="nv">$i</span><span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span>--network<span class="w"> </span>team-a-net<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="k">done</span>
+<p>切回部署虛擬環境，用自己的 inventory 部署 Nova：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>第 1 台: BUILD
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>第 2 台: BUILD
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>team-a 目前台數: 2
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>--- 第 3 台(超過 servers=2,應被擋)---
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>ForbiddenException: 403: Project d2b258226e6b4d4493d93b5411726c97 is over a limit for
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>[Resource servers is over limit of 2 due to current usage 2 and delta 1]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>PLAY RECAP: ok=74  changed=13  failed=0
 </span></code></pre></div>
-<p><img alt="alice 在 team-a 開第 3 台,被 unified limits 以 403 擋下" src="../../assets/screenshots/day27-limit-403.png" /></p>
-<p><strong>額度真的擋下了,而且訊息直接告訴你上限、現況、以及這次要多拿的量。</strong> 這就是 unified limits 在運作的樣子——注意擋人的不是 Nova 自己的抽屜,是 Keystone 裡那筆 <code>servers=2</code>。</p>
-<p>清乾淨:<code>openstack server delete limit-test-1 limit-test-2</code>。</p>
-<div class="admonition question">
-<p class="admonition-title">這些東西在主控台看得到嗎?</p>
-<p><strong>一半看得到,而看不到的那一半正好在示範<a href="#mine-3">地雷 3</a>。</strong></p>
-<ul>
-<li><strong>額度看得到</strong>:Horizon 的 <strong>專案 → Compute → Overview</strong> 有一區 Limit Summary,把 Instances、VCPUs、RAM 的用量畫成圓餅圖(<code>Used 4 of 10</code> 這種)——那個分母就是今天設的 unified limits。</li>
-<li><strong>domain 階層看不到</strong>:Identity → Projects 列得出 <code>team-a</code>(工程團隊)、<code>team-b</code>(資料團隊),但 <strong>Domain Name 那欄顯示 <code>-</code></strong>,不是 <code>day27-corp</code>。而導覽列裡<strong>根本沒有 Domains 這一項</strong>;直接打 <code>/identity/domains/</code> 會回 <strong><code>You are not authorized to access this page</code></strong>。</li>
-</ul>
-<p>最後那個「未授權」不是權限設錯——<strong>是 admin 的 token scope 在 admin 專案上</strong>,而 domain 是專案之上的東西。跟<a href="#mine-3">地雷 3</a> 一模一樣的道理:<strong>在 Keystone 的世界裡,你看到什麼永遠取決於你是誰</strong>,連主控台也不例外。</p>
-<p>所以今天的畫面是上面那張終端機——<strong>因為額度真正說話的地方是 API 的回應,不是圓餅圖</strong>。</p>
-</div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>domain 階層</td>
-<td><code>day27-corp</code> → team-a / team-b,alice 在 team-a 是 member</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>租戶隔離</td>
-<td>alice 看不到 admin 的網路</td>
-<td><code>No Network found</code>(正是隔離生效)</td>
-</tr>
-<tr>
-<td><strong>app credential</strong></td>
-<td>清空所有帳密環境變數仍能認證</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>遷移</td>
-<td>舊 quota 進了 Keystone 的 registered limits</td>
-<td>servers 10、VCPU 20、MEMORY_MB 51200…</td>
-</tr>
-<tr>
-<td>compute API</td>
-<td>切換 driver 後 API 仍正常</td>
-<td>補上 <code>[oslo_limit]</code> 後正常(見地雷 1)</td>
-</tr>
-<tr>
-<td><strong>額度真的擋下</strong></td>
-<td>第 3 台被 403,訊息來自 unified limits</td>
-<td><code>over limit of 2 due to current usage 2 and delta 1</code></td>
-</tr>
-<tr>
-<td>Secure RBAC</td>
-<td>見下方「誠實的現況」</td>
-<td>△ 量不出來,列為概念討論</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:切了 driver 沒設 <code>[oslo_limit]</code>,整個 compute API 掛掉<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:改完 <code>driver = nova.quota.UnifiedLimitsDriver</code> 重新部署後,<strong>開機不是被擋,是整個炸開</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>HttpException: 500: Server Error for url: http://10.0.0.4:8774/v2.1/servers,
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>Unexpected API Error... &lt;class &#39;oslo_limit.exception.SessionInitError&#39;&gt;
+<p><code>failed=0</code> 只表示部署步驟成功。還要做下一步的建立測試，才能知道額度查詢與執行是否正常。</p>
+<h2 id="5">步驟 5：確認額度真的限制建立請求<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>清除 <code>OS_SYSTEM_SCOPE</code> 及 application credential 變數後，載入 alice 的 team-a openrc。確認 team-a 沒有其他 VM 佔用這個兩台的額度，再依序申請三台：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="m">3</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>limit-test-<span class="nv">$i</span><span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span>--network<span class="w"> </span>team-a-net<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="k">done</span>
 </span></code></pre></div>
-<p><strong>判讀關鍵</strong>:<strong>500 不是 403</strong>。額度不足會回 403,回 500 代表<strong>額度系統本身壞了</strong>,不是你超額。這個區分能省下很多時間。</p>
-<p><strong>根因</strong>:<code>UnifiedLimitsDriver</code> 要向 Keystone 查額度,而查詢用的憑證放在 <code>[oslo_limit]</code> 段。只切了 driver 沒給憑證 → Nova 連 session 都建不起來 → 每個 API 請求都爆。</p>
-<p><strong>解法</strong>:補完整的 <code>[oslo_limit]</code> 段(見步驟 4),並給 nova 使用者 system 層級的 reader 角色。</p>
-<p><strong>教訓</strong>:<strong>這是「半套設定」最惡劣的一種——它不是讓新功能失效,是讓舊功能一起死。</strong> 切換任何核心 driver 之前,先確認它的相依設定是否完整;<code>--tags nova</code> 的部署前檢查<strong>不會</strong>幫你檢查 <code>[oslo_limit]</code> 在不在。</p>
-<h3 id="mine-2">地雷 2:region 對不上,所有額度讀成 0<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:補完 <code>[oslo_limit]</code>,API 活了,403 也出現了——但仔細看訊息:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>403: Project d2b258226e6b4d4493d93b5411726c97 is over a limit for
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>[Resource class:DISK_GB is over limit of 0 due to current usage 0 and delta 1,
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a> Resource class:MEMORY_MB is over limit of 0 due to current usage 0 and delta 512,
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a> Resource class:VCPU is over limit of 0 due to current usage 0 and delta 1,
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a> Resource servers is over limit of 0 due to current usage 0 and delta 1]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>第 1 台: BUILD
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>第 2 台: BUILD
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>team-a 目前台數: 2
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>--- 第 3 台(超過 servers=2,應被擋)---
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>ForbiddenException: 403: Project d2b258226e6b4d4493d93b5411726c97 is over a limit for
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>[Resource servers is over limit of 2 due to current usage 2 and delta 1]
 </span></code></pre></div>
-<p><strong><code>over limit of 0</code>——每一項額度都是 0,連一台都開不了。</strong> 但 Keystone 裡明明寫著 servers=10。</p>
-<p><strong>根因</strong>:三行輸出就破案了:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>=== registered limits 的 region ===
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>servers 10 None
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>class:VCPU 20 None
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>=== nova endpoint 的 region ===
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>RegionOne
+<p><img alt="alice在team-a申請第三台VM，被Nova依unified limits回403拒絕" src="../../assets/screenshots/day27-limit-403.png" /></p>
+<p>第三次回應列出上限 2、目前使用量 2，以及這次新增量 1。這才是額度限制生效的觀察。前兩個 <code>BUILD</code> 表示請求已受理，並不單獨保證 VM 最後進入 ACTIVE。測試後用 <code>openstack server delete limit-test-1 limit-test-2</code> 刪掉這兩台，避免影響後續章節。</p>
+<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">切換 driver 後 compute API 回 500<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>：建立請求出現以下錯誤：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>HttpException: 500: Server Error for url: http://10.0.0.4:8774/v2.1/servers,
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Unexpected API Error... &lt;class &#39;oslo_limit.exception.SessionInitError&#39;&gt;
 </span></code></pre></div>
-<p><code>nova-manage limits migrate_to_unified_limits</code> <strong>建出來的 limit 沒有 region</strong>(<code>None</code>),而 nova 的 endpoint 在 <code>RegionOne</code>。oslo.limit 是用 endpoint 反查 service + region 再去找額度的——<strong>對不上就當作沒設,而沒設就是 0</strong>。</p>
-<p><strong>解法</strong>:重建時明確帶 <code>--region RegionOne</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>openstack<span class="w"> </span>registered<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span>--default-limit<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$V</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$R</span><span class="s2">&quot;</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>openstack<span class="w"> </span>limit<span class="w"> </span>create<span class="w"> </span>--service<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SVC</span><span class="s2">&quot;</span><span class="w"> </span>--region<span class="w"> </span>RegionOne<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$TEAM_A</span><span class="s2">&quot;</span><span class="w"> </span>--resource-limit<span class="w"> </span><span class="m">2</span><span class="w"> </span>servers
+<p><strong>原因</strong>：這份紀錄缺少 <code>[oslo_limit]</code> 的認證設定，Nova 無法建立查額度的連線。<strong>修法</strong>：回步驟 4 補完整設定與服務角色。這個 <code>SessionInitError</code> 與超額的 403 不同；不能把所有 500 都判作額度問題。</p>
+<h3 id="mine-2">尚未建立 VM，卻每項都顯示額度 0<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>：Keystone 查得到預設值，Nova 卻拒絕第一台：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>403: Project d2b258226e6b4d4493d93b5411726c97 is over a limit for
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>[Resource class:DISK_GB is over limit of 0 due to current usage 0 and delta 1,
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a> Resource class:MEMORY_MB is over limit of 0 due to current usage 0 and delta 512,
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a> Resource class:VCPU is over limit of 0 due to current usage 0 and delta 1,
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a> Resource servers is over limit of 0 due to current usage 0 and delta 1]
 </span></code></pre></div>
-<p><strong>教訓</strong>:<strong>官方遷移工具產生的資料,不保證能被官方的執行路徑讀到。</strong> 這不是誰寫錯了,是兩邊對「region 可以是 None 嗎」的假設不一致。跑完任何 migrate 指令,<strong>一定要驗證結果真的生效</strong>,而不是看到「遷移完成」就往下走。</p>
-<div class="admonition note">
-<p class="admonition-title">殘骸要清</p>
-<p>舊的 <code>None</code> region 記錄有兩筆刪不掉(被 project limit 參照),於是 Keystone 裡會同時存在 <code>region=None</code> 與 <code>region=RegionOne</code> 兩份。生效的是 RegionOne 那份,None 那份是死資料——<strong>但它會誤導之後每一次查詢</strong>。等 project limit 也重建到 RegionOne 之後,記得回頭把 None 的殘骸清掉。</p>
-</div>
-<h3 id="mine-3">地雷 3:查詢回空,而限制正在執行<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>這是本章最陰險的一顆</strong>,而且它是在兩天後的 <a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 才咬人的。</p>
-<p><strong>症狀</strong>:想確認 team-a 還有沒有額度限制:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>openstack<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>--project<span class="w"> </span><span class="nv">$TEAM_A</span><span class="w"> </span>-f<span class="w"> </span>value
+<p>比對兩邊的 region：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>=== registered limits 的 region ===
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>servers 10 None
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>class:VCPU 20 None
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>=== nova endpoint 的 region ===
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>RegionOne
 </span></code></pre></div>
-<p><strong>它一個字都沒印。</strong> 不是錯誤、不是「你沒權限看」——就是零筆結果,離開代碼 0。拿掉 <code>--project</code> 查全部,一樣什麼都沒有。</p>
-<p>不信邪,繞過 CLI 直接問 Keystone:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;http://10.0.0.4:5000/v3/limits&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sys,json; print(&#39;總數:&#39;, len(json.load(sys.stdin)[&#39;limits&#39;]))&quot;</span>
+<p><strong>原因</strong>：本課遷移結果是 None，endpoint 是 RegionOne。<strong>修法</strong>：依步驟 3 在相符 region 補齊預設與專案記錄，再查一次。舊 None 記錄若仍被 project limit 參照，要先處理相依記錄，不能只看到新資料就假設舊資料已刪除。</p>
+<h3 id="mine-3">管理員查詢回空，Nova 卻仍執行限制<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>：使用 admin 專案範圍的 token 查 team-a：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>openstack<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>--project<span class="w"> </span><span class="nv">$TEAM_A</span><span class="w"> </span>-f<span class="w"> </span>value
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>總數: 0
+<p>CLI 沒列出結果。直接呼叫 API 也得到零筆；這裡的 <code>TOKEN</code> 指同一個 project-scoped token，UUID 與位址需換成自己的值：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;http://10.0.0.4:5000/v3/limits&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sys,json; print(&#39;總數:&#39;, len(json.load(sys.stdin)[&#39;limits&#39;]))&quot;</span>
 </span></code></pre></div>
-<p><strong>API 也說沒有。於是你合理地認為 team-a 沒有專案額度覆寫。然後 Nova 賞你一巴掌:</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>403: Project ... is over a limit for
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>[Resource servers is over limit of 2 due to current usage 2 and delta 1]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>總數: 0
 </span></code></pre></div>
-<p><strong>限制一直都在,而且正在執行。</strong></p>
-<p><strong>根因</strong>:Keystone 的 <code>GET /v3/limits</code> <strong>會依 token 的 scope 過濾</strong>。用「scope 在 admin 專案」的 token 去查,只看得到 admin 專案的限制——<strong>看別的專案就是空的,而且不會告訴你「你沒權限看」,就只是空的</strong>。</p>
-<p>而 Nova 看得到,是因為它的 <code>[oslo_limit]</code> 設了 <code>system_scope = all</code>(步驟 4 那行不是裝飾)。</p>
-<p><strong>解法</strong>:用 system-scoped token 查:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">unset</span><span class="w"> </span>OS_PROJECT_NAME<span class="w"> </span>OS_PROJECT_DOMAIN_NAME<span class="w"> </span>OS_PROJECT_ID<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">      </span>OS_TENANT_NAME<span class="w"> </span>OS_TENANT_ID<span class="w"> </span>OS_PROJECT_DOMAIN_ID
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OS_SYSTEM_SCOPE</span><span class="o">=</span>all
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>openstack<span class="w"> </span>limit<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Project ID&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Resource Name&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Resource Limit&quot;</span>
+<p>但建立 VM 仍被拒絕：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>403: Project ... is over a limit for
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>[Resource servers is over limit of 2 due to current usage 2 and delta 1]
 </span></code></pre></div>
+<p><strong>原因</strong>：本課的 limit list 依 token scope 過濾，空清單不代表其他專案沒有額度。<strong>修法</strong>：依步驟 3 改用有 system 權限的 token 查詢，原紀錄才列出：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>d2b258226e6b4d4493d93b5411726c97 servers 2
 </span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>d2b258226e6b4d4493d93b5411726c97 class:VCPU 4
 </span></code></pre></div>
-<p><strong>限制在那裡,一直都在。</strong></p>
-<p><strong>教訓</strong>:<strong>「查詢回空」和「東西不存在」是兩件事。</strong> 這一族的雷比報錯危險得多——報錯會停下你,回空會讓你<strong>帶著錯誤的世界觀繼續往下走</strong>。<a href="../sprint5-day29-aodh-autoscaling/#mine-5">Day 29 地雷 5</a> 是同族(CLI 欄位顯示 <code>null</code>),<a href="../sprint4-day17-designate-dns/#mine-2">Day 17 地雷 2</a> 也是(少一個點,一切照常但整合默默不動)。</p>
-<p><strong>通則</strong>:<strong>當查詢結果讓你想說「這不可能」時,換一個身分或介面再問一次。</strong> 在 Keystone 的世界裡,「你看到什麼」永遠取決於「你是誰」。</p>
-<h3 id="mine-4">地雷 4:application credential 的 JSON 欄位是大寫<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:想用腳本抓剛建立的 credential ID:</p>
+<p>檢查額度時，把請求的身分與 scope 一起記下；只換 CLI 成 curl，不會改變 token 能看見的範圍。</p>
+<h3 id="mine-4">解析 application credential JSON 得到 KeyError<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p>下面是失敗寫法，不要重新建立同名憑證來重試：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>openstack<span class="w"> </span>application<span class="w"> </span>credential<span class="w"> </span>create<span class="w"> </span>day27-ci<span class="w"> </span>-f<span class="w"> </span>json<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="s2">import sys,json; print(json.load(sys.stdin)[&#39;id&#39;])&quot;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>KeyError: &#39;id&#39;
 </span></code></pre></div>
-<p><strong>根因</strong>:直接看原始輸出就破案:</p>
+<p>原輸出的欄位是大寫：</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="p">{</span>
 </span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="w">  </span><span class="nt">&quot;ID&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fe27332a44874f6aab76bac71ac4d3d8&quot;</span><span class="p">,</span>
 </span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span><span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;day27-ci&quot;</span><span class="p">,</span>
 </span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="err">...</span>
 </span></code></pre></div>
-<p><strong>這個指令的 JSON 欄位名是大寫的 <code>ID</code> / <code>Name</code> / <code>Secret</code> / <code>Roles</code></strong>,不像其他 openstack 指令用小寫。</p>
-<p><strong>解法</strong>:用 <code>-f value -c ID</code> 直接取值,不要自己解 JSON。</p>
-<p><strong>教訓</strong>:<code>openstack</code> CLI 的輸出格式<strong>不是全域一致的</strong>。與其猜欄位名,不如用 <code>-f value -c &lt;欄位&gt;</code> 讓 CLI 自己處理——順便避開 <a href="../sprint4-day15-object-storage-rgw/#mine-3">Day 15 地雷 3</a> 那種「grep 表格」的脆弱寫法。</p>
-<h3 id="mine-5">地雷 5:<code>openstack service list --service</code> 不存在<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:</p>
+<p><strong>原因</strong>：這個 CLI 輸出用 <code>ID</code>，程式卻讀 <code>id</code>。<strong>修法</strong>：依實際欄位名稱解析，或用 <code>-f value -c ID</code> 取值。建立時的 Secret 仍須妥善保存。</p>
+<h3 id="mine-5">service list 不接受 --service<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p>以下是參數錯誤的反例：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span>--service<span class="w"> </span>compute<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>ID
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>openstack service list: error: unrecognized arguments: --service compute
 </span></code></pre></div>
-<p>而如果沒發現,那個空值會一路流到下一個指令:</p>
+<p>空的 service ID 若又傳給下一個指令，會出現另一種錯誤：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>BadRequestException: 400: Invalid input for field/attribute service_id.
 </span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>Value: . &#39;&#39; is not a &#39;uuid&#39;
 </span></code></pre></div>
-<p><strong>根因</strong>:<code>service list</code> 沒有 <code>--service</code> 這個過濾參數(那是別的指令的參數)。</p>
-<p><strong>解法</strong>:</p>
+<p><strong>修法</strong>：先列 service 的 ID 與 Type，再選 compute：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="nv">NOVA_SVC</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>service<span class="w"> </span>list<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>ID<span class="w"> </span>-c<span class="w"> </span>Type<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;$2==&quot;compute&quot;{print $1}&#39;</span><span class="k">)</span>
 </span></code></pre></div>
-<p><strong>教訓</strong>:重點不是這個參數本身,是<strong>「空值會安靜地往下流」</strong>。shell 裡一個失敗的 <code>$(...)</code> 會變成空字串,然後下一個指令拿著空字串去做事,報出一個看起來完全無關的錯(<code>'' is not a 'uuid'</code>)。<strong>寫自動化時,抓到的 ID 要立刻驗證非空</strong>,否則你會在三步之後除一個假的錯。</p>
-<h2 id="secure-rbac">Secure RBAC:誠實的現況<a class="headerlink" href="#secure-rbac" title="Permanent link">&para;</a></h2>
-<p><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 預告過今天要談「新一代權限模型」。這裡必須誠實交代:<strong>本課環境沒能驗證它。</strong></p>
-<p>Secure RBAC 是 OpenStack 這幾年在做的權限改革——引入 <code>reader</code> 角色、system/domain/project 三種 scope、以及 <code>enforce_scope</code> / <code>enforce_new_defaults</code> 兩個開關。<strong>截至 2026-07</strong>,Nova、Neutron、Octavia 在 2025.1 已預設開啟強制執行,Cinder 進度落後。</p>
-<p>但這件事很難量。先讀設定檔:</p>
+<p>確認取得一個非空 ID，再用它建立 limit。</p>
+<h2 id="secure-rbac">本章沒有驗證完整的 Secure RBAC<a class="headerlink" href="#secure-rbac" title="Permanent link">&para;</a></h2>
+<p>Secure RBAC 涵蓋角色與 system／domain／project scope 的政策。單看設定檔沒有寫某個選項，不能判定它已關閉：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>nova-api         enforce_scope=(未設,用預設)
 </span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>neutron-server   enforce_scope=(未設,用預設)
 </span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>cinder-api       enforce_scope=(未設,用預設)
 </span></code></pre></div>
-<p>全部「未設」——因為 kolla 沒明寫,服務吃程式碼裡的預設值。改成直接問跑著的容器:</p>
+<p>直接讀函式庫的預設值，也不等於服務載入設定後的實際行為：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>nova_api         enforce_scope/new_defaults = True True
 </span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>neutron_server   enforce_scope/new_defaults = True True
 </span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>cinder_api       enforce_scope/new_defaults = True True
 </span></code></pre></div>
-<p>看起來全開了。<strong>但這個數字量到的是 oslo.policy 函式庫的預設值,不是各服務實際覆寫後的生效值</strong>——兩者未必相同,而這種<strong>靜態讀值</strong>分不出兩者。</p>
-<p>所以本章的判決是:<strong>列為概念討論,不宣稱已驗證。</strong> 你今天確實用到了 Secure RBAC 的一部分——步驟 4 那個 <code>--system all reader</code> 就是 system scope 加 reader 角色的實例,而且它有效(<a href="#mine-3">地雷 3</a> 就是靠它才看得見真相)。但「哪些服務真的在強制執行 scope」,這門課目前答不出來。</p>
-<div class="admonition note">
-<p class="admonition-title">這個△其實測得出來(留給想收尾的人)</p>
-<p>上面說「靜態讀值分不出兩者」是對的,但這不代表無法得知——有兩條路能把這個△變成可判決:</p>
+<p>本章驗到的是 application credential 的查詢、專案額度及 system scope 的可見性，沒有逐一測各服務的 <code>enforce_scope</code>。政策產生工具可協助檢視政策規則，但不能單憑產出的規則保證執行中的服務採用哪個設定。要驗證權限邊界，仍需選定 API、身分、scope 與應拒絕的操作做行為測試；limit list 的過濾行為不能直接代替所有 API 的拒絕測試。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>行為測試</strong>:拿一個 <strong>project-scoped</strong> 的 admin token 去打一個「scope 不符時會<strong>明確拒絕</strong>」的 system-scope API。若 <code>enforce_scope</code> 真的生效會被擋(403),沒生效會照過——過或擋,直接告訴你答案。<strong>但要挑對 API</strong>:本章 <a href="#mine-3">地雷 3</a> 實測過 <code>GET /v3/limits</code> 對 project token 是回 <strong>200 + 靜默過濾成空清單</strong>(既不 403 也不算「照過」),這種<strong>過濾型</strong>端點當不了判別器,得選 scope 不符會回 403 的操作。</li>
-<li><strong><code>oslopolicy-policy-generator</code></strong>:對各服務跑一次,它吐出的是<strong>生效後</strong>的 policy 值,不是函式庫預設值,正好補上靜態讀值量不到的那一半。</li>
+<li>CI 已能用 application credential 列 team-a 的 VM，接著管理額度卻失敗。你會先檢查哪些環境變數與角色範圍？</li>
+<li>預設 servers 是 10，第一台卻收到 limit 0。切回舊 driver 前，應先比對哪兩份資料？</li>
+<li>admin 專案的 limit list 回空，能否判定另一個專案沒有額度？你會怎麼確認？</li>
 </ul>
-<p>本課沒有逐一跑這兩條(所以維持△),但它們的存在說明:這是「本課還沒去驗」,不是「無法得知」。</p>
-</div>
-<h2 id="_5">帶得走的東西<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>資源先有專案歸屬，才有可以限制與計量的對象。Application credential 讓 CI 使用獨立憑證；scope 決定查詢與管理的範圍。Unified limits 將 Nova 額度存到 Keystone，再由 Nova 取回執行檢查。遷移後要確認 service、region、資源名稱與認證設定一致，最後用實際建立請求分辨超額拒絕和設定失敗。</p>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong>權限綁的是「使用者 × 專案」這層關係。</strong> 同一個帳號在 A 專案是 member、在 B 專案什麼都不是——所有分帳、告警、稽核的邊界都從這個結構長出來。</li>
-<li><strong>額度的查詢路徑是 endpoint → service + region → limit,三段任何一段對不上,答案是 0 而不是錯誤。</strong> 這是「錯了不會叫」在額度系統的具體長相。</li>
-<li><strong>在 Keystone 的世界裡,你看到什麼取決於你是誰。</strong> 同一個 API、同一個查詢,project-scoped 與 system-scoped 的 token 看到的東西完全不同——而它不會告訴你「你看得不夠多」。</li>
-<li><strong>官方遷移工具產生的資料,不保證能被官方的執行路徑讀到。</strong> 跑完任何 migrate,要驗證結果真的生效,不是看到「完成」就往下走。</li>
-<li><strong>切換核心 driver 是「連舊功能一起賭」的操作。</strong> 相依設定只要少一段,原本好好的 API 也會跟著壞。</li>
+<li><a href="https://docs.openstack.org/nova/2025.1/admin/unified-limits.html">Nova Unified Limits</a>：遷移、region、oslo.limit 與資源策略。</li>
+<li><a href="https://docs.openstack.org/keystone/2025.1/admin/unified-limits.html">Keystone Unified Limits</a>：預設與專案限制，以及管理所需角色。</li>
+<li><a href="https://docs.openstack.org/keystone/2025.1/user/application_credentials.html">Application Credentials</a>：角色、到期日與撤銷。</li>
+<li><a href="https://governance.openstack.org/tc/goals/selected/consistent-and-secure-rbac.html">Secure RBAC 目標</a>：各服務的權限政策演進。</li>
 </ul>
-<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
-<ul>
-<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/unified-limits.html">Nova 的 Unified Limits 指南</a></strong> —— <code>migrate_to_unified_limits</code>、<code>[oslo_limit]</code> 設定、以及本章<a href="#mine-1">地雷 1</a> 相依設定的官方對照。</li>
-<li><strong><a href="https://docs.openstack.org/keystone/2025.1/admin/unified-limits.html">Keystone Unified Limits</a></strong> —— registered limit 與 project limit 的概念與 API;本章<a href="#mine-3">地雷 3</a> 那個 scope 過濾行為的出處。</li>
-<li><strong><a href="https://docs.openstack.org/keystone/2025.1/user/application_credentials.html">Keystone Application Credentials</a></strong> —— 到期日、角色限制、access rules 等本章沒用到的進階選項。</li>
-<li><strong><a href="https://governance.openstack.org/tc/goals/selected/consistent-and-secure-rbac.html">OpenStack Secure RBAC 現況</a></strong> —— 這場改革的官方進度表;想自己判斷哪個服務走到哪一步,從這份開始。</li>
-</ul>
-<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
-<p>分帳的<strong>對象</strong>有了。<a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 補上分帳的<strong>依據</strong>:部署 Ceilometer,讓雲說得出每個租戶到底用了多少——資料直接流進 Day 21 建好的 Prometheus。</p>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 用 Ceilometer 取得帶有 <code>project_id</code> 的用量。先有這個專案歸屬，後面的告警與費用計算才知道要套用到誰。</p>
 
 
 

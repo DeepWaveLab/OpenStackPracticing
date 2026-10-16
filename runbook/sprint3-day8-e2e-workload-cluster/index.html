@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-8-e2e-workload-cluster" class="md-skip">
+        <a href="#day-8-workload-clusternova-microversionccm-provideridloadbalancer-pvc" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -838,44 +838,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#cluster-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一行 cluster create 會經過哪些服務
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="原理與架構">
+    <nav class="md-nav" aria-label="開始之前">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cluster-create" class="md-nav__link">
+  <a href="#vm-lb" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 三層互動:一個 cluster create 背後發生什麼
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-external-cloud-providerproviderid-ccm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. external cloud provider:providerID 與 CCM 的關鍵角色(本日兩個地雷的核心)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-loadbalancer-pvc-openstack" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. LoadBalancer / PVC 怎麼落到 OpenStack
+        清掉前幾天留下的 VM 和 LB
       
     </span>
   </a>
@@ -884,6 +873,89 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-magnum-nova-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:讓 Magnum 用夠新的 Nova API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k8s-openstack-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        K8s 節點怎麼對上 OpenStack 的 VM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="K8s 節點怎麼對上 OpenStack 的 VM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ccm-keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CCM 要連得到 Keystone
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-template-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:建 template 與 cluster
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cluster-create_complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:看著 cluster 建到 CREATE_COMPLETE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-loadbalancer-pvc-openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:讓 LoadBalancer 和 PVC 落到 OpenStack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看同一座 cluster
+      
+    </span>
+  </a>
   
 </li>
       
@@ -891,102 +963,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#0-pre-flightreboot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0. Pre-flight(reboot 後必查)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#1-magnumconf-cluster-1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 修 magnum.conf(建 cluster 前必做,預防地雷 1)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-azure-correcttemplate-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 用「Azure-correct」template 開 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-create_complete" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 監控到 CREATE_COMPLETE
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. 三項最終驗收
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄(本日四連)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄(本日四連)">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:nova_client api_version=2 太舊 → server group soft-anti-affinity 被拒(CREATE_FAILED 秒失敗)
+        cluster 幾秒就 CREATE_FAILED,kind 裡沒有任何 CAPI 物件
       
     </span>
   </a>
@@ -997,7 +986,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:fixed_subnet_cidr 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷)
+        VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS
       
     </span>
   </a>
@@ -1008,7 +997,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:octavia_provider 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗
+        LoadBalancer 一直 pending,CCM 報 Provider 'amphorav2' is not enabled
       
     </span>
   </a>
@@ -1019,7 +1008,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:Nova disk 被 leftover VM 佔滿 → amphora No valid host
+        LB 的 amphora 開不出來,Nova 報 No valid host was found
       
     </span>
   </a>
@@ -1032,10 +1021,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sprint-1" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sprint 1 未完成項:全數補完
+        想一想
       
     </span>
   </a>
@@ -1046,7 +1035,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從儀表板看成果
+        小結
       
     </span>
   </a>
@@ -1065,10 +1054,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-9" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 9)
+        下一步
       
     </span>
   </a>
@@ -1471,7 +1460,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1862,7 +1851,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1890,7 +1879,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1918,7 +1907,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2038,7 +2027,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4076,44 +4065,33 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#cluster-create" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一行 cluster create 會經過哪些服務
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="原理與架構">
+    <nav class="md-nav" aria-label="開始之前">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-cluster-create" class="md-nav__link">
+  <a href="#vm-lb" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 三層互動:一個 cluster create 背後發生什麼
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-external-cloud-providerproviderid-ccm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. external cloud provider:providerID 與 CCM 的關鍵角色(本日兩個地雷的核心)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-loadbalancer-pvc-openstack" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. LoadBalancer / PVC 怎麼落到 OpenStack
+        清掉前幾天留下的 VM 和 LB
       
     </span>
   </a>
@@ -4122,6 +4100,89 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-magnum-nova-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:讓 Magnum 用夠新的 Nova API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k8s-openstack-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        K8s 節點怎麼對上 OpenStack 的 VM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="K8s 節點怎麼對上 OpenStack 的 VM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ccm-keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CCM 要連得到 Keystone
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-template-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:建 template 與 cluster
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cluster-create_complete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:看著 cluster 建到 CREATE_COMPLETE
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-loadbalancer-pvc-openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:讓 LoadBalancer 和 PVC 落到 OpenStack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看同一座 cluster
+      
+    </span>
+  </a>
   
 </li>
       
@@ -4129,102 +4190,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#0-pre-flightreboot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        0. Pre-flight(reboot 後必查)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#1-magnumconf-cluster-1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 修 magnum.conf(建 cluster 前必做,預防地雷 1)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-azure-correcttemplate-cluster" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 用「Azure-correct」template 開 cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-create_complete" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 監控到 CREATE_COMPLETE
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. 三項最終驗收
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄(本日四連)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄(本日四連)">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:nova_client api_version=2 太舊 → server group soft-anti-affinity 被拒(CREATE_FAILED 秒失敗)
+        cluster 幾秒就 CREATE_FAILED,kind 裡沒有任何 CAPI 物件
       
     </span>
   </a>
@@ -4235,7 +4213,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:fixed_subnet_cidr 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷)
+        VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS
       
     </span>
   </a>
@@ -4246,7 +4224,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:octavia_provider 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗
+        LoadBalancer 一直 pending,CCM 報 Provider 'amphorav2' is not enabled
       
     </span>
   </a>
@@ -4257,7 +4235,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:Nova disk 被 leftover VM 佔滿 → amphora No valid host
+        LB 的 amphora 開不出來,Nova 報 No valid host was found
       
     </span>
   </a>
@@ -4270,10 +4248,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sprint-1" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sprint 1 未完成項:全數補完
+        想一想
       
     </span>
   </a>
@@ -4284,7 +4262,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從儀表板看成果
+        小結
       
     </span>
   </a>
@@ -4303,10 +4281,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-9" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 9)
+        下一步
       
     </span>
   </a>
@@ -4330,41 +4308,115 @@
 
 
 
-<h1 id="day-8-e2e-workload-cluster">Day 8: E2E——開 workload cluster 跑起來<a class="headerlink" href="#day-8-e2e-workload-cluster" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>課程定位:用 Day 7 的 ClusterTemplate 真的 <code>openstack coe cluster create</code> 開一座 K8s workload cluster,驗證三層互動並完成三項最終驗收:<strong>① <code>kubectl get nodes</code> 全 Ready ② <code>Service type=LoadBalancer</code> 拿到 Octavia LB ③ PVC 由 Cinder CSI 供裝</strong>。
-本日踩了四個雷(microversion、CIDR 撞號、LB provider、Nova disk),全部記錄——這正是本次路線的價值:Sprint 1 死在無法診斷的 charm/image 斷代,本次每個地雷都能定位、能修。</p>
-</blockquote>
-<h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="1-cluster-create">1. 三層互動:一個 <code>cluster create</code> 背後發生什麼<a class="headerlink" href="#1-cluster-create" title="Permanent link">&para;</a></h3>
+<h1 id="day-8-workload-clusternova-microversionccm-provideridloadbalancer-pvc">Day 8: 開出第一座 workload cluster——Nova microversion、CCM 與 providerID、LoadBalancer 與 PVC<a class="headerlink" href="#day-8-workload-clusternova-microversionccm-provideridloadbalancer-pvc" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Kubernetes 官方標誌" src="../../assets/logos/kubernetes.png" width="90" /></p>
-<p>今天的終點是一座<strong>真正的 Kubernetes</strong>——不是管理用的 kind,而是跑你工作負載的 workload cluster。整條生產線長這樣:</p>
-<pre class="mermaid"><code>flowchart TB
-    A["openstack coe cluster create&lt;br/&gt;(你下的那一行指令)"]
-    A --&gt; B["magnum-conductor(CAPI driver)&lt;br/&gt;在 kind 裡建立整組宣告:&lt;br/&gt;Cluster / OpenStackCluster /&lt;br/&gt;KubeadmControlPlane / MachineDeployment"]
-    B --&gt; C["CAPI / CAPO controllers&lt;br/&gt;開始把宣告變成現實"]
-    C --&gt;|"Neutron"| N["建 cluster 專用網路&lt;br/&gt;router、防火牆"]
-    C --&gt;|"Octavia"| O["建 K8s API 的&lt;br/&gt;負載平衡器"]
-    C --&gt;|"Nova"| V["開出 control-plane&lt;br/&gt;與 worker VM"]
-    V --&gt; D["VM 開機後 cloud-init 執行 kubeadm&lt;br/&gt;→ K8s control plane 起來"]
-    D --&gt; E["節點註冊時還「不知道自己是哪台 VM」&lt;br/&gt;(帶著 uninitialized 記號)"]
-    E --&gt; F["OpenStack CCM 查出 VM 身分&lt;br/&gt;補上 providerID、拿掉記號"]
-    F --&gt; G["CAPI 確認節點就緒&lt;br/&gt;→ cluster=CREATE_COMPLETE ✅"]</code></pre>
-<p>三層 = <strong>Magnum(API/driver)→ CAPI/CAPO(kind,宣告式 reconcile)→ OpenStack(Nova/Octavia/Cinder 出實體資源)</strong>。</p>
-<h3 id="2-external-cloud-providerproviderid-ccm">2. external cloud provider:providerID 與 CCM 的關鍵角色(本日兩個地雷的核心)<a class="headerlink" href="#2-external-cloud-providerproviderid-ccm" title="Permanent link">&para;</a></h3>
-<p>現代 CAPO 走 <strong>external cloud provider</strong>:kubelet 起來時<strong>不知道自己是哪台 OpenStack VM</strong>,以 <code>node.cloudprovider.kubernetes.io/uninitialized:NoSchedule</code> taint 註冊。<strong>OpenStack CCM</strong> 才去 Nova 問出這台 VM 的 UUID、寫進 <code>Node.spec.providerID=openstack:///&lt;uuid&gt;</code>、移除 taint。</p>
-<p>連鎖後果:<strong>CCM 一旦掛掉,整座 cluster 卡死</strong> —— 沒 providerID → CAPI 永遠「Waiting for a Node with providerID X to exist」;沒移除 taint → coredns/CSI-controller 排不進節點 → 一路 Pending。本日的<a href="#mine-2">地雷 2</a> 正是 CCM 連不到 Keystone 而 crash 的實例。</p>
-<h3 id="3-loadbalancer-pvc-openstack">3. LoadBalancer / PVC 怎麼落到 OpenStack<a class="headerlink" href="#3-loadbalancer-pvc-openstack" title="Permanent link">&para;</a></h3>
+<p>Day 7 結束時,Magnum 已經接上 Day 6 的 kind,也有了一份 ClusterTemplate。這一章真的下單:打一行 <code>openstack coe cluster create</code>,等它開出一座 Kubernetes。下完指令之後,你能直接看到的只有一個狀態欄位。它可能幾秒就變成 <code>CREATE_FAILED</code>,也可能停在 <code>CREATE_IN_PROGRESS</code>,VM 明明都開好了,狀態卻一直不往下走。</p>
+<p>這一行指令會依序經過 Magnum、kind 裡的 CAPI、OpenStack 的 Nova、Neutron 和 Octavia,最後還要等新 cluster 裡的元件回頭向 OpenStack 確認自己的身分。cluster 建好之後,我們再在裡面開一個 <code>type=LoadBalancer</code> 的 Service 和一個 PVC,確認它們分別變成 Octavia 的 LB 和 Cinder 的 volume。讀完之後,cluster 建不起來或 LoadBalancer、PVC 卡住時,你能判斷問題停在 Magnum 本身、新節點的初始化,還是 OpenStack 這邊的資源。</p>
+<h2 id="cluster-create">一行 <code>cluster create</code> 會經過哪些服務<a class="headerlink" href="#cluster-create" title="Permanent link">&para;</a></h2>
+<p>先分清楚兩座 cluster。Day 6 的 kind 是 <strong>management cluster</strong>,只負責管理別的 cluster,不跑你的應用程式。這一章開出來的叫 <strong>workload cluster</strong>:節點是 OpenStack 裡真正的 VM,你的應用程式跑在這裡。</p>
+<p>把 <code>cluster create</code> 之後發生的事由上往下畫出來,左側標出每一段由誰負責:</p>
+<p><img alt="由上往下:openstack coe cluster create 交給 Magnum,magnum-conductor 裡的 CAPI driver 在 kind 寫入 Cluster、KubeadmControlPlane、MachineDeployment 等物件;kind 裡的 CAPI/CAPO controllers 照這些物件呼叫 OpenStack,由 Nova 開出 control plane 與 worker VM、Neutron 建 cluster 專用網路與 router、Octavia 建 K8s API 的負載平衡器;節點 VM 裡,kubeadm 建出節點並帶著 uninitialized taint 註冊,CCM 向 Nova 查出 VM、寫入 providerID 並移除 taint(橘色強調),CAPI 看到 providerID 之後 cluster 變成 CREATE_COMPLETE" src="../../assets/diagrams/os-s3d8-create-flow.svg" /></p>
+<p>照著圖由上往下看:</p>
+<ol>
+<li><strong>Magnum 只負責接單。</strong> 它驗過身分、查過配額,就把請求翻譯成 CAPI 的物件寫進 kind(Day 7 接上的那條線)。如果狀態幾秒就變成 <code>CREATE_FAILED</code>,而且 kind 裡一個 CAPI 物件都沒有,問題就出在 Magnum 這一層,還沒輪到 CAPI。</li>
+<li><strong>真正建資源的是 kind 裡的 CAPI 和 CAPO。</strong> 它們呼叫的 Nova、Neutron、Octavia 都是你前幾天部署過的服務,所以這一層出錯時,錯誤訊息通常會出現在那些服務的 log 裡。</li>
+<li><strong>節點 VM 開好不等於 cluster 建好。</strong> 最下面一排是在節點 VM 裡發生的事,要等其中橘色那一步完成,CAPI 才會把節點標成就緒。這一步是什麼、為什麼會卡住,下面會單獨講。</li>
+</ol>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>這一章會用到 Day 4 的 Octavia、Day 6 的 kind、Day 7 的 Magnum,三者都要先確認還在運作,特別是主機(跑 Kolla 的那台 Azure VM)重開機過的話。下文的「主機」都指這台 VM,Nova 替 cluster 開的 VM 則叫「節點 VM」。</p>
+<p>kind 裡應該要有 Day 6 裝的四個 provider。kind 在主機重開後不會自己恢復,處理方式見 Day 6 的<a href="../sprint3-day6-capi-management-cluster/#mine-4">「VM 重開機後 management cluster 沒有恢復」</a>。如果你重建過 kind,它的 API port 會改變,要照 Day 7 的做法更新 <code>/etc/kolla/config/magnum/kubeconfig</code>,再跑一次 <code>kolla-ansible deploy --tags magnum</code>。</p>
+<p>cluster 的節點要用一組 keypair(SSH 金鑰對)建立,這裡先建好。</p>
+<p>o-hm0 是 Day 4 在主機上建的網卡,Octavia 透過它跟 amphora VM 溝通。這座 cluster 的 K8s API 前面會有一台 Octavia LB,o-hm0 不通,這台 LB 就建不起來。主機重開機後,負責建立 o-hm0 的 <code>octavia-interface.service</code> 可能比 OVN 先啟動而失敗,o-hm0 就會停在 DOWN。下面程式碼註解提到的「自動重試」設定,本課的章節沒有收錄,所以不要假設它已經生效:最後兩條指令手動重新啟動這個服務(服務已經正常時重跑也無妨),再確認網卡是 UP、有一個 <code>10.1.0.x</code> 的位址(Day 4 的 dhclient 問題也會造成同樣的症狀,見 Day 4 的<a href="../sprint3-day4-octavia/#mine-2">「octavia-interface.service 起不來,<code>status=203/EXEC</code>」</a>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># management cluster 4 controllers Ready、magnum 連得到 kind、template 在</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># keypair(cluster create 需要)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>openstack<span class="w"> </span>keypair<span class="w"> </span>create<span class="w"> </span>k8s-admin<span class="w"> </span>&gt;<span class="w"> </span>~/k8s-admin.pem<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/k8s-admin.pem
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># ⚠️ Octavia o-hm0:host reboot 後 octavia-interface 常因比 OVN 早跑而 failed → o-hm0 DOWN</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1">#   K8s API LB 靠它,先修(見 Day6 solutions 的 drop-in 已讓它自動重試)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>reset-failed<span class="w"> </span>octavia-interface<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>octavia-interface
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>ip<span class="w"> </span>-br<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>o-hm0<span class="w">     </span><span class="c1"># 應 UP + 10.1.0.x</span>
+</span></code></pre></div>
+<h3 id="vm-lb">清掉前幾天留下的 VM 和 LB<a class="headerlink" href="#vm-lb" title="Permanent link">&para;</a></h3>
+<p><span id="nova-disk"></span>確認完上面幾項,建 cluster 之前還要騰出 Nova 的磁碟空間。這座 cluster 要開兩台 m1.medium(control plane 和 worker 各一台,每台宣告 40 GB 磁碟),再加上兩台 LB 的 amphora VM。Nova 計算一台主機還剩多少磁碟,用的是每台 VM 的 flavor 宣告的磁碟大小加總,不是實際用了多少;關機(SHUTOFF)的 VM 也照算。Day 2 和 Day 4 的示範 VM、Day 4 用 amphora 建的 lb2 如果還留著,單機 lab 的磁碟額度很快就會用完,amphora 會開不出來。</p>
+<p>這些資源是用 demo 帳號建的,先切到 demo 帳號再刪,刪完切回 admin:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>delete<span class="w"> </span>vm-cirros<span class="w"> </span>vm-ubuntu<span class="w"> </span>vm-web1<span class="w"> </span>vm-web2
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>delete<span class="w"> </span>--cascade<span class="w"> </span>lb2
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>delete<span class="w"> </span>--cascade<span class="w"> </span>lb-ovn
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span></code></pre></div>
+<p><code>--cascade</code> 會連同 LB 底下的 listener、pool、member 一起刪掉,也會刪掉 lb2 的 amphora VM。lb-ovn 走 OVN provider,沒有 amphora VM,不佔 Nova 磁碟,這裡一併刪掉只是清理。如果你在前幾天用了別的名字,先用 <code>openstack server list</code> 和 <code>openstack loadbalancer list</code> 找出來。</p>
+<h2 id="1-magnum-nova-api">步驟 1:讓 Magnum 用夠新的 Nova API<a class="headerlink" href="#1-magnum-nova-api" title="Permanent link">&para;</a></h2>
+<p>Magnum 的 CAPI driver 會替 cluster 的節點建一個 <strong>server group</strong>:Nova 的一個分組,讓同一組 VM 照指定的規則擺放。driver 用的規則是 <code>soft-anti-affinity</code>,意思是「盡量把這組 VM 放在不同的主機上,放不開也沒關係」。這對單機 lab 很重要:只有一台主機時,要求「一定分開」的 <code>anti-affinity</code> 會讓第二台 VM 開不出來,「盡量分開」則照樣開在同一台上。</p>
+<p>問題在於 Nova 的 API 有版本之分。Nova 每次改 API 的行為,就把版本號往上加一點,這叫 <strong>microversion</strong>,呼叫的人要在請求裡說明自己要用哪一個版本,Nova 就照那個版本的規則回應。<code>soft-anti-affinity</code> 是 2.15 才加進來的規則,而 Magnum 預設用 <code>2</code>,也就是最早的 2.1。用 2.1 送出這個規則,Nova 會回 400,cluster 幾秒內就 <code>CREATE_FAILED</code>(症狀見<a href="#mine-1">疑難排解:cluster 幾秒就 CREATE_FAILED</a>)。</p>
+<p>修法是在 Magnum 的設定裡指定 2.15。Kolla 的自訂設定放在 <code>/etc/kolla/config/</code> 底下(Day 7 的 kubeconfig 也放在這裡),部署時 Kolla 會把這份 <code>magnum.conf</code> 合併進 Magnum 容器的設定檔:</p>
+<div class="language-ini highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># /etc/kolla/config/magnum.conf  (Kolla merge)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">[nova_client]</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># 預設 2 太舊,driver 建 soft-anti-affinity server group 需 ≥2.15</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="na">api_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2.15</span>
+</span></code></pre></div>
+<p>註解要自己獨立一行。OpenStack 讀 ini 設定檔時,只把 <code>#</code> 或 <code>;</code> 開頭的整行當成註解,寫在值後面的 <code># ...</code> 會被當成值的一部分。</p>
+<p>版本也不要設得太高。從 2.64 開始,建立 server group 的 API 把規則欄位從清單 <code>policies</code> 改成單一值 <code>policy</code>,而 driver 送的還是清單,設到 2.64 以上會換成另一種失敗。</p>
+<p>改完設定,重跑 Magnum 的部署,讓新設定生效:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>magnum<span class="w">   </span><span class="c1"># regen conf + 重啟容器</span>
+</span></code></pre></div>
+<h2 id="k8s-openstack-vm">K8s 節點怎麼對上 OpenStack 的 VM<a class="headerlink" href="#k8s-openstack-vm" title="Permanent link">&para;</a></h2>
+<p>建 cluster 之前,還要先決定 cluster 內部網路用哪個網段。為什麼網段會影響 cluster 能不能建好,要先看流程圖最下面那一排。</p>
+<p>節點 VM 開機後,裡面的 kubeadm 把它變成一個 K8s 節點,向 cluster 註冊。這時節點上只記錄了 hostname 和 IP,沒有記錄它對應 OpenStack 裡的哪一台 VM。CAPI 需要這筆對應,才能把每個節點對回自己請 Nova 開的那台 VM 來管理。</p>
+<p>替節點補上這個資訊的,是跑在 workload cluster 裡的 <strong>OpenStack CCM</strong>(cloud controller manager,K8s 跟所在的雲溝通的元件,Magnum 的 driver 會替你裝好)。它向 Nova 查出這個節點是哪一台 VM,把 VM 的 UUID 寫進節點的 <strong>providerID</strong> 欄位,格式是 <code>openstack:///&lt;VM 的 UUID&gt;</code>。CAPI 檢查到 providerID,就能把節點對回 VM,把它標成就緒。</p>
+<p>在 CCM 完成之前,節點身上會帶著一個 taint <code>node.cloudprovider.kubernetes.io/uninitialized:NoSchedule</code>,意思是「這個節點還沒被雲端元件初始化,不要排 pod 進來」。CCM 寫完 providerID 會順手拿掉它。</p>
+<p>所以,cluster 建立期間 CCM 如果起不來,後果會一路傳下去:節點沒有 providerID,CAPI 一直等不到就緒的節點;taint 沒拿掉,coredns、Cinder CSI 這些 pod 排不進去,一直 Pending。cluster 已經建好之後 CCM 才出問題,影響比較小:已經就緒的節點和上面的 pod 照常運作,既有的 LB 由 Octavia 自己運作,照樣轉送流量;但新的節點加不進來,新的 LoadBalancer 也建不出來。</p>
+<h3 id="ccm-keystone">CCM 要連得到 Keystone<a class="headerlink" href="#ccm-keystone" title="Permanent link">&para;</a></h3>
+<p>CCM 要向 Nova 查資料,得先在 Keystone 取得身分,用的是 Magnum 的 driver 為這座 cluster 建的 application credential(一組只給這座 cluster 用的 OpenStack 登入資訊)。所以 CCM 必須連得到 OpenStack 的 API 位址,在本課的環境是 <code>10.0.0.4</code>,也就是 Day 1 填進 <code>kolla_internal_vip_address</code> 的主機私有 IP。</p>
+<p>CCM 跑在節點 VM 上,節點的位址來自 cluster 專用網路。driver 預設把這個網路設成 <code>10.0.0.0/24</code>,剛好跟主機所在的 Azure 網段相同。下面對照兩種網段設定,看 CCM 送往 <code>10.0.0.4</code> 的封包怎麼走:</p>
+<p><img alt="左邊是預設的 fixed_subnet_cidr=10.0.0.0/24:節點 VM 位址是 10.0.0.x,CCM 要連 10.0.0.4 時,因為它落在節點自己的網段,節點直接在本地網路上找,沒人回應,cluster 的 router 沒被用到;右邊是 fixed_subnet_cidr=10.6.0.0/24(橘色強調):節點位址 10.6.0.x,10.0.0.4 不在自己的網段,封包交給 cluster 的 router,轉到主機 eth0 上的 Keystone 與 Nova API" src="../../assets/diagrams/os-s3d8-subnet-overlap.svg" /></p>
+<p>我們可以從圖上看到,差別在 <code>10.0.0.4</code> 落不落在節點自己的網段裡:</p>
+<ol>
+<li><strong>左邊:網段重疊。</strong> 節點的網段是 <code>10.0.0.0/24</code>,<code>10.0.0.4</code> 落在裡面,節點的路由表據此把它當成同一個區域網路上的位址,直接在 cluster 專用網路裡找,不交給 router。可是那個網路上沒有 <code>10.0.0.4</code>,真正的 Keystone 在主機上,CCM 連不上,不斷重啟(<code>CrashLoopBackOff</code>)。</li>
+<li><strong>右邊:網段錯開。</strong> 節點的網段換成 <code>10.6.0.0/24</code>,<code>10.0.0.4</code> 不在裡面,封包交給 router,由 router 轉到主機。CCM 連得到 Keystone,節點就能拿到 providerID。</li>
+</ol>
+<p>網段要錯開的不只 API 位址。這朵雲上已經用掉的網段還有 Octavia 的管理網路 <code>10.1.0.0/24</code>(o-hm0 那張網卡所在的網路)和對外網路 <code>172.24.4.0/24</code>;workload cluster 內部也有自己的網段,pod 用 <code>10.100</code> 開頭、service 用 <code>10.254</code> 開頭。<code>10.6.0.0/24</code> 跟這些都不重疊。</p>
+<h2 id="2-template-cluster">步驟 2:建 template 與 cluster<a class="headerlink" href="#2-template-cluster" title="Permanent link">&para;</a></h2>
+<p>Day 7 那份 template 沒有指定網段,所以這裡另建一份,帶上三個 label:</p>
 <ul>
-<li><strong><code>Service type=LoadBalancer</code></strong>:CCM 監到後呼叫 <strong>Octavia</strong> 建 LB(amphora),VIP 掛 ext-net FIP → <code>EXTERNAL-IP</code>。node 是 LB 的 member(NodePort)。</li>
-<li><strong>PVC</strong>:<code>openstack-cinder-csi</code> 動態供裝 → 建 <strong>Cinder volume</strong> → attach 到 pod 所在 node → mount。</li>
+<li><code>kube_tag=v1.34.8</code>:K8s 的版本,要跟 Day 7 上傳的 node image(<code>ubuntu-24.04-v1.34.8</code>)一致。</li>
+<li><code>fixed_subnet_cidr=10.6.0.0/24</code>:上一節講的 cluster 專用網路網段。</li>
+<li><code>octavia_provider=amphora</code>:之後 CCM 替 <code>type=LoadBalancer</code> 的 Service 向 Octavia 開 LB 時,指定要哪一種 provider。Day 4 用過 Octavia 的 amphora 和 OVN 兩種 provider,這朵雲 Octavia 的 <code>enabled_provider_drivers</code> 也只有 <code>amphora</code> 和 <code>ovn</code> 兩個名字。driver 預設要的是 <code>amphorav2</code>,不在清單上,Octavia 會拒絕(見<a href="#mine-3">疑難排解:LoadBalancer 一直 pending</a>),所以明確指定 <code>amphora</code>。</li>
 </ul>
-<p>今天的三項驗收,每一項背後都是一個你前幾天親手部署過的服務在動工:</p>
+<p><code>--master-lb-enabled</code> 讓 K8s API 前面也放一台 Octavia LB,就是「開始之前」提到需要 o-hm0 的那一台。建 cluster 時指定一台 control plane、一台 worker:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.34.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>--cluster-template<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>--keypair<span class="w"> </span>k8s-admin<span class="w"> </span>--master-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span>
+</span></code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">到了 Day 22,amphora 這條路會改變</p>
+<p>本章照 amphora 做。到了 Day 22,全量 prechecks 會要求 <code>octavia_provider_drivers</code> 只保留 <code>ovn</code>,之後 Octavia 不再接受 amphora,本章的 <code>octavia_provider=amphora</code> 也就不能再用。如果你讀完 Day 22 還要在 workload cluster 開 LoadBalancer,先看 Day 22 的<a href="../sprint4-day22-upgrade-backup/#mine-1">prechecks 擋下 Octavia 設定</a>,那裡說明了兩條路的取捨。</p>
+</div>
+<h2 id="3-cluster-create_complete">步驟 3:看著 cluster 建到 CREATE_COMPLETE<a class="headerlink" href="#3-cluster-create_complete" title="Permanent link">&para;</a></h2>
+<p>建立需要一段時間。第一行用 <code>watch</code> 每隔幾秒刷新 cluster 的狀態,看完按 <code>Ctrl-C</code> 離開,再接著跑下面幾行。</p>
+<p>另外再盯一個更早出現問題的指標:節點有沒有拿到 providerID。要看 workload cluster 裡的節點,得先有它的 kubeconfig。CAPI 把每座 workload cluster 的 kubeconfig 存成 kind 裡 <code>magnum-system</code> 這個 namespace 的一個 Secret,下面的第二、三行把它取出來存成檔案。最後一行在指令前面加上 <code>KUBECONFIG=...</code>,只有這一條指令改用 workload cluster 的 kubeconfig,你終端機裡的 <code>kubectl</code> 還是指向 kind:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>watch<span class="w"> </span>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>show<span class="w"> </span>k8s-lab<span class="w"> </span>-c<span class="w"> </span>status
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># 盯 providerID 是否被 CCM 設上(關鍵健康指標):</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nv">SEC</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>kubeconfig<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span><span class="nv">$SEC</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.value}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span>&gt;<span class="w"> </span>/tmp/wl.kubeconfig
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">KUBECONFIG</span><span class="o">=</span>/tmp/wl.kubeconfig<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{..providerID}&#39;</span>
+</span></code></pre></div>
+<p>節點註冊之後,最後一行應該印出 <code>openstack:///</code> 開頭的字串,每個節點一個。如果印出來是空的,而節點 VM 都已經 ACTIVE,就回頭看「K8s 節點怎麼對上 OpenStack 的 VM」那一節:CCM 很可能連不到 Keystone(見<a href="#mine-2">疑難排解:VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS</a>)。</p>
+<p>狀態變成 <code>CREATE_COMPLETE</code> 就可以進下一步。</p>
+<h2 id="4-loadbalancer-pvc-openstack">步驟 4:讓 LoadBalancer 和 PVC 落到 OpenStack<a class="headerlink" href="#4-loadbalancer-pvc-openstack" title="Permanent link">&para;</a></h2>
+<p>cluster 建好之後,剩下要確認的是 workload cluster 裡的資源能不能變成 OpenStack 的資源。這一步開兩樣東西,每一樣背後都是你前幾天部署過的服務在做事:</p>
 <table>
 <thead>
 <tr>
 <th>你在 K8s 宣告的</th>
-<th>幕後動工的</th>
+<th>實際做事的 OpenStack 服務</th>
 <th>你在哪天認識它</th>
 </tr>
 </thead>
@@ -4386,181 +4438,111 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="0-pre-flightreboot">0. Pre-flight(reboot 後必查)<a class="headerlink" href="#0-pre-flightreboot" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># management cluster 4 controllers Ready、magnum 連得到 kind、template 在</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>providers<span class="w"> </span>-A
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># keypair(cluster create 需要)</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>openstack<span class="w"> </span>keypair<span class="w"> </span>create<span class="w"> </span>k8s-admin<span class="w"> </span>&gt;<span class="w"> </span>~/k8s-admin.pem<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/k8s-admin.pem
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># ⚠️ Octavia o-hm0:host reboot 後 octavia-interface 常因比 OVN 早跑而 failed → o-hm0 DOWN</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1">#   K8s API LB 靠它,先修(見 Day6 solutions 的 drop-in 已讓它自動重試)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>reset-failed<span class="w"> </span>octavia-interface<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>octavia-interface
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>ip<span class="w"> </span>-br<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>o-hm0<span class="w">     </span><span class="c1"># 應 UP + 10.1.0.x</span>
+<p>節點已經在步驟 3 看過了。另外兩樣,中間都要靠一個 workload cluster 裡的元件轉手:</p>
+<p><img alt="兩條路,左半是 workload cluster 裡,右半是 OpenStack。上排:Service web-lb(type=LoadBalancer)交給 CCM,CCM 請 Octavia 開一台 amphora LB,VIP 掛上 ext-net 的 FIP,成為 EXTERNAL-IP;檢查方式是 kubectl get svc 出現 EXTERNAL-IP,主機上 curl 得到 nginx 首頁。下排:PVC day8-pvc(StorageClass cinder)交給 Cinder CSI,Cinder 建一顆 volume,掛到 pod 所在節點,再掛進容器的 /data;檢查方式是 kubectl get pvc 是 Bound,openstack volume list 多一顆 pvc-*。CCM 與 Cinder CSI 以橘色強調" src="../../assets/diagrams/os-s3d8-lb-pvc-paths.svg" /></p>
+<p>照著圖上兩排看:</p>
+<ul>
+<li><strong>上排是 LoadBalancer。</strong> CCM 除了替節點寫 providerID,也負責 <code>type=LoadBalancer</code> 的 Service:它看到這種 Service,就請 Octavia 開一台 LB,把各節點當成 LB 的成員(流量轉到各節點上 Service 的 NodePort),再把 LB 的 VIP 掛上對外網路 <code>ext-net</code> 的一個 floating IP。這個 floating IP 就是 <code>kubectl get svc</code> 看到的 <code>EXTERNAL-IP</code>。</li>
+<li><strong>下排是 PVC。</strong> PVC 是 pod 對儲存空間的請求(「我要 1 GiB」)。真正去建儲存空間的是 <strong>Cinder CSI</strong>,一個跑在 workload cluster 裡、會呼叫 Cinder API 的儲存外掛。PVC 透過 <strong>StorageClass</strong> 指定要交給哪個外掛處理。Cinder CSI 收到請求就建一顆 Cinder volume,掛到 pod 所在的節點 VM 上,再掛進容器。</li>
+</ul>
+<p>driver 裝 Cinder CSI 時,會替 Cinder 裡每個 <code>__DEFAULT__</code> 以外的 volume type 建一個名叫 <code>block-&lt;type&gt;</code> 的 StorageClass。這朵雲的 Cinder 只有 <code>__DEFAULT__</code>,所以 workload cluster 裡一個 StorageClass 都沒有,下面的指令先建一個名叫 <code>cinder</code> 的 StorageClass,並設成預設值(annotation <code>is-default-class</code>,之後沒寫 StorageClass 的 PVC 也會交給它)。接著建一個 1 GiB 的 PVC 和一個掛載它的 busybox pod,pod 啟動時把一行字寫進 volume。最後部署兩份 nginx,開一個 <code>type=LoadBalancer</code> 的 Service。</p>
+<p>開頭的 <code>export</code> 讓這個終端機接下來的 <code>kubectl</code> 都改連 workload cluster。之後要回頭操作 kind,開一個新的終端機就好:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>/tmp/wl.kubeconfig
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># ① nodes Ready</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># ③ PVC → Cinder(先建 StorageClass,driver 沒附預設的)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s">apiVersion: storage.k8s.io/v1</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s">kind: StorageClass</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s">metadata: {name: cinder, annotations: {storageclass.kubernetes.io/is-default-class: &quot;true&quot;}}</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s">provisioner: cinder.csi.openstack.org</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s">volumeBindingMode: Immediate</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s">EOF</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;        # PVC 1Gi + busybox 掛載(最小可用範本)</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="s">apiVersion: v1</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="s">kind: PersistentVolumeClaim</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="s">metadata: {name: day8-pvc}</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="s">spec:</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="s">  accessModes: [&quot;ReadWriteOnce&quot;]</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="s">  storageClassName: cinder</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="s">  resources: {requests: {storage: 1Gi}}</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="s">---</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="s">apiVersion: v1</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="s">kind: Pod</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="s">metadata: {name: day8-pod}</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="s">spec:</span>
+</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="s">  containers:</span>
+</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="s">    - name: busybox</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="s">      image: busybox</span>
+</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="s">      command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo deepwave-day8 &gt; /data/hello &amp;&amp; sleep 3600&quot;]</span>
+</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="s">      volumeMounts: [{name: vol, mountPath: /data}]</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="s">  volumes:</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="s">    - name: vol</span>
+</span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a><span class="s">      persistentVolumeClaim: {claimName: day8-pvc}</span>
+</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a><span class="s">EOF</span>
+</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w">                   </span><span class="c1"># Bound;openstack volume list 出現 pvc-*</span>
+</span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>day8-pod<span class="w"> </span>--<span class="w"> </span>cat<span class="w"> </span>/data/hello<span class="w">   </span><span class="c1"># 回 deepwave-day8 = volume 掛載+持久化成功</span>
+</span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="c1"># ② LoadBalancer → Octavia</span>
+</span><span id="__span-6-37"><a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--image<span class="w"> </span>nginx<span class="w"> </span>--replicas<span class="w"> </span><span class="m">2</span>
+</span><span id="__span-6-38"><a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a>kubectl<span class="w"> </span>expose<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--type<span class="w"> </span>LoadBalancer<span class="w"> </span>--name<span class="w"> </span>web-lb
+</span><span id="__span-6-39"><a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>web-lb<span class="w">            </span><span class="c1"># EXTERNAL-IP(ext-net FIP)</span>
+</span><span id="__span-6-40"><a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a>curl<span class="w"> </span>http://&lt;EXTERNAL-IP&gt;/<span class="w">        </span><span class="c1"># host 內可打(Azure FIP 僅 host 內有效)</span>
 </span></code></pre></div>
-<h3 id="1-magnumconf-cluster-1">1. 修 magnum.conf(建 cluster 前必做,預防<a href="#mine-1">地雷 1</a>)<a class="headerlink" href="#1-magnumconf-cluster-1" title="Permanent link">&para;</a></h3>
-<p><div class="language-ini highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># /etc/kolla/config/magnum.conf  (Kolla merge)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">[nova_client]</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="na">api_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2.15</span><span class="w">     </span><span class="c1"># 預設 2 太舊,driver 建 soft-anti-affinity server group 需 ≥2.15</span>
-</span></code></pre></div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>magnum<span class="w">   </span><span class="c1"># regen conf + 重啟容器</span>
-</span></code></pre></div></p>
-<h3 id="2-azure-correcttemplate-cluster">2. 用「Azure-correct」template 開 cluster<a class="headerlink" href="#2-azure-correcttemplate-cluster" title="Permanent link">&para;</a></h3>
-<p>Template 必帶三個 lab 專屬 label,每一個都是用地雷換來的:<code>kube_tag</code> 釘選 K8s 版本、<code>fixed_subnet_cidr=10.6.0.0/24</code>(不可與 API 的 <code>10.0.0.4</code> 同段,<a href="#mine-2">地雷 2</a>)、<code>octavia_provider=amphora</code>(本 Octavia 沒啟用 amphorav2,<a href="#mine-3">地雷 3</a>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.34.8<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.34.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>--cluster-template<span class="w"> </span>k8s-v1.34.8-azure<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span>--keypair<span class="w"> </span>k8s-admin<span class="w"> </span>--master-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span>
-</span></code></pre></div>
-<h3 id="3-create_complete">3. 監控到 CREATE_COMPLETE<a class="headerlink" href="#3-create_complete" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>watch<span class="w"> </span>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>show<span class="w"> </span>k8s-lab<span class="w"> </span>-c<span class="w"> </span>status
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># 盯 providerID 是否被 CCM 設上(關鍵健康指標):</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">SEC</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span>secret<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>kubeconfig<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1<span class="k">)</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span><span class="nv">$SEC</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{.data.value}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span>&gt;<span class="w"> </span>/tmp/wl.kubeconfig
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nv">KUBECONFIG</span><span class="o">=</span>/tmp/wl.kubeconfig<span class="w"> </span>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-o<span class="w"> </span><span class="nv">jsonpath</span><span class="o">=</span><span class="s1">&#39;{..providerID}&#39;</span>
-</span></code></pre></div>
-<h3 id="4">4. 三項最終驗收<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>/tmp/wl.kubeconfig
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># ① nodes Ready</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># ③ PVC → Cinder(先建 StorageClass,driver 沒附預設的)</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s">apiVersion: storage.k8s.io/v1</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s">kind: StorageClass</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">metadata: {name: cinder, annotations: {storageclass.kubernetes.io/is-default-class: &quot;true&quot;}}</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">provisioner: cinder.csi.openstack.org</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s">volumeBindingMode: Immediate</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s">EOF</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;        # PVC 1Gi + busybox 掛載(最小可用範本)</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="s">apiVersion: v1</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">kind: PersistentVolumeClaim</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="s">metadata: {name: day8-pvc}</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s">spec:</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="s">  accessModes: [&quot;ReadWriteOnce&quot;]</span>
-</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="s">  storageClassName: cinder</span>
-</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s">  resources: {requests: {storage: 1Gi}}</span>
-</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="s">---</span>
-</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="s">apiVersion: v1</span>
-</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="s">kind: Pod</span>
-</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="s">metadata: {name: day8-pod}</span>
-</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="s">spec:</span>
-</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="s">  containers:</span>
-</span><span id="__span-5-26"><a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="s">    - name: busybox</span>
-</span><span id="__span-5-27"><a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="s">      image: busybox</span>
-</span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28" href="#__codelineno-5-28"></a><span class="s">      command: [&quot;sh&quot;, &quot;-c&quot;, &quot;echo deepwave-day8 &gt; /data/hello &amp;&amp; sleep 3600&quot;]</span>
-</span><span id="__span-5-29"><a id="__codelineno-5-29" name="__codelineno-5-29" href="#__codelineno-5-29"></a><span class="s">      volumeMounts: [{name: vol, mountPath: /data}]</span>
-</span><span id="__span-5-30"><a id="__codelineno-5-30" name="__codelineno-5-30" href="#__codelineno-5-30"></a><span class="s">  volumes:</span>
-</span><span id="__span-5-31"><a id="__codelineno-5-31" name="__codelineno-5-31" href="#__codelineno-5-31"></a><span class="s">    - name: vol</span>
-</span><span id="__span-5-32"><a id="__codelineno-5-32" name="__codelineno-5-32" href="#__codelineno-5-32"></a><span class="s">      persistentVolumeClaim: {claimName: day8-pvc}</span>
-</span><span id="__span-5-33"><a id="__codelineno-5-33" name="__codelineno-5-33" href="#__codelineno-5-33"></a><span class="s">EOF</span>
-</span><span id="__span-5-34"><a id="__codelineno-5-34" name="__codelineno-5-34" href="#__codelineno-5-34"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pvc<span class="w">                   </span><span class="c1"># Bound;openstack volume list 出現 pvc-*</span>
-</span><span id="__span-5-35"><a id="__codelineno-5-35" name="__codelineno-5-35" href="#__codelineno-5-35"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>day8-pod<span class="w"> </span>--<span class="w"> </span>cat<span class="w"> </span>/data/hello<span class="w">   </span><span class="c1"># 回 deepwave-day8 = volume 掛載+持久化成功</span>
-</span><span id="__span-5-36"><a id="__codelineno-5-36" name="__codelineno-5-36" href="#__codelineno-5-36"></a><span class="c1"># ② LoadBalancer → Octavia</span>
-</span><span id="__span-5-37"><a id="__codelineno-5-37" name="__codelineno-5-37" href="#__codelineno-5-37"></a>kubectl<span class="w"> </span>create<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--image<span class="w"> </span>nginx<span class="w"> </span>--replicas<span class="w"> </span><span class="m">2</span>
-</span><span id="__span-5-38"><a id="__codelineno-5-38" name="__codelineno-5-38" href="#__codelineno-5-38"></a>kubectl<span class="w"> </span>expose<span class="w"> </span>deploy<span class="w"> </span>web<span class="w"> </span>--port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--type<span class="w"> </span>LoadBalancer<span class="w"> </span>--name<span class="w"> </span>web-lb
-</span><span id="__span-5-39"><a id="__codelineno-5-39" name="__codelineno-5-39" href="#__codelineno-5-39"></a>kubectl<span class="w"> </span>get<span class="w"> </span>svc<span class="w"> </span>web-lb<span class="w">            </span><span class="c1"># EXTERNAL-IP(ext-net FIP)</span>
-</span><span id="__span-5-40"><a id="__codelineno-5-40" name="__codelineno-5-40" href="#__codelineno-5-40"></a>curl<span class="w"> </span>http://&lt;EXTERNAL-IP&gt;/<span class="w">        </span><span class="c1"># host 內可打(Azure FIP 僅 host 內有效)</span>
-</span></code></pre></div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>cluster</td>
-<td>CREATE_COMPLETE / HEALTHY</td>
-<td>符合</td>
-</tr>
-<tr>
-<td><strong>驗收① nodes</strong></td>
-<td>control-plane + worker 全 Ready、有 providerID</td>
-<td>v1.34.8,<code>openstack:///...</code></td>
-</tr>
-<tr>
-<td>CCM / CSI / calico</td>
-<td>全 Running(providerID 設好、taint 移除)</td>
-<td>CCM 0 重啟</td>
-</tr>
-<tr>
-<td><strong>驗收② LoadBalancer</strong></td>
-<td>Octavia amphora LB ACTIVE/ONLINE、EXTERNAL-IP、curl 200</td>
-<td><code>172.24.4.183</code>,curl ×6 = 200</td>
-</tr>
-<tr>
-<td><strong>驗收③ PVC</strong></td>
-<td>Bound、Cinder volume in-use、資料持久化</td>
-<td><code>pvc-f99513ec</code> in-use,<code>cat</code> 回 <code>deepwave-day8</code></td>
-</tr>
-<tr>
-<td><strong>總驗收</strong></td>
-<td>前兩次嘗試卡死的三大項(Octavia/Cinder/Magnum)全數走通</td>
-<td>三項全數通過</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">地雷記錄(本日四連)<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:<code>nova_client api_version=2</code> 太舊 → server group <code>soft-anti-affinity</code> 被拒(CREATE_FAILED 秒失敗)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p>cluster create 8 秒就 CREATE_FAILED,magnum-system 無任何 CAPI CR。conductor log:<code>nova.server_groups.create(policies=['soft-anti-affinity'])</code> → Nova 400 <code>'soft-anti-affinity' is not one of ['anti-affinity','affinity']</code>。driver 用 <code>magnum.common.clients</code> 建 nova client,Magnum <code>[nova_client] api_version</code> 預設 <code>2</code>(=2.1),而 <code>soft-anti-affinity</code> 需 <strong>microversion ≥ 2.15</strong>。修:magnum.conf 設 <code>api_version = 2.15</code>(<strong>別設 ≥2.64</strong>,那之後 server_group API 從 <code>policies</code> list 改成 <code>policy</code>,driver 還用 list)。</p>
-<h3 id="mine-2">地雷 2:<code>fixed_subnet_cidr</code> 與 OpenStack API IP 撞號 → CCM CrashLoopBackOff → cluster 卡死(solutions 級,本日最大地雷)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>cluster 一直 CREATE_IN_PROGRESS、VM 都 ACTIVE 但 Machine 停在 Provisioned。根因:driver 的 <code>fixed_subnet_cidr</code> 預設 <strong><code>10.0.0.0/24</code></strong>,與 OpenStack API endpoint <strong><code>10.0.0.4</code></strong>(host)同段 → 節點把 10.0.0.4 當 on-link、ARP 不到真 Keystone → CCM crash → 無 providerID → 卡死。修:label <strong><code>fixed_subnet_cidr=10.6.0.0/24</code></strong>(避開 10.0.0.4,也避開 pod 10.100/svc 10.254/lb-mgmt 10.1/ext-net 172.24)。完整記錄見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/">CAPI 子網撞 API IP</a>。</p>
-<h3 id="mine-3">地雷 3:<code>octavia_provider</code> 預設 amphorav2,但 Octavia 只啟用 amphora → LoadBalancer 失敗<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><code>Service type=LoadBalancer</code> 一直 pending,CCM 報 Octavia 400 <code>Provider 'amphorav2' is not enabled</code>。driver 的 CCM cloud.conf <code>lb-provider</code> 由 label <code>octavia_provider</code>(預設 <code>amphorav2</code>)決定,而本 Octavia <code>enabled_provider_drivers</code> 只有 <code>amphora,ovn</code>。修:label <strong><code>octavia_provider=amphora</code></strong>(現有 cluster 熱修:patch workload <code>cloud-config</code> secret 的 <code>lb-provider=amphora</code> + 重啟 CCM)。</p>
-<div class="admonition note">
-<p class="admonition-title">後續變動</p>
-<p>這裡的 <code>octavia_provider=amphora</code> 在 <a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22 地雷 1</a> 會受影響:那天全量 precheck 逼著把 <code>octavia_provider_drivers</code> 收斂成只剩 <code>ovn</code>,amphora 從此不再可選。若讀到 Day 22 後還要沿用本章的 amphora 路線,先看那段的取捨說明。</p>
-</div>
-<h3 id="mine-4">地雷 4:Nova disk 被 leftover VM 佔滿 → amphora <code>No valid host</code><a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p>改用 amphora 後 LB 仍失敗,Octavia amphora build 報 Nova <code>No valid host was found</code>。hypervisor <code>free_disk_gb=1</code>、<code>local_gb_used=121/122</code>:<strong>Day 2-4 遺留的 SHUTOFF VM(vm-cirros/ubuntu/web1/web2)+ 舊 LB 的 amphora 仍佔用 Nova 的 flavor-disk 配額</strong>(SHUTOFF 不佔 RAM/CPU 但佔 disk 帳)。修:刪掉 leftover(<code>openstack server delete</code> demo VM、<code>loadbalancer delete --cascade</code> 舊 lb2/lb-ovn)→ 釋放 36GB → amphora 排得進。<strong>教訓:單機 lab 要定期清 leftover,Nova disk 用 flavor 總和計帳、SHUTOFF 也算。</strong></p>
-<h2 id="sprint-1">Sprint 1 未完成項:全數補完<a class="headerlink" href="#sprint-1" title="Permanent link">&para;</a></h2>
-<p>Sprint 1 的三大敗因,在 Kolla + Magnum-CAPI 路線全部解決:</p>
-<table>
-<thead>
-<tr>
-<th>Sprint 1 敗因</th>
-<th>本 Sprint 結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Octavia:Canonical charm amd64 斷代(裝不了)</td>
-<td>✅ Day 4 amphora LB round-robin;Day 8 workload <code>Service type=LoadBalancer</code> 拿到 Octavia LB</td>
-</tr>
-<tr>
-<td>Cinder LVM:LXD device-mapper 限制</td>
-<td>✅ Day 3 LVM;Day 8 PVC 由 Cinder CSI 動態供裝</td>
-</tr>
-<tr>
-<td>Magnum:heat driver 內嵌 image URL 全失效</td>
-<td>✅ CAPI driver + capo-image-elements 維護的 node image,cluster CREATE_COMPLETE</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">從儀表板看成果<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>這段指令依序檢查三件事,每一件該看到的結果如下:</p>
+<ul>
+<li><strong>節點</strong>:<code>kubectl get nodes</code> 列出 control plane 和 worker 兩個節點,STATUS 都是 <code>Ready</code>,版本是 <code>v1.34.8</code>。workload cluster 裡 CCM、Cinder CSI、calico 的 pod 都是 <code>Running</code>,CCM 的重啟次數是 0。</li>
+<li><strong>PVC</strong>:<code>kubectl get pvc</code> 的 STATUS 是 <code>Bound</code>。這時在 OpenStack 這邊跑 <code>openstack volume list</code>,會多一顆名字以 <code>pvc-</code> 開頭、狀態 <code>in-use</code> 的 volume,它就是這個 PVC。<code>kubectl exec</code> 讀回 <code>deepwave-day8</code>,代表 pod 寫進去的資料確實落在這顆 volume 上。</li>
+<li><strong>LoadBalancer</strong>:<code>kubectl get svc web-lb</code> 的 <code>EXTERNAL-IP</code> 從 <code>&lt;pending&gt;</code> 變成一個 <code>172.24.4.x</code> 的位址,也就是 ext-net 的 floating IP。LB 要先開一台 amphora VM,會等上幾分鐘。拿到位址時,<code>openstack loadbalancer list</code> 裡這台 LB 的狀態是 <code>ACTIVE</code>、<code>ONLINE</code>。把位址填進最後一行的 <code>&lt;EXTERNAL-IP&gt;</code>。跟 Day 4 一樣,ext-net 只在主機內有效,所以 <code>curl</code> 要在主機上打。</li>
+</ul>
+<p><code>EXTERNAL-IP</code> 一直停在 <code>&lt;pending&gt;</code>,通常是兩個原因之一:provider 名稱不對(<a href="#mine-3">疑難排解:LoadBalancer 一直 pending</a>),或 Nova 磁碟額度不夠開 amphora(<a href="#mine-4">疑難排解:amphora 開不出來</a>)。</p>
+<h2 id="cluster">從儀表板看同一座 cluster<a class="headerlink" href="#cluster" title="Permanent link">&para;</a></h2>
+<p>下面兩張截圖是同一座 <code>k8s-lab</code>,在課程更後面的階段拍的,所以跟你現在看到的會有一點不同。</p>
 <p><img alt="skyline-coe-clusters" src="../../assets/screenshots/skyline-coe-clusters.png" /></p>
-<p><em>Magnum 的 cluster 列表(Skyline 檢視):k8s-lab,狀態 UPDATE COMPLETE、健康狀態 HEALTHY——十一天的成果濃縮成這一列。</em></p>
+<p><em>Magnum 的 cluster 列表,畫面來自 Day 13 才會裝的網頁介面 Skyline。k8s-lab 的健康狀態是 HEALTHY;狀態欄是 UPDATE COMPLETE,因為 Day 9 對這座 cluster 做了更新。你現在看到的會是 CREATE_COMPLETE,用步驟 3 的 <code>openstack coe cluster show</code> 就能確認。</em></p>
 <p><img alt="kubectl-nodes" src="../../assets/screenshots/kubectl-nodes.png" /></p>
-<p><em>同一座 cluster,從 kubectl 看:三個節點全 Ready(control-plane、worker,加上 Day 9 的 <code>app</code> node group)。這裡用的是</em><em>暫存的 kubeconfig</em><em>(<code>KUBECONFIG=/tmp/wl.kubeconfig</code> 只影響這一條指令)——查別人的 cluster 時養成這個習慣,不會弄髒自己的 kubectl 設定。</em></p>
+<p><em>從 kubectl 看同一座 cluster。畫面上有三個節點全部 Ready,版本是 Day 9 升級後的 v1.35.5,第三個是 Day 9 新增的 <code>app</code> node group;你現在只會有 control plane 和 worker 兩個,版本是 v1.34.8。指令前面的 <code>KUBECONFIG=/tmp/wl.kubeconfig</code> 跟步驟 3 一樣,只影響這一條指令。</em></p>
+<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>照官方預設值建 cluster,或漏掉本章某一步時,會遇到下面四個問題,依出現順序排列。</p>
+<h3 id="mine-1">cluster 幾秒就 CREATE_FAILED,kind 裡沒有任何 CAPI 物件<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>cluster create</code> 之後幾秒就變成 <code>CREATE_FAILED</code>,<code>magnum-system</code> 裡沒有任何 CAPI 物件。magnum-conductor 的 log 有一行 Nova 回的 400:<code>'soft-anti-affinity' is not one of ['anti-affinity','affinity']</code>。</p>
+<p><strong>原因</strong>:Magnum 用預設的 Nova API 版本 2.1 建 server group,這個版本還不認得 <code>soft-anti-affinity</code>。</p>
+<p><strong>修法</strong>:照步驟 1 把 <code>[nova_client] api_version</code> 設成 <code>2.15</code>,重跑 <code>kolla-ansible deploy --tags magnum</code>,再刪掉失敗的 cluster 重建:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>delete<span class="w"> </span>k8s-lab
+</span></code></pre></div>
+<p>刪除完成後,照步驟 2 的 <code>cluster create</code> 再建一次。</p>
+<h3 id="mine-2">VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:節點 VM 都是 ACTIVE,CAPI 的 Machine 卻停在 <code>Provisioned</code>(VM 已經開好,但還沒對上任何 K8s 節點),cluster 一直是 <code>CREATE_IN_PROGRESS</code>。步驟 3 的 providerID 查詢是空的;workload cluster 裡的 CCM 是 <code>CrashLoopBackOff</code>,coredns 和 CSI controller 都 Pending。</p>
+<p><strong>原因</strong>:cluster 專用網路的網段跟 OpenStack API 位址重疊,CCM 連不到 Keystone。原理見「K8s 節點怎麼對上 OpenStack 的 VM」的對照圖。</p>
+<p><strong>修法</strong>:照步驟 2 在 template 加上 <code>fixed_subnet_cidr=10.6.0.0/24</code>(或任何跟 API 位址、既有網段都不重疊的網段),刪掉卡住的 cluster(<code>openstack coe cluster delete k8s-lab</code>),等它刪除完成再照步驟 2 重建。完整的追查過程見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/">CAPI 子網撞 API IP</a>。</p>
+<h3 id="mine-3">LoadBalancer 一直 pending,CCM 報 <code>Provider 'amphorav2' is not enabled</code><a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>type=LoadBalancer</code> 的 Service 一直沒有 <code>EXTERNAL-IP</code>,CCM 的 log 是 Octavia 回的 400 <code>Provider 'amphorav2' is not enabled</code>。</p>
+<p><strong>原因</strong>:CCM 設定裡的 <code>lb-provider</code> 來自 template 的 <code>octavia_provider</code> label,沒寫時預設是 <code>amphorav2</code>,而這朵雲的 Octavia 只啟用了 <code>amphora</code> 和 <code>ovn</code>。</p>
+<p><strong>修法</strong>:新的 cluster 照步驟 2 帶上 <code>octavia_provider=amphora</code>。已經建好的 cluster 不用重建:workload cluster 裡有一個叫 <code>cloud-config</code> 的 Secret,是 CCM 讀取的設定檔,裡面寫著 Keystone 位址和 <code>lb-provider</code> 等設定。把其中的 <code>lb-provider</code> 改成 <code>amphora</code>,再重啟 CCM。本課沒有記錄這個 Secret 所在的 namespace 與確切的修改指令,動手前先在 workload cluster 裡找到它。Day 22 之後 amphora 不能再用,見步驟 2 後面的說明。</p>
+<h3 id="mine-4">LB 的 amphora 開不出來,Nova 報 <code>No valid host was found</code><a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:provider 名稱改對了,LB 還是建不起來;Octavia 建 amphora 時,Nova 回 <code>No valid host was found</code>。查主機的 hypervisor 磁碟帳(<code>&lt;host&gt;</code> 換成 <code>openstack hypervisor list</code> 列出的名稱):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>openstack<span class="w"> </span>hypervisor<span class="w"> </span>show<span class="w"> </span>&lt;host&gt;<span class="w"> </span>-c<span class="w"> </span>local_gb<span class="w"> </span>-c<span class="w"> </span>local_gb_used<span class="w"> </span>-c<span class="w"> </span>free_disk_gb
+</span></code></pre></div>
+<p>本課遇到這個問題時,<code>local_gb_used</code> 是 121(總共 122),<code>free_disk_gb</code> 只剩 1。</p>
+<p><strong>原因</strong>:Nova 用 flavor 宣告的磁碟大小計帳,SHUTOFF 的 VM 和舊 LB 的 amphora 也照算。前幾天留下的示範 VM 和 LB 把單機的磁碟額度用完了,見「開始之前」的<a href="#nova-disk">清理那一段</a>。</p>
+<p><strong>修法</strong>:照那一段刪掉留下的 VM 和 LB。本課刪完釋放了約 36 GB,額度夠開 amphora 之後,LB 會繼續建立。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一位同學的 cluster 建立後五秒就 <code>CREATE_FAILED</code>,他打算到 kind 裡翻 CAPI 的 Machine 物件找原因。你會建議他先看哪裡?為什麼?</li>
+<li>另一朵 OpenStack 的 API 位址是 <code>192.168.10.5</code>,有人把 template 的 <code>fixed_subnet_cidr</code> 設成 <code>192.168.10.0/24</code>。cluster 建立時會在哪一步卡住?你會從哪個指令最早發現?</li>
+<li>workload cluster 已經跑了一陣子,某天 CCM 因為設定錯誤一直重啟。線上那兩份 nginx 還能不能連到?這時新開一個 <code>type=LoadBalancer</code> 的 Service 會怎樣?</li>
+</ul>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p><code>openstack coe cluster create</code> 這一行指令,先由 Magnum 翻譯成 CAPI 的物件,再由 kind 裡的 CAPI/CAPO 呼叫 Nova、Neutron、Octavia 開出 VM、網路和 API 的 LB,最後還要等 workload cluster 裡的 CCM 向 Nova 查出每個節點是哪台 VM、寫上 providerID,CAPI 才把 cluster 標成建好。所以追查問題時可以照這個順序往下找:幾秒就失敗、kind 裡沒有 CAPI 物件,問題在 Magnum,例如 Nova 的 microversion 不夠新;VM 都開好了卻一直不完成,先看 providerID 和 CCM,特別是 cluster 網段有沒有跟 API 位址重疊。cluster 建好之後,CCM 和 Cinder CSI 會繼續把 LoadBalancer 和 PVC 轉成 Octavia 的 LB 和 Cinder 的 volume;LB 卡住時,先看 provider 名稱,再看 Nova 還有沒有磁碟額度可以開 amphora。</p>
 <h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>想再深入,可以從這幾份開始:</p>
 <ul>
 <li><strong><a href="https://kubernetes.io/docs/concepts/architecture/cloud-controller/">K8s 官方:Cloud Controller Manager 概念</a></strong> —— 為什麼 K8s 需要一個「懂雲」的元件?CCM 的職責邊界在這份講得最清楚。</li>
-<li><strong><a href="https://github.com/kubernetes/cloud-provider-openstack">cloud-provider-openstack 專案</a></strong> —— 本章部署的 OCCM 與 Cinder CSI 都住在這個 repo;文件目錄裡有各元件的設定參考。</li>
-<li><strong><a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">K8s 官方:Persistent Volumes</a></strong> —— PV/PVC/StorageClass 的權威定義;本章「PVC 自動變出 Cinder volume」的 K8s 側原理。</li>
-<li><strong><a href="https://kubernetes.io/docs/concepts/services-networking/service/">K8s 官方:Service</a></strong> —— <code>type=LoadBalancer</code> 到底承諾了什麼,以及它如何委託給雲(我們的 Octavia)實現。</li>
+<li><strong><a href="https://github.com/kubernetes/cloud-provider-openstack">cloud-provider-openstack 專案</a></strong> —— 本章用到的 OpenStack CCM 與 Cinder CSI 都在這個 repo;文件目錄裡有各元件的設定參考。</li>
+<li><strong><a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes/">K8s 官方:Persistent Volumes</a></strong> —— PV、PVC、StorageClass 的正式定義;本章「PVC 變成 Cinder volume」在 K8s 這一側的原理。</li>
+<li><strong><a href="https://kubernetes.io/docs/concepts/services-networking/service/">K8s 官方:Service</a></strong> —— <code>type=LoadBalancer</code> 承諾了什麼,以及它怎麼交給雲(這裡是 Octavia)實現。</li>
 </ul>
-<h2 id="day-9">下一步(Day 9)<a class="headerlink" href="#day-9" title="Permanent link">&para;</a></h2>
-<p>Day-2 operations:用 <code>k8s-v1.34.8-azure</code> template 驗 cluster 升版(CAPI rolling,如 v1.34→v1.35,需先上傳對應 node image)、node group、cluster-autoscaler。開工前照 Pre-flight §0 確認 kind/magnum/octavia o-hm0 就緒。</p>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>cluster 開起來之後,還要能升級版本、增加節點、依負載自動擴縮。<a href="../sprint3-day9-day2-operations/">Day 9</a> 用 <code>k8s-v1.34.8-azure</code> 這份 template 做這三件事,每一件都會多開 VM,開工前一樣先照本章「開始之前」確認 kind、Magnum 和 o-hm0 都正常。</p>
 <hr />
 <p><em>Kubernetes 標誌為 CNCF(Linux Foundation)之商標;OpenStack 吉祥物為 OpenInfra Foundation 官方資產。此處均作社群教學用途。</em></p>
 

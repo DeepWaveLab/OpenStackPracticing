@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,12 +22,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Day 30 · 計費(CloudKitty) - OpenStack Lab Course</title>
+        <title>Day 30 · 計價與費用明細(CloudKitty) - OpenStack Lab Course</title>
       
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -114,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 30 · 計費(CloudKitty)
+              Day 30 · 計價與費用明細(CloudKitty)
             
           </span>
         </div>
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1586,7 +1586,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1604,7 +1604,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1633,7 +1633,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸雲端計費?先讀這段
+        先分清楚費用計算與完整帳務
       
     </span>
   </a>
@@ -1641,33 +1641,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#step-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:三行 globals
+        步驟 1：部署 collector 與 storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：決定收哪些指標、如何解讀
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 2：決定收哪些指標、如何解讀">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        這份規則究竟算什麼
       
     </span>
   </a>
@@ -1675,54 +1675,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-metricsymlkolla" class="md-nav__link">
+  <a href="#collector-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:寫 metrics.yml(kolla 不給你)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:訂價規則
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-cloudkitty" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:告訴 CloudKitty 要對誰計費
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:驗收——逐週期對帳
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        帳單畫面
+        使用實際 collector 的 schema 驗證
       
     </span>
   </a>
@@ -1735,10 +1691,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3-hashmap" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3：啟用 hashmap 並設定費率
       
     </span>
   </a>
@@ -1746,22 +1702,72 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 4：選出要計算費用的專案
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：按週期、專案與項目核對
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 5：按週期、專案與項目核對">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        兩個專案與儲存項目的既有結果
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        用 Horizon 核對畫面
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:帳單永遠 0 元,因為沒有任何租戶被計費
+        Prometheus 有用量，但沒有專案被計算
       
     </span>
   </a>
@@ -1772,7 +1778,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:kolla 讓你選 Prometheus,卻不給你對應的 metrics.yml
+        改 Prometheus collector 後仍要求 Gnocchi 欄位
       
     </span>
   </a>
@@ -1783,7 +1789,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:noop 模組預設啟用,一切算 0 元
+        有專案與資料，費用仍為零
       
     </span>
   </a>
@@ -1794,7 +1800,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:processor 每輪睡整整一小時
+        改了角色，processor 尚未重新處理
       
     </span>
   </a>
@@ -1805,7 +1811,7 @@
   <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 5:rating hashmap mapping create 在 2025.1 直接壞掉
+        mapping create 回 Unknown attribute: name
       
     </span>
   </a>
@@ -1818,10 +1824,21 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        補完:雙租戶帳單 + 儲存計費
+        小結
       
     </span>
   </a>
@@ -1832,17 +1849,6 @@
   <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         延伸閱讀
       
     </span>
@@ -1851,7 +1857,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1884,7 +1890,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1912,7 +1918,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2032,7 +2038,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4073,7 +4079,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸雲端計費?先讀這段
+        先分清楚費用計算與完整帳務
       
     </span>
   </a>
@@ -4081,33 +4087,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#step-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:三行 globals
+        步驟 1：部署 collector 與 storage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：決定收哪些指標、如何解讀
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 2：決定收哪些指標、如何解讀">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        這份規則究竟算什麼
       
     </span>
   </a>
@@ -4115,54 +4121,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-metricsymlkolla" class="md-nav__link">
+  <a href="#collector-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:寫 metrics.yml(kolla 不給你)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:訂價規則
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-cloudkitty" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:告訴 CloudKitty 要對誰計費
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:驗收——逐週期對帳
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        帳單畫面
+        使用實際 collector 的 schema 驗證
       
     </span>
   </a>
@@ -4175,10 +4137,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3-hashmap" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3：啟用 hashmap 並設定費率
       
     </span>
   </a>
@@ -4186,22 +4148,72 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 4：選出要計算費用的專案
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：按週期、專案與項目核對
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 5：按週期、專案與項目核對">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        兩個專案與儲存項目的既有結果
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#horizon" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        用 Horizon 核對畫面
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:帳單永遠 0 元,因為沒有任何租戶被計費
+        Prometheus 有用量，但沒有專案被計算
       
     </span>
   </a>
@@ -4212,7 +4224,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:kolla 讓你選 Prometheus,卻不給你對應的 metrics.yml
+        改 Prometheus collector 後仍要求 Gnocchi 欄位
       
     </span>
   </a>
@@ -4223,7 +4235,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:noop 模組預設啟用,一切算 0 元
+        有專案與資料，費用仍為零
       
     </span>
   </a>
@@ -4234,7 +4246,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:processor 每輪睡整整一小時
+        改了角色，processor 尚未重新處理
       
     </span>
   </a>
@@ -4245,7 +4257,7 @@
   <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 5:rating hashmap mapping create 在 2025.1 直接壞掉
+        mapping create 回 Unknown attribute: name
       
     </span>
   </a>
@@ -4258,10 +4270,21 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        補完:雙租戶帳單 + 儲存計費
+        小結
       
     </span>
   </a>
@@ -4272,17 +4295,6 @@
   <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
-    <span class="md-ellipsis">
-      
         延伸閱讀
       
     </span>
@@ -4291,7 +4303,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4318,148 +4330,84 @@
 
 
 
-<h1 id="day-30">Day 30: 計費——用量變成帳單<a class="headerlink" href="#day-30" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>Day 27 給了分帳的對象,Day 28 給了分帳的依據,Day 29 讓數字產生後果。今天把它們變成<strong>錢</strong>:CloudKitty 讀 Prometheus 裡的用量,套上訂價規則,吐出每個租戶各自的帳單——全程不碰 Gnocchi。本章最值錢的一顆雷叫做「<strong>帳單永遠 0 元,而且沒有任何錯誤</strong>」,它的根因不是 bug,是一個沒人告訴你的開關。</p>
-</blockquote>
+<h1 id="day-30">Day 30: 計算租戶費用——選取專案、套用費率與逐期核對<a class="headerlink" href="#day-30" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="CloudKitty 官方吉祥物" src="../../assets/mascots/cloudkitty.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 27–29</strong>:租戶結構、計量管線、自動反應都就緒。</li>
-<li><strong>今天</strong>:階段三——用量變帳單,兩個租戶各拿各的。</li>
-<li><strong>今天之後</strong>:Day 31 進入階段四,回多機環境談 SLA 與自癒。</li>
-</ul>
-</div>
-<h2 id="_1">第一次接觸雲端計費?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>CloudKitty 做的事只有一句話:<strong>定期把「誰用了多少」乘上「單價」,存成帳單</strong>。但它把這件事拆成四個可以各自替換的零件,而今天四個都要動:</p>
-<table>
-<thead>
-<tr>
-<th>零件</th>
-<th>回答什麼問題</th>
-<th>本課的選擇</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>fetcher</strong></td>
-<td><strong>要對誰計費?</strong></td>
-<td>Keystone(列出租戶)</td>
-</tr>
-<tr>
-<td><strong>collector</strong></td>
-<td>他用了多少?</td>
-<td><strong>Prometheus</strong>(kolla 預設是 gnocchi)</td>
-</tr>
-<tr>
-<td><strong>rating module</strong></td>
-<td>這些用量值多少錢?</td>
-<td><strong>hashmap</strong>(預設是 noop)</td>
-</tr>
-<tr>
-<td><strong>storage</strong></td>
-<td>帳單存哪?</td>
-<td><strong>OpenSearch</strong>(重用 Day 21 的)</td>
-</tr>
-</tbody>
-</table>
-<p><strong>第一個零件是今天最大的雷</strong>。直覺會認為「雲裡有幾個專案就對幾個計費」——<strong>不是的</strong>,fetcher 有它自己的一套挑選規則,而預設挑出來是<strong>零個</strong>。</p>
-<p>另外兩個名詞今天會反覆出現:</p>
-<ul>
-<li><strong>period(週期)</strong>:計費的時間顆粒,預設 <strong>3600 秒</strong>。帳單是一小時一格算出來的。</li>
-<li><strong>wait_periods</strong>:等幾個週期才結算,預設 <strong>2</strong>。所以<strong>帳單永遠落後現在約兩小時</strong>——這不是故障。</li>
-</ul>
-<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TB
-    KS["Keystone fetcher&lt;br/&gt;要對誰計費"] ==&gt; PROC["cloudkitty-processor"]
-    PROM["Prometheus&lt;br/&gt;(Day 28 的用量)"] ==&gt; PROC
-    PROC ==&gt;|"套 hashmap 訂價"| RATE["每個週期&lt;br/&gt;× 每個租戶 = 一筆帳"]
-    RATE ==&gt; OS["OpenSearch&lt;br/&gt;(Day 21 建的)"]</code></pre>
-<p>processor 每一輪做的事:<strong>問 fetcher 有哪些租戶 → 對每個租戶,把還沒算的週期一個一個補算 → 每個週期去 Prometheus 查用量 → 乘上單價 → 存進 OpenSearch</strong>。</p>
-<p>它送去 Prometheus 的查詢長這樣(由 <code>metrics.yml</code> 組出來):</p>
-<div class="language-promql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">max</span><span class="o">(</span><span class="kr">max_over_time</span><span class="o">(</span><span class="nv">power_state</span><span class="p">{</span><span class="nl">project_id</span><span class="o">=</span><span class="p">&quot;</span><span class="s">&lt;租戶&gt;</span><span class="p">&quot;}[</span><span class="s">3600s</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">resource_id</span><span class="p">,</span><span class="w"> </span><span class="nv">project_id</span><span class="o">)</span>
+<p>Prometheus 查得到 team-a 的用量，費用摘要卻一直是 0。你可能先懷疑費率設錯，其實也可能根本沒有專案被選進計算。這一章部署 CloudKitty，沿著「選專案、取用量、套費率、存結果」逐段查驗。讀完之後，你能找到零費用出在哪個階段，也能把結果對回同一租戶、同一週期與同一計費項目。</p>
+<h2 id="_1">先分清楚費用計算與完整帳務<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>CloudKitty 做的是 <strong>rating</strong>：依規則把用量轉成費用資料。它不會因此替你完成付款、發票、稅務、退款或對帳爭議處理。本章的 <code>$0.05</code> 等數值是示範費率，不代表實際貨幣或市場報價。</p>
+<p>需要 Day 21 的 Prometheus／OpenSearch、Day 28 的計量，以及 Day 27 的兩個專案。以管理員身分操作設定；先清除 application credential 與 <code>OS_SYSTEM_SCOPE</code> 殘留，再載入管理員 openrc。CLI 命令在已安裝 OpenStack 工具的虛擬環境執行，<code>10.0.0.4</code>、inventory 與 UUID 需換成自己的值。</p>
+<p>下圖把處理過程分成四段。<strong>Fetcher</strong> 決定要處理哪些專案，<strong>collector</strong> 取回用量，<strong>rating module</strong> 套費率，<strong>storage</strong> 保存結果。</p>
+<p><img alt="Keystone fetcher選專案、Prometheus collector取用量、hashmap套費率、OpenSearch存每期結果" src="../../assets/diagrams/os-s5d30-stages.svg" /></p>
+<p>四段都設定好才會得到有意義的金額。容器健康不代表專案清單非空，也不代表已啟用計價模組。</p>
+<h2 id="step-1">步驟 1：部署 collector 與 storage<a class="headerlink" href="#step-1" title="Permanent link">&para;</a></h2>
+<p>本章使用 Prometheus collector、OpenSearch storage。明確指定後端，避免沿用套件的 Gnocchi 預設：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="s"># Day 30: CloudKitty 計費(prometheus collector + 重用 Day 21 的 OpenSearch)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">enable_cloudkitty: &quot;yes&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="s">cloudkitty_collector_backend: &quot;prometheus&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s">cloudkitty_storage_backend: &quot;opensearch&quot;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">EOF</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>cloudkitty
 </span></code></pre></div>
-<p><strong>看懂這條查詢,今天就懂一半了</strong>:一小時的窗口內,每台機器(<code>resource_id</code>)只要出現過就算 1 台——<strong>這正是「機器時數」的定義</strong>,而且 <code>project_id</code> 讓它自動分租戶。<a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 那個 label 在這裡兌現。</p>
-<div class="admonition tip">
-<p class="admonition-title">為什麼是帶窗口的查詢,而不是 <code>count(power_state)</code></p>
-<p><a href="../sprint5-day28-ceilometer-metering/#mine-5">Day 28 地雷 5</a> 記過:Pushgateway 會<strong>永遠記得已經刪掉的機器</strong>。<code>max_over_time(...[3600s])</code> 有時間窗口,舊資料滑出窗外就不算;但 instant query 沒有窗口,<strong>幽靈機器會被收錢</strong>。CloudKitty 用的是前者,算它避開了一劫——但你自己寫查詢時要記得這件事。</p>
-</div>
-<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="step-1">步驟 1:三行 globals<a class="headerlink" href="#step-1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="s"># Day 30: CloudKitty 計費(prometheus collector + 重用 Day 21 的 OpenSearch)</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">enable_cloudkitty: &quot;yes&quot;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s">cloudkitty_collector_backend: &quot;prometheus&quot;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s">cloudkitty_storage_backend: &quot;opensearch&quot;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s">EOF</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>cloudkitty
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PLAY RECAP: ok=26  changed=16  failed=0
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>PLAY RECAP: ok=26  changed=16  failed=0
+<p>本課 Kolla 模板能帶入既有服務位址與 Prometheus 認證，相關段落是：</p>
+<div class="language-jinja highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="x">[collector_prometheus]</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="x">prometheus_url = </span><span class="cp">{{</span> <span class="nv">cloudkitty_prometheus_url</span> <span class="cp">}}</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="x">prometheus_user = admin</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="x">prometheus_password = </span><span class="cp">{{</span> <span class="nv">prometheus_password</span> <span class="cp">}}</span>
 </span></code></pre></div>
-<p>只要三行,是因為 kolla 的預設值已經幫你對好了其餘的:<code>cloudkitty_opensearch_url</code> 自動指向 Day 21 的 OpenSearch,<code>cloudkitty_prometheus_url</code> 自動指向 Day 21 的 Prometheus。</p>
-<div class="admonition note">
-<p class="admonition-title">kolla 的預設 collector 是 gnocchi</p>
-<p><code>cloudkitty_collector_backend</code> 不寫的話是 <strong><code>gnocchi</code></strong>——<a href="../sprint4-day26-sprint5-preview/">Day 26</a> 講的「教科書路線」在這裡是<strong>預設值</strong>。要走 Prometheus 必須明確指定。</p>
-</div>
-<div class="admonition quote">
-<p class="admonition-title">同一個 Prometheus,兩種待遇</p>
-<p>值得跟 <a href="../sprint5-day29-aodh-autoscaling/#mine-2">Day 29</a> 對照一下。kolla 的 <code>cloudkitty.conf</code> 模板長這樣:</p>
-<div class="language-jinja highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="x">[collector_prometheus]</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="x">prometheus_url = </span><span class="cp">{{</span> <span class="nv">cloudkitty_prometheus_url</span> <span class="cp">}}</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="x">prometheus_user = admin</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="x">prometheus_password = </span><span class="cp">{{</span> <span class="nv">prometheus_password</span> <span class="cp">}}</span>
+<p>這與 Day 29 的 Aodh 整合不同：CloudKitty 有專用帳密設定。部署後仍要查實際產生的設定與連線結果，不能只依同屬 OpenStack 就假設設定方式一致。</p>
+<h2 id="2">步驟 2：決定收哪些指標、如何解讀<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
+<p>先從 <code>/etc/kolla/passwords.yml</code> 讀取自己的 <code>prometheus_password</code> 並設定 shell 變數 <code>PW</code>，沿用 Day 28 的方式；不要假設換終端機後仍保留變數。查看來源有哪些指標：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>--get<span class="w"> </span>http://10.0.0.4:9091/api/v1/query<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--data-urlencode<span class="w"> </span><span class="s1">&#39;query={job=&quot;openstack-telemetry&quot;}&#39;</span>
 </span></code></pre></div>
-<p><strong>basic auth 直接幫你接好了。</strong> 而昨天的 Aodh,同一個 Prometheus,你得把帳密內嵌進 host 字串才進得去。這就是<strong>整合成熟度的差異</strong>——同一個生態系裡,不同專案跟同一個依賴的接合程度可以差這麼多。</p>
-</div>
-<h3 id="2-metricsymlkolla">步驟 2:寫 <code>metrics.yml</code>(kolla 不給你)<a class="headerlink" href="#2-metricsymlkolla" title="Permanent link">&para;</a></h3>
-<p><strong>kolla 的 cloudkitty role 沒有 <code>metrics.yml</code> 模板</strong>,所以容器裡用的是套件內建那份——而<strong>那份是為 gnocchi 寫的</strong>(指標名叫 <code>image.size</code>,<code>extra_args</code> 裡是 <code>resource_type</code>、<code>force_granularity</code> 這些 gnocchi 專屬的東西)。改用 Prometheus collector,這份計量對應規則得自己寫(<a href="#mine-2">地雷 2</a>)。</p>
-<p>先看手上有什麼原料(<a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 推上去的指標):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>--get<span class="w"> </span>http://10.0.0.4:9091/api/v1/query<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--data-urlencode<span class="w"> </span><span class="s1">&#39;query={job=&quot;openstack-telemetry&quot;}&#39;</span>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>power_state             4 條序列      ← 機器存在 = 計費主軸
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>volume_size             4 條序列      ← 儲存 GB
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>cpu                     4 條序列
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>memory_usage            4 條序列
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>network_incoming_bytes  4 條序列
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>...
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>power_state             4 條序列      ← 機器存在 = 計費主軸
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>volume_size             4 條序列      ← 儲存 GB
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>cpu                     4 條序列
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>memory_usage            4 條序列
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>network_incoming_bytes  4 條序列
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>...
+<p>本章挑 <code>power_state</code> 與 <code>volume_size</code>，映射成計費項目 <code>instance</code> 與 <code>volume</code>。Kolla 沒提供這條 Prometheus 路線所需的完整 <code>metrics.yml</code>，需自行寫入：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/cloudkitty
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/cloudkitty/metrics.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="s">metrics:</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="s">  # 機器時數:power_state 開機中為 1,NUMBOOL 把任何非零轉成 1</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="s">  power_state:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s">    unit: instance</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s">    alt_name: instance</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="s">    groupby:</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s">      - project_id</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s">      - resource_id</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="s">    mutate: NUMBOOL</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="s">    extra_args:</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s">      aggregation_method: max</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s">  # 儲存:volume_size 單位已是 GiB</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="s">  volume_size:</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="s">    unit: GiB</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s">    alt_name: volume</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="s">    groupby:</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="s">      - project_id</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="s">      - resource_id</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="s">    extra_args:</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="s">      aggregation_method: max</span>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="s">EOF</span>
 </span></code></pre></div>
-<p>挑兩個對應到雲端帳單的兩大項:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/cloudkitty
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/cloudkitty/metrics.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s">metrics:</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s">  # 機器時數:power_state 開機中為 1,NUMBOOL 把任何非零轉成 1</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s">  power_state:</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s">    unit: instance</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s">    alt_name: instance</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s">    groupby:</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s">      - project_id</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s">      - resource_id</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="s">    mutate: NUMBOOL</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="s">    extra_args:</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="s">      aggregation_method: max</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="s">  # 儲存:volume_size 單位已是 GiB</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="s">  volume_size:</span>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="s">    unit: GiB</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="s">    alt_name: volume</span>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="s">    groupby:</span>
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="s">      - project_id</span>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="s">      - resource_id</span>
-</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="s">    extra_args:</span>
-</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="s">      aggregation_method: max</span>
-</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="s">EOF</span>
+<p><code>alt_name</code> 是套費率時使用的名稱；<code>groupby</code> 保留 project/resource，避免把不同專案或資源合在一起。<code>unit</code> 是記錄給人看的單位名稱，不會自動換算數值。</p>
+<h3 id="_2">這份規則究竟算什麼<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p><code>NUMBOOL</code> 會把非零值轉為 1，並不是「只接受開機狀態 1」。其他非零 power-state 也可能算入。因此這個示範不能直接宣稱是只對 RUNNING 秒數收費；正式規則要先決定哪些狀態應計費，再依資料模型篩選或映射。</p>
+<p>Collector 產生的查詢形狀如下：</p>
+<div class="language-promql highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">max</span><span class="o">(</span><span class="kr">max_over_time</span><span class="o">(</span><span class="nv">power_state</span><span class="p">{</span><span class="nl">project_id</span><span class="o">=</span><span class="p">&quot;</span><span class="s">&lt;租戶&gt;</span><span class="p">&quot;}[</span><span class="s">3600s</span><span class="p">]</span><span class="o">))</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="o">(</span><span class="nv">resource_id</span><span class="p">,</span><span class="w"> </span><span class="nv">project_id</span><span class="o">)</span>
 </span></code></pre></div>
-<p>三個欄位值得說明:</p>
-<ul>
-<li><strong><code>alt_name</code></strong>——這是帳單上的服務名稱,<strong>等一下訂價規則要用同一個名字</strong>,對不上就不會計價。</li>
-<li><strong><code>mutate: NUMBOOL</code></strong>——<code>power_state</code> 的值是 1(開機中),NUMBOOL 把任何非零轉成 1,於是「一台機器一小時」就是數量 1。</li>
-<li><strong><code>groupby</code></strong> 必須包含 <code>project_id</code>——那是 <code>scope_key</code>,分租戶靠它。</li>
-</ul>
-<p><strong>不要試錯部署,用 CloudKitty 自己的 schema 先驗</strong>:</p>
+<p>它對每個 resource/project 取窗口中的最大值，之後才做 NUMBOOL。只要窗口內符合非零條件，就可能計一個週期單位；這不是按精確存活秒數比例計算。例如只存在部分小時的 VM，也可能被這份規則計成一個小時週期。</p>
+<p>而 Day 28 的 Pushgateway 仍可能曝露已刪 VM 的舊值，每次 scrape 都形成新樣本。<code>max_over_time</code> 不會自動排除這些資源，所以這份練習尚未驗證資源刪除後一定停止計費。</p>
+<h3 id="collector-schema">使用實際 collector 的 schema 驗證<a class="headerlink" href="#collector-schema" title="Permanent link">&para;</a></h3>
+<p>在已載入 <code>cloudkitty.conf</code> 的容器內驗證，才能使用 Prometheus 的 schema：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>cp<span class="w"> </span>/etc/kolla/config/cloudkitty/metrics.yml<span class="w"> </span>cloudkitty_api:/tmp/m.yml
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>cloudkitty_api<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="s2">import yaml</span>
@@ -4475,30 +4423,26 @@
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>✅ power_state@#instance | groupby = [&#39;resource_id&#39;, &#39;project_id&#39;]
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>✅ volume_size@#volume | groupby = [&#39;resource_id&#39;, &#39;project_id&#39;]
 </span></code></pre></div>
-<div class="admonition danger">
-<p class="admonition-title">一定要在 <code>cloudkitty_api</code> 容器裡驗</p>
-<p>用一個乾淨的容器跑這段驗證,會得到:</p>
+<p>結果顯示 collector 是 prometheus，且兩項規則通過結構驗證。若環境錯用 Gnocchi 預設，會出現不相關的必填欄位錯誤：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>❌ required key not provided @ data[&#39;extra_args&#39;][&#39;resource_type&#39;]
 </span></code></pre></div>
-<p><code>resource_type</code> 是 <strong>gnocchi</strong> 的必填欄位。乾淨容器沒有 <code>cloudkitty.conf</code>,<code>collector</code> 吃到預設值 <code>gnocchi</code>,於是<strong>拿 gnocchi 的 schema 來驗 prometheus 的設定</strong>——錯誤訊息完全誤導。<strong>驗證工具本身也需要正確的環境</strong>,這個坑會讓你去改一個根本沒問題的檔案。</p>
-<p>重新部署套用:<code>kolla-ansible deploy -i ~/all-in-one --tags cloudkitty</code></p>
-</div>
-<h3 id="3">步驟 3:訂價規則<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
-<p>先看計費模組的現況:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-cloudkittyclient<span class="w">      </span><span class="c1"># CLI 外掛,同型雷第 N 次</span>
+<p>結構驗證通過仍不等於費用語意正確。確認規則符合預期後，重新執行 <code>kolla-ansible deploy -i ~/all-in-one --tags cloudkitty</code> 套用。</p>
+<h2 id="3-hashmap">步驟 3：啟用 hashmap 並設定費率<a class="headerlink" href="#3-hashmap" title="Permanent link">&para;</a></h2>
+<p><strong>Hashmap</strong> 模組把選定的服務或屬性對到費率。先看模組狀態：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-cloudkittyclient
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>openstack<span class="w"> </span>rating<span class="w"> </span>module<span class="w"> </span>list
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>hashmap    False
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>noop       True
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>pyscripts  False
 </span></code></pre></div>
-<p><strong><code>noop</code> 是啟用的,<code>hashmap</code> 是關的。</strong> <code>noop</code> 的意思正如其名——什麼都不算。不改這個,<strong>帳單永遠 0 元,而且不會有任何錯誤</strong>(<a href="#mine-3">地雷 3</a>)。</p>
+<p>本課預設只開 noop，它不計價。啟用 hashmap，再建立與 <code>alt_name</code> 同名的服務：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>openstack<span class="w"> </span>rating<span class="w"> </span>module<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>hashmap
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nv">IID</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>rating<span class="w"> </span>hashmap<span class="w"> </span>service<span class="w"> </span>create<span class="w"> </span>instance<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Service ID&quot;</span><span class="k">)</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="nv">VID</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>rating<span class="w"> </span>hashmap<span class="w"> </span>service<span class="w"> </span>create<span class="w"> </span>volume<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;Service ID&quot;</span><span class="k">)</span>
 </span></code></pre></div>
-<p><code>instance</code> 和 <code>volume</code> 這兩個名字<strong>必須跟 <code>metrics.yml</code> 的 <code>alt_name</code> 一模一樣</strong>。</p>
-<p>接著訂價——每台機器每小時 $0.05、每 GiB 每小時 $0.01。<strong>CLI 在這一步會壞掉</strong>(<a href="#mine-5">地雷 5</a>),直接打 API:</p>
+<p>接著建立 flat 費率。這裡的示範是每個一小時週期的 instance 單位 0.05、GiB 單位 0.01；若改 <code>period</code>，必須重新確認費率及週期單位，不能直接沿用「每小時」的解讀。</p>
+<p>本課 CLI 與 API 有參數不相容，使用 API 建立：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>token<span class="w"> </span>issue<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nv">CK</span><span class="o">=</span>http://10.0.0.4:8889
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="k">for</span><span class="w"> </span>pair<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$IID</span><span class="s2">:0.05&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$VID</span><span class="s2">:0.01&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
@@ -4510,379 +4454,193 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>✅ cost= 0.0500000000000000000000000000 | type= flat
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>✅ cost= 0.0100000000000000000000000000 | type= flat
 </span></code></pre></div>
-<p>建好之後在 Horizon 的 <strong>Admin → Rating → Hashmap → (點 service) → Service Mappings</strong> 看得到同一筆:</p>
-<p><img alt="Horizon 的 Hashmap:instance 服務的 flat 費率 0.05,以及 Create new Mapping 按鈕" src="../../assets/screenshots/day30-horizon-hashmap-mapping.png" /></p>
-<div class="admonition tip">
-<p class="admonition-title">CLI 壞了,滑鼠沒壞</p>
-<p>注意右上角那顆 <strong><code>+ Create new Mapping</code></strong>——<strong>這一頁做得到那個壞掉的 CLI 做不到的事</strong>。如果你不想打 curl,整個步驟 3 都可以在這裡用點的:<code>Create new Service</code> 建 <code>instance</code> / <code>volume</code>,再進來 <code>Create new Mapping</code> 填 flat + 0.05。</p>
-<p>這是本章少數「圖形介面比命令列可靠」的地方,值得記著。</p>
-</div>
-<h3 id="4-cloudkitty">步驟 4:告訴 CloudKitty 要對誰計費<a class="headerlink" href="#4-cloudkitty" title="Permanent link">&para;</a></h3>
-<p><strong>這是今天最重要的一步,也是最多人卡死的地方。</strong> 到目前為止一切正常,但帳單是 0:</p>
+<p>回傳值顯示兩筆 mapping 已建立。若 token 過期，重新取得；<code>CK</code> 也要使用自己的 CloudKitty endpoint。</p>
+<p><img alt="Horizon Hashmap頁面列出instance服務的flat費率0.05" src="../../assets/screenshots/day30-horizon-hashmap-mapping.png" /></p>
+<p>Horizon 的 Service Mappings 頁也可檢查同一筆設定。API 與畫面要對到同一個服務名稱，不要重複建立 mapping 來處理查不到的情況。</p>
+<h2 id="4">步驟 4：選出要計算費用的專案<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>有用量與費率，摘要仍可能是零：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CK</span><span class="s2">/v2/summary&quot;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>{&quot;results&quot;: [[&quot;2026-07-01T00:00:00+00:00&quot;, &quot;2026-08-01T00:00:00+00:00&quot;, 0.0, 0.0]]}
 </span></code></pre></div>
-<p>零錯誤、零警告。processor 的 debug log 裡只有一行輕描淡寫的話:</p>
+<p>先看 processor 的 fetcher 日誌：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>DEBUG cloudkitty.fetcher.keystone  Number of tenants to rate : 0
 </span></code></pre></div>
-<p><strong>要計費的租戶有 0 個。</strong> 根因在原始碼裡(<a href="#mine-1">地雷 1</a>):<strong>CloudKitty 只對「cloudkitty 服務帳號持有 <code>rating</code> 角色」的專案計費</strong>。kolla 建了這個角色,卻沒指派給任何專案。</p>
-<p>所以這一步的本質是:<strong>這是「哪些專案要計費」的開關</strong>。</p>
+<p><code>Number of tenants to rate : 0</code> 表示它沒有選中任何專案。這個 fetcher 預設要求 cloudkitty 服務使用者在該專案有 <code>rating</code> 角色。以管理員確認服務使用者 ID，再替本章 domain 下兩個專案指派：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nv">CKUSER</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>user<span class="w"> </span>show<span class="w"> </span>cloudkitty<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="k">for</span><span class="w"> </span>P<span class="w"> </span><span class="k">in</span><span class="w"> </span>team-a<span class="w"> </span>team-b<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span><span class="nv">$CKUSER</span><span class="w"> </span>--project<span class="w"> </span><span class="nv">$P</span><span class="w"> </span>rating
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span><span class="nv">$CKUSER</span><span class="w"> </span>--project<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$P</span><span class="s2">&quot;</span><span class="w"> </span>--project-domain<span class="w"> </span>day27-corp<span class="w"> </span>rating
 </span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="k">done</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>cloudkitty_processor<span class="w">      </span><span class="c1"># 別等一小時,見地雷 4</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>cloudkitty_processor
 </span></code></pre></div>
+<p>上面的 restart 是讓本課練習立即重新讀取專案清單；正式環境要配合處理中的工作安排重啟。重新處理後，原紀錄選到兩個專案：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Number of tenants to rate : 2
 </span></code></pre></div>
-<h3 id="5">步驟 5:驗收——逐週期對帳<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
+<p>這只確認選取範圍，不表示它們都有可計價資料。</p>
+<h2 id="5">步驟 5：按週期、專案與項目核對<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p><strong>Period</strong> 是收集／計價的週期，本課是 3600 秒。<strong>Wait periods</strong> 預設為 2，讓近期資料先等待兩個週期再處理；實際看見結果的延遲還受週期邊界、處理進度與補算影響，不是精確固定兩小時。</p>
+<p>先查按 project 分組的摘要：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-Auth-Token: </span><span class="nv">$TOKEN</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CK</span><span class="s2">/v2/summary?groupby=project_id&quot;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>{&quot;columns&quot;: [&quot;begin&quot;, &quot;end&quot;, &quot;qty&quot;, &quot;rate&quot;, &quot;project_id&quot;],
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a> &quot;results&quot;: [[&quot;2026-07-01T00:00:00+00:00&quot;, &quot;2026-08-01T00:00:00+00:00&quot;,
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>              5.0, 0.2500000037252903, &quot;d2b258226e6b4d4493d93b5411726c97&quot;]]}
 </span></code></pre></div>
-<p><strong>team-a:5 機器時 = $0.25。</strong> 拆開看明細(<code>GET /v2/dataframes</code>,整理後):</p>
+<p>原紀錄中 team-a 的 instance 數量合計 5，費用約 0.25。摘要是區間總和，要再看 <code>/v2/dataframes</code> 的每個週期，不能拿單一時刻的 VM 台數直接比：</p>
 <table>
 <thead>
 <tr>
-<th>週期</th>
-<th>計費項</th>
-<th>機器</th>
-<th>小計</th>
+<th>原紀錄的週期</th>
+<th style="text-align: right;">instance 數量</th>
+<th style="text-align: right;">套用費率</th>
+<th style="text-align: right;">結果</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>11:00–12:00</td>
-<td>instance × 1</td>
-<td><code>83b15110</code>(meter-vm)</td>
-<td>$0.05</td>
+<td>第一個小時</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.05</td>
 </tr>
 <tr>
-<td>12:00–13:00</td>
-<td>instance × 4</td>
-<td><code>83b15110</code>、<code>f621a28d</code>、<code>bf256add</code>、<code>6fc3c0f3</code></td>
-<td>$0.20</td>
+<td>下一個小時</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.20</td>
+</tr>
+<tr>
+<td>合計</td>
+<td style="text-align: right;">5 個週期單位</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">0.25</td>
 </tr>
 </tbody>
 </table>
-<p>11:00 那小時 team-a 只有一台;12:00 那小時有四台——多的三台正是 <a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 那些自動生滅的 ASG 機器。<strong>它們只活了幾十分鐘,帳單照樣算到了。</strong></p>
-<p>最後跟 Prometheus 逐週期對帳,這才是驗收:</p>
+<p>這裡的 4 是該窗口查詢得到的資源數，不等於同時有四台 VM，也不能證明每台都執行滿一小時。請先看懂本章 max／NUMBOOL 規則，再解讀它和實際執行時間的差別。</p>
+<p>圖中刻意把每期數量與費率配在一起，最後才相加：</p>
+<p><img alt="第一期1乘0.05得0.05，第二期4乘0.05得0.20，同項目合計0.25；不同單位不能合計qty" src="../../assets/diagrams/os-s5d30-periods.svg" /></p>
+<p><code>instance</code> 與 <code>volume</code> 的 qty 單位不同，不可把兩者的數量直接相加。費用可以按同一幣值規則彙總，但仍須能拆回來源資料。</p>
+<h3 id="_3">兩個專案與儲存項目的既有結果<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>後續保存的核對結果同時包含兩個專案及 volume：</p>
 <table>
 <thead>
 <tr>
-<th>週期</th>
-<th>租戶</th>
-<th>Prometheus 用量</th>
-<th>CloudKitty 收費</th>
+<th>專案</th>
+<th>項目</th>
+<th style="text-align: right;">原紀錄用量</th>
+<th style="text-align: right;">費率</th>
+<th style="text-align: right;">金額</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>11:00–12:00</td>
 <td>team-a</td>
-<td>1 台</td>
-<td>1 × $0.05</td>
+<td>instance</td>
+<td style="text-align: right;">13 個一小時週期單位</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.65</td>
 </tr>
 <tr>
-<td>11:00–12:00</td>
-<td>team-b</td>
-<td>0 台</td>
-<td>$0</td>
-</tr>
-<tr>
-<td>12:00–13:00</td>
 <td>team-a</td>
-<td><strong>4 台</strong></td>
-<td><strong>4 × $0.05</strong></td>
+<td>volume</td>
+<td style="text-align: right;">10 GiB 週期單位</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.10</td>
 </tr>
 <tr>
-<td>12:00–13:00</td>
 <td>team-b</td>
-<td>0 台</td>
-<td>$0</td>
+<td>instance</td>
+<td style="text-align: right;">2 個一小時週期單位</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.10</td>
 </tr>
 <tr>
-<td></td>
-<td><strong>team-a 合計</strong></td>
-<td><strong>5 台時</strong></td>
-<td><strong>$0.25</strong></td>
+<td>team-b</td>
+<td>volume</td>
+<td style="text-align: right;">6 GiB 週期單位</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">0.06</td>
 </tr>
 </tbody>
 </table>
-<p><strong>一格一格對得上。</strong> 而 team-b 收 $0 不是廢話——<strong>它證明分租戶的歸屬沒有外洩</strong>。如果 <code>scope_key</code> 壞掉,team-a 的用量會漏到 team-b 身上,兩邊都會有錢。</p>
-<div class="admonition warning">
-<p class="admonition-title">對帳要逐週期比,不要拿總和比單期</p>
-<p>拿「12:00 那個週期的 4 台」去比「帳單總額 5」,會得出「CloudKitty 算錯了」的結論——<strong>5 是兩個週期的總和(1 + 4),不是單一週期的數字。</strong> 帳單是<strong>時間的積分</strong>,不是某一刻的快照——這個直覺不建立起來,對帳永遠對不完。</p>
-</div>
-<h3 id="_4">帳單畫面<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<p><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 說過帳單畫面要回 Horizon 看(Skyline 沒有計費外掛)。位置在 <strong>Admin → Rating → Rating Summary</strong>:</p>
-<p><img alt="Horizon 的 Rating Summary:team-a 的帳單 0.25,與 Cloud Total 一致" src="../../assets/screenshots/day30-horizon-rating-summary.png" /></p>
-<p>畫面上的 <code>0.25</code> 跟你剛才從 API 讀到的完全一致,<code>Project Name</code> 那欄直接把 project_id 翻成 <code>team-a</code>。</p>
-<p>CloudKitty 的儀表板一共五頁,這一天做的每件事都有對應的圖形版:</p>
-<table>
-<thead>
-<tr>
-<th>位置</th>
-<th>做什麼</th>
-<th>對應本章</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Admin → Rating → <strong>Hashmap</strong></td>
-<td>建 service 與費率</td>
-<td>步驟 3</td>
-</tr>
-<tr>
-<td>Admin → Rating → <strong>Rating Modules</strong></td>
-<td>開關 hashmap / noop / pyscripts</td>
-<td>步驟 3、<a href="#mine-3">地雷 3</a></td>
-</tr>
-<tr>
-<td>Admin → Rating → <strong>Rating Summary</strong></td>
-<td>分租戶帳單(上圖)</td>
-<td>步驟 5</td>
-</tr>
-<tr>
-<td>Admin → Rating → <strong>PyScripts</strong></td>
-<td>用 Python 寫複雜計費邏輯</td>
-<td>本章沒用到</td>
-</tr>
-<tr>
-<td><strong>Project → Rating</strong></td>
-<td>租戶自己查帳單與報表</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p><strong>這是 Sprint 5 到目前為止唯一有畫面的服務。</strong> Ceilometer 與 Aodh 連一個面板都沒有(<a href="../sprint5-day28-ceilometer-metering/">Day 28</a> 與 <a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 各有一則說明講原因)——<strong>計量與告警是機器在讀的,帳單才是給人看的</strong>,這個分野很合理。</p>
-<div class="admonition danger">
-<p class="admonition-title">這個頁面差點沒出現——<code>--tags cloudkitty</code> 不會碰 Horizon</p>
-<p>kolla 的 <code>enable_horizon_cloudkitty</code> 預設跟著 <code>enable_cloudkitty</code> 一起開,照理說裝完就有。但本課環境打開頁面時<strong>選單裡什麼都沒有</strong>——因為<a href="#step-1">步驟 1</a> 只跑了 <code>--tags cloudkitty</code>,<strong>Horizon 從頭到尾沒被重新部署過</strong>,設定檔還停在沒有 cloudkitty 的版本。</p>
+<p>team-a 合計 0.75、team-b 合計 0.16，四筆都能按費率核算。這支持這些樣本的分組與乘法結果，不足以證明完整租戶隔離、所有計費狀態或刪除同步都正確。原紀錄沒有留下這段補驗建立各資源的完整命令，這裡保留結果，沒有補造可直接重跑的輸出。</p>
+<h2 id="horizon">用 Horizon 核對畫面<a class="headerlink" href="#horizon" title="Permanent link">&para;</a></h2>
+<p>只部署 CloudKitty 不會更新 Horizon。先部署其面板設定：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>horizon
 </span></code></pre></div>
-<p>這是 <a href="../sprint5-day28-ceilometer-metering/#mine-3">Day 28 地雷 3</a> 一字不差的翻版:<strong>跨服務的 flag,<code>--tags A</code> 永遠不夠</strong>。同一顆雷在這個 Sprint 已經是第三次了(Day 21 的 Skyline、Day 28 的通知、今天的 Horizon)——它會一直來,因為 kolla 的開關和它影響的服務,本來就不是同一個名字。</p>
-</div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>部署</td>
-<td>api / processor 容器 healthy</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>storage</td>
-<td>重用 Day 21 的 OpenSearch,不新增資料庫</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>metrics.yml</td>
-<td>通過 CloudKitty 自己的 schema 驗證</td>
-<td>兩條規則都過</td>
-</tr>
-<tr>
-<td>訂價</td>
-<td>hashmap 啟用,費率建立成功</td>
-<td>instance $0.05 / volume $0.01</td>
-</tr>
-<tr>
-<td><strong>有租戶被計費</strong></td>
-<td><code>Number of tenants to rate</code> &gt; 0</td>
-<td>指派 rating 角色後為 2</td>
-</tr>
-<tr>
-<td><strong>帳單對得上用量</strong></td>
-<td>逐週期比對 Prometheus 與 CloudKitty</td>
-<td>1↔1、4↔4,合計 5 台時 = $0.25</td>
-</tr>
-<tr>
-<td><strong>租戶歸屬</strong></td>
-<td>team-b 無用量 → 無費用(沒被汙染)</td>
-<td>$0</td>
-</tr>
-<tr>
-<td>Horizon 帳單頁</td>
-<td>Admin → Rating → Rating Summary 顯示分租戶金額</td>
-<td>符合(需補跑 <code>--tags horizon</code>)</td>
-</tr>
-<tr>
-<td><strong>雙租戶帳單</strong></td>
-<td>兩個租戶都有帳單、金額不同、互不汙染</td>
-<td>team-a $0.75 / team-b $0.16(補驗)</td>
-</tr>
-<tr>
-<td><strong>儲存計費</strong></td>
-<td>volume 產生實際費用</td>
-<td>team-a $0.10 / team-b $0.06(補驗)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_5">地雷記錄<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:帳單永遠 0 元,因為沒有任何租戶被計費<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:部署成功、費率建好、Prometheus 有資料、processor 健康、<strong>零錯誤</strong>。帳單就是 0。</p>
-<p><strong>判讀關鍵</strong>:把 debug 打開(<code>cloudkitty_logging_debug: "yes"</code> 後重新部署),真相只有一行:</p>
+<p>再打開 Admin → Rating → Rating Summary：</p>
+<p><img alt="Horizon Rating Summary顯示team-a的0.25，對應同範圍API摘要" src="../../assets/screenshots/day30-horizon-rating-summary.png" /></p>
+<p>畫面的 project 名稱與費用要對回 API 使用的範圍。Hashmap 頁管理費率，Rating Modules 頁查看模組，Rating Summary 看結果；Project → Rating 則是專案端檢視。本章沒有測完每個角色的資料存取邊界。</p>
+<h2 id="_4">疑難排解<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">Prometheus 有用量，但沒有專案被計算<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>：零費用且 fetcher 顯示：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>DEBUG cloudkitty.fetcher.keystone  Number of tenants to rate : 0
 </span></code></pre></div>
-<p><strong>根因</strong>:讀原始碼就明白了:</p>
+<p>原始碼的篩選條件是：</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># cloudkitty/fetcher/keystone.py</span>
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_rating_role</span><span class="p">:</span>
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">roles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin_ks</span><span class="o">.</span><span class="n">roles</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">my_user_id</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">tenant</span><span class="p">)</span>
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="k">if</span> <span class="s1">&#39;rating&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">role</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">roles</span><span class="p">]:</span>
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>        <span class="n">tenant_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tenant</span><span class="p">)</span>          <span class="c1"># ← 沒有 rating 角色 → 直接移除</span>
 </span></code></pre></div>
-<p><strong>CloudKitty 只對「cloudkitty 服務帳號在該專案上持有 <code>rating</code> 角色」的專案計費。</strong> kolla 把角色建出來了,但沒指派給任何專案——所以全新安裝的預設狀態就是「零個租戶」。</p>
-<p><strong>解法</strong>:</p>
+<p><strong>修法</strong>：依步驟 4 指派 rating 角色；單一專案的原操作如下，已補明確 domain：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nv">CKUSER</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>user<span class="w"> </span>show<span class="w"> </span>cloudkitty<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span><span class="nv">$CKUSER</span><span class="w"> </span>--project<span class="w"> </span>team-a<span class="w"> </span>rating
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--user<span class="w"> </span><span class="nv">$CKUSER</span><span class="w"> </span>--project<span class="w"> </span>team-a<span class="w"> </span>--project-domain<span class="w"> </span>day27-corp<span class="w"> </span>rating
 </span></code></pre></div>
-<p>或者對所有專案計費:<code>[fetcher_keystone] ignore_rating_role = true</code>。</p>
-<p><strong>教訓</strong>:<strong>這不是 bug,是設計——它是「哪些專案要計費」的 opt-in 開關</strong>,只是沒有任何地方告訴你它存在。這是本課程「錯了不會叫」家族最貴的一顆:帳單系統靜靜地對零個客戶收零元,而每一個健康檢查都是綠的。</p>
-<p><strong>通則</strong>:<strong>當一個系統「成功地產出空結果」時,先問「它認為它該處理的東西有哪些」</strong>,而不是去查「它處理得對不對」。這顆雷會把你引去查 metrics.yml、查 Prometheus、查訂價規則——而那些全都是對的,錯的是那份工作清單本身是空的。</p>
-<h3 id="mine-2">地雷 2:kolla 讓你選 Prometheus,卻不給你對應的 <code>metrics.yml</code><a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:<code>cloudkitty_collector_backend: "prometheus"</code> 設了,部署也成功,但 CloudKitty 拿著一份寫著 <code>image.size</code>、<code>resource_type</code>、<code>force_granularity</code> 的計量規則去查 Prometheus。</p>
-<p><strong>根因</strong>:kolla 的 cloudkitty role 的 <code>templates/</code> 底下只有 <code>cloudkitty.conf.j2</code>、<code>cloudkitty-api.json.j2</code>、<code>cloudkitty-processor.json.j2</code>、<code>wsgi-cloudkitty.conf.j2</code>——<strong>沒有 <code>metrics.yml</code></strong>。所以容器用的是套件內建的預設,而那份是為 gnocchi 寫的。</p>
-<p><strong>解法</strong>:自己寫 <code>/etc/kolla/config/cloudkitty/metrics.yml</code>(見步驟 2)。</p>
-<p><strong>教訓</strong>:<strong>「這個選項存在」不等於「這條路是通的」。</strong> kolla 讓你把 collector 設成 prometheus,語法檢查會過、部署會成功——但配套的計量規則要你自己補,而它不會提醒你。遇到「換了後端」這類設定時,養成一個習慣:<strong>問一句「這個後端需要的其他檔案,是誰負責產生?」</strong></p>
-<h3 id="mine-3">地雷 3:<code>noop</code> 模組預設啟用,一切算 0 元<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:帳單 0 元(是的,今天有兩顆不同的雷都長這樣)。</p>
-<p><strong>根因</strong>:CloudKitty 預設啟用的計費模組是 <code>noop</code>——它不計價。<code>hashmap</code> 預設關閉。</p>
-<p><strong>解法</strong>:<code>openstack rating module enable hashmap</code>,並確認:</p>
+<p>也有 <code>ignore_rating_role</code> 設定，但它會改變要處理的範圍，不能只為消除空清單就直接對所有專案啟用。</p>
+<h3 id="mine-2">改 Prometheus collector 後仍要求 Gnocchi 欄位<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>：collector 與 metrics 設定沒有同步，或驗證工具沒載入相同的服務設定。<strong>修法</strong>：依步驟 2 檢查生效的 collector、<code>metrics.yml</code> 與 schema，再重新部署。</p>
+<h3 id="mine-3">有專案與資料，費用仍為零<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>：本課預設啟用 noop、未啟用 hashmap，或 alt_name 沒對到有費率的服務。<strong>修法</strong>：先列模組，再核對 service 與 mapping：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>openstack<span class="w"> </span>rating<span class="w"> </span>module<span class="w"> </span>list
 </span></code></pre></div>
-<p><strong>教訓</strong>:跟<a href="#mine-1">地雷 1</a> 合起來看更有意思——<strong>同一個症狀(0 元)有兩個完全不同的根因</strong>,一個在「要對誰計費」,一個在「怎麼算錢」。這正是為什麼除錯要先分層:<strong>先確認有沒有工作進來,再確認工作做得對不對。</strong> 順序反了會繞很久。</p>
-<h3 id="mine-4">地雷 4:processor 每輪睡整整一小時<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:指派完 <code>rating</code> 角色,等了 20 分鐘,帳單還是 0,scope 狀態表空的。</p>
-<p><strong>根因</strong>:<code>internal_run</code> 的最後一行:</p>
+<p>不要把「沒有可計費專案」與「沒有計價規則」混為同一個問題。</p>
+<h3 id="mine-4">改了角色，processor 尚未重新處理<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p>本課版本在處理迴圈末尾等待 collect period：</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished processing all storage scopes with worker ...&quot;</span><span class="p">)</span>
 </span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>        <span class="c1"># FIXME(sheeprine): We may cause a drift here</span>
 </span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">CONF</span><span class="o">.</span><span class="n">collect</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
 </span></code></pre></div>
-<p><strong><code>CONF.collect.period</code> 是 3600</strong>。processor 跑完一輪就睡一小時——它在 14:07 那輪看到 0 個租戶,接著睡到 15:07。<strong>我 14:08 做的設定變更,它要一小時後才會發現。</strong></p>
-<p><strong>解法</strong>:重啟它。</p>
+<p>因此設定更新後可能要等下一輪。實驗中使用重啟讓它重新讀取：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>cloudkitty_processor
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>14:10:22  Number of tenants to rate : 2
 </span></code></pre></div>
-<p><strong>教訓</strong>:注意 <code>[collect] period</code> <strong>同時是「計費週期」和「processor 的輪詢間隔」</strong>——兩個完全不同的概念綁在同一個參數上。想讓它反應快就得縮短計費週期,而那會改變帳單的顆粒度。<strong>這是設計上的疙瘩,而上游自己也知道</strong>(那行 <code>FIXME</code> 就掛在旁邊)。</p>
-<p><strong>實務上</strong>:改完任何 CloudKitty 設定,<strong>重啟 processor</strong>,別等。</p>
-<h3 id="mine-5">地雷 5:<code>rating hashmap mapping create</code> 在 2025.1 直接壞掉<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>openstack<span class="w"> </span>rating<span class="w"> </span>hashmap<span class="w"> </span>mapping<span class="w"> </span>create<span class="w"> </span>--service-id<span class="w"> </span><span class="nv">$IID</span><span class="w"> </span>--type<span class="w"> </span>flat<span class="w"> </span><span class="m">0</span>.05
+<p>這只證明重新選到專案，還要檢查計量 scope（本章按 <code>project_id</code> 切分的處理範圍）的進度和待結算週期。不要為了讓畫面立即出數字就隨意縮短 period，因為它也改變計價週期。</p>
+<p>全新的 scope 另有補算行為，沒有時間狀態時從當月開始：</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># cloudkitty/utils/__init__.py</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">check_time_state</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">wait_periods</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>        <span class="k">return</span> <span class="n">tzutils</span><span class="o">.</span><span class="n">get_month_start</span><span class="p">()</span>
 </span></code></pre></div>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="p">{</span><span class="nt">&quot;faultcode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Client&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;faultstring&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown attribute for argument mapping_data: name&quot;</span><span class="p">,</span>
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="w"> </span><span class="nt">&quot;debuginfo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">}</span><span class="w">  </span><span class="err">(HTTP</span><span class="w"> </span><span class="mi">400</span><span class="err">)</span>
+<p>因此短暫零費用也可能是尚未處理到有資料的週期。查看進度後再決定是否需要介入。</p>
+<h3 id="mine-5">mapping create 回 Unknown attribute: name<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p>以下是在 python-cloudkittyclient 6.1.0 與 CloudKitty 22.0.1 組合的失敗命令：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>openstack<span class="w"> </span>rating<span class="w"> </span>hashmap<span class="w"> </span>mapping<span class="w"> </span>create<span class="w"> </span>--service-id<span class="w"> </span><span class="nv">$IID</span><span class="w"> </span>--type<span class="w"> </span>flat<span class="w"> </span><span class="m">0</span>.05
 </span></code></pre></div>
-<p><strong>根因</strong>:<code>python-cloudkittyclient</code> 6.1.0 送了一個 <code>name</code> 欄位,而 CloudKitty 22.0.1(2025.1)的 API 不認得。<strong>CLI 與 API 版本不同步。</strong></p>
-<p><strong>解法</strong>:兩條路都行——繞過 CLI 直接打 API(見步驟 3),或者<strong>乾脆用 Horizon 的 Hashmap 頁點一點</strong>(那顆 <code>+ Create new Mapping</code> 做得到 CLI 做不到的事)。同一族的還有幾個:</p>
-<table>
-<thead>
-<tr>
-<th>指令</th>
-<th>症狀</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>openstack rating storage dataframe get</code></td>
-<td>這版根本沒這個指令</td>
-</tr>
-<tr>
-<td><code>GET /v1/scope/state</code></td>
-<td>405 Method Not Allowed</td>
-</tr>
-<tr>
-<td><code>GET /v1/storage/dataframes?limit=2</code></td>
-<td><code>Unknown argument: "limit"</code></td>
-</tr>
-</tbody>
-</table>
-<p><strong>都改用 v2</strong>:<code>/v2/scope</code>、<code>/v2/dataframes</code>、<code>/v2/summary</code>。</p>
-<p><strong>教訓</strong>:<strong>CLI 壞掉不代表功能壞掉。</strong> 這幾顆都只是客戶端跟服務端版本對不上,底下的 API 好端端的。遇到 CLI 報奇怪的參數錯誤時,<strong>先用 curl 打一次 API 確認功能本身在不在</strong>——這個習慣今天省了很多時間,<a href="../sprint5-day29-aodh-autoscaling/#mine-5">Day 29 地雷 5</a> 也是靠它。</p>
-<div class="admonition note">
-<p class="admonition-title">還有一顆:全新的 scope 從「當月 1 號」開始算</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># cloudkitty/utils/__init__.py</span>
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">check_time_state</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">wait_periods</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>        <span class="k">return</span> <span class="n">tzutils</span><span class="o">.</span><span class="n">get_month_start</span><span class="p">()</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="p">{</span><span class="nt">&quot;faultcode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Client&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;faultstring&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unknown attribute for argument mapping_data: name&quot;</span><span class="p">,</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="w"> </span><span class="nt">&quot;debuginfo&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">}</span><span class="w">  </span><span class="err">(HTTP</span><span class="w"> </span><span class="mi">400</span><span class="err">)</span>
 </span></code></pre></div>
-<p>月中安裝的話,processor 得先把當月 1 號到現在的空白週期全部補跑一遍才會走到有資料的時段。本課環境是 7/14 裝的,所以它磨了 <strong>326 個週期 × 2 個租戶 = 652 次</strong>——好消息是 <code>Worker.run()</code> 是個 while 迴圈,<strong>一輪之內全部追完</strong>,只花了 4 秒。看到帳單暫時是 0,先確認它是不是還在補跑。</p>
-</div>
-<h2 id="_6">補完:雙租戶帳單 + 儲存計費<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>寫這章的當下有兩個缺口:team-b 沒有資源(雙租戶對比退化成 <code>$0.25 vs $0</code>)、<code>volume_size</code> 規則寫了但沒磁碟可算。這兩件事的補驗只差「時間」——<code>period=3600</code> + <code>wait_periods=2</code> 意味著新用量要兩到三小時後才結算。所以在 <a href="../sprint5-day32-full-tls/">Day 32</a> 開機做 TLS 時,順手替兩個租戶種下 VM 與 volume,讓計費週期在部署期間自己跑。三小時後收帳:</p>
-<table>
-<thead>
-<tr>
-<th>租戶</th>
-<th>計費項</th>
-<th>用量</th>
-<th>費率</th>
-<th>金額</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>team-a</td>
-<td>instance</td>
-<td>13 台時</td>
-<td>$0.05</td>
-<td>$0.65</td>
-</tr>
-<tr>
-<td>team-a</td>
-<td>volume</td>
-<td>10 GiB 時</td>
-<td>$0.01</td>
-<td>$0.10</td>
-</tr>
-<tr>
-<td>team-b</td>
-<td>instance</td>
-<td>2 台時</td>
-<td>$0.05</td>
-<td>$0.10</td>
-</tr>
-<tr>
-<td>team-b</td>
-<td>volume</td>
-<td>6 GiB 時</td>
-<td>$0.01</td>
-<td>$0.06</td>
-</tr>
-</tbody>
-</table>
-<p><strong>兩個缺口一次補齊</strong>:team-a 收 $0.75、team-b 收 $0.16——<strong>兩個租戶都有帳單、金額各自不同</strong>,不再是退化案例;而且 <code>volume</code> 這個計費項真的產生了費用($0.10 與 $0.06),儲存計費不再是紙上談兵。四筆金額全部逐項對得上費率(<code>13×0.05</code>、<code>10×0.01</code>、<code>2×0.05</code>、<code>6×0.01</code>)。</p>
-<p>這也讓今天的核心結論從「單租戶對得上」升級成完整的商業場景:<strong>兩個真實租戶、兩種計費項(機器 + 儲存)、各自的帳單、金額互不汙染。</strong> 這才是一朵雲「能當生意經營」該有的樣子。</p>
-<h2 id="_7">帶得走的東西<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p><strong>原因</strong>：客戶端送出 API 不接受的 <code>name</code>。<strong>修法</strong>：用步驟 3 已驗證的 API 內容或 Horizon 建立；這是此版本組合的問題，不能推成所有 2025.1 安裝都會失敗。查結果時可用 <code>/v2/scope</code>、<code>/v2/dataframes</code>、<code>/v2/summary</code>，並依伺服器支援的 API 參數操作。</p>
+<h2 id="_5">想一想<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>當一個系統「成功地產出空結果」時,先問它認為該處理的東西有哪些</strong>,而不是查它處理得對不對。帳單 0 元的兩個根因(沒租戶、noop 模組)都在工作清單那一層,不在計算那一層。</li>
-<li><strong>帳單是時間的積分,不是某一刻的快照。</strong> 對帳要逐週期比,拿總和比單期一定得出「算錯了」的錯誤結論。</li>
-<li><strong>同一個依賴,不同專案的接合程度可以差很多。</strong> 同一座 Prometheus:CloudKitty 的模板幫你把帳密接好,Aodh 要你自己內嵌進 host 字串。遇到整合問題,先確認這條路有沒有人真的走過。</li>
-<li><strong>CLI 壞掉不代表功能壞掉。</strong> 客戶端與服務端版本不同步是常態;報奇怪的參數錯誤時,先用 API 或圖形介面確認功能本身在不在。</li>
-<li><strong>「這個選項存在」不等於「這條路是通的」。</strong> 換後端時要問:這個後端需要的其他檔案,是誰負責產生?沒人負責的,就是你。</li>
+<li>費用是 0，但 Prometheus 有數字。你會依哪個順序查專案清單、模組、mapping 與處理進度？</li>
+<li>VM 只存在十分鐘，這份 max／NUMBOOL 規則一定會按六分之一小時計算嗎？</li>
+<li>instance 的 qty 是 5，volume 的 qty 是 10，能否宣稱總用量是 15？要怎樣核對才有意義？</li>
 </ul>
-<h2 id="_8">延伸閱讀<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<h2 id="_6">小結<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>費用計算先決定處理哪些專案，再決定讀取與轉換哪些用量，最後才套費率。核對時保留專案、資源、週期與項目，才能辨認零費用或數量差異。這份示範驗到機器與儲存樣本的計價結果，仍缺少資源生命週期同步、完整狀態規則與正式帳務流程；有金額並不代表已能正確向客戶收費。</p>
+<h2 id="_7">延伸閱讀<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/cloudkitty/2025.1/">CloudKitty 官方文件</a></strong> —— collector / fetcher / rating module / storage 四個零件的完整說明。</li>
-<li><strong><a href="https://docs.openstack.org/cloudkitty/2025.1/admin/configuration/collector.html">CloudKitty 的 Prometheus collector</a></strong> —— <code>metrics.yml</code> 的完整 schema,以及 <code>query_prefix</code> / <code>range_function</code> 等本章沒用到的進階選項。</li>
-<li><strong><a href="https://docs.openstack.org/cloudkitty/2025.1/user/rating/hashmap.html">hashmap 計費模組</a></strong> —— 本章只用了最簡單的 <code>flat</code>;分級費率(threshold)、依 flavor 差別訂價都在這份。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/rating/cloudkitty-guide.html">Kolla-Ansible 的 CloudKitty 指南</a></strong> —— 本章 globals 三行設定的官方對照。</li>
+<li><a href="https://docs.openstack.org/cloudkitty/2025.1/">CloudKitty 2025.1</a>：rating 與各元件的用途。</li>
+<li><a href="https://docs.openstack.org/cloudkitty/2025.1/admin/configuration/collector.html">Collector configuration</a>：NUMBOOL、單位、groupby、period 與 Prometheus 查詢。</li>
+<li><a href="https://docs.openstack.org/cloudkitty/2025.1/user/rating/hashmap.html">Hashmap rating module</a>：費率與 mapping。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/rating/cloudkitty-guide.html">Kolla CloudKitty 指南</a>：部署設定。</li>
 </ul>
-<h2 id="_9">下一步<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
-<p>雲會自己收錢了。階段三結束——<strong>這朵雲現在說得出誰用了多少、值多少錢</strong>。</p>
-<p><a href="../sprint5-day31-masakari-ha/">Day 31</a> 進入階段四的第一天,也是 Sprint 5 唯一要回多機環境的一天:<strong>Masakari 自癒</strong>——VM 的程序死掉自動重啟,compute 整台掛掉,VM 自動搬到別台去。</p>
+<h2 id="_8">下一步<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint5-day31-masakari-ha/">Day 31</a> 回到多節點環境，用 Masakari 測試 VM 恢復。計算用量之外，還要確認故障後能恢復哪些狀態，以及自動處理之前需要哪些隔離前提。</p>
 
 
 
@@ -4937,13 +4695,13 @@
         
         
           
-          <a href="../sprint5-day31-masakari-ha/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 31 · SLA 與自癒(Masakari)">
+          <a href="../sprint5-day31-masakari-ha/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 31 · 主機故障與 VM 恢復(Masakari)">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 31 · SLA 與自癒(Masakari)
+                Day 31 · 主機故障與 VM 恢復(Masakari)
               </div>
             </div>
             <div class="md-footer__button md-icon">

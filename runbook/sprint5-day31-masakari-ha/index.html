@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,12 +22,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Day 31 · SLA 與自癒(Masakari) - OpenStack Lab Course</title>
+        <title>Day 31 · 主機故障與 VM 恢復(Masakari) - OpenStack Lab Course</title>
       
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-31-sla" class="md-skip">
+        <a href="#day-31-masakari-vm" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -114,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 31 · SLA 與自癒(Masakari)
+              Day 31 · 主機故障與 VM 恢復(Masakari)
             
           </span>
         </div>
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1577,7 +1577,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1614,7 +1614,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1632,7 +1632,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1661,18 +1661,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        自癒有兩層,別搞混
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#evacuate-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
+        行程失敗與主機失敗，恢復方式不同
       
     </span>
   </a>
@@ -1683,79 +1672,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:重啟健檢——多機環境開機不會自己好
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-cinderevacuate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:補上 Cinder(evacuate 的前提)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:部署,然後補上被漏掉的負載平衡器
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-masakari-failover-segment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:建立 Masakari 的 failover segment
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:兩道 gate——親手弄死,看它自己救回來
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        疏散之前，要先排除兩台同時執行
       
     </span>
   </a>
@@ -1766,19 +1683,74 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1：先確認控制面可用
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-compute-cinder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：準備獨立於 compute 的 Cinder 根碟
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：部署服務，也部署 VIP 前端
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：登記恢復群組與測試 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：分開讀兩次恢復結果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 5：分開讀兩次恢復結果">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mine-1" class="md-nav__link">
+  <a href="#vm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:mariadb_recovery 在 2025.1 改名了
+        VM 行程失敗，原主機仍在
       
     </span>
   </a>
@@ -1786,65 +1758,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#mine-2" class="md-nav__link">
+  <a href="#compute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 4:多機 --tags cinder 不會配負載平衡器前端
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 5:你沒辦法用軟手段殺死一台主機
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 6:evacuate 失敗會留下 on_maintenance,擋掉重試
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 7:Masakari 預設只救有標記的 VM
+        compute 停止後，人工通知再疏散
       
     </span>
   </a>
@@ -1860,7 +1777,101 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mariadb_recovery 不是有效子命令
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        單一 controller 的多個服務連不上資料庫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新服務 db sync 被 ProxySQL 拒絕
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cinder 已啟動，VIP 的 8776 埠仍拒絕連線
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        停 Docker 後，Nova 仍顯示主機 up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        重送主機通知回 already under maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VM 異常停止後沒有執行恢復
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
       
     </span>
   </a>
@@ -1868,7 +1879,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1879,7 +1901,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1912,7 +1934,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2032,7 +2054,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4073,18 +4095,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        自癒有兩層,別搞混
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#evacuate-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上
+        行程失敗與主機失敗，恢復方式不同
       
     </span>
   </a>
@@ -4095,79 +4106,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:重啟健檢——多機環境開機不會自己好
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-cinderevacuate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:補上 Cinder(evacuate 的前提)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:部署,然後補上被漏掉的負載平衡器
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-masakari-failover-segment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:建立 Masakari 的 failover segment
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:兩道 gate——親手弄死,看它自己救回來
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        疏散之前，要先排除兩台同時執行
       
     </span>
   </a>
@@ -4178,19 +4117,74 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1：先確認控制面可用
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-compute-cinder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：準備獨立於 compute 的 Cinder 根碟
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：部署服務，也部署 VIP 前端
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：登記恢復群組與測試 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：分開讀兩次恢復結果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 5：分開讀兩次恢復結果">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#mine-1" class="md-nav__link">
+  <a href="#vm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:mariadb_recovery 在 2025.1 改名了
+        VM 行程失敗，原主機仍在
       
     </span>
   </a>
@@ -4198,65 +4192,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#mine-2" class="md-nav__link">
+  <a href="#compute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 4:多機 --tags cinder 不會配負載平衡器前端
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 5:你沒辦法用軟手段殺死一台主機
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 6:evacuate 失敗會留下 on_maintenance,擋掉重試
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 7:Masakari 預設只救有標記的 VM
+        compute 停止後，人工通知再疏散
       
     </span>
   </a>
@@ -4272,7 +4211,101 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mariadb_recovery 不是有效子命令
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        單一 controller 的多個服務連不上資料庫
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        新服務 db sync 被 ProxySQL 拒絕
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cinder 已啟動，VIP 的 8776 埠仍拒絕連線
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        停 Docker 後，Nova 仍顯示主機 up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        重送主機通知回 already under maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VM 異常停止後沒有執行恢復
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
       
     </span>
   </a>
@@ -4280,7 +4313,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4291,7 +4335,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4318,79 +4362,29 @@
 
 
 
-<h1 id="day-31-sla">Day 31: SLA 與自癒——讓雲自己救自己<a class="headerlink" href="#day-31-sla" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>到目前為止,VM 掛了要靠人去重開,一台 compute 主機死了上面的機器就跟著陪葬。今天讓雲自己處理這兩件事:<strong>Masakari</strong> 盯著每台 VM 與每台主機,程序死掉自動重啟、主機失效自動把 VM 搬到別台去。這是 Sprint 5 唯一回多機環境的一天,也是唯一一次你會<strong>親手把一台主機弄死</strong>,再看雲自己把它上面的機器救回來。</p>
-</blockquote>
-<p><img align="right" alt="Masakari 官方吉祥物" src="../../assets/mascots/masakari.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 23</strong>:多節點環境建好,關掉一台 controller 只停 6 秒。</li>
-<li><strong>今天</strong>:回多機環境。先做重啟健檢,補上 evacuate 缺的 Cinder,部署 Masakari,驗證兩層自癒。</li>
-<li><strong>今天之後</strong>:多機環境用完即關;<a href="../sprint5-day32-full-tls/">Day 32</a> 回單機,把所有 API 換上 https。</li>
-</ul>
-</div>
-<h2 id="_1">自癒有兩層,別搞混<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>「VM 掛了自動復原」聽起來是一件事,其實是兩件,而且復原的手段完全不同:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph L1["程序級:VM 死了,主機還活著"]
-        direction LR
-        A1["qemu 程序崩潰"] --&gt; A2["原地 stop + start"]
-    end
-    subgraph L2["主機級:整台 compute 失聯"]
-        direction LR
-        B1["主機斷電/失聯"] --&gt; B2["evacuate 搬到別台"]
-    end
-    L1 ~~~ L2</code></pre>
-<p><strong>程序級</strong>:主機還在,只是上面某台 VM 的 qemu 崩了——原地重啟就好,不用搬家。負責的是 <strong>instancemonitor</strong>(住在每台 compute 上)。</p>
-<p><strong>主機級</strong>:整台 compute 斷電或失聯,上面所有 VM 跟著消失——得把它們<strong>搬到活著的主機重建</strong>(evacuate)。負責的是 <strong>hostmonitor</strong>,而它需要 pacemaker 叢集當偵測底層。</p>
-<p>兩層對應 Masakari 的三個角色:</p>
-<table>
-<thead>
-<tr>
-<th>角色</th>
-<th>住哪</th>
-<th>做什麼</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>masakari-api / engine</strong></td>
-<td>controller</td>
-<td>收通知、編排復原流程</td>
-</tr>
-<tr>
-<td><strong>instancemonitor</strong></td>
-<td>每台 compute</td>
-<td>盯 libvirt 事件,VM 程序死了通報</td>
-</tr>
-<tr>
-<td><strong>hostmonitor</strong></td>
-<td>controller</td>
-<td>盯主機存活(靠 pacemaker)</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="admonition-title">今天不部署 hostmonitor</p>
-<p>hostmonitor 需要 pacemaker/corosync 叢集,那是另一套 HA 中介軟體的完整安裝。本課的 lab 規模不值得為了偵測主機存活而養一整套 pacemaker——所以今天<strong>主機級的偵測改用手動送通知</strong>代替(見<a href="#step-5">步驟 5</a>)。這不是偷懶,是<strong>把 evacuate 這個真正的動作和「怎麼偵測到主機死了」這個獨立問題拆開</strong>:偵測方式可以換(pacemaker、外部監控、手動),但收到通知之後的搬家流程是同一套。</p>
-</div>
-<div class="admonition danger">
-<p class="admonition-title">偵測可以換,但『圍籬』(fencing)不能省</p>
-<p>上面說「偵測方式可以換」是對的,但漏了半句話:<strong>pacemaker 的另一半職責是先圍籬(fencing / STONITH)再搬家</strong>。本章 demo 之所以安全,是因為<a href="#step-5">步驟 5</a> 那道 gate 用的 <code>az vm deallocate</code> <strong>本身就是圍籬</strong>——它保證主機真的斷電,不可能一邊被 evacuate、一邊自己還在寫硬碟。</p>
-<p>真實世界最危險的情境是主機「看起來死了」其實還活著(網路分區:nova 連不到它,但它的 qemu 還在跑)。此時若只靠「偵測到就送通知」自動觸發 evacuate,而<strong>沒有先強制斷電/斷存取</strong>,同一顆 boot-from-volume 的 volume 會被兩台活著的 VM 同時掛寫——資料直接毀損,而且每個健康檢查都是綠的(<a href="../sprint5-day27-multi-tenant-governance/">「錯了不會叫」</a>的又一個實例)。所以把手動通知換成自動偵測前,<strong>圍籬是必補的前提,不是選配</strong>。</p>
-</div>
-<h2 id="evacuate-vm">一個 evacuate 的硬前提:VM 的硬碟不能在死掉的主機上<a class="headerlink" href="#evacuate-vm" title="Permanent link">&para;</a></h2>
-<p>主機級復原要「把 VM 搬到別台重建」,但如果 VM 的系統碟是主機本地磁碟,<strong>主機死了硬碟也跟著死</strong>——搬過去也沒東西可開。所以 evacuate 真正能救的是 <strong>boot-from-volume</strong> 的 VM:系統碟是一顆 Cinder volume,獨立於任何 compute 存在,主機死了 volume 還在,換台機器重新掛上就能開。</p>
-<p>而 <a href="../sprint4-day23-multinode-ha/">Day 23</a> 建的多機環境<strong>沒有 Cinder</strong>——所以今天在動 Masakari 之前,得先把 Cinder 補上。這是今天的隱藏前置。</p>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="1">步驟 1:重啟健檢——多機環境開機不會自己好<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
-<p>多機環境上次 <a href="../sprint4-day24-scale-out/">Day 24</a> 之後就關機了。全部開機後,第一件事不是部署,是<strong>確認它真的活過來了</strong>。而它不會自己活過來——兩個地方要救。</p>
-<p>先救 Galera。兩台 controller 同時關機再開,Galera 不知道誰的資料最新,不敢自己選主,整個叢集停在等待:</p>
+<h1 id="day-31-masakari-vm">Day 31：用 Masakari 恢復失敗的 VM<a class="headerlink" href="#day-31-masakari-vm" title="Permanent link">&para;</a></h1>
+<p>一台 compute 主機無法連線，上面的 VM 也失去回應。把 VM 在別台主機重新啟動之前，先要回答兩件事：來源主機真的停止執行了嗎？原本的磁碟資料還能從哪裡取得？本章回到多節點實驗環境，用 Masakari 觀察行程重啟與主機故障後疏散；讀完能判斷恢復流程的前提，以及 ACTIVE 狀態還沒有證明的事。</p>
+<h2 id="_1">行程失敗與主機失敗，恢復方式不同<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p><strong>Masakari</strong> 接收故障通知，再呼叫 Nova 執行恢復。它的 API 收通知，engine 編排後續工作；負責觀察故障的 monitor 則是另一個元件。</p>
+<p><strong>Instancemonitor</strong> 觀察 compute 上的 libvirt 事件。本章第一個實驗是某台 VM 的 qemu 行程異常結束，但主機仍可用；通知送達後，Masakari 在原主機上安排 stop／start。</p>
+<p><strong>Hostmonitor</strong> 用來偵測主機故障，本課沒有部署它，也沒有整合其 Pacemaker／Corosync 前提。第二個實驗在確認主機停止後，由操作者人工送通知，才讓 Masakari 呼叫 Nova <strong>evacuate</strong>：在其他主機重建實例。這不是 Day 24 在正常運作中搬移 VM 的 live migration。</p>
+<p><img alt="上排由 instancemonitor 通知 VM 行程失敗，原機重啟；下排先隔離故障主機，再人工通知，於其他主機疏散重建" src="../../assets/diagrams/os-s5d31-recovery.svg" /></p>
+<p>所以本章驗到行程事件的自動通知，以及人工主機通知之後的恢復處理，沒有驗證完整的自動主機故障偵測。</p>
+<h2 id="_2">疏散之前，要先排除兩台同時執行<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p><strong>Fencing</strong> 是確認或強制隔離來源主機，使它不能繼續執行或存取共享資料。Nova 顯示主機 <code>down</code> 只代表心跳條件不成立，不能證明來源 qemu 已停止；網路中斷時，VM 可能仍在原機執行。</p>
+<p>如果這時在別台重新啟動同一份 VM，可能造成雙重執行與共享磁碟同時寫入。本課用 Azure 的 deallocate 停止實驗 compute，並在確認解除配置完成後才送通知。真正改成自動偵測時，仍要設計與驗證 fencing，不能只把「監控報失聯」直接接到 evacuate。</p>
+<p>磁碟也影響能保留什麼。沒有共享儲存的本地根碟，可以由原始 image 重建實例，但原機上後來寫入的資料不會因此搬過去。共享根碟或 <strong>boot-from-volume</strong> 的實例則能使用原有儲存，前提是目的主機仍能存取它。</p>
+<p><img alt="本地根碟在來源主機失效後以原始 image 重建，新增資料不會自動保留；Cinder 根碟由目的主機重新掛載同一 volume" src="../../assets/diagrams/os-s5d31-storage.svg" /></p>
+<p>因此 Cinder 不是所有 evacuate 的必要條件；本章加它，是為了觀察同一顆 volume 跨 compute 重新掛載。這個 LVM 後端放在 controller，仍是單點，沒有因為 compute 能疏散就成為高可用儲存。</p>
+<h2 id="_3">開始之前<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>需要 Day 23–24 的兩台 controller、三台 compute，以及可用的網路、image、flavor 和目的主機容量。以下 <code>oslab-ctrl1</code>、<code>oslab-comp1</code> 等是 inventory 名稱，應對應自己的環境；這套多節點環境與 Day 27–30 的單機環境分開。</p>
+<p>本課未附完整 loop device 開機掛載 unit、canary VM 建立指令與人工主機通知 payload，以下包含操作與結果摘要。重做前必須補齊這些素材，不能把含省略號的片段當成完整命令，也不能在未確認來源主機隔離時送出恢復通知。</p>
+<h2 id="1">步驟 1：先確認控制面可用<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>先檢查 Galera 與各節點服務。若叢集已是 Primary 且成員正常，不需每次開機都執行資料庫恢復。本課曾在整組關機後無法形成正常叢集，依 Kolla 的資料庫恢復程序執行：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kolla-ansible<span class="w"> </span>mariadb-recovery<span class="w"> </span>-i<span class="w"> </span>~/multinode
 </span></code></pre></div>
+<p>以下為當時的 Ansible 摘要及後續 Galera 查詢節錄：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PLAY RECAP:
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>oslab-ctrl1  : ok=27  changed=5   failed=0
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>oslab-ctrl2  : ok=31  changed=10  failed=0
@@ -4398,214 +4392,153 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>wsrep_cluster_size    2
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>wsrep_cluster_status  Primary
 </span></code></pre></div>
-<p><code>Primary</code> + <code>size 2</code> = 叢集回來了。注意指令叫 <code>mariadb-recovery</code>(連字號)——舊版是底線,2025.1 改名了(<a href="#mine-1">地雷 1</a>)。</p>
-<p>接著會撞到今天第一顆真正的雷:ctrl1 的一票服務 unhealthy 且<strong>不自己好</strong>:</p>
+<p><code>Primary</code> 與預期的兩個成員表示這次叢集形成成功。若仍有不同步或分割情況，要先處理資料庫，不要繼續故障演練。</p>
+<p>本課曾出現只有 ctrl1 的多個服務不健康、ctrl2 正常的情況：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ctrl1: neutron_server nova_conductor nova_api nova_scheduler placement_api keystone
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ctrl2: (全健康)
 </span></code></pre></div>
-<p>nova-api 的 log 只是不斷重試連資料庫:</p>
+<p>相關 API log 都出現資料庫連線失敗：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>WARNING oslo_db.sqlalchemy.engines SQL connection failed.
 </span></code></pre></div>
-<p>根因不在這些服務,在它們共用的資料庫入口——<strong>ctrl1 的 ProxySQL 崩了</strong>,而症狀偽裝成「一堆服務連不上資料庫」。完整判讀見<a href="#mine-2">地雷 2</a>,解法是移走它損壞的統計資料庫再重啟:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/var/lib/docker/volumes/proxysql/_data/proxysql_stats.db<span class="o">{</span>,.corrupt<span class="o">}</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>proxysql
+<p>多個服務共用的資料庫入口是 ProxySQL，所以接著檢查 ctrl1 的代理。本課定位到統計資料庫檔案問題後，移走該檔並重啟，結果如下；只有符合<a href="#mine-2">疑難排解：單一 controller 的多個服務連不上資料庫</a>時才採用該修法：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>proxysql: Up 30 seconds (healthy)
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>ctrl1 → VIP:3306 ✅ 通了
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>proxysql: Up 30 seconds (healthy)
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>ctrl1 → VIP:3306 ✅ 通了
+<p>受影響服務重新連線或重啟後，Nova 服務摘要恢復正常：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>nova-scheduler oslab-ctrl1 up
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>nova-conductor oslab-ctrl1 up
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>nova-compute    oslab-comp1 up / comp2 up / comp3 up
 </span></code></pre></div>
-<p>資料庫入口一通,那票服務重啟一次就全部回歸:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>nova-scheduler oslab-ctrl1 up
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>nova-conductor oslab-ctrl1 up
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>nova-compute    oslab-comp1 up / comp2 up / comp3 up
+<p>這些是開始演練的基本條件，不是應用正常的完整證明。</p>
+<h2 id="2-compute-cinder">步驟 2：準備獨立於 compute 的 Cinder 根碟<a class="headerlink" href="#2-compute-cinder" title="Permanent link">&para;</a></h2>
+<p>Day 23 的多節點環境沒有 Cinder。本課在 ctrl1 用檔案加 loop device 建立 LVM VG，作為實驗儲存。這是把檔案當區塊裝置的做法，不適合作為正式高可用儲存設計。</p>
+<p>下面摘要省略了目錄建立、loop device 掛載及 systemd unit；<code>/dev/loop7</code> 是當時已確認的裝置，自己的環境不能直接照抄。必須先確認 loop device 對應到指定檔案且沒有其他資料，再執行會初始化裝置的 PV／VG 指令：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sudo<span class="w"> </span>truncate<span class="w"> </span>-s<span class="w"> </span>60G<span class="w"> </span>/var/lib/cinder-lvm/cinder-volumes.img
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># systemd oneshot 開機把它接成 loop device(檔略)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>pvcreate<span class="w"> </span>/dev/loop7
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>sudo<span class="w"> </span>vgcreate<span class="w"> </span>cinder-volumes<span class="w"> </span>/dev/loop7
 </span></code></pre></div>
-<h3 id="2-cinderevacuate">步驟 2:補上 Cinder(evacuate 的前提)<a class="headerlink" href="#2-cinderevacuate" title="Permanent link">&para;</a></h3>
-<p>多機環境沒有 Cinder,先給它一個 LVM 後端。用 loopback 檔當 volume group(lab 沒有多的實體磁碟),並且<strong>用 systemd 讓它開機自動掛回</strong>——否則下次重啟 VG 就消失:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>truncate<span class="w"> </span>-s<span class="w"> </span>60G<span class="w"> </span>/var/lib/cinder-lvm/cinder-volumes.img
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="c1"># systemd oneshot 開機把它接成 loop device(檔略)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>sudo<span class="w"> </span>pvcreate<span class="w"> </span>/dev/loop7
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>sudo<span class="w"> </span>vgcreate<span class="w"> </span>cinder-volumes<span class="w"> </span>/dev/loop7
+<p>本課建立結果如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Physical volume &quot;/dev/loop7&quot; successfully created.
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Volume group &quot;cinder-volumes&quot; successfully created
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Physical volume &quot;/dev/loop7&quot; successfully created.
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>Volume group &quot;cinder-volumes&quot; successfully created
+<p>把 ctrl1 加入 inventory 的 <code>[storage]</code>，在 globals 開啟 Cinder 與 Masakari，並明確關閉尚未整合的 hostmonitor：</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">enable_cinder</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">enable_cinder_backend_lvm</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">enable_masakari</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nt">enable_masakari_instancemonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nt">enable_masakari_hostmonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
 </span></code></pre></div>
-<p><code>inventory</code> 的 <code>[storage]</code> 群組加入 ctrl1,globals 開 Cinder 與 Masakari:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">enable_cinder</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nt">enable_cinder_backend_lvm</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nt">enable_masakari</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="nt">enable_masakari_instancemonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;yes&quot;</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nt">enable_masakari_hostmonitor</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
+<h2 id="3-vip">步驟 3：部署服務，也部署 VIP 前端<a class="headerlink" href="#3-vip" title="Permanent link">&para;</a></h2>
+<p>使用多節點 inventory，先部署服務角色：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>common,cinder,iscsi,masakari
 </span></code></pre></div>
-<h3 id="3">步驟 3:部署,然後補上被漏掉的負載平衡器<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>common,cinder,iscsi,masakari
+<p>以下是部分容器分布摘要；實際受保護的每台 compute 都要確認 instancemonitor 是否可用，不能只確認 comp1：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ctrl1: masakari_engine, masakari_api
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>comp1: masakari_instancemonitor
 </span></code></pre></div>
-<p>部署成功,masakari 三個容器也各就各位:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ctrl1: masakari_engine, masakari_api
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>comp1: masakari_instancemonitor
+<p>接著部署 loadbalancer，讓 VIP 有新服務入口：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>loadbalancer
 </span></code></pre></div>
-<p>但打 Cinder API 會撞牆:</p>
+<p>這個步驟不能因 Cinder 容器已經啟動就省略。本課在尚未補前端時曾看到：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Failed to establish a new connection: [Errno 111] Connection refused
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>(host=&#39;10.100.0.250&#39;, port=8776)
 </span></code></pre></div>
-<p><strong>服務起來了,VIP 上卻沒有它的入口</strong>——<code>--tags cinder</code> 不會回頭配 haproxy 的前端(<a href="#mine-4">地雷 4</a>)。補一次:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/multinode<span class="w"> </span>--tags<span class="w"> </span>loadbalancer
+<p>前端配置完成後，Cinder 服務與測試 volume 的結果如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>cinder-volume oslab-ctrl1@lvm-1 up
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>volume 狀態: available
 </span></code></pre></div>
-<p>之後 VIP 上就有新前端了(<code>8776</code> cinder、<code>15868</code> masakari),測一顆 volume:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>cinder-volume oslab-ctrl1@lvm-1 up
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>volume 狀態: available
+<p><code>available</code> 只代表該 volume 建立完成；還要以 boot-from-volume 的測試實例確認 compute 能存取儲存。若新服務的 db sync 被拒，再查 ProxySQL 是否載入新帳號，不要把所有資料庫拒絕都視為密碼錯誤。</p>
+<h2 id="4-vm">步驟 4：登記恢復群組與測試 VM<a class="headerlink" href="#4-vm" title="Permanent link">&para;</a></h2>
+<p>Masakari 的 <strong>failover segment</strong> 管理一組主機及其恢復策略。本章選 <code>auto</code>；實際目的主機還由 Nova 排程與資源、儲存、網路條件決定，不能只靠 segment 名單就假設容量或相容性足夠。</p>
+<p>以下是本課登記三台 compute 的命令；執行環境需已有提供 <code>openstack segment</code> 的 Masakari CLI 外掛，本課未留存安裝步驟：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>create<span class="w"> </span>day31-seg<span class="w"> </span>auto<span class="w"> </span>COMPUTE
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="k">for</span><span class="w"> </span>h<span class="w"> </span><span class="k">in</span><span class="w"> </span>oslab-comp1<span class="w"> </span>oslab-comp2<span class="w"> </span>oslab-comp3<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>create<span class="w"> </span><span class="nv">$h</span><span class="w"> </span>COMPUTE<span class="w"> </span>SSH<span class="w"> </span>day31-seg
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="k">done</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>list<span class="w"> </span>day31-seg
 </span></code></pre></div>
-<h3 id="4-masakari-failover-segment">步驟 4:建立 Masakari 的 failover segment<a class="headerlink" href="#4-masakari-failover-segment" title="Permanent link">&para;</a></h3>
-<p>Masakari 用 <strong>segment</strong> 把「互相支援的一組 compute」圈起來——某台死了,VM 搬到同 segment 的其他台:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>create<span class="w"> </span>day31-seg<span class="w"> </span>auto<span class="w"> </span>COMPUTE
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">for</span><span class="w"> </span>h<span class="w"> </span><span class="k">in</span><span class="w"> </span>oslab-comp1<span class="w"> </span>oslab-comp2<span class="w"> </span>oslab-comp3<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>create<span class="w"> </span><span class="nv">$h</span><span class="w"> </span>COMPUTE<span class="w"> </span>SSH<span class="w"> </span>day31-seg
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="k">done</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>list<span class="w"> </span>day31-seg
+<p>主機清單中的 <strong><code>on_maintenance</code></strong> 表示 Masakari 的維護狀態，這時是 False：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>oslab-comp1  False      ← on_maintenance,False = 正常待命
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>oslab-comp2  False
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>oslab-comp3  False
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>oslab-comp1  False      ← on_maintenance,False = 正常待命
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>oslab-comp2  False
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>oslab-comp3  False
+<p>它不是電源隔離證明，也不能單獨代表 Nova 一定會接受新排程。</p>
+<p>本課另準備了可破壞的 <code>ha-canary</code> 與 <code>bfv-canary</code>，後者從 Cinder volume 開機。建立過程未完整收錄；測試前應先確認所在 compute、磁碟來源與可用容量，並寫入自己能辨認的測試資料，供恢復後比對。以下是替行程實驗的 VM 加 metadata：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>openstack<span class="w"> </span>server<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--property<span class="w"> </span><span class="nv">HA_Enabled</span><span class="o">=</span>True<span class="w"> </span>ha-canary
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># 在 comp1 上:sudo kill -9 &lt;qemu-pid&gt;</span>
 </span></code></pre></div>
-<h3 id="step-5">步驟 5:兩道 gate——親手弄死,看它自己救回來<a class="headerlink" href="#step-5" title="Permanent link">&para;</a></h3>
-<p><strong>Gate 1(程序級)</strong>:開一台掛 <code>HA_Enabled</code> 標記的 VM,直接 <code>kill -9</code> 它的 qemu 程序:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>openstack<span class="w"> </span>server<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--property<span class="w"> </span><span class="nv">HA_Enabled</span><span class="o">=</span>True<span class="w"> </span>ha-canary
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="c1"># 在 comp1 上:sudo kill -9 &lt;qemu-pid&gt;</span>
+<p><strong><code>HA_Enabled=True</code></strong> 是本課恢復策略使用的實例標記。Masakari engine 的 <code>[instance_failure] process_all_instances</code> 預設 False，因此只恢復有對應標記的實例；主機故障的範圍由另外的 <code>[host_failure] evacuate_all_instances</code> 控制。不要把兩種事件的設定當成同一個開關。</p>
+<h2 id="step-5">步驟 5：分開讀兩次恢復結果<a class="headerlink" href="#step-5" title="Permanent link">&para;</a></h2>
+<h3 id="vm">VM 行程失敗，原主機仍在<a class="headerlink" href="#vm" title="Permanent link">&para;</a></h3>
+<p>本課終止測試 VM 的 qemu 行程，instancemonitor 收到 libvirt 的異常停止事件後通知 Masakari。破壞性操作只應針對已用 VM UUID 核對的測試行程；不能猜 PID，也不能終止其他租戶的 VM。</p>
+<p>以下保留當時的事件順序：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>06:50:11  kill qemu PID 20730
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>06:50:12  notification: {vir_domain_event: STOPPED_FAILED}   ← libvirt 通報
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>06:50:14  masakari engine → nova stop
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>06:50:18  masakari engine → nova start
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>06:50:30  vm=ACTIVE(下一次輪詢確認)
 </span></code></pre></div>
-<p>什麼都不用做,盯著看:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>06:50:11  kill qemu PID 20730
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>06:50:12  notification: {vir_domain_event: STOPPED_FAILED}   ← libvirt 通報
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>06:50:14  masakari engine → nova stop
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>06:50:18  masakari engine → nova start
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>06:50:30  vm=ACTIVE(下一次輪詢確認)
+<p>重點是 <code>STOPPED_FAILED</code> 之後出現 stop／start，最後查到 ACTIVE。這不是正常關機的測試，也不能從這一次時間戳推導恢復時間保證；ACTIVE 仍需搭配連線、檔案與應用檢查。</p>
+<h3 id="compute">compute 停止後，人工通知再疏散<a class="headerlink" href="#compute" title="Permanent link">&para;</a></h3>
+<p>這次要測整台 compute 無法執行 VM，而不是只停一個容器。在自己的可破壞實驗環境，以下為本課對來源 compute 執行的動作；resource group 與 VM 名稱都要先確認：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>-g<span class="w"> </span>&lt;多機RG&gt;<span class="w"> </span>-n<span class="w"> </span>oslab-comp1<span class="w">     </span><span class="c1"># 停止並解除配置實驗 compute</span>
 </span></code></pre></div>
-<p><strong>從程序被殺到 Masakari 送出重啟指令,只花 7 秒</strong>(<code>06:50:11</code> → <code>06:50:18</code>),VM 在下一次輪詢就回到 ACTIVE。那個 <code>STOPPED_FAILED</code> 是關鍵——它是 libvirt 分辨「正常關機」和「異常死亡」的依據,Masakari 只對後者出手。</p>
-<p><strong>Gate 2(主機級)</strong>:這裡有個必須先跨過的坎——<strong>你沒辦法用軟手段殺死一台主機</strong>(<a href="#mine-5">地雷 5</a>)。<code>docker stop nova_compute</code> 會被 systemd 拉回、<code>systemctl stop docker</code> 因為 live-restore 容器照跑,兩種「假死」nova 都判定主機還 <code>up</code>。只有真斷電才算數:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>-g<span class="w"> </span>&lt;多機RG&gt;<span class="w"> </span>-n<span class="w"> </span>oslab-comp1<span class="w">     </span><span class="c1"># 真的拔電源</span>
+<p><strong>先確認 Azure 已完成 deallocate，再確認 Nova 對來源主機的狀態。</strong> 本課之後人工送主機失效通知，未提供完整通知命令與 payload，所以不能宣稱照目前片段就完成自動偵測與復原。收到通知後留下的流程摘要如下：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>07:09:28  comp1: down                    ← nova 終於判定失聯
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>07:17:55  lock → evacuate                ← Masakari 的搬家流程
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>07:18:06  bfv=comp1/REBUILD  ha=comp1/REBUILD
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE   ← 在 comp2 復活
 </span></code></pre></div>
-<p>comp1 上有兩台掛了 <code>HA_Enabled</code> 的 VM:一台 boot-from-volume(<code>bfv-canary</code>)、一台本地碟。等 nova 判定主機 down,送一個主機失效通知,然後盯著 evacuate:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>07:09:28  comp1: down                    ← nova 終於判定失聯
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>07:17:55  lock → evacuate                ← Masakari 的搬家流程
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>07:18:06  bfv=comp1/REBUILD  ha=comp1/REBUILD
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE   ← 在 comp2 復活
+<p>兩台實例最後都在 comp2 顯示 ACTIVE。Boot-from-volume 的 <code>volume_id</code> 保持相同、attachment 改變，表示目的主機重新掛上同一顆 volume；這不等於驗證所有資料原封不動，也沒有證明應用沒有中斷。本地根碟的實例由 image 重建，原機上的新增資料不會隨這個動作恢復。</p>
+<p>後續應比較事前寫入的測試資料、檢查應用啟動與實際連線，並確認來源主機重新加入時不會重複啟動舊實例。本課沒有留下完整資料比對與主機重新加入的驗證結果，不能把演練直接視為正式復原程序。</p>
+<h2 id="_4">疑難排解<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">mariadb_recovery 不是有效子命令<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>本課 Kolla 2025.1 使用 <code>mariadb-recovery</code>，拼字帶連字號。依目前版本的 help 與官方文件操作；不要只因服務不健康就直接執行 recovery。</p>
+<h3 id="mine-2">單一 controller 的多個服務連不上資料庫<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>若 Galera 狀態正常、另一台 controller 也可使用，先查失敗節點的 ProxySQL。這些觀察縮小檢查範圍，仍不足以排除所有資料庫問題。本課的代理狀態是：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>proxysql: Exited (134)          ← 134 = SIGABRT,程式自己爆的
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>policy=no                        ← restart policy 是 no,崩了不會被拉起來
 </span></code></pre></div>
-<p><strong>兩台 VM 都在 comp2 復活了。</strong> 而 boot-from-volume 那台,系統碟是<strong>同一顆 volume</strong> 重新掛上(<code>volume_id</code> 沒變,只有 <code>attachment_id</code> 換新)——資料原封不動。這就是為什麼 evacuate 前非補 Cinder 不可:本地碟的 VM 只能 rebuild(空白重建),boot-from-volume 的才能真的<strong>帶著資料搬家</strong>。</p>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>重啟健檢</td>
-<td>Galera <code>Primary</code>、全容器健康</td>
-<td>recovery 後 size=2 Primary;proxysql 修復後全綠</td>
-</tr>
-<tr>
-<td>Cinder</td>
-<td>volume 建立成功</td>
-<td><code>available</code></td>
-</tr>
-<tr>
-<td>Masakari 部署</td>
-<td>api/engine + instancemonitor 就位</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>segment</td>
-<td>三台 compute 掛入,<code>on_maintenance=False</code></td>
-<td>符合</td>
-</tr>
-<tr>
-<td><strong>Gate 1 程序級</strong></td>
-<td>kill qemu → VM 自動回 ACTIVE</td>
-<td>STOPPED_FAILED → stop+start,<strong>7 秒送出重啟</strong></td>
-</tr>
-<tr>
-<td><strong>Gate 2 主機級</strong></td>
-<td>主機斷電 → VM 在別台復活</td>
-<td>lock/evacuate → 兩台在 comp2 ACTIVE</td>
-</tr>
-<tr>
-<td>BFV 資料保留</td>
-<td>系統碟同一顆 volume 重新掛上</td>
-<td><code>volume_id</code> 不變,<code>attachment_id</code> 更新</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:<code>mariadb_recovery</code> 在 2025.1 改名了<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:<code>kolla-ansible mariadb_recovery</code> 回「is not a kolla-ansible command」,還附上一句「Did you mean <code>mariadb-recovery</code>?」。</p>
-<p><strong>根因</strong>:2025.1 把子指令的底線統一改成連字號。</p>
-<p><strong>教訓</strong>:小事,但它提醒一件大事——<strong>維運指令的名字會隨版本漂移</strong>。把 runbook 裡的指令當「這個版本當下驗證過」的快照,升版後要重驗,不要背。</p>
-<h3 id="mine-2">地雷 2:ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:重啟後 ctrl1 上七、八個服務全 unhealthy,log 全是 <code>SQL connection failed</code>。看起來像「資料庫掛了」,但 Galera 明明 <code>Primary</code>、ctrl2 的服務全好。</p>
-<p><strong>判讀關鍵</strong>:<strong>ctrl2 好、ctrl1 壞,而兩台連的是同一個 Galera</strong> ——那問題就不在資料庫本身,在 ctrl1 到資料庫的<strong>那一段路</strong>。那段路是 ProxySQL(本課的資料庫入口 proxy):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>proxysql: Exited (134)          ← 134 = SIGABRT,程式自己爆的
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>policy=no                        ← restart policy 是 no,崩了不會被拉起來
+<p>當時 crash log 指向讀取 <code>proxysql_stats.db</code> 的錯誤，因而採用移走統計檔的處理。這不是通用 SQL 連線修法；先確認該實例已停止、檔案確為統計資料且路徑正確，再保留原檔並重啟：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/var/lib/docker/volumes/proxysql/_data/proxysql_stats.db<span class="o">{</span>,.corrupt<span class="o">}</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>proxysql
 </span></code></pre></div>
-<p>crash log 指向 <code>SQLite3DB::check_table_structure</code>,而它讀的是 <code>proxysql_stats.db</code>——<strong>統計資料庫在斷電時寫到一半,檔案損壞</strong>,ProxySQL 一啟動讀到它就 SIGABRT。</p>
-<p><strong>解法</strong>:統計資料庫是可拋棄的(它只存效能統計,不是設定),移走讓它重建:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>sudo<span class="w"> </span>mv<span class="w"> </span>/var/lib/docker/volumes/proxysql/_data/proxysql_stats.db<span class="o">{</span>,.corrupt<span class="o">}</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>proxysql
+<p>不要移走包含實際設定的資料庫；若沒有同樣的 crash 證據，先查網路、使用者設定與代理 log。</p>
+<h3 id="mine-3">新服務 db sync 被 ProxySQL 拒絕<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p>本課手動修復代理後，曾出現檔案已更新、執行中的 ProxySQL 卻尚未接受新服務帳號的情況。先比對設定與執行狀態，再依部署方式載入或重啟代理；不能推論 Kolla 每次部署新服務都必然漏掉重啟。處理後重新驗證資料庫連線與服務同步。</p>
+<h3 id="mine-4">Cinder 已啟動，VIP 的 8776 埠仍拒絕連線<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p>檢查 HAProxy 是否已有 Cinder 前端。本課使用服務 tags 後還需套用步驟 3 的 loadbalancer 設定；同類問題也可能發生在有 HAProxy 的單機環境，不是多節點專屬。</p>
+<h3 id="mine-5">停 Docker 後，Nova 仍顯示主機 up<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p>本課曾因 systemd 重啟 <code>nova_compute</code>，或 Docker live-restore 讓容器繼續執行，而無法用停止管理元件模擬主機故障。應確認測試真正停掉的是哪一層，不代表軟體永遠不能停止主機。</p>
+<p>以下是當時 deallocate 的縮寫；省略號不是合法參數，請以步驟 5 的完整參數形式核對自己的資源：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>...<span class="w"> </span>oslab-comp1
 </span></code></pre></div>
-<p><strong>教訓</strong>:兩顆嵌套的教訓。其一:<strong>「一整排服務故障」往往有單一根因</strong>,不要逐個去救那些服務,去找它們的共同依賴。其二:crash stack 會誠實指向壞掉的檔(<code>stats.db</code>),但直覺會先去怪那個 0 byte 的 <code>proxysql.db</code>——那個 0 byte 是<strong>啟動時 rename 的產物,是果不是因</strong>。看崩潰堆疊,不要看檔案大小。</p>
-<h3 id="mine-3">地雷 3:部署新服務後 ProxySQL 沒被重讀,新服務連不上資料庫<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:手動修好 ProxySQL 之後,部署 Cinder,結果 Cinder 的 <code>db sync</code> 連資料庫被拒。</p>
-<p><strong>根因</strong>:kolla 部署新服務時會把該服務的資料庫帳號寫進 ProxySQL 的 users 設定,<strong>但不會重啟 ProxySQL 讓它重讀</strong>。所以新帳號躺在設定檔裡,執行中的 ProxySQL 不認得。</p>
-<p><strong>解法</strong>:部署後手動重啟兩台的 ProxySQL。</p>
-<p><strong>教訓</strong>:這是 <a href="../sprint5-day28-ceilometer-metering/#mine-3">Day 28 地雷 3</a> 的近親——<strong>一個元件的設定改了,依賴它的元件不會自動知道</strong>。在多機這種「服務入口與服務本體分離」的架構裡,改完設定要問一句:<strong>誰需要被重讀?</strong></p>
-<h3 id="mine-4">地雷 4:多機 <code>--tags cinder</code> 不會配負載平衡器前端<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:Cinder 服務全 <code>up</code>,但打 VIP 的 8776 埠 <code>Connection refused</code>。</p>
-<p><strong>根因</strong>:多機環境的 API 入口是 haproxy 的 VIP。<code>--tags cinder</code> 只部署 Cinder 服務本身,<strong>不會回頭在 haproxy 上開一個 8776 的前端</strong>——所以服務在聽,但 VIP 上沒有門。</p>
-<p><strong>解法</strong>:補一次 <code>--tags loadbalancer</code>。</p>
-<p><strong>教訓</strong>:又一顆 <code>--tags</code> 盲區(<a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22</a> 開始的家族),但這顆是<strong>多機專屬</strong>的變種:單機沒有 haproxy 前端這回事,多機才有「服務起來了,但入口沒開」的斷層。加服務到多機環境,記得問:<strong>它的 VIP 前端誰來配?</strong></p>
-<h3 id="mine-5">地雷 5:你沒辦法用軟手段殺死一台主機<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:想模擬「一台 compute 死掉」,試了兩種軟手段,nova 都不認為主機死了:</p>
+<h3 id="mine-6">重送主機通知回 already under maintenance<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
+<p>恢復流程失敗後可能留下 <code>on_maintenance=True</code>，再次送通知因而被拒。先查原通知、工作狀態、來源主機隔離及目的實例是否已建立，排除仍在執行或重複恢復，再決定是否清除標記重試。本課使用過：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>update<span class="w"> </span>day31-seg<span class="w"> </span>oslab-comp1<span class="w"> </span>--on_maintenance<span class="w"> </span>False
+</span></code></pre></div>
+<p>這只改 Masakari 的維護狀態，不會完成 fencing，也不應當成強迫任何失敗流程繼續的方法。</p>
+<h3 id="mine-7">VM 異常停止後沒有執行恢復<a class="headerlink" href="#mine-7" title="Permanent link">&para;</a></h3>
+<p>先查 libvirt 事件、monitor 是否送出通知，再看 Masakari 的實例恢復設定與 metadata。預設 <code>process_all_instances=False</code> 時，缺少 <code>HA_Enabled=True</code> 會排除該實例；限制來自恢復策略，不是看到 monitor 容器就代表所有 VM 都會重啟。</p>
+<h2 id="_5">想一想<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>docker stop nova_compute</code> → systemd 的 unit 立刻把容器拉回來,heartbeat 沒斷。</li>
-<li><code>systemctl stop docker</code> → docker 的 <strong>live-restore</strong> 讓容器在 daemon 停止後照跑,heartbeat 還是沒斷。</li>
+<li>Nova 顯示來源主機 down，但來源 VM 可能仍能存取共享儲存。這時能立即 evacuate 嗎？還缺哪個前提？</li>
+<li>本地根碟與 boot-from-volume 的 VM 都回 ACTIVE，為什麼兩者保留的資料可能不同？同一個 volume ID 又能證明到哪裡？</li>
+<li>行程故障自動重啟成功，能不能推論整台主機故障也會自動被偵測？本章主機通知由誰發出？</li>
 </ul>
-<p>nova 一路顯示 comp1 <code>up</code>,evacuate 根本不會觸發。</p>
-<p><strong>根因</strong>:這些手段都只是「停掉管理層」,而<strong>回報存活的那個程序還在跑</strong>。要讓 nova 判定主機死亡,得讓那個程序真的消失。</p>
-<p><strong>解法</strong>:真斷電。</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>...<span class="w"> </span>oslab-comp1
-</span></code></pre></div>
-<p>之後 nova 才判定 <code>down</code>(還花了幾分鐘——heartbeat 逾時有寬限)。</p>
-<p><strong>教訓</strong>:這顆的價值超出 OpenStack——<strong>測試「東西壞掉」時,要壞在對的層級</strong>。你想測的是「主機沒了」,就得真的讓主機沒了;停個容器、停個 daemon,測到的是別的東西。故障演練最常見的失敗,是<strong>演了一個比你以為的更輕的故障</strong>,然後誤以為系統扛住了。</p>
-<h3 id="mine-6">地雷 6:evacuate 失敗會留下 <code>on_maintenance</code>,擋掉重試<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:第一次送主機失效通知失敗後,重送同一個通知被回 <code>409 ... the host is already under maintenance</code>。</p>
-<p><strong>根因</strong>:Masakari 一收到主機失效通知,就先把該主機標成 <code>on_maintenance=True</code>(隔離,不再往它排程)。如果復原流程失敗,這個標記<strong>不會自動清除</strong>——於是主機卡在維護狀態,重送通知被當成「這台已經在維護了」而拒收。</p>
-<p><strong>解法</strong>:重試前先手動清標記:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>openstack<span class="w"> </span>segment<span class="w"> </span>host<span class="w"> </span>update<span class="w"> </span>day31-seg<span class="w"> </span>oslab-comp1<span class="w"> </span>--on_maintenance<span class="w"> </span>False
-</span></code></pre></div>
-<p>清完再送,workflow 就跑起來了(<code>lock → evacuate → unlock</code>)。</p>
-<p><strong>教訓</strong>:<strong>自動化流程失敗後,常留下半途的狀態擋住重試</strong>。設計或操作故障復原時,「失敗後怎麼回到可重試的乾淨狀態」和「成功路徑」一樣重要——而很多工具的成功路徑很漂亮,失敗清理卻要你自己來。</p>
-<h3 id="mine-7">地雷 7:Masakari 預設只救有標記的 VM<a class="headerlink" href="#mine-7" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:沒有 <code>HA_Enabled</code> metadata 的 VM,程序死了 Masakari 不理它。</p>
-<p><strong>根因</strong>:instancemonitor 預設只對帶 <code>HA_Enabled=True</code> 的實例出手(<code>process_all_instances</code> 預設關閉)。</p>
-<p><strong>教訓</strong>:這其實是<strong>設計,不是限制</strong>——不是每台 VM 都該被自動重啟(短命的批次 VM 自動重啟反而是災難)。「哪些 VM 值得自癒」是租戶的決定,用 metadata 表達。動手驗證前先確認你的測試 VM 有這個標記,否則會對著一台「照設計不該被救」的 VM 等半天。</p>
-<h2 id="_4">帶得走的東西<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="_6">小結<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>Masakari 將故障通知接到 Nova 的恢復動作；行程仍有可用主機時可以原機重啟，整台 compute 停止時則需要疏散。這次主機演練用人工通知，並先以 deallocate 確認來源停止。恢復能否保留資料，取決於儲存來源與隔離條件；VM 回 ACTIVE 後仍須確認應用、資料與來源主機重新加入的安全條件。</p>
+<h2 id="_7">延伸閱讀<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong>自癒是兩層問題,手段不同:程序死了原地重啟,主機死了搬家重建。</strong> 把它們當一件事處理,會在「主機死了卻只會重啟本地不存在的程序」上卡住。</li>
-<li><strong>evacuate 能不能保住資料,取決於系統碟在哪。</strong> 本地碟只能空白重建,boot-from-volume 才能帶著同一顆 volume 搬家——這是「HA 設計要從開機方式就決定」的具體例子。</li>
-<li><strong>故障演練要壞在對的層級。</strong> 停容器、停 daemon 都不是「主機死掉」;演一個比真實更輕的故障,會得到一個假的安心。</li>
-<li><strong>一整排服務故障,先找共同依賴。</strong> 逐個救那些服務是白費力氣,它們往往死於同一個上游(這次是 ProxySQL)。</li>
-<li><strong>自動化流程失敗會留下擋路的中間狀態。</strong> 成功路徑之外,要知道怎麼把系統手動撥回可重試的乾淨狀態。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html">Kolla-Ansible 2025.1 Masakari 指南</a>：API、engine 與 monitor 開關。</li>
+<li><a href="https://docs.openstack.org/masakari/2025.1/configuration/config.html">Masakari 2025.1 設定參考</a>：實例與主機故障的恢復範圍。</li>
+<li><a href="https://docs.openstack.org/nova/2025.1/admin/evacuate.html">Nova 2025.1 evacuate 指南</a>：來源主機停止、從 image／volume 重建與共享儲存條件。</li>
+<li><a href="https://proxysql.com/documentation/">ProxySQL 文件</a>：代理設定與統計資料的管理。</li>
 </ul>
-<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
-<ul>
-<li><strong><a href="https://docs.openstack.org/masakari/2025.1/">Masakari 官方文件</a></strong> —— segment、host、instance 三種監控與復原流程的完整說明。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html">Kolla-Ansible 的 Masakari 指南</a></strong> —— kolla 這側啟用 Masakari 的官方頁(<code>enable_masakari</code> 開關的對照)。</li>
-<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/evacuate.html">Nova 的 evacuate 說明</a></strong> —— 為什麼 evacuate 需要共享儲存或 boot-from-volume;本章那個硬前提的權威出處。</li>
-<li><strong><a href="https://proxysql.com/documentation/">ProxySQL 官方文件</a></strong> —— 本課的資料庫入口;<code>proxysql.db</code> 與 <code>proxysql_stats.db</code> 的角色差異(<a href="#mine-2">地雷 2</a>)在這裡有完整背景。</li>
-</ul>
-<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>雲會自己救自己了。多機環境今天用完即關——它的任務(演一次真的主機失效)已經完成。<a href="../sprint5-day32-full-tls/">Day 32</a> 回單機環境,做生產化的第一件事:<strong>把所有 API 從 http 換成 https</strong>,而你會發現這件「加密」的事牽動的遠不只加密。</p>
+<h2 id="_8">下一步<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint5-day32-full-tls/">Day 32</a> 回到單機環境，為 API 的 VIP 入口啟用 TLS，並檢查改址後的用戶端信任與手動覆寫設定。</p>
 
 
 
@@ -4643,7 +4576,7 @@
       <nav class="md-footer__inner md-grid" aria-label="頁腳" >
         
           
-          <a href="../sprint5-day30-cloudkitty-rating/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 30 · 計費(CloudKitty)">
+          <a href="../sprint5-day30-cloudkitty-rating/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 30 · 計價與費用明細(CloudKitty)">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4653,20 +4586,20 @@
                 上一頁
               </span>
               <div class="md-ellipsis">
-                Day 30 · 計費(CloudKitty)
+                Day 30 · 計價與費用明細(CloudKitty)
               </div>
             </div>
           </a>
         
         
           
-          <a href="../sprint5-day32-full-tls/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 32 · 全站 TLS">
+          <a href="../sprint5-day32-full-tls/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 32 · API 入口 TLS">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 32 · 全站 TLS
+                Day 32 · API 入口 TLS
               </div>
             </div>
             <div class="md-footer__button md-icon">

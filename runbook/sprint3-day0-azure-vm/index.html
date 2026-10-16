@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-0-azure-lab" class="md-skip">
+        <a href="#day-0-azure-lab-vm" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -614,63 +614,123 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#vm-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一台 VM 裡還要再開 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        記憶體要算到 Day 8
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="原理與架構">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-e16s_v5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 機器規格:為什麼是 E16s_v5
+        開始之前
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2-azure-lab" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#1-resource-group-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Azure 網路約束(整個 lab 的架構前提)
+        步驟 1:建立 resource group 並加上 tags
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3-security-type-standard" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#step-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Security type:為什麼堅持 Standard
+        步驟 2:允許這個訂閱使用 Standard security type
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4-guardrails" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-vm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. 成本 guardrails 三件套
+        步驟 3:開 VM
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SSH 是進這台 VM 的唯一入口
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4nsg-ip-ssh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:NSG 只讓你的 IP 連 SSH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:每晚自動關機
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 6:預算警報
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 7:確認 VM 可以開始用
+      
+    </span>
+  </a>
   
 </li>
       
@@ -678,96 +738,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#0" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        0. 前置確認
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#1-resource-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Resource group
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-standard-security-type-feature" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 註冊 Standard security type feature(第一次會踩)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 開 VM(從這行開始計費)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-nsg-ssh-ip" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. NSG 鎖 SSH 到本機 IP
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-auto-shutdown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. auto-shutdown
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-budget-alertaz-cli-az-rest" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. Budget alert(az CLI 沒有含通知的指令,走 az rest)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 驗證
+        --security-type Standard 被 Azure 拒絕
       
     </span>
   </a>
@@ -776,28 +759,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        本次 lab 環境總表
-      
-    </span>
-  </a>
   
 </li>
       
@@ -805,32 +766,37 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        想一想
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-security-type-standard-azure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 1:--security-type Standard 被 Azure 拒絕
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1460,7 +1426,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1851,7 +1817,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1879,7 +1845,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1907,7 +1873,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2027,7 +1993,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4065,63 +4031,123 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#vm-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一台 VM 裡還要再開 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        記憶體要算到 Day 8
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="原理與架構">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-e16s_v5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. 機器規格:為什麼是 E16s_v5
+        開始之前
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2-azure-lab" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#1-resource-group-tags" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Azure 網路約束(整個 lab 的架構前提)
+        步驟 1:建立 resource group 並加上 tags
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3-security-type-standard" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#step-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Security type:為什麼堅持 Standard
+        步驟 2:允許這個訂閱使用 Standard security type
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4-guardrails" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-vm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. 成本 guardrails 三件套
+        步驟 3:開 VM
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SSH 是進這台 VM 的唯一入口
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4nsg-ip-ssh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:NSG 只讓你的 IP 連 SSH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:每晚自動關機
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 6:預算警報
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 7:確認 VM 可以開始用
+      
+    </span>
+  </a>
   
 </li>
       
@@ -4129,96 +4155,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#0" class="md-nav__link">
+  <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        0. 前置確認
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#1-resource-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Resource group
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-standard-security-type-feature" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. 註冊 Standard security type feature(第一次會踩)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. 開 VM(從這行開始計費)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-nsg-ssh-ip" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. NSG 鎖 SSH 到本機 IP
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-auto-shutdown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. auto-shutdown
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#6-budget-alertaz-cli-az-rest" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6. Budget alert(az CLI 沒有含通知的指令,走 az rest)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7. 驗證
+        --security-type Standard 被 Azure 拒絕
       
     </span>
   </a>
@@ -4227,28 +4176,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        本次 lab 環境總表
-      
-    </span>
-  </a>
   
 </li>
       
@@ -4256,32 +4183,37 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        想一想
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-security-type-standard-azure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 1:--security-type Standard 被 Azure 拒絕
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4308,228 +4240,144 @@
 
 
 
-<h1 id="day-0-azure-lab">Day 0: 準備 Azure Lab 環境<a class="headerlink" href="#day-0-azure-lab" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>今天還不碰 OpenStack——先把地基打好:在 Azure 開一台<strong>支援巢狀虛擬化</strong>的 VM 當實驗室,並且把成本控管(自動關機、預算警報)一次設好,確保這個 lab 不會變成月底的帳單驚喜。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>今天</strong>:租一台夠大的 Azure VM。規格、安全類型、網路限制每一項都有理由,原理章會逐一解釋。</li>
-<li><strong>今天之後</strong>:接下來十一天的所有東西——整朵 OpenStack 雲、裡面開的每台虛擬機——全部跑在這一台 VM 上。它每晚 22:00 會自動關機幫你省錢,早上記得自己開。</li>
-</ul>
-</div>
-<h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>租一台 VM 看起來只是填幾個欄位,但這台機器要扛完接下來十二天的所有東西——<strong>選錯了不是重開一台就算了,是整個 lab 的架構前提跟著變</strong>。動手前有四個決定要先想通:<strong>機器規格</strong>(要多大、為什麼非得支援巢狀虛擬化)、<strong>Azure 網路約束</strong>(公有雲不給你什麼)、<strong>security type</strong>(為什麼要退回 Standard)、<strong>成本 guardrails</strong>(三道保險絲)。</p>
-<p>其中第二項最容易被當成故障:<strong>它不是設定選項,是這個 lab 的物理定律</strong>——後面每一天的網路行為都受它約束,Day 2、Day 8、Day 20 都會再回來找它。</p>
-<h3 id="1-e16s_v5">1. 機器規格:為什麼是 E16s_v5<a class="headerlink" href="#1-e16s_v5" title="Permanent link">&para;</a></h3>
-<p>先算帳,再挑機型。Kolla-Ansible AIO + Magnum CAPI 全套同時跑的記憶體尖峰(以 Day 8 為準):</p>
-<table>
-<thead>
-<tr>
-<th>元件</th>
-<th>RAM 預估</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Kolla 全服務(core + Octavia + Barbican + Magnum)</td>
-<td>~24 GB</td>
-</tr>
-<tr>
-<td>kind management cluster(CAPI/CAPO controllers)</td>
-<td>~6 GB</td>
-</tr>
-<tr>
-<td>K8s workload cluster nested VM(CP ×1 + worker ×2, 各 4 GB)</td>
-<td>12 GB</td>
-</tr>
-<tr>
-<td>Octavia amphora ×2</td>
-<td>~3 GB</td>
-</tr>
-<tr>
-<td>host OS + buffer</td>
-<td>其餘</td>
-</tr>
-</tbody>
-</table>
-<p>E16s_v5 = 16 vCPU / 128 GB(Intel Ice Lake),<strong>支援 nested virtualization</strong> —— Nova 才能用 KVM 加速開 VM,否則退回 qemu 純模擬慢 3–5 倍。這也是 Sprint 2 驗證過的同款規格。</p>
-<h3 id="2-azure-lab">2. Azure 網路約束(整個 lab 的架構前提)<a class="headerlink" href="#2-azure-lab" title="Permanent link">&para;</a></h3>
-<p>Azure VNet <strong>沒有 L2 廣播、擋 MAC/IP spoofing</strong>。後果:</p>
-<ul>
-<li>Neutron 的 external/provider network <strong>出不了這台 host</strong>,floating IP 只在 host 內部有效</li>
-<li>從 Mac 存取 lab 裡的資源一律走 <strong>SSH tunnel / sshuttle</strong></li>
-<li>這不是缺陷,是公有雲上跑 IaaS lab 的既定架構;生產環境的 external network 會接真實的 provider VLAN</li>
-</ul>
-<h3 id="3-security-type-standard">3. Security type:為什麼堅持 Standard<a class="headerlink" href="#3-security-type-standard" title="Permanent link">&para;</a></h3>
-<p>Azure 新政策預設強制 TrustedLaunch。TrustedLaunch 與巢狀虛擬化的相容性有版本地雷,lab 沒必要冒險——直接用 <code>--security-type Standard</code>。但要注意:新訂閱必須先註冊 feature <code>Microsoft.Compute/UseStandardSecurityType</code> 才准用 Standard,忘了會在開 VM 時被拒絕(步驟 2 就是在做這件事;完整錯誤訊息見文末的地雷記錄)。</p>
-<h3 id="4-guardrails">4. 成本 guardrails 三件套<a class="headerlink" href="#4-guardrails" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>機制</th>
-<th>值</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>auto-shutdown</td>
-<td>每日 14:00 UTC(台北 22:00)</td>
-<td>忘了關機的保險絲;<strong>只會 deallocate,早上要自己開機</strong></td>
-</tr>
-<tr>
-<td>budget alert</td>
-<td>RG 範圍 US$150/月;80% 實際 + 100% 預測寄信</td>
-<td>帳單面警報</td>
-</tr>
-<tr>
-<td>tags</td>
-<td><code>purpose=lab owner=souch sprint=3</code></td>
-<td>Cost Analysis 一眼歸戶</td>
-</tr>
-</tbody>
-</table>
-<p>牌價(japaneast, 2026-07-07):E16s_v5 $1.216/hr;P10 $22.67/月 + P15 $43.72/月(<strong>磁碟關機也計費</strong>)。每天 10 小時 ≈ <strong>US$101/週</strong>。</p>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="0">0. 前置確認<a class="headerlink" href="#0" title="Permanent link">&para;</a></h3>
-<p>確認三件事:要用的訂閱存在、SSH 金鑰存在、目標區域的 vCPU 配額夠開 16 核:</p>
+<h1 id="day-0-azure-lab-vm">Day 0: 準備 Azure Lab 環境——巢狀虛擬化、VM 規格與成本控管<a class="headerlink" href="#day-0-azure-lab-vm" title="Permanent link">&para;</a></h1>
+<p>這門課要在一台機器上蓋出整朵 OpenStack 雲,再從這朵雲裡開 VM。手邊多半沒有閒置的實體伺服器,所以我們在 Azure 租一台 VM 當實驗室。這台 VM 跟平常開來跑網站的不一樣:它裡面還要再開 VM,記憶體要撐住之後每一天加上去的服務,而且要連續用好幾週。規格挑錯的話,問題要到 Day 1 部署或 Day 2 開第一台 VM 時才會出現。</p>
+<p>這一章用 Azure CLI 把這台 VM 開起來,並在開機當天設好每晚自動關機和預算警報。讀完之後,拿到一台候選的 VM,你能判斷它能不能當這門課的實驗室:支不支援巢狀虛擬化、記憶體夠不夠,以及關機之後還有哪些東西在計費。</p>
+<h2 id="vm-vm">一台 VM 裡還要再開 VM<a class="headerlink" href="#vm-vm" title="Permanent link">&para;</a></h2>
+<p>OpenStack 裡負責開 VM 的服務叫 Nova。Nova 開 VM 時用的是 KVM:Linux 核心內建的虛擬化功能,讓 VM 直接使用 CPU 的硬體虛擬化指令,速度接近實體機。在實體伺服器上,CPU 本來就有這些指令;可是我們的 OpenStack 是裝在一台 Azure VM 上,這台 VM 看到的 CPU 是 Azure 虛擬出來的,硬體虛擬化指令有沒有一起交給它,要看機型。</p>
+<p>把這三層畫出來,由下往上是誰在誰裡面:</p>
+<p><img alt="三層由下往上:最底層是 Azure 資料中心的實體主機,實體 CPU 提供硬體虛擬化功能;中間是今天租的 Azure VM Standard_E16s_v5,OpenStack 的服務全部跑在這裡,它必須支援巢狀虛擬化;最上層是 Day 2 起 Nova 在這台 VM 裡用 KVM 開出的 VM" src="../../assets/diagrams/os-s3d0-nesting.svg" /></p>
+<p>照著圖看:</p>
+<ol>
+<li><strong>中間那層是今天要租的機器。</strong> 之後在 OpenStack 開的每一台 VM,都跑在它裡面,共用它的 CPU 和記憶體。</li>
+<li><strong>最上層能不能用 KVM,取決於中間那層。</strong> 在一台 VM 裡面再用硬體虛擬化開 VM,叫做<strong>巢狀虛擬化</strong>(nested virtualization),Azure 只有部分機型支援。機型不支援的話,Kolla 預設的 <code>nova_compute_virt_type: "kvm"</code> 不會自動退回其他方式,要在 Day 1 的 <code>globals.yml</code> 手動改成 <code>qemu</code>,讓 Nova 用 QEMU 的純軟體模擬開 VM,速度會慢很多。</li>
+</ol>
+<p>這門課用 <strong>Standard_E16s_v5</strong>:Azure 官方的 Esv5 系列規格頁把巢狀虛擬化列為支援。步驟 7 會在 VM 上用 <code>kvm-ok</code> 實際確認一次。</p>
+<h2 id="day-8">記憶體要算到 Day 8<a class="headerlink" href="#day-8" title="Permanent link">&para;</a></h2>
+<p>Kolla-Ansible(Day 1 用來部署 OpenStack 的工具)官方寫的主機最低需求是 8 GB 記憶體,那是只裝核心服務的情況。這門課會一路加上負載平衡、金鑰管理等服務,到了 Day 8 還要在雲裡開一整座 Kubernetes 叢集。記憶體要以 Day 8 同時在跑的東西來估:</p>
+<p><img alt="上半部是 Day 8 同時在跑的四項估算:Kolla 部署的 OpenStack 服務 24 GB、kind 上的 Cluster API(Day 6)6 GB、Day 8 的 Kubernetes 叢集 3 台 VM 各 4 GB 共 12 GB、負載平衡器背後的 2 台 VM 3 GB;下半部是 Standard_E16s_v5 的 128 GB,其中約 45 GB 標成橘色,其餘留給主機作業系統與緩衝,並在 8 GB 處標出 Kolla 官方的最低需求" src="../../assets/diagrams/os-s3d0-memory.svg" /></p>
+<p>第二項的 Cluster API 是 Day 6 起用來建立 Kubernetes 叢集的程式,跑在 kind(把一座小型 Kubernetes 裝在 Docker 容器裡的工具)上。上半部四項加起來約 45 GB,是 Kolla 官方最低需求的五倍多。Standard_E16s_v5 有 16 vCPU、128 GB 記憶體,扣掉這 45 GB,還有八十多 GB 留給主機的作業系統和緩衝。圖上的數字都是估算,估錯一些也還有空間。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>以下指令在你自己電腦的終端機上執行(以 macOS 或 Linux 為例),需要裝好 Azure CLI 並用 <code>az login</code> 登入。開 VM 之前先確認三件事:要用的訂閱存在、SSH 金鑰存在、目標區域的配額夠開 16 核。<strong>配額</strong>(quota)是 Azure 對每個訂閱、每個區域、每個 VM 系列設的 vCPU 上限,用量加上這台的 16 核超過上限,開 VM 就會失敗,要先到 Azure 入口網站申請提高:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>az<span class="w"> </span>account<span class="w"> </span>list<span class="w"> </span>-o<span class="w"> </span>table<span class="w">          </span><span class="c1"># 你要用的訂閱在清單裡</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ls<span class="w"> </span>~/.ssh/juju_id_rsa.pub<span class="w">         </span><span class="c1"># SSH 公鑰存在(沒有就先 ssh-keygen)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>ls<span class="w"> </span>~/.ssh/&lt;ssh-key&gt;.pub<span class="w">         </span><span class="c1"># SSH 公鑰存在(沒有就先 ssh-keygen)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>az<span class="w"> </span>vm<span class="w"> </span>list-usage<span class="w"> </span>-l<span class="w"> </span>japaneast<span class="w"> </span>-o<span class="w"> </span>table<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>esv5<span class="w">   </span><span class="c1"># ESv5 家族配額 ≥ 16(不足要先申請)</span>
 </span></code></pre></div>
-<h3 id="1-resource-group">1. Resource group<a class="headerlink" href="#1-resource-group" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>az<span class="w"> </span>group<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>souch-openstack-sprint3<span class="w"> </span>-l<span class="w"> </span>japaneast<span class="w"> </span><span class="se">\</span>
+<p>接下來的指令裡有三個值要換成你自己的:<code>&lt;resource-group&gt;</code> 是步驟 1 要建立的 resource group 名稱,取一個認得出這個 lab 的名字即可,例如 <code>openstack-lab-rg</code>;<code>&lt;your-name&gt;</code> 是你的名字,步驟 1 會把它寫進 tag;<code>&lt;ssh-key&gt;</code> 是 <code>~/.ssh/</code> 底下那把金鑰的檔名,公鑰是同名加上 <code>.pub</code>。區域 <code>japaneast</code> 和 VM 名稱 <code>openstack-lab</code> 也可以換,只是之後每一步都要跟著換,包括後面章節開機用的 <code>az vm start</code>。換區域的話,先用上面第三行確認那一區有 Esv5 系列的配額。<code>&lt;subscription-id&gt;</code> 換成 <code>az account list</code> 列出的訂閱 ID。</p>
+<h2 id="1-resource-group-tags">步驟 1:建立 resource group 並加上 tags<a class="headerlink" href="#1-resource-group-tags" title="Permanent link">&para;</a></h2>
+<p><strong>resource group</strong> 是 Azure 裝一組相關資源的容器,VM、磁碟、網路都放在裡面,不用時可以整組刪掉。建立時順便加上 <strong>tags</strong>:附在資源上的 <code>key=value</code> 標籤。Azure 的成本分析可以依 tag 分組,之後想知道這個 lab 花了多少,篩 <code>purpose=lab</code> 就好:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>az<span class="w"> </span>group<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>&lt;resource-group&gt;<span class="w"> </span>-l<span class="w"> </span>japaneast<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--tags<span class="w"> </span><span class="nv">purpose</span><span class="o">=</span>lab<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>souch<span class="w"> </span><span class="nv">sprint</span><span class="o">=</span><span class="m">3</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--tags<span class="w"> </span><span class="nv">purpose</span><span class="o">=</span>lab<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>&lt;your-name&gt;<span class="w"> </span><span class="nv">sprint</span><span class="o">=</span><span class="m">3</span>
 </span></code></pre></div>
-<h3 id="2-standard-security-type-feature">2. 註冊 Standard security type feature(第一次會踩)<a class="headerlink" href="#2-standard-security-type-feature" title="Permanent link">&para;</a></h3>
+<h2 id="step-2">步驟 2:允許這個訂閱使用 Standard security type<a class="headerlink" href="#step-2" title="Permanent link">&para;</a></h2>
+<p>Azure VM 有一個設定叫 <strong>security type</strong>。新建的 Gen2 VM(Azure 第二代 VM,用 UEFI 開機,Ubuntu 24.04 映像檔就是這一代)預設是 <strong>Trusted Launch</strong>,它會開啟 Secure Boot(開機時只允許有簽章的作業系統和驅動程式載入)和虛擬 TPM。另一個選項 <strong>Standard</strong> 不開這些功能。</p>
+<p>這個 lab 用不到 Secure Boot 和虛擬 TPM,本課也只在 Standard 上確認過巢狀虛擬化可用,所以步驟 3 會指定 <code>--security-type Standard</code>。Azure 有些功能要先在訂閱上個別開啟才能用,這種開關叫 <strong>feature</strong>;<code>UseStandardSecurityType</code> 就是其中一個,新訂閱要先註冊它,才准建立 Standard 的 VM。<strong>provider</strong> 則是 Azure 上提供某一類資源的服務,VM 由 <code>Microsoft.Compute</code> 提供,feature 註冊完要重新註冊 provider,設定才會生效。這一步要在開 VM 之前做:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>az<span class="w"> </span>feature<span class="w"> </span>register<span class="w"> </span>--namespace<span class="w"> </span>Microsoft.Compute<span class="w"> </span>--name<span class="w"> </span>UseStandardSecurityType<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>az<span class="w"> </span>provider<span class="w"> </span>register<span class="w"> </span>-n<span class="w"> </span>Microsoft.Compute<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span>--wait
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>az<span class="w"> </span>feature<span class="w"> </span>show<span class="w"> </span>--namespace<span class="w"> </span>Microsoft.Compute<span class="w"> </span>--name<span class="w"> </span>UseStandardSecurityType<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span>--query<span class="w"> </span>properties.state<span class="w"> </span>-o<span class="w"> </span>tsv
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>az<span class="w"> </span>provider<span class="w"> </span>register<span class="w"> </span>-n<span class="w"> </span>Microsoft.Compute<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span>--wait
 </span></code></pre></div>
-<h3 id="3-vm">3. 開 VM(從這行開始計費)<a class="headerlink" href="#3-vm" title="Permanent link">&para;</a></h3>
+<p><code>az feature register</code> 送出註冊後,要幾分鐘才會完成。用 <code>az feature show</code> 查狀態,等它顯示 <code>Registered</code>,再執行最後的 <code>az provider register</code>。跳過這一步,步驟 3 會被拒絕,錯誤訊息見<a href="#mine-1">疑難排解:<code>--security-type Standard</code> 被 Azure 拒絕</a>。</p>
+<h2 id="3-vm">步驟 3:開 VM<a class="headerlink" href="#3-vm" title="Permanent link">&para;</a></h2>
+<p>從這一步開始計費。<code>az vm create</code> 除了 VM 本身,還會一起建立虛擬網路、公網 IP,以及一個名叫 <code>openstack-labNSG</code> 的防火牆規則組(步驟 4 會用到):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>az<span class="w"> </span>vm<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>-g<span class="w"> </span>souch-openstack-sprint3<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>-g<span class="w"> </span>&lt;resource-group&gt;<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--image<span class="w"> </span>Ubuntu2404<span class="w"> </span>--size<span class="w"> </span>Standard_E16s_v5<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span>--security-type<span class="w"> </span>Standard<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--admin-username<span class="w"> </span>azureuser<span class="w"> </span>--ssh-key-values<span class="w"> </span>~/.ssh/juju_id_rsa.pub<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--admin-username<span class="w"> </span>azureuser<span class="w"> </span>--ssh-key-values<span class="w"> </span>~/.ssh/&lt;ssh-key&gt;.pub<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--public-ip-sku<span class="w"> </span>Standard<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span>--os-disk-size-gb<span class="w"> </span><span class="m">128</span><span class="w"> </span>--data-disk-sizes-gb<span class="w"> </span><span class="m">256</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--tags<span class="w"> </span><span class="nv">purpose</span><span class="o">=</span>lab<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>souch<span class="w"> </span><span class="nv">sprint</span><span class="o">=</span><span class="m">3</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--tags<span class="w"> </span><span class="nv">purpose</span><span class="o">=</span>lab<span class="w"> </span><span class="nv">owner</span><span class="o">=</span>&lt;your-name&gt;<span class="w"> </span><span class="nv">sprint</span><span class="o">=</span><span class="m">3</span>
 </span></code></pre></div>
-<h3 id="4-nsg-ssh-ip">4. NSG 鎖 SSH 到本機 IP<a class="headerlink" href="#4-nsg-ssh-ip" title="Permanent link">&para;</a></h3>
+<p>這台 VM 會有兩顆磁碟:128 GB 的作業系統碟,和一顆 256 GB、什麼都沒裝的資料碟。資料碟今天不要格式化,Day 3 會把它整顆交給 OpenStack 的儲存服務 Cinder 使用。Esv5 系列沒有本機暫存碟,所以 VM 裡看到的第二顆磁碟一定是這顆資料碟。</p>
+<p>指令跑完會印出一段 JSON,記下裡面的 <code>publicIpAddress</code>(公網 IP,SSH 連線用)和 <code>privateIpAddress</code>(VM 在 Azure 虛擬網路裡的位址,Day 1 設定 OpenStack 時會用到)。<code>--public-ip-sku Standard</code> 建立的公網 IP 是固定的,之後每天關機再開機,位址都不會變。</p>
+<h2 id="ssh-vm">SSH 是進這台 VM 的唯一入口<a class="headerlink" href="#ssh-vm" title="Permanent link">&para;</a></h2>
+<p>VM 開好之後,你從自己的電腦能連到的只有它的 SSH。原因在 Azure 的虛擬網路:它不轉送廣播,也會擋掉來源位址不屬於這台 VM 的封包。之後 OpenStack 在這台 VM 裡建的網路,外面連不進來:雲裡的 VM 拿到的 floating IP(OpenStack 配給 VM、讓它能被外部連線的位址)只在這台 VM 內部有效。雲裡的 VM 往外連可以經過 NAT(Day 2 會設定),但反方向不行。要從自己的電腦打開 OpenStack 的網頁介面 Horizon(Day 1 會裝),或連到雲裡的 VM,一律透過 SSH 轉送(SSH tunnel)。Day 1 設定 OpenStack 網路時會再遇到這個限制。</p>
+<p>既然 SSH 是唯一的入口,就要管好誰能連。<code>az vm create</code> 建立的 <strong>NSG</strong>(network security group,Azure 的防火牆規則組)預設允許任何來源連 SSH。這一步把它改成只允許你自己的公網 IP:</p>
+<p><img alt="左邊是你的電腦和其他 IP;中間的 NSG 只放行你的 IP 連 port 22,其他 IP 的連線在 NSG 擋掉;右邊的 Azure VM 裡,SSH 是唯一對外的入口,再透過 SSH tunnel 才能到只在 VM 內部可達的 OpenStack API、Horizon 和雲裡開出的 VM。底部註明 Azure 虛擬網路不轉送廣播,外面連不進 lab 內部,floating IP 只在這台 VM 內部有效" src="../../assets/diagrams/os-s3d0-entry.svg" /></p>
+<p>我們可以從圖上看到兩件事:NSG 是外面到 VM 之間唯一的檢查點,而雲裡的東西全部在右邊的虛線框內,外面只能經由 SSH 進去。</p>
+<h2 id="4nsg-ip-ssh">步驟 4:NSG 只讓你的 IP 連 SSH<a class="headerlink" href="#4nsg-ip-ssh" title="Permanent link">&para;</a></h2>
+<p><code>curl -s ifconfig.me</code> 會回傳你現在對外的公網 IP。NSG 的名稱是 VM 名稱加上 <code>NSG</code>,規則名稱 <code>default-allow-ssh</code> 是 <code>az vm create</code> 預設建立的:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">MY_IP</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>ifconfig.me<span class="k">)</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>az<span class="w"> </span>network<span class="w"> </span>nsg<span class="w"> </span>rule<span class="w"> </span>update<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>-g<span class="w"> </span>souch-openstack-sprint3<span class="w"> </span>--nsg-name<span class="w"> </span>openstack-labNSG<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>-g<span class="w"> </span>&lt;resource-group&gt;<span class="w"> </span>--nsg-name<span class="w"> </span>openstack-labNSG<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>-n<span class="w"> </span>default-allow-ssh<span class="w"> </span>--source-address-prefixes<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$MY_IP</span><span class="s2">/32&quot;</span>
 </span></code></pre></div>
-<h3 id="5-auto-shutdown">5. auto-shutdown<a class="headerlink" href="#5-auto-shutdown" title="Permanent link">&para;</a></h3>
+<p>換了網路(例如從家裡換到公司),你的公網 IP 會跟著變,SSH 就會連不上。這時重跑這一步即可。</p>
+<h2 id="5">步驟 5:每晚自動關機<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>這台 VM 要用好幾週,忘記關機的時數會一直累積成費用。<code>az vm auto-shutdown</code> 設定每天固定時間關機。時間以 UTC 計算,<code>1400</code> 就是台北時間 22:00:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>az<span class="w"> </span>vm<span class="w"> </span>auto-shutdown<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>-g<span class="w"> </span>souch-openstack-sprint3<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span>--time<span class="w"> </span><span class="m">1400</span><span class="w">   </span><span class="c1"># UTC → 台北 22:00</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>-g<span class="w"> </span>&lt;resource-group&gt;<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span>--time<span class="w"> </span><span class="m">1400</span><span class="w">   </span><span class="c1"># UTC → 台北 22:00</span>
 </span></code></pre></div>
-<h3 id="6-budget-alertaz-cli-az-rest">6. Budget alert(az CLI 沒有含通知的指令,走 az rest)<a class="headerlink" href="#6-budget-alertaz-cli-az-rest" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>az<span class="w"> </span>rest<span class="w"> </span>--method<span class="w"> </span>PUT<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>--url<span class="w"> </span><span class="s2">&quot;https://management.azure.com/subscriptions/&lt;subscription-id&gt;/resourceGroups/souch-openstack-sprint3/providers/Microsoft.Consumption/budgets/sprint3-lab-budget?api-version=2023-05-01&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>--body<span class="w"> </span><span class="s1">&#39;{&quot;properties&quot;:{&quot;category&quot;:&quot;Cost&quot;,&quot;amount&quot;:150,&quot;timeGrain&quot;:&quot;Monthly&quot;,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s1">    &quot;timePeriod&quot;:{&quot;startDate&quot;:&quot;2026-07-01T00:00:00Z&quot;,&quot;endDate&quot;:&quot;2026-12-31T00:00:00Z&quot;},</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s1">    &quot;notifications&quot;:{</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s1">      &quot;actual80&quot;:{&quot;enabled&quot;:true,&quot;operator&quot;:&quot;GreaterThan&quot;,&quot;threshold&quot;:80,&quot;contactEmails&quot;:[&quot;you@example.com&quot;],&quot;thresholdType&quot;:&quot;Actual&quot;},</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s1">      &quot;forecast100&quot;:{&quot;enabled&quot;:true,&quot;operator&quot;:&quot;GreaterThan&quot;,&quot;threshold&quot;:100,&quot;contactEmails&quot;:[&quot;you@example.com&quot;],&quot;thresholdType&quot;:&quot;Forecasted&quot;}}}}&#39;</span>
+<p>自動關機做的是 <strong>deallocate</strong>:VM 停止,並釋放它在 Azure 實體主機上佔用的資源。deallocate 之後不再收 VM 的運算費用,但磁碟和網路資源照樣計費,所以兩顆磁碟和公網 IP 每天 24 小時都在收錢。</p>
+<p>自動關機不會自動開機。每天開始操作前,先在自己的電腦上把 VM 開起來:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>az<span class="w"> </span>vm<span class="w"> </span>start<span class="w"> </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;<span class="w"> </span>-g<span class="w"> </span>&lt;resource-group&gt;<span class="w"> </span>-n<span class="w"> </span>openstack-lab
 </span></code></pre></div>
-<h3 id="7">7. 驗證<a class="headerlink" href="#7" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/juju_id_rsa<span class="w"> </span>azureuser@203.0.113.10
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span>-qq<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>cpu-checker
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>kvm-ok
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>lsblk<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE,MOUNTPOINT
+<p>因為這台 VM 每天都會重開,之後幾章會遇到一些「開機後要自動重建」的設定,例如 Day 1 的 dummy 網卡(Day 1 會建的一張不接任何線路的虛擬網卡)、Day 2 的對外網路修正,原因都在這裡。</p>
+<h2 id="6">步驟 6:預算警報<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<p>自動關機防的是忘記關機;<strong>預算警報</strong>(budget alert)防的是另一種情況:費用不知不覺超出預期。它在 Azure 上設一個每月預算,花費達到門檻時寄信通知。這裡用 Azure 的 Budgets REST API,透過 <code>az rest</code> 直接呼叫,在這個 resource group 上設兩道通知:</p>
+<ul>
+<li><code>actual80</code>:本月實際花費超過預算的 80%。</li>
+<li><code>forecast100</code>:Azure 依目前的用量預測,月底會超過預算的 100%。</li>
+</ul>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>az<span class="w"> </span>rest<span class="w"> </span>--method<span class="w"> </span>PUT<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span>--url<span class="w"> </span><span class="s2">&quot;https://management.azure.com/subscriptions/&lt;subscription-id&gt;/resourceGroups/&lt;resource-group&gt;/providers/Microsoft.Consumption/budgets/sprint3-lab-budget?api-version=2023-05-01&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>--body<span class="w"> </span><span class="s1">&#39;{&quot;properties&quot;:{&quot;category&quot;:&quot;Cost&quot;,&quot;amount&quot;:150,&quot;timeGrain&quot;:&quot;Monthly&quot;,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="s1">    &quot;timePeriod&quot;:{&quot;startDate&quot;:&quot;2026-07-01T00:00:00Z&quot;,&quot;endDate&quot;:&quot;2026-12-31T00:00:00Z&quot;},</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s1">    &quot;notifications&quot;:{</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s1">      &quot;actual80&quot;:{&quot;enabled&quot;:true,&quot;operator&quot;:&quot;GreaterThan&quot;,&quot;threshold&quot;:80,&quot;contactEmails&quot;:[&quot;you@example.com&quot;],&quot;thresholdType&quot;:&quot;Actual&quot;},</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="s1">      &quot;forecast100&quot;:{&quot;enabled&quot;:true,&quot;operator&quot;:&quot;GreaterThan&quot;,&quot;threshold&quot;:100,&quot;contactEmails&quot;:[&quot;you@example.com&quot;],&quot;thresholdType&quot;:&quot;Forecasted&quot;}}}}&#39;</span>
 </span></code></pre></div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>在 VM 上逐項執行,<strong>全部符合判準才算完成今天</strong>;不符合就回對應步驟追查:</p>
-<table>
-<thead>
-<tr>
-<th>驗證指令</th>
-<th>你應該看到</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>sudo kvm-ok</code></td>
-<td><code>KVM acceleration can be used</code>——巢狀虛擬化可用,這是整個 lab 的前提</td>
-</tr>
-<tr>
-<td><code>nproc</code> 與 <code>free -h</code></td>
-<td>16 核心、約 125 GiB 記憶體</td>
-</tr>
-<tr>
-<td><code>lsblk</code></td>
-<td>sda 128G 掛在 <code>/</code>;sdb 256G <strong>保持未格式化</strong>(Day 3 會把它做成 Cinder 的儲存池)</td>
-</tr>
-<tr>
-<td><code>lsb_release -d</code></td>
-<td>Ubuntu 24.04 LTS</td>
-</tr>
-</tbody>
-</table>
-<h2 id="lab">本次 lab 環境總表<a class="headerlink" href="#lab" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>項目</th>
-<th>值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Subscription</td>
-<td>Azure AI Services(<code>&lt;subscription-id&gt;</code>)</td>
-</tr>
-<tr>
-<td>Resource group</td>
-<td><code>souch-openstack-sprint3</code>(japaneast)</td>
-</tr>
-<tr>
-<td>VM</td>
-<td><code>openstack-lab</code>(Standard_E16s_v5, 16 vCPU / 128 GB, security type <strong>Standard</strong>)</td>
-</tr>
-<tr>
-<td>OS</td>
-<td>Ubuntu 24.04.4 LTS</td>
-</tr>
-<tr>
-<td>Public IP</td>
-<td><code>203.0.113.10</code>(SSH 限 <code>198.51.100.1/32</code>,換網路要重跑步驟 4)</td>
-</tr>
-<tr>
-<td>Private IP</td>
-<td><code>10.0.0.4</code></td>
-</tr>
-<tr>
-<td>Disk</td>
-<td>OS sda 128 GB(P10)+ data sdb 256 GB(P15,未格式化)</td>
-</tr>
-<tr>
-<td>SSH</td>
-<td><code>ssh -i ~/.ssh/juju_id_rsa azureuser@203.0.113.10</code></td>
-</tr>
-<tr>
-<td>每日操作</td>
-<td>早上 <code>az vm start -g souch-openstack-sprint3 -n openstack-lab</code>;晚上 22:00 自動關機</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1-security-type-standard-azure">地雷 1:<code>--security-type Standard</code> 被 Azure 拒絕<a class="headerlink" href="#1-security-type-standard-azure" title="Permanent link">&para;</a></h3>
+<p>照打之前要改四個地方:<code>amount</code> 改成你自己的每月預算(金額以帳單帳戶的幣別計算),<code>contactEmails</code> 改成你的信箱,<code>startDate</code> 改成本月 1 日(Azure 要求月預算的起始日是某個月的第一天),<code>endDate</code> 改成你預計結束 lab 的日子。</p>
+<p>預算警報只會寄信,不會停掉任何資源,收到信之後要自己決定關機或刪除。Azure 的官方教學也列出 <code>az consumption budget create-with-rg</code> 這個指令,同樣可以帶通知設定,本課沒有用它驗證過。</p>
+<h2 id="7-vm">步驟 7:確認 VM 可以開始用<a class="headerlink" href="#7-vm" title="Permanent link">&para;</a></h2>
+<p>SSH 進 VM,把 <code>203.0.113.10</code> 換成步驟 3 記下的公網 IP。<code>kvm-ok</code> 是 <code>cpu-checker</code> 套件裡的小工具,檢查這台機器能不能用 KVM:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/&lt;ssh-key&gt;<span class="w"> </span>azureuser@203.0.113.10
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span>-qq<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>cpu-checker
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>sudo<span class="w"> </span>kvm-ok
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>lsblk<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE,MOUNTPOINT
+</span></code></pre></div>
+<p>看兩個地方:</p>
+<ul>
+<li><code>kvm-ok</code> 最後一行要是 <code>KVM acceleration can be used</code>。這代表巢狀虛擬化可用,Nova 之後能用 KVM 開 VM。如果不是這一行,回頭確認步驟 3 的 <code>--size</code>。</li>
+<li><code>lsblk</code> 裡,<code>sda</code> 是 128G 的作業系統碟,掛在 <code>/</code>;<code>sdb</code> 是 256G 的資料碟,沒有分割區,也沒有掛載點。保持這樣,Day 3 才會用到它。</li>
+</ul>
+<p>再確認 CPU、記憶體和作業系統版本:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>nproc
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>free<span class="w"> </span>-h
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>lsb_release<span class="w"> </span>-d
+</span></code></pre></div>
+<p><code>nproc</code> 應該是 16;<code>free -h</code> 的總記憶體約 125Gi,比 128 GB 少一點是正常的;<code>lsb_release -d</code> 顯示 Ubuntu 24.04 LTS。</p>
+<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1"><code>--security-type Standard</code> 被 Azure 拒絕<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
 <p><strong>症狀</strong>:<code>az vm create --security-type Standard</code> 直接失敗,錯誤訊息是 <code>BadRequest: The value 'Standard' is not available for property 'securityType' until the feature Microsoft.Compute/UseStandardSecurityType is registered</code>。</p>
-<p><strong>根因</strong>:Azure 從 2024 年起,新訂閱預設強制 TrustedLaunch;要用 Standard 必須先註冊 feature 並重新註冊 provider——也就是步驟 2 存在的原因。如果你跳過了步驟 2,回去補跑再重試 <code>az vm create</code> 即可。</p>
-<h2 id="_4">下一步<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>一台乾淨的、支援巢狀虛擬化的 VM 已經就緒。<a href="../sprint3-day1-kolla-aio-core/">Day 1</a> 我們安裝部署工具 Kolla-Ansible,把 OpenStack 的五個核心服務部上去——今天這台空白的主機,明天就會是一朵能登入的雲。</p>
-<p>如果你想先了解「為什麼選 Kolla-Ansible、之前兩條路線怎麼失敗的」,可以先讀<a href="../../previous-attempts/">前兩次嘗試</a>;想直接動手也完全沒問題,Day 1 開頭會給你需要的所有背景。</p>
+<p><strong>原因</strong>:這個訂閱還沒註冊 <code>UseStandardSecurityType</code>,只能建立 Trusted Launch 的 VM。回到<a href="#step-2">步驟 2</a> 補跑,再重試 <code>az vm create</code>。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一位同學為了省錢,挑了一台記憶體夠大、但規格頁沒有列出支援巢狀虛擬化的機型。他會在這一章的哪一步第一次發現不對?如果他堅持用這台機器,Nova 開 VM 只剩什麼方式?</li>
+<li>週五晚上 VM 自動關機,整個週末你都沒開機。這兩天裡,這個 resource group 還有哪些東西在計費?如果這個月累計的花費在週末超過預算的 80%,預算警報會替你做什麼?</li>
+<li>你帶筆電到咖啡店,SSH 連不上 VM,同一時間同事從辦公室卻連得上。你會先檢查哪一步的設定?</li>
+</ul>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>這一章開的 VM 承載之後所有章節的內容:OpenStack 的服務和它開出的 VM 都跑在裡面,所以它必須支援巢狀虛擬化,記憶體要以 Day 8 同時在跑的東西來估。Azure 的虛擬網路讓外面連不進雲裡的東西,只能經由 SSH 進去,所以 NSG 只放行你自己的 IP;換了網路連不上時,重跑步驟 4。費用方面,自動關機只停掉運算費用,磁碟和公網 IP 照樣計費,預算警報也只寄信、不停機。這台 VM 每天都會重開,之後章節裡凡是開機後要自動重建的設定,都是因為這件事。</p>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想再深入,可以從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/memory-optimized/esv5-series">Azure Esv5 系列規格</a></strong> —— 各尺寸的 vCPU 與記憶體,以及巢狀虛擬化、本機暫存碟等功能支援表;挑其他機型時,用同樣的欄位對照。</li>
+<li><strong><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/trusted-launch">Azure Trusted Launch</a></strong> —— Trusted Launch 包含哪些功能、什麼情況下是預設值,對應步驟 2。</li>
+<li><strong><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/states-billing">Azure VM 的狀態與計費</a></strong> —— Stopped 和 Deallocated 的差別、哪些狀態不收運算費用,以及磁碟與網路為什麼仍然計費。</li>
+<li><strong><a href="https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-acm-create-budgets">用 Azure 建立與管理預算</a></strong> —— 實際花費與預測花費兩種通知、月預算起始日的規定,以及入口網站、CLI 等其他建立方式。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/quickstart.html">Kolla-Ansible Quick Start(2025.1)</a></strong> —— 開頭的主機最低需求,可以跟本章的記憶體估算對照;Day 1 會照這份文件部署。</li>
+</ul>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>一台支援巢狀虛擬化的空白 VM 已經就緒。<a href="../sprint3-day1-kolla-aio-core/">Day 1</a> 我們安裝部署工具 Kolla-Ansible,把 OpenStack 的核心服務部到這台 VM 上,讓它變成一朵能登入的雲。</p>
+<p>如果你想先了解為什麼選 Kolla-Ansible、之前兩條路線怎麼失敗,可以先讀<a href="../../previous-attempts/">前兩次嘗試</a>;想直接動手也可以,Day 1 開頭會交代需要的背景。</p>
 
 
 

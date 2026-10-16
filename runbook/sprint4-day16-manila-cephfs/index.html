@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-16-manila" class="md-skip">
+        <a href="#day-16-manila-cephfs" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1158,7 +1158,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸共享檔案系統?先讀這段
+        三種儲存怎麼分
       
     </span>
   </a>
@@ -1166,10 +1166,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#manila-ceph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        Manila 只管建立和授權,讀寫直接走 Ceph
       
     </span>
   </a>
@@ -1177,66 +1177,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#1-ceph-manila" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1ceph-manila" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:Ceph 端——建檔案系統與 Manila 專用身分
+        步驟 1:在 Ceph 建檔案系統和 Manila 用的身分
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2kolla" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#2-ceph-kolla" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:Kolla 端——兩個設定檔(這裡埋著兩顆文件級的雷)
+        步驟 2:把 Ceph 設定檔和金鑰交給 Kolla
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3globals" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-manila" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 3:globals 與部署
+        步驟 3:打開 Manila 並部署
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4cli-share-type" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#4-cli-share-type" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 4:CLI 外掛與 share type
+        步驟 4:裝 CLI 外掛,建 share type
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#5-share" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 5:建 share、授權、真的掛起來
+        步驟 5:建 share、授權、掛載
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubernetes-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選讀:讀懂 Kubernetes 共用 share 的結果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="選讀:讀懂 Kubernetes 共用 share 的結果">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼需要它
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csi-driver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        兩個 CSI driver 怎麼分工
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nginx-pod-rwx-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證:兩個 nginx Pod 共用一顆 RWX volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        既有 Pod 的網頁如何連到瀏覽器
       
     </span>
   </a>
@@ -1249,33 +1293,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:openstack 沒有 share 子命令
+        openstack 沒有 share 子命令
       
     </span>
   </a>
@@ -1286,7 +1319,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:keyring 路徑與 ceph.conf 縮排——兩顆文件級的雷
+        keyring 放錯目錄或 ceph.conf 帶縮排
       
     </span>
   </a>
@@ -1297,7 +1330,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:CephFS 的 pool 誕生後 PG 總數超標
+        CephFS 建好後出現 too many PGs per OSD
       
     </span>
   </a>
@@ -1310,107 +1343,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-16-manila-day-8-k8s-cluster" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster
+        想一想
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼這個整合重要
+        小結
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        運作原理
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nginx-pod-rwx" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗證:兩個 nginx Pod 共用一顆 RWX 卷
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        收尾:讓它真的 serve 一個網頁
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        從你的瀏覽器看到這個網頁:兩種路徑
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="從你的瀏覽器看到這個網頁:兩種路徑">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#kubectl-port-forwardlab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        路徑一:kubectl port-forward(lab 臨時用,本課採用)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#service-typeloadbalancer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        路徑二:Service type=LoadBalancer(正式環境的做法)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1421,7 +1376,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1510,7 +1465,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1901,7 +1856,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1929,7 +1884,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1957,7 +1912,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2077,7 +2032,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4118,7 +4073,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸共享檔案系統?先讀這段
+        三種儲存怎麼分
       
     </span>
   </a>
@@ -4126,10 +4081,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#manila-ceph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        Manila 只管建立和授權,讀寫直接走 Ceph
       
     </span>
   </a>
@@ -4137,66 +4092,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#1-ceph-manila" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1ceph-manila" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:Ceph 端——建檔案系統與 Manila 專用身分
+        步驟 1:在 Ceph 建檔案系統和 Manila 用的身分
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#2kolla" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#2-ceph-kolla" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:Kolla 端——兩個設定檔(這裡埋著兩顆文件級的雷)
+        步驟 2:把 Ceph 設定檔和金鑰交給 Kolla
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#3globals" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#3-manila" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 3:globals 與部署
+        步驟 3:打開 Manila 並部署
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4cli-share-type" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#4-cli-share-type" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 4:CLI 外掛與 share type
+        步驟 4:裝 CLI 外掛,建 share type
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#5-share" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 5:建 share、授權、真的掛起來
+        步驟 5:建 share、授權、掛載
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kubernetes-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選讀:讀懂 Kubernetes 共用 share 的結果
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="選讀:讀懂 Kubernetes 共用 share 的結果">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼需要它
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csi-driver" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        兩個 CSI driver 怎麼分工
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nginx-pod-rwx-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        驗證:兩個 nginx Pod 共用一顆 RWX volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        既有 Pod 的網頁如何連到瀏覽器
       
     </span>
   </a>
@@ -4209,33 +4208,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:openstack 沒有 share 子命令
+        openstack 沒有 share 子命令
       
     </span>
   </a>
@@ -4246,7 +4234,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:keyring 路徑與 ceph.conf 縮排——兩顆文件級的雷
+        keyring 放錯目錄或 ceph.conf 帶縮排
       
     </span>
   </a>
@@ -4257,7 +4245,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:CephFS 的 pool 誕生後 PG 總數超標
+        CephFS 建好後出現 too many PGs per OSD
       
     </span>
   </a>
@@ -4270,107 +4258,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-16-manila-day-8-k8s-cluster" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster
+        想一想
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼這個整合重要
+        小結
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        運作原理
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nginx-pod-rwx" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗證:兩個 nginx Pod 共用一顆 RWX 卷
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#serve" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        收尾:讓它真的 serve 一個網頁
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        從你的瀏覽器看到這個網頁:兩種路徑
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="從你的瀏覽器看到這個網頁:兩種路徑">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#kubectl-port-forwardlab" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        路徑一:kubectl port-forward(lab 臨時用,本課採用)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#service-typeloadbalancer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        路徑二:Service type=LoadBalancer(正式環境的做法)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_8" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4381,7 +4291,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_9" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4408,72 +4318,63 @@
 
 
 
-<h1 id="day-16-manila">Day 16: Manila——多台機器同掛一顆碟<a class="headerlink" href="#day-16-manila" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>儲存三部曲的最終章:<strong>共享檔案系統</strong>。Cinder 的磁碟一次只能掛給一台機器;今天部署的 Manila 讓多台 VM(以及未來 K8s 的多個 Pod)同時讀寫同一份資料。後端就用 Day 14 的 Ceph——一套骨幹,第三種介面。</p>
-</blockquote>
+<h1 id="day-16-manila-cephfs">Day 16: Manila——用 CephFS 讓多台機器同時讀寫同一份資料<a class="headerlink" href="#day-16-manila-cephfs" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Manila 官方吉祥物" src="../../assets/mascots/manila.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>儲存三部曲</strong>:區塊(Day 3 Cinder)✅、物件(Day 15 RGW)✅、<strong>檔案(今天)</strong>。</li>
-<li><strong>今天</strong>:CephFS 當後端,部署 Manila,建立 share、授權、掛載、讀寫全流程。</li>
-<li><strong>今天之後</strong>:Day 8 的 K8s PVC 只能單 Pod 讀寫(RWO);有了 Manila,<code>ReadWriteMany</code> 的缺口就補上了——文末的 <strong>Day 16+ 選讀</strong>會把它真的接回 Day 8 的 cluster。</li>
-</ul>
-</div>
-<h2 id="_1">第一次接觸共享檔案系統?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>三種儲存的差異用「怎麼用」最好記:</p>
+<p>假設你在這朵雲上用兩台 VM 跑同一個網站,前面放負載平衡器分流。使用者上傳的圖片存在其中一台,另一台就讀不到。直覺的做法是開一顆 Cinder volume 當共用的圖片目錄,但 <a href="../sprint3-day3-cinder-lvm/">Day 3</a> 已經看過,本課 Day 3 的 LVM volume 配置一次只 attach 到一台 VM,不能直接拿來當跨機共用目錄。Cinder 另有需後端與 volume type 支援的 multiattach;即使同時掛到多台,檔案系統與應用仍須能協調共用存取。改成在兩台之間定時同步檔案,又會出現某一台還沒同步到的空窗。</p>
+<p>這一章部署 OpenStack 的共享檔案服務 <strong>Manila</strong>,後端用 <a href="../sprint4-day14-ceph-bootstrap/">Day 14</a> 立起來的 Ceph。做完之後,你會在主機上掛載一個由 Manila 開出來的網路資料夾,寫入檔案再讀回來;章末的選讀段落再解讀它接回 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 的 Kubernetes cluster 後,兩個跨節點 Pod 共用檔案的結果,不提供完整 CSI 建置步驟。讀完之後,遇到「多台機器要同時讀寫同一份資料」的需求,你能判斷該開 Manila share 而不是 Cinder volume;share 掛不上時,也能分辨問題出在 Manila 這一側(share 沒建起來、沒有授權),還是 Ceph 這一側(連不到、金鑰不對)。</p>
+<h2 id="_1">三種儲存怎麼分<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>到這一章為止,這朵雲已經有兩種儲存,加上今天的第三種,差別在使用方式:</p>
 <table>
 <thead>
 <tr>
 <th></th>
-<th>介面</th>
+<th>怎麼用</th>
 <th>同時使用者</th>
-<th>代表場景</th>
+<th>適合的場景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>區塊(Cinder)</td>
-<td>掛成 <code>/dev/vdb</code>,自己分割格式化</td>
-<td><strong>一台機器</strong></td>
+<td>區塊(Cinder,Day 3 的 LVM 配置)</td>
+<td>掛成 <code>/dev/vdb</code>,自己分割、格式化</td>
+<td>本課配置為一台機器</td>
 <td>資料庫的資料碟</td>
 </tr>
 <tr>
-<td>物件(RGW)</td>
-<td>HTTP API,無掛載</td>
-<td>無限</td>
+<td>物件(RGW,Day 15)</td>
+<td>透過 HTTP API 存取,不掛載</td>
+<td>不限</td>
 <td>備份、映像檔、靜態資源</td>
 </tr>
 <tr>
-<td><strong>檔案(Manila)</strong></td>
-<td>掛成網路資料夾,現成檔案系統</td>
-<td><strong>多台機器同時讀寫</strong></td>
-<td>共用素材庫、多實例應用的共同目錄、K8s RWX</td>
+<td><strong>檔案(Manila,今天)</strong></td>
+<td>掛成網路資料夾,已經是現成的檔案系統</td>
+<td>多台機器同時讀寫</td>
+<td>共用的上傳目錄、多台機器跑同一個應用時的共同目錄</td>
 </tr>
 </tbody>
 </table>
-<p>AWS 對應是 <strong>EFS</strong>。Manila 是 OpenStack 的「檔案分享即服務」:它不搬資料,只負責<strong>開單</strong>——在後端(我們的 CephFS)建立分享、管理配額與存取權;資料流量由客戶端直連後端。</p>
-<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>今天用的驅動是 <strong>CephFS native</strong>:VM 直接以 Ceph 客戶端身分掛載 CephFS。Manila 這邊三個服務容器 + Ceph 那邊一個新角色:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph manila["Manila(Kolla 容器)"]
-        direction LR
-        API["manila-api&lt;br/&gt;(收單)"] --&gt; SCH["manila-scheduler&lt;br/&gt;(挑後端)"] --&gt; SHR["manila-share&lt;br/&gt;(對 Ceph 下指令)"]
-    end
-    SHR ==&gt;|"建立/授權 share&lt;br/&gt;(走 mgr API)"| CEPH["CephFS(manila_fs)&lt;br/&gt;+ MDS(檔案系統的大腦)"]
-    VM["VM / 客戶端"] ==&gt;|"掛載後直連讀寫&lt;br/&gt;(mount -t ceph)"| CEPH</code></pre>
-<p>注意資料路徑:<strong>manila-share 只管控制面</strong>,VM 掛載後的讀寫直達 Ceph——跟 Day 3「control path 是 OpenStack 的、data path 是 Linux 的」同一個道理。</p>
-<p><code>MDS</code>(Metadata Server)是 CephFS 專屬的新角色:管目錄樹與檔名(資料本體仍存 OSD)。建立檔案系統時 cephadm 會自動部署它。</p>
-<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1ceph-manila">步驟 1:Ceph 端——建檔案系統與 Manila 專用身分<a class="headerlink" href="#1ceph-manila" title="Permanent link">&para;</a></h3>
+<p>Manila 管的單位叫 <strong>share</strong>:一個有容量上限、可以被多台機器掛載的網路資料夾。AWS 上對應的服務是 EFS。Manila 本身不存檔案,它負責在後端儲存系統上把 share 建出來、設定容量上限、決定誰可以掛載;檔案實際存在後端,這一章的後端就是 Ceph 的檔案系統 CephFS。</p>
+<h2 id="manila-ceph">Manila 只管建立和授權,讀寫直接走 Ceph<a class="headerlink" href="#manila-ceph" title="Permanent link">&para;</a></h2>
+<p>Manila 對接 CephFS 有兩種方式。這一章用的是 <strong>CephFS native</strong>:要掛載的機器自己當 Ceph 客戶端,用 Ceph 的協定直接連到 Ceph。另一種是在中間放一台 NFS 服務,客戶端用 NFS 掛載,本課沒有實作。</p>
+<p>把 Manila 的服務和 Ceph 的角色放在一起看,跟 Day 3 的 Cinder 一樣能分成控制路徑和資料路徑兩半:</p>
+<p><img alt="上半是控制路徑,由 OpenStack 服務組成:openstack CLI 送出請求給 manila-api,manila-scheduler 挑後端,交給 manila-share,manila-share 以橘色強調,它往下呼叫 Ceph 的 MGR 管理 API 來建立 share、授權存取。中間是 Day 14 部署的 Ceph 叢集:OSD 存檔案內容、MDS 管目錄與檔名、MON 在 port 6789 提供叢集地圖、MGR 提供管理 API。下半是資料路徑:主機或 VM 上的 Ceph 客戶端用 mount -t ceph 加上 export location 掛載,直接連 MON、MDS、OSD,不經過 Manila" src="../../assets/diagrams/os-s4d16-paths.svg" /></p>
+<p>我們可以從圖上看到兩件事:</p>
+<ol>
+<li><strong>Manila 的三個服務只出現在上半。</strong> <code>manila-share</code> 是跟 Ceph 打交道的那一個,它透過 Ceph MGR 的管理 API 建 share、設定誰可以存取,不碰檔案本身。所以待會兒給 Manila 的 Ceph 身分只需要很少的權限。</li>
+<li><strong>掛載之後的讀寫完全不經過 Manila。</strong> 客戶端從 MON 拿到叢集地圖,目錄和檔名找 <strong>MDS</strong>(Day 14 提過的檔案中繼,只有用 CephFS 才需要),檔案內容直接讀寫 OSD。這也決定了除錯的順序:share 建不起來或狀態不對,查上半的 Manila 服務;share 是 <code>available</code>、卻掛不上或讀寫失敗,查下半,也就是掛載的機器連不連得到 Ceph、金鑰對不對。</li>
+</ol>
+<h2 id="1-ceph-manila">步驟 1:在 Ceph 建檔案系統和 Manila 用的身分<a class="headerlink" href="#1-ceph-manila" title="Permanent link">&para;</a></h2>
+<p>這一步全在 Ceph 這一側,跟 Day 14 一樣透過 <code>cephadm shell</code> 下指令。三行分別做三件事:建一個叫 <code>manila_fs</code> 的 CephFS;關掉一項單機一定會出現的健康警告;替 Manila 建一個專用的 Ceph 身分。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>fs<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>manila_fs
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>fs<span class="w"> </span><span class="nb">set</span><span class="w"> </span>manila_fs<span class="w"> </span>standby_count_wanted<span class="w"> </span><span class="m">0</span><span class="w">   </span><span class="c1"># 單機沒有備援 MDS,關掉這項健康檢查</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>auth<span class="w"> </span>get-or-create<span class="w"> </span>client.manila<span class="w"> </span>mon<span class="w"> </span><span class="s1">&#39;allow r&#39;</span><span class="w"> </span>mgr<span class="w"> </span><span class="s1">&#39;allow rw&#39;</span>
 </span></code></pre></div>
-<p>約 20 秒後 <code>ceph fs status manila_fs</code> 應顯示 MDS <code>active</code>。</p>
-<p>權限那行值得一看:<code>client.manila</code> 只需要 <code>mon 讀 + mgr 讀寫</code>——Manila 是透過 <strong>mgr 的管理 API</strong> 操作 CephFS 的,不直接碰資料,所以不需要 osd/mds 權限。最小權限原則的好示範。</p>
-<h3 id="2kolla">步驟 2:Kolla 端——兩個設定檔(這裡埋著兩顆文件級的雷)<a class="headerlink" href="#2kolla" title="Permanent link">&para;</a></h3>
+<p><code>ceph fs volume create</code> 建檔案系統時,cephadm 會自動替它部署 MDS。CephFS 預設希望有一台待命的 MDS 隨時接手,單機只有一台,不關掉 <code>standby_count_wanted</code> 就會一直出現健康警告。等 MDS 起來之後,<code>ceph fs status manila_fs</code> 會顯示 MDS 狀態為 <code>active</code>。</p>
+<p>第三行建的是一個 <strong>cephx 身分</strong>。cephx 是 Ceph 的認證機制,每個要連 Ceph 的程式都用一個名字(這裡是 <code>client.manila</code>)加一把金鑰登入,能做什麼由後面的權限決定。<code>client.manila</code> 只拿到 <code>mon 'allow r'</code>(讀叢集地圖)和 <code>mgr 'allow rw'</code>(使用 MGR 的管理 API),沒有任何 OSD 或 MDS 的權限,對應的正是上一節圖上的事實:Manila 只透過 MGR 管理 share,不讀寫檔案。這組權限的出處是 Manila CephFS driver 的官方文件。</p>
+<p>建好檔案系統後,<code>ceph health</code> 可能出現 <code>too many PGs per OSD</code>。PG 是 Ceph 把 pool 裡資料分組、分配給 OSD 的單位。這是新的 pool 讓單一 OSD 承擔的 PG 數超過上限,處理方式見<a href="#mine-3">疑難排解:CephFS 建好後出現 too many PGs per OSD</a>。</p>
+<h2 id="2-ceph-kolla">步驟 2:把 Ceph 設定檔和金鑰交給 Kolla<a class="headerlink" href="#2-ceph-kolla" title="Permanent link">&para;</a></h2>
+<p><code>manila-share</code> 容器要連 Ceph,需要兩個檔案:Ceph 的連線設定 <code>ceph.conf</code>,和 <code>client.manila</code> 的金鑰檔 keyring。Day 1 講過,某個服務需要的額外設定放在 <code>/etc/kolla/config/</code> 底下對應的目錄,deploy 時 Kolla 會把它們放進容器。Manila 對應的目錄是 <code>/etc/kolla/config/manila/</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/manila
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># ceph.conf:用官方指令產生「最小版」,再把行首空白拿掉</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>config<span class="w"> </span>generate-minimal-conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/^[[:space:]]*//&#39;</span><span class="w"> </span><span class="se">\</span>
@@ -4482,8 +4383,14 @@
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>auth<span class="w"> </span>get<span class="w"> </span>client.manila<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/^[[:space:]]*//&#39;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/manila/ceph.client.manila.keyring
 </span></code></pre></div>
-<p>兩個 <code>sed</code> 不是潔癖:<code>generate-minimal-conf</code> 的輸出帶<strong>行首縮排</strong>,而 Kolla 的設定合併器讀到縮排的 ini 會直接解析失敗——這是官方文件有提但極易忽略的一行警告。另外,keyring 的<strong>路徑</strong>要照上面放在 <code>manila/</code> 正下方:官方文件某處寫了 <code>manila-share/</code> 子目錄,那是文件錯誤,Kolla 程式碼實際只從 <code>manila/</code> 讀。</p>
-<h3 id="3globals">步驟 3:globals 與部署<a class="headerlink" href="#3globals" title="Permanent link">&para;</a></h3>
+<p>這段有兩處要照做:</p>
+<ul>
+<li><strong>兩個 <code>sed</code> 都不能省。</strong> <code>generate-minimal-conf</code> 和 <code>ceph auth get</code> 的輸出,每一行開頭帶縮排(tab),Kolla 解析這類 ini 格式的設定檔時,遇到行首的 tab 會解析失敗。Kolla-Ansible 的外部 Ceph 指南有提到要先拿掉這些 tab。</li>
+<li><strong>兩個檔案都直接放在 <code>manila/</code> 底下。</strong> 官方指南在「多個 Ceph 後端」那一段,keyring 的範例路徑多了一層 <code>manila-share/</code> 子目錄。本課的單一後端照上面的路徑放,deploy 成功。</li>
+</ul>
+<p>漏了其中一項會遇到的狀況,見<a href="#mine-2">疑難排解:keyring 放錯目錄或 ceph.conf 帶縮排</a>。</p>
+<h2 id="3-manila">步驟 3:打開 Manila 並部署<a class="headerlink" href="#3-manila" title="Permanent link">&para;</a></h2>
+<p>接著照 Day 1 的做法,在 <code>globals.yml</code> 加開關,再重跑 deploy。三行的意思:<code>enable_manila</code> 部署 Manila 本身;<code>enable_manila_backend_cephfs_native</code> 讓它用 CephFS native 這個後端;<code>manila_cephfs_filesystem_name</code> 指定用步驟 1 建的檔案系統,不寫的話 Manila 會用 Ceph 回報的第一個檔案系統。<code>--tags manila</code> 讓這次 deploy 只處理 Manila 相關的部分。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s">enable_manila: &quot;yes&quot;</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">enable_manila_backend_cephfs_native: &quot;yes&quot;</span>
@@ -4492,22 +4399,29 @@
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>manila
 </span></code></pre></div>
+<p>一樣看 <code>PLAY RECAP</code> 的 <code>failed=0</code>:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>PLAY RECAP: ok=29  changed=20  failed=0
 </span></code></pre></div>
-<h3 id="4cli-share-type">步驟 4:CLI 外掛與 share type<a class="headerlink" href="#4cli-share-type" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-manilaclient<span class="w">        </span><span class="c1"># 沒裝的話 openstack 沒有 share 子命令(見地雷 1)</span>
+<p>部署完可以用 <code>openstack share service list</code> 確認 Manila 的服務都是 enabled 而且 <code>up</code>;這個指令要等下一步裝好 CLI 外掛才能用。</p>
+<h2 id="4-cli-share-type">步驟 4:裝 CLI 外掛,建 share type<a class="headerlink" href="#4-cli-share-type" title="Permanent link">&para;</a></h2>
+<p><code>openstack</code> 指令本身沒有 Manila 的子命令,要另外裝 Manila 的外掛 <code>python-manilaclient</code>。Day 5 的 Heat、Barbican 也是同樣的情況:每個服務的 CLI 指令來自各自的外掛套件。</p>
+<p>接下來要建一個 <strong>share type</strong>。使用者建 share 時要指定一種 share type,Manila 的 scheduler 依照它上面寫的條件,挑出能滿足條件的後端。最基本的條件是 <strong>DHSS</strong>(driver handles share servers):後端的 driver 要不要自行建立和管理「share server」,share server 是提供共用檔案並管理匯出與存取規則的後端資源,具體形式由 driver 決定,不一定是一台新 VM。CephFS native 不建立這類 share server,客戶端直接連 Ceph,所以它只接受 DHSS 為 <code>False</code> 的 share type。下面最後一行的 <code>False</code> 就是 DHSS:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-manilaclient
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>share<span class="w"> </span><span class="nb">type</span><span class="w"> </span>create<span class="w"> </span>default_share_type<span class="w"> </span>False
 </span></code></pre></div>
-<p>那個 <code>False</code> 是 <strong>DHSS</strong>(driver 是否自管服務網路)——CephFS native 驅動不需要,<strong>必須是 False</strong>;照別的教學抄 <code>True</code> 會在建立 share 時卡死。</p>
-<h3 id="5-share">步驟 5:建 share、授權、真的掛起來<a class="headerlink" href="#5-share" title="Permanent link">&para;</a></h3>
+<p>如果照其他教學建成 <code>True</code>,scheduler 找不到符合條件的後端,share 就建不起來。Kolla-Ansible 的 Manila 指南示範的是另一種需要 share server 的 driver,範例裡的 share type 是 <code>True</code>,照抄時要改。</p>
+<h2 id="5-share">步驟 5:建 share、授權、掛載<a class="headerlink" href="#5-share" title="Permanent link">&para;</a></h2>
+<p>先建一顆 1 GB、用 CephFS 協定的 share,確認狀態,再查它的 <strong>export location</strong>:客戶端掛載時要用的位址,也就是 share 在 Ceph 上的路徑。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>share<span class="w"> </span>create<span class="w"> </span>CEPHFS<span class="w"> </span><span class="m">1</span><span class="w"> </span>--name<span class="w"> </span>day16-share<span class="w"> </span>--share-type<span class="w"> </span>default_share_type
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>openstack<span class="w"> </span>share<span class="w"> </span>show<span class="w"> </span>day16-share<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status<span class="w">          </span><span class="c1"># available(秒級)</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>openstack<span class="w"> </span>share<span class="w"> </span><span class="nb">export</span><span class="w"> </span>location<span class="w"> </span>list<span class="w"> </span>day16-share<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>Path
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>10.0.0.4:6789:/volumes/_nogroup/bf9a.../a1d5...
 </span></code></pre></div>
-<p>授權一個 cephx 身分並取出金鑰,然後在任何能連到 Ceph 的機器上掛載(這裡用主機示範;VM 內做法完全相同,只需裝 <code>ceph-common</code>):</p>
+<p>這串位址分成兩段:冒號前的 <code>10.0.0.4:6789</code> 是 Ceph MON 的位址和 port,客戶端先連它拿叢集地圖;後面的 <code>/volumes/_nogroup/...</code> 是這顆 share 在 CephFS 裡的目錄。你的路徑會是另一串 ID。</p>
+<p>share 建好了還不能掛,因為還沒有人被允許存取它。Manila 用 <strong>access rule</strong> 決定誰能掛載一顆 share;CephFS native 只支援 <code>cephx</code> 這種 access rule,意思是「允許某個 cephx 身分存取」。下面第一行允許一個叫 <code>day16user</code> 的身分存取,Manila 會在 Ceph 上建好這個身分、產生金鑰,第二行把金鑰取出來。接著就能在任何連得到 Ceph 的機器上掛載。這裡用主機示範。所有掛載端都要先有 Ceph 客戶端套件 <code>ceph-common</code>,包括這台主機;只有 cephadm 容器不代表主機已安裝掛載工具。掛載端也必須連得到 Ceph 的 MON、MDS 和 OSD,不能只放行 MON 的 6789。VM 裡也適用相同前提。</p>
+<p>先確認掛載端有 <code>mount.ceph</code> 工具。若尚未安裝,依所用 Ubuntu 與 Ceph 版本準備 <code>ceph-common</code>;這是掛載前提,不屬於前面 cephadm 的部署結果。建立 access rule 後,要等規則狀態成為 <code>active</code>,再執行取金鑰與掛載的命令。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>share<span class="w"> </span>access<span class="w"> </span>create<span class="w"> </span>day16-share<span class="w"> </span>cephx<span class="w"> </span>day16user
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">KEY</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>share<span class="w"> </span>access<span class="w"> </span>list<span class="w"> </span>day16-share<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;Access Key&#39;</span><span class="k">)</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/mnt/day16
@@ -4515,141 +4429,99 @@
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;manila-e2e&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/mnt/day16/proof.txt
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>sudo<span class="w"> </span>cat<span class="w"> </span>/mnt/day16/proof.txt<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>df<span class="w"> </span>-h<span class="w"> </span>/mnt/day16<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-1
 </span></code></pre></div>
+<p><code>mount</code> 那一行的路徑換成你上一步查到的 export location。結果:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>manila-e2e
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>10.0.0.4:6789:/volumes/...  1.0G  0  1.0G  0% /mnt/day16
 </span></code></pre></div>
-<p>寫得進、讀得回、配額 1G 正確呈現——三部曲的最後一塊拼圖到位。</p>
-<p>這顆 share 不只在 CLI 看得到——Skyline 的「Share File Storage」頁把它列得清清楚楚:size、protocol(CEPHFS)、狀態一欄到位。下圖的兩列裡,<code>day16-share</code> 是你剛手動建的,<code>pvc-…</code>(描述寫 <code>provisioned by=manila.csi.openstack.org</code>)則是稍後 Day 16+ 由 K8s 動態要來的——同一個共享檔案服務,CLI 與主控台看到的是同一份資料:</p>
-<p><img alt="Skyline 的共享檔案頁:手動建的 day16-share 與 K8s 動態供裝的 PVC 並列" src="../../assets/screenshots/day16-skyline-shares.png" /></p>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Ceph 端</td>
-<td><code>manila_fs</code> 存在、MDS active</td>
-<td>約 20 秒就緒</td>
-</tr>
-<tr>
-<td>Manila 服務</td>
-<td><code>openstack share service list</code> 三服務 enabled+up</td>
-<td>data/scheduler/share 全 up</td>
-</tr>
-<tr>
-<td>share</td>
-<td>建立後 <code>available</code></td>
-<td>秒級</td>
-</tr>
-<tr>
-<td>export location</td>
-<td>取得 CephFS 路徑</td>
-<td><code>10.0.0.4:6789:/volumes/…</code></td>
-</tr>
-<tr>
-<td><strong>端到端</strong></td>
-<td>cephx 授權 → 掛載 → 寫入讀回一致、df 顯示配額</td>
-<td>符合</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:<code>openstack</code> 沒有 <code>share</code> 子命令<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>同型雷第三次出現</strong>(Day 5 的 heat/barbican、以及 designate 都一樣):OpenStack CLI 的各服務指令來自各自的外掛套件。通則直接背起來:<strong>新服務部署完 CLI 沒指令,第一反應是 <code>pip install python-&lt;服務&gt;client</code></strong>。</p>
-<h3 id="mine-2">地雷 2:keyring 路徑與 ceph.conf 縮排——兩顆文件級的雷<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>已在步驟 2 預拆。這兩顆雷值得記住的是出處:keyring 路徑是<strong>官方文件寫錯</strong>(以 Kolla 原始碼為準);縮排則是<strong>官方工具的輸出跟官方部署工具互不相容</strong>。「文件與程式碼衝突時,程式碼才是真相」——本課程方法論的又一實例。</p>
-<h3 id="mine-3">地雷 3:CephFS 的 pool 誕生後 PG 總數超標<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:<code>manila_fs</code> 建立後 <code>ceph health</code> 出現 <code>too many PGs per OSD (369 &gt; max 250)</code>。</p>
-<p><strong>根因</strong>:每個 pool 都帶著預設的 PG 數出生,單 OSD 的上限很快被多個 pool 疊爆——又是單機才會撞到的邊界。</p>
-<p><strong>解法</strong>:lab 直接放寬上限 <code>ceph config set mon mon_max_pg_per_osd 512</code>。生產環境的正解是讓 autoscaler 依容量比例縮放,多 OSD 下不會發生。</p>
-<h2 id="day-16-manila-day-8-k8s-cluster">Day 16+ 延伸(選讀):把 Manila 接回 Day 8 的 K8s cluster<a class="headerlink" href="#day-16-manila-day-8-k8s-cluster" title="Permanent link">&para;</a></h2>
-<div class="admonition tip">
-<p class="admonition-title">這是選讀的進階整合</p>
-<p>上面的核心課程到 host 掛載就完成了。這一節示範 Manila 最有價值的應用場景——<strong>填補 Kubernetes 的儲存缺口</strong>。內容較深(要動到兩個 CSI 驅動),但成果很值得:你會看到一個 K8s 應用要求共享儲存,而 OpenStack 自動在 Ceph 上開一顆 share 滿足它。</p>
-</div>
-<h3 id="_5">為什麼這個整合重要<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<p>回想 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a>:我們讓 K8s 的 PVC 由 Cinder 供裝——但 Cinder 是<strong>區塊</strong>儲存,一顆 volume 一次只能掛給一個 Pod(<code>ReadWriteOnce</code>,RWO)。可是很多場景需要<strong>多個 Pod 同時讀寫同一份資料</strong>(<code>ReadWriteMany</code>,RWX):共用的上傳目錄、多副本網站的靜態資源、共享的模型檔案。<strong>RWX 正是 Cinder 給不了、而 Manila 天生就能提供的</strong>——這一節就把這塊拼上,讓 Sprint 3 的儲存故事真正完整。</p>
-<h3 id="_6">運作原理<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>flowchart TB
-    A["K8s 應用宣告一個 RWX PVC"] --&gt; B["Manila CSI driver&lt;br/&gt;(裝在 workload cluster 內)"]
-    B ==&gt;|"呼叫 Manila API"| C["Manila 在 Ceph 上&lt;br/&gt;自動建一顆 CephFS share"]
-    C ==&gt;|"share + cephx 存取金鑰"| D["ceph-csi 把 share&lt;br/&gt;掛進每個 Pod"]
-    D --&gt; E["多個 Pod、跨不同節點&lt;br/&gt;同時讀寫同一份資料"]</code></pre>
-<p>安裝需要兩個 CSI 驅動搭配:<strong>csi-driver-manila</strong>(負責跟 Manila 要 share)委派給 <strong>ceph-csi</strong>(負責實際掛載 CephFS)。兩者用 helm 裝進 Day 8 的 workload cluster。</p>
-<h3 id="nginx-pod-rwx">驗證:兩個 nginx Pod 共用一顆 RWX 卷<a class="headerlink" href="#nginx-pod-rwx" title="Permanent link">&para;</a></h3>
-<p>建一個 <code>ReadWriteMany</code> 的 PVC(用 Manila 的 StorageClass),然後讓兩個 nginx Pod 掛同一顆——關鍵是<strong>確認它們被排到不同節點</strong>,這樣「跨節點共享」才有說服力:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$ kubectl get pvc shared-static
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>NAME            STATUS   VOLUME            CAPACITY   ACCESS MODES   ...
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>shared-static   Bound    manila-share-pv   1Gi        RWX            ...
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>$ kubectl get pods -l app=shared-web -o wide
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>web-reader   Running   kube-plpuz-default-worker-...    ← 節點 A
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>web-writer   Running   kube-plpuz-ng-app-...            ← 節點 B(不同節點!)
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>$ openstack share list          # 這顆 RWX 卷,就是 Manila 開的一顆 share
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>pvc-e6cbc3c7-...  CEPHFS  available
+<p>第一行是寫進去再讀回來的內容。第二行的 <code>df</code> 顯示這個掛載點的大小是 1.0G,正是建 share 時給的 1 GB:Manila 設的容量上限,在 Ceph 這一側生效了。如果 <code>mount</code> 失敗而 share 狀態是 <code>available</code>,依照前面那張圖,問題在資料路徑:先確認這台機器連得到 MON,再確認能連到地圖中的 MDS 和 OSD,以及 <code>name=</code> 和 <code>secret=</code> 用的是同一個身分的金鑰。</p>
+<p>Day 13 已經部署 Skyline,加入 Manila 後還要更新它的代理設定,才能從網頁呼叫新服務。這沿用 Day 13 的部署方式,但下列補充命令沒有獨立的本課執行輸出:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>skyline
 </span></code></pre></div>
-<p><img alt="Manila RWX kubectl 驗證" src="../../assets/screenshots/day16-kubectl.png" /></p>
-<p>最後一行是整個整合的證據:<strong>K8s 開一個 PVC,OpenStack 這側就多了一顆同名的 share</strong>——這朵雲的儲存服務,自動滿足了它上面 K8s 應用的需求。</p>
-<h3 id="serve">收尾:讓它真的 serve 一個網頁<a class="headerlink" href="#serve" title="Permanent link">&para;</a></h3>
-<p>叫 <code>web-writer</code> 寫一個 hello world HTML 到共享卷,再從<strong>另一個節點上</strong>的 <code>web-reader</code> 讀——它的 nginx 吐出的,正是 writer 剛寫的那一份:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-writer<span class="w">  </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;echo &quot;&lt;h1&gt;Hello, World!&lt;/h1&gt;...&quot; &gt; /usr/share/nginx/html/index.html&#39;</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-reader<span class="w">  </span>--<span class="w"> </span>wget<span class="w"> </span>-qO-<span class="w"> </span>http://localhost/<span class="w">     </span><span class="c1"># 讀到同一份頁面</span>
-</span></code></pre></div>
-<p><img alt="兩個 Pod 共用 RWX 卷 serve 出的 hello world 頁面" src="../../assets/screenshots/day16-hello-page.png" /></p>
-<p><em>這個頁面由 <code>web-writer</code> 寫入、<code>web-reader</code>(不同節點的 Pod)serve 出來,底層是 Manila 供裝、Ceph 承載的共享卷。Sprint 3 的 Cinder RWO 加上今天的 Manila RWX,K8s 的兩種儲存需求現在都由你自己的雲滿足了。</em></p>
-<div class="admonition note">
-<p class="admonition-title">實作時的地雷(如果你要自己做)</p>
-<p>這個整合有兩個 CSI 之間的磨合點,踩過才知道:
-- <strong>provisioner 名稱有 protocol 前綴</strong>:csi-driver-manila 的 CephFS driver 實際註冊成 <code>cephfs.manila.csi.openstack.org</code>(不是 <code>manila.csi.openstack.org</code>),StorageClass 的 <code>provisioner</code> 要寫對才綁得到 PVC。
-- <strong>node-stage secret 要放 OpenStack 認證</strong>(不是 ceph key):node 掛載時 Manila CSI 要用 OS 憑證去跟 Manila 查 share 的存取規則。
-- <strong>靜態掛載缺 <code>fsName</code> 會失敗</strong>:ceph-csi 掛 CephFS 必須知道檔案系統名(我們的是 <code>manila_fs</code>),少了它報 <code>missing required field fsName</code>。</p>
-</div>
-<h3 id="_7">從你的瀏覽器看到這個網頁:兩種路徑<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
-<p>網頁在 cluster 裡跑起來了,但你的電腦要怎麼連到它?這個問題本身就是一堂網路課——因為 Pod 活在 cluster 內部網路(<code>10.100.x.x</code>),外界碰不到。有兩條路,一條給 lab、一條給正式環境:</p>
-<h4 id="kubectl-port-forwardlab">路徑一:<code>kubectl port-forward</code>(lab 臨時用,本課採用)<a class="headerlink" href="#kubectl-port-forwardlab" title="Permanent link">&para;</a></h4>
-<p><code>kubectl port-forward</code> 借用 K8s API server 當跳板,打一條「臨時隧道」直通某個 Pod——不需要負載平衡器、不需要對外 IP,一行指令就通。因為我們的 lab 從你的電腦到 cluster 隔著兩層(Azure lab VM、cluster 內網),所以要串接兩段隧道:</p>
-<pre class="mermaid"><code>flowchart LR
-    A["你的瀏覽器&lt;br/&gt;localhost:8888"] --&gt;|"SSH tunnel"| B["Azure lab VM&lt;br/&gt;(10.0.0.4)"]
-    B --&gt;|"kubectl port-forward&lt;br/&gt;(借道 K8s API server)"| C["web-reader Pod&lt;br/&gt;裡的 nginx"]
-    C --&gt; D["讀取 Manila RWX 卷&lt;br/&gt;上的 index.html"]</code></pre>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># 在 lab VM 上:把 pod 的 80 埠轉發到 VM 的 8888</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>--address<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>pod/web-reader<span class="w"> </span><span class="m">8888</span>:80<span class="w"> </span><span class="p">&amp;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># 在你的電腦上:把 VM 的 8888 接到本機 8888</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">8888</span>:127.0.0.1:8888<span class="w"> </span>azureuser@&lt;VM公網IP&gt;
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># 瀏覽器開 http://localhost:8888 —— 就看到那個 hello world 頁</span>
-</span></code></pre></div>
-<p>這條路的特點是<strong>臨時、點對點、只給操作者自己看</strong>——適合除錯或 demo,不是給真實使用者用的入口。</p>
-<h4 id="service-typeloadbalancer">路徑二:<code>Service type=LoadBalancer</code>(正式環境的做法)<a class="headerlink" href="#service-typeloadbalancer" title="Permanent link">&para;</a></h4>
-<p>正式環境會用你在 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 學過的方式:把 Service 宣告成 <code>type=LoadBalancer</code>,K8s 的 CCM 就會自動叫 <strong>Octavia</strong> 開一台負載平衡器、掛上對外 IP,把流量分流到每個節點上的 Pod:</p>
-<pre class="mermaid"><code>flowchart LR
-    U["真實使用者&lt;br/&gt;(從外部網路)"] --&gt; LB["Octavia 負載平衡器&lt;br/&gt;(對外 IP)"]
-    LB --&gt;|"分流"| N1["節點 A 的 Pod"]
-    LB --&gt;|"分流"| N2["節點 B 的 Pod"]
-    N1 --&gt; V["Manila RWX 共享卷&lt;br/&gt;(兩個 Pod 讀寫同一份)"]
-    N2 --&gt; V</code></pre>
-<p>這才是「一個公開網站」該有的樣子:有穩定的對外 IP、有負載平衡、多個 Pod 分攤流量——而它們共用的正是今天這顆 RWX 卷。</p>
-<div class="admonition warning">
-<p class="admonition-title">在本 lab 開 LoadBalancer 會撞到 Day 8 的老朋友</p>
-<p>如果你在這座 cluster 試 <code>type=LoadBalancer</code>,CCM 建 LB 時會失敗:<code>Provider 'amphorav2' is not enabled</code>。這正是 <a href="../sprint3-day8-e2e-workload-cluster/#mine-3">Day 8 的地雷 #3</a>——CCM 預設要 <code>amphorav2</code>,而我們的 Octavia 只啟用了 <code>amphora</code>。所以本課的 demo 走 <code>port-forward</code>(路徑一);要走 LoadBalancer,得依 Day 8 的解法給 cluster 帶上 <code>octavia_provider=amphora</code> 標籤。<strong>同一顆雷在不同章節重逢,正好說明它是這套 lab 架構的固有特性,不是偶發。</strong></p>
-<p>但注意時序:這條 <code>amphora</code> 指引到 <a href="../sprint4-day22-upgrade-backup/#mine-1">Day 22 地雷 1</a> 會失效——那天全量 precheck 逼著把 <code>octavia_provider_drivers</code> 收斂成只剩 <code>ovn</code>,amphora 不再可選。若你的環境已經走過 Day 22,要走 LoadBalancer 得先回頭處理 provider(見那段的取捨說明),不能再直接帶 <code>amphora</code> label。</p>
-</div>
-<h2 id="_8">延伸閱讀<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>同一顆 share 在網頁主控台上也看得到。Skyline(Day 13)的「Share File Storage」頁列出這朵雲的 share:</p>
+<p><img alt="Skyline 的 Shares 頁列出兩顆 share:day16-share 與 pvc-e6cbc3c7 開頭的那一顆,兩者 share type 都是 default_share_type、大小 1GiB、協定 CEPHFS、狀態 Available;pvc 那一顆的描述是 provisioned-by=manila.csi.openstack.org" src="../../assets/screenshots/day16-skyline-shares.png" /></p>
+<p><code>day16-share</code> 是剛才用 CLI 建的。另一顆 <code>pvc-…</code> 的描述寫著 <code>provisioned-by=manila.csi.openstack.org</code>,它是後續 Kubernetes 整合曾透過 Manila 建立的 share;做完這一節時,你的畫面只會有 <code>day16-share</code> 一列。</p>
+<p>這個安全上的前提要知道:CephFS native 的客戶端直接連 Ceph 的網路,租戶之間的隔離只靠各自的 cephx 金鑰。Manila 的官方文件因此說明,這種後端只適合租戶彼此可以信任的私有雲;要給不互信的租戶使用,官方文件介紹的是透過 NFS 提供 share 的方式。</p>
+<h2 id="kubernetes-share">選讀:讀懂 Kubernetes 共用 share 的結果<a class="headerlink" href="#kubernetes-share" title="Permanent link">&para;</a></h2>
+<p>前面到主機掛載為止,Manila 已經可以用了。這一節說明既有 Kubernetes 共用儲存結果。本章未提供完整 Helm values 與 manifests,所以這裡不作為可從空白叢集重建的操作步驟;先看懂 PVC、PV 和 Manila share 的關係即可。完整部署方式見章末的 Manila CSI 文件。</p>
+<h3 id="_2">為什麼需要它<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p><a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 讓 Kubernetes 的 PVC 由 Cinder 提供,accessModes 寫的是 <code>ReadWriteOnce</code>(RWO):一顆 volume 同一時間只能掛到一個節點,原因跟開場的兩台 VM 一樣,Cinder 給的是區塊裝置。很多應用需要多個 Pod 同時讀寫同一份資料,例如共用的上傳目錄、多個副本共用的網站靜態檔,這種存取方式在 Kubernetes 叫 <code>ReadWriteMany</code>(RWX)。本課的 Cinder CSI 路徑沒有提供這種跨節點共用檔案模式,因此改用 Manila share。</p>
+<h3 id="csi-driver">兩個 CSI driver 怎麼分工<a class="headerlink" href="#csi-driver" title="Permanent link">&para;</a></h3>
+<p>Kubernetes 透過 CSI driver(讓 Kubernetes 跟外部儲存系統對接的外掛)取得儲存。這個整合用到兩個:<strong>csi-driver-manila</strong> 向 Manila 要 share,實際把 CephFS 掛進 Pod 的工作交給 <strong>ceph-csi</strong>。兩者需要安裝在 workload cluster,並設定 OpenStack 憑證及掛載所需的節點服務。下圖由上往下是一個 RWX PVC 被滿足的過程:</p>
+<p><img alt="最上層是 Day 8 的 workload cluster:一個 accessModes 為 ReadWriteMany 的 PVC 交給 csi-driver-manila,csi-driver-manila 往下呼叫 OpenStack 的 Manila API;Manila 在 Ceph 上建 share、授權 cephx 身分;最下層的 CephFS share 以橘色強調,由 ceph-csi 把同一顆 share 掛進節點 A 上的 web-writer 和節點 B 上的 web-reader 兩個 Pod" src="../../assets/diagrams/os-s4d16-rwx.svg" /></p>
+<p>照著圖由上往下看:中間的 Manila 做的事,跟步驟 5 你手動做的一樣,建 share 再授權一個 cephx 身分;差別是發出請求的換成了 csi-driver-manila。最後掛載的 ceph-csi 也跟步驟 5 的 <code>mount -t ceph</code> 一樣,直接連 Ceph,不經過 Manila。</p>
+<p>讀其他安裝範例時,留意以下差異:</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/manila/2025.1/configuration/shared-file-systems/drivers/cephfs_driver.html">Manila CephFS driver 官方文件</a></strong> —— native 與 NFS 兩種模式的差異、<code>client.manila</code> 權限的出處。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/manila-guide.html">Kolla-Ansible 的 Manila 指南</a></strong> —— Kolla 側部署選項的官方對照(注意本章地雷 2 提到的文件勘誤)。</li>
-<li><strong><a href="https://docs.ceph.com/en/tentacle/cephfs/">CephFS 官方文件</a></strong> —— MDS、subvolume、配額這些概念的權威定義。</li>
-<li><strong><a href="https://github.com/kubernetes/cloud-provider-openstack/tree/master/docs/manila-csi-plugin">Manila CSI plugin</a></strong> —— Day 16+ 那套 K8s 整合的官方文件與部署選項。</li>
+<li><strong>StorageClass 的 <code>provisioner</code> 要寫對。</strong> StorageClass 告訴 Kubernetes 哪一種 PVC 交給哪個 driver 處理。csi-driver-manila 的 CephFS driver 註冊的名稱是 <code>cephfs.manila.csi.openstack.org</code>,前面多了協定名稱;寫成 <code>manila.csi.openstack.org</code>,PVC 會一直綁不上。</li>
+<li><strong>node-stage secret 放的是 OpenStack 的認證資訊,不是 Ceph 金鑰。</strong> 節點要掛載時,csi-driver-manila 會用這組 OpenStack 帳號去 Manila 查這顆 share 的存取規則。</li>
+<li><strong>先分清由哪個 driver 接受 PV。</strong> 直接交給 ceph-csi 的靜態 PV 與交給 Manila CSI 的 PV,參數不同。前者需要 CephFS 的 <code>fsName</code>;後者引用 Manila 的 share 與 access rule,不能把兩套範例混用。</li>
 </ul>
-<h2 id="_9">下一步<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
-<p>儲存三部曲完成——你的雲現在同時提供區塊、物件、檔案三種儲存,全部長在同一套 Ceph 上。<a href="../sprint4-day17-designate-dns/">Day 17</a> 換個領域:給雲加上 <strong>DNS 服務</strong>,讓每台 VM 自動擁有自己的域名。</p>
+<h3 id="nginx-pod-rwx-volume">驗證:兩個 nginx Pod 共用一顆 RWX volume<a class="headerlink" href="#nginx-pod-rwx-volume" title="Permanent link">&para;</a></h3>
+<p>下面是既有結果的摘錄:一個 <code>ReadWriteMany</code> PVC 已經綁到 PV,兩個 nginx Pod 在不同節點執行,Manila 也有一顆 available share。PVC 是應用提出的儲存要求,PV 是 Kubernetes 用來描述實際儲存的物件;要證明兩者引用這顆 share,還必須核對 PV 的 shareID 或 shareName,不能只靠名稱猜測。</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$ kubectl get pvc shared-static
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>NAME            STATUS   VOLUME            CAPACITY   ACCESS MODES   ...
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>shared-static   Bound    manila-share-pv   1Gi        RWX            ...
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>$ kubectl get pods -l app=shared-web -o wide
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>web-reader   Running   kube-plpuz-default-worker-...    ← 節點 A
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>web-writer   Running   kube-plpuz-ng-app-...            ← 節點 B(不同節點!)
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>$ openstack share list          # 這顆 RWX 卷,就是 Manila 開的一顆 share
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>pvc-e6cbc3c7-...  CEPHFS  available
+</span></code></pre></div>
+<p>要看的有三處:PVC 的 <code>ACCESS MODES</code> 是 <code>RWX</code> 而且 <code>Bound</code>;兩個 Pod 的第三欄是兩個不同的節點;<code>openstack share list</code> 多了一顆 <code>pvc-</code> 開頭的 CephFS share,描述顯示它曾由 csi-driver-manila 建立。不過這份摘錄沒有 PV 的 shareID,不能單憑它判定 <code>shared-static</code> 是否觸發了這次建立,或只是重用既有 share。終端機畫面如下:</p>
+<p><img alt="終端機畫面:kubectl get pvc shared-static 顯示 Bound、容量 1Gi、存取模式 RWX;kubectl get pods 顯示 web-reader 和 web-writer 都在 Running,分別在兩個不同的節點;openstack share list 顯示一顆 pvc-e6cbc3c7 開頭的 CEPHFS share,狀態 available" src="../../assets/screenshots/day16-kubectl.png" /></p>
+<p>兩個 Pod 已掛好同一顆 share 時,下面的操作可檢查檔案是否跨節點可見。它依賴前述尚未附齊的安裝與 Pod 定義,請把它當作既有測試的解讀:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-writer<span class="w">  </span>--<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;echo &quot;&lt;h1&gt;Hello, World!&lt;/h1&gt;...&quot; &gt; /usr/share/nginx/html/index.html&#39;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>web-reader<span class="w">  </span>--<span class="w"> </span>wget<span class="w"> </span>-qO-<span class="w"> </span>http://localhost/<span class="w">     </span><span class="c1"># 讀到同一份頁面</span>
+</span></code></pre></div>
+<p><code>web-reader</code> 回應的就是 <code>web-writer</code> 剛寫入的頁面。既有的瀏覽器畫面如下;下一小節說明這個入口如何連到 Pod:</p>
+<p><img alt="瀏覽器顯示 Hello, World! 頁面,這個頁面由 web-writer 寫入、由另一個節點上的 web-reader 提供" src="../../assets/screenshots/day16-hello-page.png" /></p>
+<h3 id="pod">既有 Pod 的網頁如何連到瀏覽器<a class="headerlink" href="#pod" title="Permanent link">&para;</a></h3>
+<p>Pod 的位址在 cluster 的內部網路(<code>10.100.x.x</code>),你的電腦連不到。有兩種做法,下圖上下兩列分別是它們經過的路:</p>
+<p><img alt="上列是路徑一 port-forward:你的瀏覽器 localhost:8888 經 SSH tunnel 連到 lab VM 的 8888,再經 kubectl port-forward 連到 web-reader 的 nginx 80 port。下列是路徑二 LoadBalancer:外部使用者連到有對外 IP 的 Octavia LB,LB 分流到節點 A 和節點 B 上的 Pod。兩列最後都讀到右邊以橘色強調的同一顆 Manila RWX volume 上的 index.html" src="../../assets/diagrams/os-s4d16-access.svg" /></p>
+<p>兩條路最後讀的都是同一顆 RWX volume,差別在入口:上列限於能登入 lab VM 並建立 SSH tunnel 的操作者,下列則依負載平衡器與網路的開放範圍提供存取。</p>
+<p><strong>路徑一:<code>kubectl port-forward</code>。</strong> <code>kubectl port-forward</code> 透過 Kubernetes API server 把本機的一個 port 轉到某個 Pod,不需要負載平衡器,也不需要對外 IP。你的電腦到 Pod 之間隔著 Azure 上的 lab VM 和 cluster 內部網路,所以要接兩段:先在 lab VM 上把 Pod 的 80 轉到 loopback 的 8888,再從你的電腦用 SSH tunnel 把 VM 的 8888 接到本機。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># 在 lab VM 上:把 pod 的 80 埠轉發到 VM 的 8888</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>kubectl<span class="w"> </span>port-forward<span class="w"> </span>--address<span class="w"> </span><span class="m">127</span>.0.0.1<span class="w"> </span>pod/web-reader<span class="w"> </span><span class="m">8888</span>:80<span class="w"> </span><span class="p">&amp;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1"># 在你的電腦上:把 VM 的 8888 接到本機 8888</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">8888</span>:127.0.0.1:8888<span class="w"> </span>azureuser@&lt;VM公網IP&gt;
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># 瀏覽器開 http://localhost:8888 —— 就看到那個 hello world 頁</span>
+</span></code></pre></div>
+<p>這條路是臨時的,只有開著這兩段轉發的人看得到,適合除錯或展示。上面的截圖就是用這個方法打開的。</p>
+<p><strong>路徑二:<code>Service type=LoadBalancer</code>。</strong> 要給外部使用者用,做法跟 Day 8 一樣:把 Service 宣告成 <code>type=LoadBalancer</code>,cluster 裡的 CCM(cloud controller manager,替 Kubernetes 向 OpenStack 要資源的元件)會請 Octavia 建一台負載平衡器、配一個對外 IP,把流量分到各節點上的 Pod,而這些 Pod 讀寫的是同一顆 RWX volume。</p>
+<p>在這個 lab 試 LoadBalancer,CCM 建 LB 時會失敗,訊息是 <code>Provider 'amphorav2' is not enabled</code>。原因和修法跟 Day 8 的<a href="../sprint3-day8-e2e-workload-cluster/#mine-3">「LoadBalancer 一直 pending,CCM 報 <code>Provider 'amphorav2' is not enabled</code>」</a>相同:CCM 預設要 <code>amphorav2</code>,這朵雲的 Octavia 只啟用了 <code>amphora</code>,所以要在 cluster 帶上 <code>octavia_provider=amphora</code> 標籤。</p>
+<p>不過這個修法在 Day 22 之後就不適用了。Day 22 的<a href="../sprint4-day22-upgrade-backup/#mine-1">「<code>--tags</code> 部署的檢查盲區」</a>把 <code>octavia_provider_drivers</code> 收斂成只剩 <code>ovn</code>,amphora 不再可選。如果你的環境已經做過 Day 22,要走 LoadBalancer 得先依那一節的說明處理 provider,不能再直接帶 <code>amphora</code> 標籤。</p>
+<h2 id="_3">疑難排解<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1"><code>openstack</code> 沒有 <code>share</code> 子命令<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>:Manila 的 CLI 指令來自另外的外掛套件 <code>python-manilaclient</code>,<code>openstack</code> 本身沒有。修法是步驟 4 的 <code>pip install python-manilaclient</code>。之後部署其他服務、CLI 沒有對應指令時,也先裝 <code>python-&lt;服務名&gt;client</code>。</p>
+<h3 id="mine-2">keyring 放錯目錄或 ceph.conf 帶縮排<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>:Kolla 解析設定檔時遇到行首的 tab 會失敗,而 <code>generate-minimal-conf</code> 和 <code>ceph auth get</code> 的輸出都帶縮排;另外,官方指南多後端那一段的範例把 keyring 放在 <code>manila-share/</code> 子目錄,單一後端照它放會放錯位置。正確的做法見步驟 2:兩個檔案都經過 <code>sed</code> 去掉行首空白,直接放在 <code>/etc/kolla/config/manila/</code> 底下。</p>
+<h3 id="mine-3">CephFS 建好後出現 <code>too many PGs per OSD</code><a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:步驟 1 建立 <code>manila_fs</code> 之後,<code>ceph health</code> 出現 <code>too many PGs per OSD (369 &gt; max 250)</code>。</p>
+<p><strong>原因</strong>:PG 是 Ceph 把 pool 裡的資料分組放到 OSD 上的單位,每個 pool 建立時都帶著預設數量的 PG。CephFS 會新增自己的 pool,單機只有一顆 OSD,所有 pool 的 PG 都算在它身上,很快就超過每顆 OSD 的上限。多顆 OSD 的叢集分攤得開,通常不會遇到。</p>
+<p><strong>修法</strong>:lab 環境直接放寬上限:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>config<span class="w"> </span><span class="nb">set</span><span class="w"> </span>mon<span class="w"> </span>mon_max_pg_per_osd<span class="w"> </span><span class="m">512</span>
+</span></code></pre></div>
+<p>正式環境不這樣處理,而是讓 PG autoscaler 依各 pool 的容量比例調整 PG 數。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一個團隊要在兩台 VM 上跑同一套轉檔程式,兩台都要從同一個資料夾讀原始影片、把結果寫回去。另一個團隊要給一台資料庫 VM 一顆資料碟。這兩個需求各該用 Cinder 還是 Manila?為什麼?</li>
+<li>同學照步驟 5 做,<code>openstack share show</code> 顯示 <code>available</code>,<code>mount</code> 卻一直逾時。依照「Manila 只管建立和授權,讀寫直接走 Ceph」那張圖,你會請他先查 Manila 的服務,還是他這台機器到 <code>10.0.0.4:6789</code> 的連線?</li>
+<li>另一位同學建 share 時,share 一直建不起來,而 <code>openstack share service list</code> 裡的服務都是 <code>up</code>。他的 share type 是照另一份教學建的。你會請他先看 share type 的哪一個設定?</li>
+</ul>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>Manila 提供可以被多台機器同時掛載的 share,這符合本章的共用檔案需求,也不同於 Day 3 單機 attach 的區塊 volume 配置。它在 CephFS native 模式下只負責控制路徑:透過 Ceph MGR 建 share、設定容量上限,並用 cephx access rule 決定誰能掛載;掛載後的讀寫由客戶端直接連 Ceph 的 MON、MDS 和 OSD。部署時要準備好只有 MON 讀、MGR 讀寫權限的 <code>client.manila</code> 身分,把去掉行首縮排的 <code>ceph.conf</code> 和 keyring 放在 <code>/etc/kolla/config/manila/</code>,並建一個 DHSS 為 <code>False</code> 的 share type。之後 share 出問題,先看狀態:建不起來就查 Manila 的服務和 share type,狀態正常卻掛不上,就查掛載的機器能不能連到 Ceph、金鑰對不對。在 Kubernetes 上,同樣的機制讓 RWX PVC 由 Manila 供應。</p>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/manila/2025.1/configuration/shared-file-systems/drivers/cephfs_driver.html">Manila CephFS driver 官方文件</a></strong> —— native 與 NFS 兩種模式的差異、<code>client.manila</code> 需要的權限,以及 native 模式只適合可信任租戶的安全說明。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/external-ceph-guide.html">Kolla-Ansible 外部 Ceph 指南</a></strong> —— Manila 的 Ceph 設定檔與 keyring 要放在哪、行首 tab 的警告都在這一頁。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/manila-guide.html">Kolla-Ansible 的 Manila 指南</a></strong> —— Kolla 側部署 Manila 的官方說明;它的範例用的是需要 share server 的 driver,share type 的 DHSS 是 <code>True</code>。</li>
+<li><strong><a href="https://docs.ceph.com/en/tentacle/cephfs/">CephFS 官方文件</a></strong> —— MDS、subvolume、配額這些概念的正式定義。</li>
+<li><strong><a href="https://github.com/kubernetes/cloud-provider-openstack/blob/release-1.32/docs/manila-csi-plugin/using-manila-csi-plugin.md">Manila CSI plugin</a></strong> —— 選讀段那套 Kubernetes 整合的官方文件與部署選項。</li>
+</ul>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>到這裡,這朵雲的區塊、物件、檔案三種儲存都有了,後兩種都建在同一套 Ceph 上。<a href="../sprint4-day17-designate-dns/">Day 17</a> 換到網路這一側:部署 DNS 服務 Designate,讓 VM 可以用名稱而不是 IP 被找到。</p>
 
 
 

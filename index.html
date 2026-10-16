@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -20,7 +20,7 @@
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -50,6 +50,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -94,8 +96,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -355,8 +356,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -431,6 +431,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenStack 是什麼？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -446,7 +457,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        還沒拼上的積木
+        其他可以延伸認識的服務
       
     </span>
   </a>
@@ -473,7 +484,7 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這裡之前發生過什麼
+        課程使用的部署工具
       
     </span>
   </a>
@@ -481,10 +492,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-0-35" class="md-nav__link">
+  <a href="#day-035" class="md-nav__link">
     <span class="md-ellipsis">
       
-        課程路徑(Day 0 → 35)
+        課程路徑（Day 0–35）
       
     </span>
   </a>
@@ -492,10 +503,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#k8s" class="md-nav__link">
+  <a href="#kubernetes-openstack" class="md-nav__link">
     <span class="md-ellipsis">
       
-        課程壓軸:一鍵 K8s 背後發生什麼
+        建立 Kubernetes 叢集時，OpenStack 做了什麼？
       
     </span>
   </a>
@@ -503,10 +514,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#cluster-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        鎮館之寶
+        Cluster API 的圖示在表達什麼？
       
     </span>
   </a>
@@ -1299,7 +1310,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1687,7 +1698,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1715,7 +1726,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1743,7 +1754,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1863,7 +1874,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -3901,6 +3912,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenStack 是什麼？
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3916,7 +3938,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        還沒拼上的積木
+        其他可以延伸認識的服務
       
     </span>
   </a>
@@ -3943,7 +3965,7 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這裡之前發生過什麼
+        課程使用的部署工具
       
     </span>
   </a>
@@ -3951,10 +3973,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-0-35" class="md-nav__link">
+  <a href="#day-035" class="md-nav__link">
     <span class="md-ellipsis">
       
-        課程路徑(Day 0 → 35)
+        課程路徑（Day 0–35）
       
     </span>
   </a>
@@ -3962,10 +3984,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#k8s" class="md-nav__link">
+  <a href="#kubernetes-openstack" class="md-nav__link">
     <span class="md-ellipsis">
       
-        課程壓軸:一鍵 K8s 背後發生什麼
+        建立 Kubernetes 叢集時，OpenStack 做了什麼？
       
     </span>
   </a>
@@ -3973,10 +3995,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#cluster-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        鎮館之寶
+        Cluster API 的圖示在表達什麼？
       
     </span>
   </a>
@@ -4001,11 +4023,15 @@
 
 
 <h1 id="_1">親手蓋一朵雲<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<p>虛擬機、虛擬網路、雲端硬碟、負載平衡——公有雲的這些能力不是魔法,是一套叫 <strong>OpenStack</strong> 的開源軟體。AWS 那個層級的東西,<strong>你可以自己蓋一朵</strong>。</p>
-<p>這個網站帶你從 Azure 的一台空白 VM 開始,把一朵雲從零蓋起來。第二天,你就會對<strong>自己的雲</strong>下這個指令:</p>
+<p><img alt="OpenStack 官方標誌" class="openstack-logo" src="assets/logos/openstack.svg" width="360" /></p>
+<h2 id="openstack">OpenStack 是什麼？<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h2>
+<p><strong>OpenStack 是用來建置雲端基礎設施的開源軟體。</strong> 它把伺服器的運算能力、儲存空間與網路集中管理，讓使用者透過網頁或指令建立虛擬機、配置網路、掛載磁碟。把這些基礎設施提供給使用者自行取用，就是「基礎設施即服務」（Infrastructure as a Service，IaaS）。企業可以用它建立內部使用的私有雲，雲端業者也可以用它提供公有雲服務。<a href="https://www.openstack.org/software/">官方介紹</a></p>
+<p>例如，你要建立一台有網路、能存資料的虛擬機。使用者只需要選擇作業系統映像檔、CPU 與記憶體規格，以及要連接的網路；雲端平台則要確認使用權限、選擇承載它的主機，並完成網路與磁碟設定。OpenStack 把這些工作分給不同服務，讓它們合作完成同一個請求。</p>
+<p>其中，<strong>Nova</strong> 負責虛擬機的建立與管理，<strong>Neutron</strong> 負責網路，<strong>Cinder</strong> 提供可掛載到虛擬機的持久磁碟。你會在下方看到這些服務各自的吉祥物與用途；讀到後面的章節時，可以用圖片和名稱一起辨認它們。</p>
+<p>這門課會帶你部署並操作這些服務。實驗從 Azure 上一台支援巢狀虛擬化的 VM 開始，也就是在這台 VM 裡再執行虛擬機。部署完成後，到了 <a href="runbook/sprint3-day2-openstack-resource-flow/">Day 2</a>，你會對自己的 OpenStack 環境送出建立虛擬機的指令：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span>vm-cirros
 </span></code></pre></div>
-<p><strong>你的雲,開出它的第一台虛擬機。</strong>之後每一天再給它一個新能力:雲端硬碟、負載平衡、秘密保險箱、資源藍圖……直到最後一天,這朵雲甚至能像 AWS 的 EKS 一樣,<a href="runbook/sprint3-day8-e2e-workload-cluster/">一行指令長出一整座 Kubernetes</a>——那是課程壓軸,也是我們<strong>失敗過兩次</strong>才做到的事。</p>
+<p>這行指令指定虛擬機規格 <code>m1.tiny</code>、映像檔 <code>cirros</code>、網路 <code>net1</code>，並將新虛擬機命名為 <code>vm-cirros</code>。這些資源會在 Day 2 先準備好，你也會確認建立出的虛擬機能否連線。接著，課程逐步加入持久磁碟、負載平衡與 Kubernetes 叢集管理，再進入多節點維運、租戶與安全管理。</p>
 <div style="text-align: center;">
 <p><img alt="Keystone" src="assets/mascots/keystone.png" width="52" />
 <img alt="Glance" src="assets/mascots/glance.png" width="52" />
@@ -4015,18 +4041,19 @@
 <img alt="Octavia" src="assets/mascots/octavia.png" width="52" />
 <img alt="Barbican" src="assets/mascots/barbican.png" width="52" />
 <img alt="Magnum" src="assets/mascots/magnum.png" width="52" /></p>
-<p><em>這些是你這趟旅程會認識的夥伴——OpenStack 每個服務都有官方吉祥物,</em><em>記臉比記名字快</em><em>。</em></p>
+<p><em>由左至右是 Keystone、Glance、Nova、Neutron、Cinder、Octavia、Barbican 與 Magnum 的官方吉祥物。下方的服務表會沿用這些圖片，說明各自負責的工作。</em></p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">這門課適合誰、需要什麼底子</p>
 <ul>
-<li><strong>平台 / DevOps / SRE 工程師</strong>:正中靶心——你會親手把公有雲的每塊積木蓋一遍,搞懂它們底下是誰在動工。</li>
-<li><strong>後端 / 應用工程師</strong>:把它當「消費雲的人的 X 光機」——PVC、負載平衡、代管資料庫、額度、SSO、帳單,底下到底發生什麼,<a href="runbook/sprint3-day2-openstack-resource-flow/">Day 2 的資源全流程</a> 與 <a href="runbook/sprint3-day8-e2e-workload-cluster/">Day 8 的 K8s 對應表</a> 會給你答案。<strong>前面幾天是純基礎建設,別在開機那天就離開</strong>——真正的 payoff 從 Day 2 開始。</li>
-<li><strong>先備知識</strong>:會 Linux 命令列與基本網路就能上手。<strong>Day 6 起會用到 Kubernetes</strong>(kubectl、pod、deployment),不熟的話先花半小時看官方的 <a href="https://kubernetes.io/docs/tutorials/kubernetes-basics/">Learn Kubernetes Basics</a> 再回來;<strong>Day 28 起會用到 PromQL</strong> 查詢語言,屆時照抄可行,想變通可先補一點 Prometheus 查詢基礎。</li>
+<li><strong>平台、DevOps 與 SRE 工程師</strong>：練習部署雲端基礎設施，理解服務如何合作，以及如何追查故障。</li>
+<li><strong>後端與應用工程師</strong>：理解虛擬機、磁碟、負載平衡與代管資料庫背後的資源管理方式。</li>
+<li><strong>先備知識</strong>：會 Linux 命令列、SSH、IP 網段與路由即可開始。Day 6 起會使用 Kubernetes 的 Pod、Deployment 與 <code>kubectl</code>；不熟悉的讀者可以先看 <a href="https://kubernetes.io/docs/tutorials/kubernetes-basics/">Learn Kubernetes Basics</a>。Day 28 起會使用 Prometheus 的查詢語言 PromQL，章節會說明查詢的用途。</li>
 </ul>
 </div>
+<p>動手需要自己的 Azure 訂閱，以及各章指定的 VM、磁碟與網路資源。前段使用單機環境，後段另建獨立多節點環境；課程各章會交代實驗前提與驗證範圍。</p>
 <h2 id="_2">這朵雲能做成什麼<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>你在公有雲用過的東西,OpenStack 幾乎都有對應的積木——這門課會親手把它們一塊塊拼起來:</p>
+<p>下表把課程會操作的服務、吉祥物與用途放在一起。右側列出公有雲中用途相近的服務，方便已有使用經驗的讀者對照；它們的功能範圍與管理方式並不完全相同。</p>
 <table>
 <thead>
 <tr>
@@ -4082,7 +4109,7 @@
 <tr>
 <td><img alt="Octavia" src="assets/mascots/octavia.png" width="32" /></td>
 <td><a href="runbook/sprint3-day4-octavia/">Octavia</a></td>
-<td>負載平衡即服務(LBaaS)</td>
+<td>將連線分配至多台虛擬機（負載平衡）</td>
 <td>ELB</td>
 <td>Cloud Load Balancing</td>
 <td>Load Balancer</td>
@@ -4098,7 +4125,7 @@
 <tr>
 <td><img alt="Heat" src="assets/mascots/heat.png" width="32" /></td>
 <td><a href="runbook/sprint3-day5-barbican-heat/">Heat</a></td>
-<td>宣告式資源編排(IaC)</td>
+<td>用範本建立網路、虛擬機等資源（資源編排）</td>
 <td>CloudFormation</td>
 <td>Infrastructure Manager</td>
 <td>Bicep / ARM</td>
@@ -4122,7 +4149,7 @@
 <tr>
 <td><img alt="Swift" src="assets/mascots/swift.png" width="32" /></td>
 <td><a href="runbook/sprint4-day15-object-storage-rgw/">物件儲存(RGW)</a></td>
-<td>物件儲存(S3 + Swift 雙 API)</td>
+<td>物件儲存：課程實作 Swift API，S3 為選讀</td>
 <td>S3</td>
 <td>Cloud Storage</td>
 <td>Blob Storage</td>
@@ -4151,11 +4178,35 @@
 <td>Cloud SQL</td>
 <td>Azure Database</td>
 </tr>
+<tr>
+<td><img alt="Telemetry" src="assets/mascots/telemetry.png" width="32" /></td>
+<td><a href="runbook/sprint5-day28-ceilometer-metering/">Telemetry</a></td>
+<td>用量計量；告警與擴縮接續於 Day 29</td>
+<td>CloudWatch</td>
+<td>Cloud Monitoring</td>
+<td>Azure Monitor</td>
+</tr>
+<tr>
+<td><img alt="CloudKitty" src="assets/mascots/cloudkitty.png" width="32" /></td>
+<td><a href="runbook/sprint5-day30-cloudkitty-rating/">CloudKitty</a></td>
+<td>依用量與費率計價</td>
+<td>Cost Explorer</td>
+<td>Cloud Billing</td>
+<td>Cost Management</td>
+</tr>
+<tr>
+<td><img alt="Masakari" src="assets/mascots/masakari.png" width="32" /></td>
+<td><a href="runbook/sprint5-day31-masakari-ha/">Masakari</a></td>
+<td>主機故障通知後的虛擬機恢復</td>
+<td>(EC2 內建自動復原)</td>
+<td>(內建即時遷移)</td>
+<td>(內建服務修復)</td>
+</tr>
 </tbody>
 </table>
-<p>點服務名稱可以直接跳到認識它的那一天。</p>
-<h3 id="_3">還沒拼上的積木<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<p>同一盒積木裡還有更多——這些本課程沒有部署,想擴充你的雲時就從這裡挑:</p>
+<p>點服務名稱可以直接跳到對應章節。Swift 的吉祥物在這裡標示物件儲存介面；本課程實際部署的是提供 Swift API 的 Ceph RGW。Telemetry 的計量與告警分別在 Day 28、Day 29 說明。</p>
+<h3 id="_3">其他可以延伸認識的服務<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>Zun 與 Ironic 沒有在本課程部署；服務全景章會介紹它們的用途。</p>
 <table>
 <thead>
 <tr>
@@ -4184,71 +4235,42 @@
 <td>Bare Metal Solution</td>
 <td>Azure BareMetal</td>
 </tr>
-<tr>
-<td><img alt="Telemetry" src="assets/mascots/telemetry.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Telemetry</a></td>
-<td>計量、監控與告警</td>
-<td>CloudWatch</td>
-<td>Cloud Monitoring</td>
-<td>Azure Monitor</td>
-</tr>
-<tr>
-<td><img alt="CloudKitty" src="assets/mascots/cloudkitty.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">CloudKitty</a></td>
-<td>用量計費與費率管理</td>
-<td>Cost Explorer</td>
-<td>Cloud Billing</td>
-<td>Cost Management</td>
-</tr>
-<tr>
-<td><img alt="Masakari" src="assets/mascots/masakari.png" width="32" /></td>
-<td><a href="runbook/sprint3-day11-openstack-service-map/">Masakari</a></td>
-<td>虛擬機高可用與自動復原</td>
-<td>(EC2 內建自動復原)</td>
-<td>(內建即時遷移)</td>
-<td>(內建服務修復)</td>
-</tr>
 </tbody>
 </table>
-<p>每一個的定位與「什麼時候會需要」,都整理在 <a href="runbook/sprint3-day11-openstack-service-map/">Day 11 · 服務全景圖</a>。<strong>Swift(RGW)、Manila、Designate、Trove 已在 Sprint 4(Day 15–18)拼上</strong>,升級到上面的主表了;Sprint 4 後半的課綱見 <a href="runbook/sprint3-day12-sprint4-preview/">Day 12 預告</a>。</p>
+<p>想知道這些服務與核心服務的關係，可以接著讀 <a href="runbook/sprint3-day11-openstack-service-map/">Day 11：服務全景圖</a>。</p>
 <h2 id="_4">從這裡出發<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <div class="grid cards">
 <ul>
 <li>
 <p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27zM5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83s-2.05.78-2.83 0m-5.66 7.07-1.41-1.41zM6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22zM2 22h1.41l4.77-4.76-1.42-1.41L2 20.59zm0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76z"/></svg></span> <strong>課程主線</strong></p>
 <hr />
-<p>從空白 VM 到 K8s-as-a-Service 的完整路徑。每一步都有實測輸出、驗收標準與踩雷記錄。</p>
+<p>從實驗環境開始，建立虛擬機，再用 OpenStack 提供 Kubernetes 叢集。章節包含操作說明、輸出解讀與適用範圍。</p>
 <p><a href="runbook/sprint3-day0-azure-vm/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Day 0 · 開始</a></p>
 </li>
 <li>
 <p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m21.71 20.29-1.42 1.42a1 1 0 0 1-1.41 0L7 9.85A3.8 3.8 0 0 1 6 10a4 4 0 0 1-3.78-5.3l2.54 2.54.53-.53 1.42-1.42.53-.53L4.7 2.22A4 4 0 0 1 10 6a3.8 3.8 0 0 1-.15 1l11.86 11.88a1 1 0 0 1 0 1.41M2.29 18.88a1 1 0 0 0 0 1.41l1.42 1.42a1 1 0 0 0 1.41 0l5.47-5.46-2.83-2.83M20 2l-4 2v2l-2.17 2.17 2 2L18 8h2l2-4Z"/></svg></span> <strong>排錯手冊</strong></p>
 <hr />
-<p>官方文件查不到、動手才會撞到的 15 條整合地雷與解法。拿錯誤訊息來搜就對了。</p>
-<p><a href="solutions/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 查地雷</a></p>
+<p>依錯誤訊息與服務查找整合問題，對照原因、修正方式及驗證結果。</p>
+<p><a href="solutions/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 查找問題</a></p>
 </li>
 <li>
 <p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.5 8H12v5l4.28 2.54.72-1.21-3.5-2.08zM13 3a9 9 0 0 0-9 9H1l3.96 4.03L9 12H6a7 7 0 0 1 7-7 7 7 0 0 1 7 7 7 7 0 0 1-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.9 8.9 0 0 0 13 21a9 9 0 0 0 9-9 9 9 0 0 0-9-9"/></svg></span> <strong>前兩次嘗試</strong></p>
 <hr />
-<p>Juju 走了 9 天、OpenStack-Helm 走了 2 天,為什麼都沒走通?失敗史是這門課的地基。</p>
+<p>比較 Juju、OpenStack-Helm 與 Kolla-Ansible 的部署經驗，了解工具選擇與整合限制。</p>
 <p><a href="previous-attempts/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 讀故事</a></p>
 </li>
 <li>
 <p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m15 19-6-2.11V5l6 2.11M20.5 3h-.16L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5a.5.5 0 0 0 .5.5c.05 0 .11 0 .16-.03L9 18.9l6 2.1 5.64-1.9c.21-.1.36-.25.36-.48V3.5a.5.5 0 0 0-.5-.5"/></svg></span> <strong>服務全景圖</strong></p>
 <hr />
-<p>OpenStack 有幾十個服務,我們用了 11 個。官方 Landscape 一張圖看懂整個版圖。</p>
+<p>對照官方 Landscape，查看運算、儲存、網路與其他服務的關係。</p>
 <p><a href="runbook/sprint3-day11-openstack-service-map/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> 看地圖</a></p>
 </li>
 </ul>
 </div>
-<h2 id="_5">這裡之前發生過什麼<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>嘗試一 · Juju + Charms</strong>:9 天。核心能動,但三項關鍵功能被生態系卡死,放棄。</li>
-<li><strong>嘗試二 · OpenStack-Helm</strong>:2 天。每個問題都要跨 K8s 與 OpenStack 兩層除錯,主動喊停。</li>
-<li><strong>嘗試三 · Kolla-Ansible + Magnum CAPI(本課程)</strong>:走完。前兩次卡死的項目,全部完成。</li>
-</ul>
-<p>完整的決策與教訓 → <a href="previous-attempts/">前兩次嘗試:走過才知道的路</a></p>
-<h2 id="day-0-35">課程路徑(Day 0 → 35)<a class="headerlink" href="#day-0-35" title="Permanent link">&para;</a></h2>
-<p>每一天一份 runbook,固定格式:<strong>原理 → 可照抄的步驟 → 驗收 checkpoint → 踩雷記錄</strong>。所有指令都在真實環境跑過。</p>
+<h2 id="_5">課程使用的部署工具<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>Kolla-Ansible 是部署 OpenStack 的工具，將各項服務放在容器中執行，再透過自動化設定完成整合。前期嘗試過的 Juju 與 OpenStack-Helm 採用不同的部署方式；它們遇到的整合限制與選擇依據，保留在<a href="previous-attempts/">前兩次嘗試</a>，供需要比較工具的讀者參考。</p>
+<h2 id="day-035">課程路徑（Day 0–35）<a class="headerlink" href="#day-035" title="Permanent link">&para;</a></h2>
+<p>先從 Day 0–12 建立與使用資源，再於 Day 13–26 擴充服務、追查請求並練習維運，最後於 Day 27–35 處理租戶、用量、費率與安全管理。</p>
 <table>
 <thead>
 <tr>
@@ -4285,7 +4307,7 @@
 </tr>
 <tr>
 <td><a href="runbook/sprint3-day5-barbican-heat/">5</a></td>
-<td>Barbican 秘密管理 + Heat 編排</td>
+<td>Barbican 機密管理 + Heat 編排</td>
 <td>secret 存取往返、HOT stack</td>
 </tr>
 <tr>
@@ -4315,18 +4337,18 @@
 </tr>
 <tr>
 <td><a href="runbook/sprint3-day11-openstack-service-map/">11</a></td>
-<td>後日談:服務全景圖</td>
-<td>用過的 11 個服務盤點 + 沒用到的版圖</td>
+<td>服務全景圖</td>
+<td>已部署服務的關係與延伸用途</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint3-day12-sprint4-preview/">12</a></td>
-<td>下一步的地圖:Sprint 4 預告</td>
+<td>Sprint 4 預告</td>
 <td>服務擴充、內部原理、維運實務、水平擴展</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day13-skyline/">13</a></td>
 <td>Skyline 新一代儀表板</td>
-<td>一個 flag 增量部署、兩代 UI 並存</td>
+<td>部署 Skyline，與 Horizon 比較操作方式</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day14-ceph-bootstrap/">14</a></td>
@@ -4336,7 +4358,7 @@
 <tr>
 <td><a href="runbook/sprint4-day15-object-storage-rgw/">15</a></td>
 <td>物件儲存 RGW</td>
-<td>S3 + Swift 雙 API、Keystone 整合</td>
+<td>Swift 存取與 Keystone 整合；S3 為選讀</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day16-manila-cephfs/">16</a></td>
@@ -4356,12 +4378,12 @@
 <tr>
 <td><a href="runbook/sprint4-day19-api-request-lifecycle/">19</a></td>
 <td>server create 的完整路徑</td>
-<td>token → RPC → qemu 進程徒手追蹤</td>
+<td>從 API、訊息佇列與資料庫追到 qemu 行程</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day20-ovn-packet-trace/">20</a></td>
 <td>封包怎麼流(OVN)</td>
-<td>ovn-trace 看 NAT 改寫的確切一刻</td>
+<td>ovn-trace 模擬邏輯規則與 NAT 路徑</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day21-observability/">21</a></td>
@@ -4371,27 +4393,27 @@
 <tr>
 <td><a href="runbook/sprint4-day22-upgrade-backup/">22</a></td>
 <td>更新與備份還原</td>
-<td>系列內更新、金絲雀判決的還原演練</td>
+<td>系列內更新、以測試資料檢查還原結果</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day23-multinode-ha/">23</a></td>
 <td>多節點部署與 HA</td>
-<td>四台機器、關掉一台 controller 只停 6 秒</td>
+<td>比較 controller 正常停機與 quorum 限制</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day24-scale-out/">24</a></td>
 <td>橫向擴展</td>
-<td>加節點三部曲、熱遷移、node drain</td>
+<td>加入 compute、熱遷移與主機清空</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day25-sprint4-recap/">25</a></td>
 <td>Sprint 4 總結</td>
-<td>前後對比、28 顆地雷、誠實的差距清單</td>
+<td>服務擴充與維運方式的適用範圍</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint4-day26-sprint5-preview/">26</a></td>
-<td>下一步的地圖:Sprint 5 預告</td>
-<td>把雲當成生意經營——計量、計費、SLA、治理稽核</td>
+<td>Sprint 5 預告</td>
+<td>計量、計價、復原、治理稽核</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day27-multi-tenant-governance/">27</a></td>
@@ -4406,65 +4428,59 @@
 <tr>
 <td><a href="runbook/sprint5-day29-aodh-autoscaling/">29</a></td>
 <td>告警與自動擴縮(Aodh)</td>
-<td>超標自動長機器、退載自動收回</td>
+<td>依告警條件增加與縮減 VM</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day30-cloudkitty-rating/">30</a></td>
-<td>計費(CloudKitty)</td>
-<td>用量變成雙租戶帳單、逐項對帳</td>
+<td>計價(CloudKitty)</td>
+<td>依租戶用量與費率核對計價明細</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day31-masakari-ha/">31</a></td>
-<td>SLA 與自癒(Masakari)</td>
-<td>主機斷電,VM 自己搬家復活</td>
+<td>主機故障與 VM 恢復(Masakari)</td>
+<td>手動通知主機故障後，觀察 VM 疏散與恢復</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day32-full-tls/">32</a></td>
-<td>全站 TLS</td>
-<td>haproxy 終結,每個 API 換 https</td>
+<td>API 入口 TLS</td>
+<td>HAProxy 終止 TLS 與用戶端 CA 信任</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day33-keycloak-federation/">33</a></td>
 <td>企業身分接軌(Keycloak)</td>
-<td>用公司帳號登入這朵雲</td>
+<td>以外部帳號完成 CLI 認證與專案授權</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day34-cadf-audit/">34</a></td>
 <td>稽核軌跡(CADF)</td>
-<td>誰在何時對哪個資源做了什麼</td>
+<td>從 Nova API 事件追查請求者、資源與操作</td>
 </tr>
 <tr>
 <td><a href="runbook/sprint5-day35-sprint5-recap/">35</a></td>
 <td>Sprint 5 總結</td>
-<td>會動 → 敢動 → 能當生意經營</td>
+<td>租戶治理、計量、計價與安全的關係</td>
 </tr>
 <tr>
 <td><a href="runbook/epilogue/">結語</a></td>
-<td>三次嘗試,才有這一朵雲</td>
-<td>整趟旅程回望 + 你的下一步</td>
+<td>課程結語</td>
+<td>依需求選擇後續練習</td>
 </tr>
 </tbody>
 </table>
-<h2 id="k8s">課程壓軸:一鍵 K8s 背後發生什麼<a class="headerlink" href="#k8s" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TB
-    A["openstack coe cluster create"] --&gt; B["Magnum + CAPI driver"]
-    B --&gt; C["CAPI / CAPO 管理叢集"]
-    C --&gt;|Nova| D["節點 VM"]
-    C --&gt;|Octavia| E["API LB"]
-    C --&gt;|Cinder| F["PVC volume"]
-    D --&gt; G["workload K8s cluster"]
-    E --&gt; G
-    F --&gt; G</code></pre>
-<p>Day 6–8 會把這條生產線一站一站蓋出來。</p>
-<h2 id="_6">鎮館之寶<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h2 id="kubernetes-openstack">建立 Kubernetes 叢集時，OpenStack 做了什麼？<a class="headerlink" href="#kubernetes-openstack" title="Permanent link">&para;</a></h2>
+<p>有了虛擬機與網路之後，還能在其上建立 Kubernetes 叢集，用來執行容器化應用程式。Magnum 提供叢集管理介面，本課程透過 Cluster API 將叢集需求轉成 OpenStack 資源。下圖由上往下呈現請求如何建立節點虛擬機、網路與負載平衡器。</p>
+<p><img alt="Magnum 的建立叢集請求經由 Cluster API，呼叫 Nova、Neutron 與 Octavia 建立資源，再確認 Kubernetes 節點狀態。" src="assets/diagrams/os-s3d8-create-flow.svg" /></p>
+<p>圖中的 Nova、Neutron 與 Octavia，就是前面服務表裡的運算、網路與負載平衡服務。Kubernetes 的節點會執行在 Nova 建立的虛擬機上，節點之間透過 Neutron 網路連線，叢集 API 則透過 Octavia 的負載平衡器存取。<a href="runbook/sprint3-day6-capi-management-cluster/">Day 6–8</a> 會逐步建立並解釋這些連結。</p>
+<h2 id="cluster-api">Cluster API 的圖示在表達什麼？<a class="headerlink" href="#cluster-api" title="Permanent link">&para;</a></h2>
 <p><img align="right" alt="Cluster API 官方標誌" src="assets/logos/cluster-api.svg" width="110" /></p>
-<p>Cluster API 的官方標誌:<strong>大龜馱小龜馱更小的龜</strong>,殼上都是 Kubernetes 的舵輪。官方副標一句話講完整個架構哲學——</p>
+<p>Cluster API 的官方標誌是<strong>大龜馱著小龜，龜殼上有 Kubernetes 的舵輪</strong>。這張圖呼應它用 Kubernetes 管理其他 Kubernetes 叢集的做法：先有一個管理叢集，再由其中的控制器建立與管理執行應用程式的叢集。專案以這句話描述這個概念：</p>
 <blockquote>
 <p><em>"It's Kubernetes all the way down."</em>(一路往下,全是 Kubernetes)</p>
 </blockquote>
-<p>為什麼用 K8s 管 K8s?哪隻龜是哪座叢集? → <a href="runbook/sprint3-day6-capi-management-cluster/">Day 6 · Cluster API 管理叢集</a></p>
+<p>管理叢集和執行應用程式的叢集各自做什麼？詳見 <a href="runbook/sprint3-day6-capi-management-cluster/">Day 6 · Cluster API 管理叢集</a></p>
 <hr />
 <p>準備好了嗎? → <strong><a href="runbook/sprint3-day0-azure-vm/">開始:Day 0 · Azure Lab 環境</a></strong></p>
+<p>OpenStack 標誌與服務吉祥物為 OpenStack 專案官方資產，此處作教學用途。來源：<a href="https://www.openstack.org/software/">OpenStack</a> 與<a href="https://www.openstack.org/project-mascots/">專案吉祥物</a>。</p>
 
 
 

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1186,7 +1186,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1295,10 +1295,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        該監控什麼
+        指標與 log 各自回答什麼
       
     </span>
   </a>
@@ -1306,71 +1306,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:開三個開關
+        步驟 1：啟用收集服務
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#2-prometheus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:驗證 Prometheus 抓到了東西
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-log" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:驗證集中式 log
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-day-13-skyline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:收尾 Day 13 的待辦 —— 把 Skyline 接上監控
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        同一個除錯,有觀測與沒觀測差多少
+        步驟 2：確認 Prometheus 能抓取指標
       
     </span>
   </a>
@@ -1378,10 +1328,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3-log-opensearch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3：確認 log 已匯入 OpenSearch
       
     </span>
   </a>
@@ -1389,22 +1339,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#4-skyline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 4：更新 Skyline 的監控設定
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：用 UUID 跨服務搜尋
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:cadvisor 崩潰迴圈 —— inotify: too many open files
+        cAdvisor 持續重啟並回報 inotify 限制
       
     </span>
   </a>
@@ -1415,7 +1387,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:Skyline 缺變數 —— 服務間的隱性依賴
+        Skyline 模板找不到 ceph_rgw_swift_compatibility
       
     </span>
   </a>
@@ -1426,7 +1398,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:RabbitMQ exporter 未上線(已知缺口)
+        RabbitMQ target 持續 down
       
     </span>
   </a>
@@ -1439,7 +1411,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1450,7 +1444,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1790,7 +1784,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1818,7 +1812,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1846,7 +1840,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1966,7 +1960,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4004,10 +3998,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        該監控什麼
+        指標與 log 各自回答什麼
       
     </span>
   </a>
@@ -4015,71 +4009,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 1:開三個開關
+        步驟 1：啟用收集服務
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#2-prometheus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟 2:驗證 Prometheus 抓到了東西
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-log" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:驗證集中式 log
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-day-13-skyline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:收尾 Day 13 的待辦 —— 把 Skyline 接上監控
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        同一個除錯,有觀測與沒觀測差多少
+        步驟 2：確認 Prometheus 能抓取指標
       
     </span>
   </a>
@@ -4087,10 +4031,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3-log-opensearch" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3：確認 log 已匯入 OpenSearch
       
     </span>
   </a>
@@ -4098,22 +4042,44 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#4-skyline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        步驟 4：更新 Skyline 的監控設定
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：用 UUID 跨服務搜尋
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:cadvisor 崩潰迴圈 —— inotify: too many open files
+        cAdvisor 持續重啟並回報 inotify 限制
       
     </span>
   </a>
@@ -4124,7 +4090,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:Skyline 缺變數 —— 服務間的隱性依賴
+        Skyline 模板找不到 ceph_rgw_swift_compatibility
       
     </span>
   </a>
@@ -4135,7 +4101,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:RabbitMQ exporter 未上線(已知缺口)
+        RabbitMQ target 持續 down
       
     </span>
   </a>
@@ -4148,7 +4114,29 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4159,7 +4147,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4186,57 +4174,15 @@
 
 
 
-<h1 id="day-21">Day 21: 可觀測性——替雲巡田水<a class="headerlink" href="#day-21" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>到目前為止,除錯全靠 <code>docker logs</code> 一個容器一個容器翻。今天部署一整套可觀測性:Prometheus 收指標、Grafana 畫圖、集中式 log 把散在各處的紀錄匯到一個地方。本章最實際的一課不是「怎麼裝」,而是<strong>裝完之後,同一個除錯情境快了幾個數量級</strong>——用 Day 19 學的 UUID 追蹤,親自感受一次。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>階段三開始</strong>:從「加能力」轉向「讓它活得久」。</li>
-<li><strong>今天</strong>:一次部署 Prometheus + Grafana + 集中式 log(OpenSearch),並收尾一件 Day 13 埋的待辦——把 Skyline 接上監控。</li>
-<li><strong>今天之後</strong>:Day 22 學升版與備份。有了觀測,升版時才看得到系統的反應。</li>
-</ul>
-</div>
-<h2 id="_1">該監控什麼<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><img align="right" alt="Prometheus 官方標誌" src="../../assets/logos/prometheus.png" width="96" /></p>
-<p>裝監控之前先想清楚要盯什麼,否則 Grafana 上一堆圖卻不知道哪個重要。一朵 OpenStack 雲的關鍵訊號:</p>
-<table>
-<thead>
-<tr>
-<th>面向</th>
-<th>盯什麼</th>
-<th>為什麼</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>API</td>
-<td>請求延遲、錯誤率</td>
-<td>使用者體感的第一線</td>
-</tr>
-<tr>
-<td>Agent</td>
-<td>各服務 agent 是否存活</td>
-<td>一個 agent 死掉,對應功能就默默失效(想想 Day 8 的 CCM)</td>
-</tr>
-<tr>
-<td>佇列</td>
-<td>RabbitMQ 佇列深度</td>
-<td>積壓 = 某個 worker 跟不上或掛了</td>
-</tr>
-<tr>
-<td>資源</td>
-<td>磁碟水位、記憶體</td>
-<td>塞滿之前要先知道(Day 8 的 Nova disk 就是塞爆才發現)</td>
-</tr>
-</tbody>
-</table>
-<p>Kolla 的監控套件把這些對應的 exporter 全都內建了,你只要開開關。</p>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="1">步驟 1:開三個開關<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
-<p><img align="right" alt="Grafana 官方標誌" src="../../assets/logos/grafana.svg" width="84" /></p>
-<p>集中式 log 那個開關會連動把 OpenSearch(儲存與查詢引擎)和它的儀表板一起帶起來:</p>
+<h1 id="day-21">Day 21：集中查詢服務紀錄與監控指標<a class="headerlink" href="#day-21" title="Permanent link">&para;</a></h1>
+<p>一台 VM 建立失敗，你拿著 Day 19 找到的 UUID，分別到 Nova、Placement、Neutron 的紀錄搜尋。當服務分散到多台主機，逐台登入就很費時。另一個問題是：還沒有人回報錯誤，如何發現磁碟快滿了，或某個服務已經停止回報？本章建立兩條資料收集路徑，讓你判斷何時看指標、何時查事件紀錄。</p>
+<h2 id="log">指標與 log 各自回答什麼<a class="headerlink" href="#log" title="Permanent link">&para;</a></h2>
+<p><strong>指標（metric）</strong> 是隨時間取樣的數值，例如可用記憶體、佇列長度、API 錯誤次數。Prometheus 定期向 <strong>exporter</strong> 抓取指標；exporter 是把服務或主機狀態轉成 Prometheus 格式的程式。Grafana 再把數值畫成趨勢圖。</p>
+<p><strong>log</strong> 記錄個別事件，例如某台 VM 的資源配置成功或失敗。Fluentd 收集服務紀錄，送到 OpenSearch 儲存與搜尋；OpenSearch Dashboards 或 Grafana 提供查詢介面。下圖將兩條路徑分開：</p>
+<p><img alt="指標由 exporter 送至 Prometheus，事件紀錄由 Fluentd 匯入 OpenSearch" src="../../assets/diagrams/os-s4d21-two-paths.svg" /></p>
+<p>圖中的連線方向表示資料流。Prometheus 主動抓取 exporter，Fluentd 則主動轉送 log。看到圖表空白時，先確認上游有資料，再確認介面能連到資料源。</p>
+<h2 id="1">步驟 1：啟用收集服務<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>以下沿用單機 Kolla 環境與管理員 openrc。先確認 <code>/var/lib/docker</code> 有足夠空間；OpenSearch 的索引會持續占用磁碟。設定 <code>enable_central_logging</code> 後，Kolla 會部署 OpenSearch 與 Dashboards，並設定 Fluentd：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="s">enable_prometheus: &quot;yes&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">enable_grafana: &quot;yes&quot;</span>
@@ -4245,12 +4191,9 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>prometheus,grafana,common,opensearch
 </span></code></pre></div>
-<p>這一步會拉不少映像檔並啟動一票 exporter,約 10 分鐘。<code>failed=0</code> 即過。記憶體帳:本課環境部署後只多約 3 GiB(OpenSearch 的 heap 預設 1 GiB),對這台機器毫無壓力。</p>
-<h3 id="2-prometheus">步驟 2:驗證 Prometheus 抓到了東西<a class="headerlink" href="#2-prometheus" title="Permanent link">&para;</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Prometheus 在 9091,不是慣例的 9090</p>
-<p>Kolla 把 Prometheus 放在 <strong>9091</strong>,而且加了 basic auth(帳號 <code>admin</code>,密碼在 <code>passwords.yml</code> 的 <code>prometheus_password</code>)。照慣例打 9090 會撲空。</p>
-</div>
+<p><code>common</code> tag 涵蓋 Fluentd 的設定。部署結束的 <code>failed=0</code> 只代表部署工作成功；接下來還要確認 target 與索引實際有資料。</p>
+<h2 id="2-prometheus">步驟 2：確認 Prometheus 能抓取指標<a class="headerlink" href="#2-prometheus" title="Permanent link">&para;</a></h2>
+<p>Prometheus 把每個抓取對象稱為 <strong>target</strong>。本章 Kolla 預設使用 <code>9091</code> 與 basic auth，帳號是 <code>admin</code>，密碼取自 <code>passwords.yml</code>。<code>10.0.0.4</code> 要對應你的單機管理位址：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^prometheus_password:&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>http://10.0.0.4:9091/api/v1/targets<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sys,json,collections; \</span>
@@ -4259,27 +4202,27 @@
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Counter({&#39;up&#39;: 36, &#39;down&#39;: 1})
 </span></code></pre></div>
-<p><code>up</code> 的那些就是 node、libvirt、mysqld、各 OpenStack 服務的 exporter——全被 Prometheus 定期抓取。(那一個 <code>down</code> 是 RabbitMQ exporter,見<a href="#mine-3">地雷 3</a>。)</p>
-<h3 id="3-log">步驟 3:驗證集中式 log<a class="headerlink" href="#3-log" title="Permanent link">&para;</a></h3>
+<p><code>up</code> 表示最近一次抓取成功；<code>down</code> 表示抓取失敗，還不能直接斷定被監控的服務停止。這份紀錄裡 RabbitMQ 的 target 尚未上線，處理範圍見<a href="#mine-3">疑難排解：RabbitMQ target 持續 down</a>。不要把「大部分 up」當作全部監控已完成。</p>
+<p>若 <code>prometheus_cadvisor</code> 持續重啟並回報 <code>inotify_init: too many open files</code>，再依<a href="#mine-1">疑難排解</a>調整主機限制。</p>
+<h2 id="3-log-opensearch">步驟 3：確認 log 已匯入 OpenSearch<a class="headerlink" href="#3-log-opensearch" title="Permanent link">&para;</a></h2>
+<p>OpenSearch 將資料放在 <strong>索引（index）</strong> 中；Kolla 預設的 log 索引名稱以 <code>flog-</code> 開頭。以下先查叢集健康，再確認 log 索引存在：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:9200/_cluster/health?pretty<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>status
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:9200/_cat/indices<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>flog
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>&quot;status&quot; : &quot;yellow&quot;,
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>yellow open flog-2026.07.12  ... 3857
 </span></code></pre></div>
-<p><code>yellow</code> 在單節點是正常的(它想要副本但只有一個節點可放)。索引裡已經有幾千筆 log——fluentd 正把各容器的 log 持續匯進來。</p>
-<p>登入 Grafana(<code>3000</code> 埠)不用手動接資料源——Kolla 已經把 Prometheus(指標)和 OpenSearch(log)兩個都自動配置好了:</p>
-<p><img alt="Grafana 的資料源頁:Prometheus 與 OpenSearch 都已自動接上" src="../../assets/screenshots/day21-grafana-datasources.png" /></p>
-<h3 id="4-day-13-skyline">步驟 4:收尾 Day 13 的待辦 —— 把 Skyline 接上監控<a class="headerlink" href="#4-day-13-skyline" title="Permanent link">&para;</a></h3>
-<p>還記得 Day 13 說「Prometheus 裝好後要回來動 Skyline 一次」嗎?就是現在。Skyline 的監控頁需要 Prometheus 當資料源,重新部署一次讓它接上:</p>
+<p><code>yellow</code> 表示 primary shard 可用，但有 replica shard 尚未配置；在只有一個節點、仍要求副本時可以出現。它不是所有異常都能忽略的訊號。這份節錄同時顯示索引已有文件；之後應持續留意文件是否增加與資料是否夠新。</p>
+<p>Grafana 使用 <code>3000</code> 埠。從你已建立的 SSH tunnel 或可達管理網路開啟它，使用 <code>admin</code> 與 <code>passwords.yml</code> 裡的 <code>grafana_admin_password</code> 登入。資料源頁可以確認 Prometheus 與 OpenSearch 的連線設定：</p>
+<p><img alt="Grafana 已建立 Prometheus 與 OpenSearch 資料源" src="../../assets/screenshots/day21-grafana-datasources.png" /></p>
+<p>看到資料源名稱不等於所有指標都存在。先從主機磁碟與記憶體、服務存活狀態，再到 API 錯誤率與佇列長度；每項都要對照相應 exporter 是否成功抓取。本章未補做各 dashboard 與告警規則的驗證。</p>
+<h2 id="4-skyline">步驟 4：更新 Skyline 的監控設定<a class="headerlink" href="#4-skyline" title="Permanent link">&para;</a></h2>
+<p>Day 13 部署 Skyline 時，Prometheus 還沒有啟用。現在要重新產生 Skyline 設定，讓它取得 Prometheus endpoint 與專用認證資料。先確認 Day 15 的 <code>ceph_rgw_swift_compatibility: "false"</code> 仍寫在 <code>globals.yml</code>，避免 RGW 路徑在這次重新產生設定時不一致。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>skyline
 </span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">會撞到一個隱性依賴（見地雷 2）</p>
-<p>這一步在本課環境第一次跑會失敗,原因是 Day 15 開了 RGW 卻沒設一個相容變數。修法一行,細節在<a href="#mine-2">地雷 2</a>。修完 <code>failed=0</code>,Skyline 的監控頁就有資料了。</p>
-</div>
-<h2 id="_3">同一個除錯,有觀測與沒觀測差多少<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>這是今天最值得體會的一段。回想 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 除 CCM 的錯——當時要一個容器一個容器 <code>docker logs</code> 慢慢翻。現在有了集中式 log,同樣的「跨服務追一個資源」變成一次查詢:</p>
+<p>部署成功後，檢查 Skyline 的監控頁是否能載入資料。如果模板回報缺少 RGW 變數，見<a href="#mine-2">疑難排解</a>；這與 Prometheus 本身是否可用是不同問題。</p>
+<h2 id="5-uuid">步驟 5：用 UUID 跨服務搜尋<a class="headerlink" href="#5-uuid" title="Permanent link">&para;</a></h2>
+<p>接著建立一台測試 VM，取得 UUID，再搜尋 OpenSearch 的 <code>Payload</code> 欄位，也就是 log 訊息本文。以下假設 <code>day17-net</code>、<code>cirros</code>、<code>m1.tiny</code> 仍存在；同名 <code>obs-vm</code> 若已存在，先確認它是不是先前練習留下的資源，避免重複建立。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># 開一台 VM,拿它的 UUID</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">VM</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>obs-vm<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>day17-net<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>sleep<span class="w"> </span><span class="m">20</span>
@@ -4291,82 +4234,47 @@
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s2">    print(&#39;命中&#39;, d[&#39;hits&#39;][&#39;total&#39;][&#39;value&#39;], &#39;筆&#39;); \</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">    [print(&#39; &#39;, h[&#39;_source&#39;][&#39;Payload&#39;][:80]) for h in d[&#39;hits&#39;][&#39;hits&#39;]]&quot;</span>
 </span></code></pre></div>
+<p>這段範例等待 20 秒讓紀錄有時間送入索引，並非 VM 完成或 log 匯入的保證。若沒有命中，先確認 VM UUID、索引與收集延遲。本課的搜尋結果節錄如下：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>命中 19 筆
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  [instance: ee9d0bd4-…] Claim successful on node openstack-lab
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>  10.0.0.4 &quot;GET /allocations/ee9d0bd4-…&quot; status: 200
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  10.0.0.4 &quot;PUT /allocations/ee9d0bd4-…&quot; status: 204
 </span></code></pre></div>
-<p><strong>一次查詢,19 筆 log,橫跨 nova 與 placement</strong>——你直接看到這台 VM 從 claim 資源到 placement 記帳的完整軌跡。Day 8 那種「翻遍容器找線索」的除錯,現在是一行指令。這就是可觀測性的價值:它不是讓系統跑得更好,是讓<strong>你</strong>修得更快。</p>
-<p>同一招在 OpenSearch Dashboards 的 Discover 頁長這樣——把某台 VM 的 UUID 貼進搜尋框,所有含這個 ID 的 log 一次濾出來,黃底就是命中的 UUID,<code>programname</code> 欄一眼看出它散落在 <code>neutron-server</code>、<code>placement-api</code> 等不同服務:</p>
-<p><img alt="在 OpenSearch Dashboards 用 server UUID 過濾,跨服務的 log 全被串起來" src="../../assets/screenshots/day21-opensearch-uuid.png" /></p>
-<p>清理:<code>openstack server delete obs-vm</code>。</p>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Prometheus</td>
-<td>targets 絕大多數 <code>up</code>(9091 + basic auth)</td>
-<td>36/37 up</td>
-</tr>
-<tr>
-<td>OpenSearch</td>
-<td>cluster 回應、log 索引持續增長</td>
-<td>yellow、3857+ docs</td>
-</tr>
-<tr>
-<td>Grafana</td>
-<td>3000 埠可登入,資料源自動含 prometheus + opensearch</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>集中 log 實戰</td>
-<td>用 UUID 一次查詢串起跨服務 log</td>
-<td>19 筆命中</td>
-</tr>
-<tr>
-<td>Skyline 尾巴</td>
-<td>接上 Prometheus 後監控頁有資料</td>
-<td>Day 13 待辦關閉</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:cadvisor 崩潰迴圈 —— <code>inotify: too many open files</code><a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:<code>prometheus_cadvisor</code> 一直重啟,log 是 <code>inotify_init: too many open files</code>。</p>
-<p><strong>根因</strong>:cadvisor 用 inotify 監看每個容器,而這台主機已經跑了六十幾個容器——系統的 <code>fs.inotify.max_user_instances</code> 預設值被耗盡。</p>
-<p><strong>解法</strong>:提高上限。</p>
+<p>命中的紀錄同時包含 Nova 的 instance 訊息與 Placement 的 allocations API。這說明同一個 UUID 能連結不同服務的事件，但這裡只要求傳回五筆文件，不能視為 VM 完整生命週期的全部紀錄。對單次請求，也可使用 Day 19 的 request-id 縮小範圍。</p>
+<p>OpenSearch Dashboards 使用 <code>5601</code> 埠，預設帳號 <code>opensearch</code>，密碼為 <code>opensearch_dashboards_password</code>。首次登入先建立 index pattern <code>flog-*</code>，時間欄位選 <code>@timestamp</code>，再到 Discover 選對時間範圍，搜尋 UUID：</p>
+<p><img alt="Discover 以 UUID 過濾並顯示不同 programname 的服務紀錄" src="../../assets/screenshots/day21-opensearch-uuid.png" /></p>
+<p>除了搜尋字串，也要看時間範圍與 <code>programname</code>。查不到時，先分辨是該服務沒有記錄這個 UUID，還是 Fluentd 尚未送入。練習結束以 <code>openstack server delete obs-vm</code> 刪除測試 VM。</p>
+<h2 id="_1">疑難排解<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">cAdvisor 持續重啟並回報 inotify 限制<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><code>inotify</code> 是 Linux 監看檔案變化的機制。當 cAdvisor 無法再建立監看實例，會出現 <code>inotify_init: too many open files</code>。先確認錯誤訊息，再提高對應限制並重啟該容器：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;fs.inotify.max_user_instances=1024&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/sysctl.d/99-inotify.conf
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;fs.inotify.max_user_watches=524288&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/sysctl.d/99-inotify.conf
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>sudo<span class="w"> </span>sysctl<span class="w"> </span>-p<span class="w"> </span>/etc/sysctl.d/99-inotify.conf
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>sudo<span class="w"> </span>docker<span class="w"> </span>restart<span class="w"> </span>prometheus_cadvisor
 </span></code></pre></div>
-<p><strong>通則</strong>:監控主機的容器一多,cadvisor 死於 inotify 幾乎是必然——先提高 sysctl。</p>
-<h3 id="mine-2">地雷 2:Skyline 缺變數 —— 服務間的隱性依賴<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:<code>deploy --tags skyline</code> 失敗,<code>'ceph_rgw_swift_compatibility' is undefined</code>。</p>
-<p><strong>根因</strong>:Day 15 開了 <code>enable_ceph_rgw</code>,但沒設 <code>ceph_rgw_swift_compatibility</code>。Skyline 的導覽列模板會引用這個變數來決定要不要顯示物件儲存入口——A 服務只開了半套設定,B 服務部署時才爆。</p>
-<p><strong>解法</strong>:<code>globals.yml</code> 補一行 <code>ceph_rgw_swift_compatibility: "true"</code>,重跑即過。</p>
-<p><strong>教訓</strong>:這是「隱性依賴」的活教材——兩個服務之間沒有明顯的關聯,直到某次部署把它們湊在一起才現形。可觀測性這一天反而暴露了儲存那一天的欠債。</p>
-<h3 id="mine-3">地雷 3:RabbitMQ exporter 未上線(已知缺口)<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p>Prometheus 有一個 target(RabbitMQ 的 metrics,埠 15692)持續 <code>down</code>,因為它需要 <code>rabbitmq_prometheus</code> plugin 持久啟用,而這要透過重新部署 rabbitmq role(由 Kolla 管理 <code>enabled_plugins</code>)才會生效。本課程將其記為已知小缺口——不影響其餘 36 個 target,RabbitMQ 本身的健康仍可從佇列深度等其他指標觀察。</p>
-<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>這是針對 inotify 限制的修法；不要只因容器數增加就認定所有重啟都由它造成。</p>
+<h3 id="mine-2">Skyline 模板找不到 ceph_rgw_swift_compatibility<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>只部署 Skyline role 時，不能依賴另一個 role 的預設值剛好已載入。將 <code>ceph_rgw_swift_compatibility: "false"</code> 明確寫進 <code>globals.yml</code>，再重跑步驟 4。此值要與 Day 15 的 <code>/swift/v1</code> 一致；改成 <code>true</code> 會改用 <code>/v1</code>，不能當成單純消除 undefined 的修法。</p>
+<h3 id="mine-3">RabbitMQ target 持續 down<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p>本章尚未完成 RabbitMQ metrics 接線。Kolla 透過 RabbitMQ role 管理 <code>rabbitmq_prometheus</code> plugin；只部署 Prometheus 的 tag 不代表既有 RabbitMQ 容器已套用 plugin 設定。本課尚未驗證重新套用後 target 恢復，因此這裡仍是未完成項目。可沿用 Day 19 的 RabbitMQ 管理工具檢查佇列，但不能宣稱 Prometheus 已取得這些佇列指標。</p>
+<h2 id="_2">想一想<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ol>
+<li>某個 target 是 down，但 VM 仍可建立，你會先檢查被監控服務，還是抓取 endpoint 與認證？需要什麼證據區分？</li>
+<li>搜尋 UUID 沒有結果，為什麼不能立刻斷定 Nova 沒處理這台 VM？</li>
+<li>同一台 VM 的紀錄有數十筆，只傳回五筆的搜尋結果能證明哪些事，又不能證明哪些事？</li>
+</ol>
+<h2 id="_3">小結<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Prometheus 用數值指出狀態與趨勢，OpenSearch 用事件紀錄追查資源經過的服務。部署之後要分別確認抓取、匯入與查詢三件事；資料源出現在介面上只是其中一步。集中查詢減少逐台找檔案的工作，對紀錄內容與缺漏的判讀仍需要 Day 19 的服務分工知識。</p>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/prometheus-guide.html">Kolla-Ansible 的 Prometheus 指南</a></strong> —— 本章部署的官方對照:exporter 清單、額外 scrape 目標、basic auth 使用者都在這份。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/central-logging-guide.html">Kolla-Ansible 的集中式 log 指南</a></strong> —— OpenSearch 的保留策略、索引設定與 Dashboards 的官方說明。</li>
-<li><strong><a href="https://prometheus.io/docs/introduction/overview/">Prometheus 官方概念導覽</a></strong> —— 指標、抓取、時間序列的第一手定義;看完就懂 targets 頁在講什麼。</li>
-<li><strong><a href="https://sre.google/sre-book/monitoring-distributed-systems/">Google SRE Book:Monitoring Distributed Systems</a></strong> —— 「四大黃金訊號」的出處;本章「該監控什麼」那張表的理論根據。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/prometheus-guide.html">Kolla-Ansible 2025.1 Prometheus 指南</a>：查看 exporter、認證與抓取設定。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/central-logging-guide.html">Kolla-Ansible 2025.1 集中式 log 指南</a>：對照索引、保留期限、Discover 與 Fluentd 設定。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/grafana-guide.html">Kolla-Ansible 2025.1 Grafana 指南</a>：查登入與資料源設定。</li>
+<li><a href="https://prometheus.io/docs/introduction/overview/">Prometheus 概念導覽</a>：理解時間序列與抓取模型。</li>
 </ul>
-<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>監控上線了。<a href="../sprint4-day22-upgrade-backup/">Day 22</a> 進入維運最實際的兩件事:<strong>更新</strong>與<strong>備份</strong>——而且從今天起,更新過程中系統的每一個反應,你都看得見。</p>
-<hr />
-<p><em>Prometheus 標誌取自 CNCF 官方 artwork;Grafana 標誌為 Grafana Labs 資產。均作社群教學用途。</em></p>
+<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint4-day22-upgrade-backup/">Day 22</a> 使用這些觀測資料，檢查更新與資料庫還原前後的狀態。</p>
 
 
 

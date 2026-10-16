@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-9-day-2-operationsnode-groupcluster-autoscaler" class="md-skip">
+        <a href="#day-9-day-2-node-group" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -869,19 +869,74 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="原理與架構">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        升版為什麼要多開一台 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:讓 Nova 的 disk 帳放得下 surge 那一台
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-v1348-v1355" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:升版 v1.34.8 → v1.35.5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-nodegroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:新增一組 node group
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-cluster-autoscaler-ng-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:讓 cluster-autoscaler 管 ng-app 的節點數
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 4:讓 cluster-autoscaler 管 ng-app 的節點數">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-capi-rolling-upgradesurge-drain-replace-in-place" class="md-nav__link">
+  <a href="#autoscaler-cluster" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CAPI rolling upgrade:surge → drain → replace(不 in-place 改套件)
+        autoscaler 放在哪一座 cluster
       
     </span>
   </a>
@@ -889,10 +944,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-disk_allocation_ratio" class="md-nav__link">
+  <a href="#machinedeployment-min-max" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 為什麼要調 disk_allocation_ratio
+        先在 MachineDeployment 標上 min 和 max
       
     </span>
   </a>
@@ -900,10 +955,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-node-group-machinedeployment-clusterclass-topology" class="md-nav__link">
+  <a href="#replicas-owner" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. node group ↔ MachineDeployment ↔ ClusterClass topology
+        replicas 只能由一個控制器決定
       
     </span>
   </a>
@@ -911,10 +966,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-cluster-autoscaler-capi" class="md-nav__link">
+  <a href="#autoscaler" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. cluster-autoscaler 在 CAPI 上怎麼運作
+        部署 autoscaler
       
     </span>
   </a>
@@ -923,6 +978,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:觸發擴充,再看它縮回
+      
+    </span>
+  </a>
   
 </li>
       
@@ -930,68 +996,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-disk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A. disk 準備
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#b-v1348-v1355" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        B. 升版 v1.34.8 → v1.35.5
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#c-node-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        C. node group
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#d-cluster-autoscaler-capi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        D. cluster-autoscaler(手動 CAPI 示範)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        從儀表板看成果
       
     </span>
   </a>
@@ -1002,19 +1007,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:升版 surge 撞 Nova No valid host
+        升版時新節點開不出來,Nova 報 No valid host
       
     </span>
   </a>
@@ -1025,7 +1030,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
+        nodegroup 立刻 CREATE_FAILED,failureDomain 是 null
       
     </span>
   </a>
@@ -1036,18 +1041,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 4:autoscaler 拓樸選擇(kind vs workload)
+        autoscaler 調了 replicas,節點數卻在 1 和 3 之間來回
       
     </span>
   </a>
@@ -1063,7 +1057,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從儀表板看成果
+        想一想
       
     </span>
   </a>
@@ -1074,6 +1068,17 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         延伸閱讀
       
     </span>
@@ -1082,10 +1087,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-10" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 10)
+        下一步
       
     </span>
   </a>
@@ -1460,7 +1465,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1851,7 +1856,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1879,7 +1884,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1907,7 +1912,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2027,7 +2032,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4068,19 +4073,74 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="原理與架構">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        升版為什麼要多開一台 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-disk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:讓 Nova 的 disk 帳放得下 surge 那一台
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-v1348-v1355" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:升版 v1.34.8 → v1.35.5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-nodegroup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:新增一組 node group
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-cluster-autoscaler-ng-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:讓 cluster-autoscaler 管 ng-app 的節點數
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 4:讓 cluster-autoscaler 管 ng-app 的節點數">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-capi-rolling-upgradesurge-drain-replace-in-place" class="md-nav__link">
+  <a href="#autoscaler-cluster" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. CAPI rolling upgrade:surge → drain → replace(不 in-place 改套件)
+        autoscaler 放在哪一座 cluster
       
     </span>
   </a>
@@ -4088,10 +4148,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-disk_allocation_ratio" class="md-nav__link">
+  <a href="#machinedeployment-min-max" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. 為什麼要調 disk_allocation_ratio
+        先在 MachineDeployment 標上 min 和 max
       
     </span>
   </a>
@@ -4099,10 +4159,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-node-group-machinedeployment-clusterclass-topology" class="md-nav__link">
+  <a href="#replicas-owner" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. node group ↔ MachineDeployment ↔ ClusterClass topology
+        replicas 只能由一個控制器決定
       
     </span>
   </a>
@@ -4110,10 +4170,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-cluster-autoscaler-capi" class="md-nav__link">
+  <a href="#autoscaler" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. cluster-autoscaler 在 CAPI 上怎麼運作
+        部署 autoscaler
       
     </span>
   </a>
@@ -4122,6 +4182,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:觸發擴充,再看它縮回
+      
+    </span>
+  </a>
   
 </li>
       
@@ -4129,68 +4200,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#a-disk" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A. disk 準備
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#b-v1348-v1355" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        B. 升版 v1.34.8 → v1.35.5
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#c-node-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        C. node group
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#d-cluster-autoscaler-capi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        D. cluster-autoscaler(手動 CAPI 示範)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        從儀表板看成果
       
     </span>
   </a>
@@ -4201,19 +4211,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:升版 surge 撞 Nova No valid host
+        升版時新節點開不出來,Nova 報 No valid host
       
     </span>
   </a>
@@ -4224,7 +4234,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:nodegroup failureDomain: null 被 CAPI 拒(solutions 級)
+        nodegroup 立刻 CREATE_FAILED,failureDomain 是 null
       
     </span>
   </a>
@@ -4235,18 +4245,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 4:autoscaler 拓樸選擇(kind vs workload)
+        autoscaler 調了 replicas,節點數卻在 1 和 3 之間來回
       
     </span>
   </a>
@@ -4262,7 +4261,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從儀表板看成果
+        想一想
       
     </span>
   </a>
@@ -4273,6 +4272,17 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         延伸閱讀
       
     </span>
@@ -4281,10 +4291,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#day-10" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        下一步(Day 10)
+        下一步
       
     </span>
   </a>
@@ -4308,154 +4318,179 @@
 
 
 
-<h1 id="day-9-day-2-operationsnode-groupcluster-autoscaler">Day 9: Day-2 Operations——升版、node group、cluster-autoscaler<a class="headerlink" href="#day-9-day-2-operationsnode-groupcluster-autoscaler" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>課程定位:cluster 開起來只是開始,Day-2 才是生產重點。本日用 CAPI 做三件事:<strong>① K8s 小版升級(rolling)② 新增 node group ③ cluster-autoscaler 自動擴縮</strong>。三者都會 surge 出新 nested VM,所以先解決 Nova disk 的帳。</p>
-</blockquote>
-<h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="1-capi-rolling-upgradesurge-drain-replace-in-place">1. CAPI rolling upgrade:surge → drain → replace(不 in-place 改套件)<a class="headerlink" href="#1-capi-rolling-upgradesurge-drain-replace-in-place" title="Permanent link">&para;</a></h3>
-<p>CAPI 升版<strong>不在舊節點上 apt upgrade</strong>,而是<strong>換新 VM</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>KubeadmControlPlane(1 replica)升版:
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  scale up 到 2(開一台新版 master)→ 等新 master join、etcd 同步
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  → 舊 master cordon+drain+delete → 回 1 replica     ← 這步需要「surge 空間」
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>MachineDeployment(worker)升版:
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  同理 rolling:新版 worker 起 → 舊的 drain+delete
+<h1 id="day-9-day-2-node-group">Day 9: Day-2 維運——滾動升版、新增 node group、讓節點自動增減<a class="headerlink" href="#day-9-day-2-node-group" title="Permanent link">&para;</a></h1>
+<p>Day 8 開出的 workload cluster <code>k8s-lab</code> 已經能跑應用程式。cluster 建好之後的日常維護,一般叫做 Day-2 維運。這一章做其中最常遇到的三件事:Kubernetes 出了新的小版本,要把 cluster 從 v1.34.8 升到 v1.35.5;某一類工作想放在專用的節點上,要多開一組節點;負載變大時,希望節點數自己增加,負載退了再自己減回來。</p>
+<p>這三件事都會讓 Nova 多開 VM。所以除了指令,這一章還要看懂兩件事:新 VM 在 Nova 那邊排不排得進去,以及節點數由誰決定。讀完之後,遇到升版開不出新節點,或節點數自己跳回原值時,你能分辨是 Nova 的 disk 帳不夠,還是有兩個控制器在改同一個欄位。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>這一章接著 Day 8 的環境做:kind management cluster、Magnum 和 Octavia 都要正常運作,<code>k8s-lab</code> 是 <code>CREATE_COMPLETE</code>。主機重開過的話,先照 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a> 開頭的 Pre-flight 檢查一遍。</p>
+<p>本章的指令會在兩座 cluster 之間切換。<code>KUBECONFIG=~/.kube/config</code> 指向 kind management cluster(Day 6 建的,CAPI 的資源都在這裡);看 workload cluster 的節點和 pod,要用 Day 8 從 secret 取出的那份 workload kubeconfig。Day 8 把它存成 <code>/tmp/wl.kubeconfig</code>,檔案不見了就照 Day 8 的步驟再取一次。下面的指令用 <code>&lt;Day 8 的 workload kubeconfig&gt;</code> 代表這個路徑。</p>
+<h2 id="vm">升版為什麼要多開一台 VM<a class="headerlink" href="#vm" title="Permanent link">&para;</a></h2>
+<p>在 CAPI 上升級 Kubernetes,不會登入舊節點去升級套件,而是用新版本的 node image 開一台新 VM,等它加入 cluster,再把舊的那台移除。這種一次換一台的做法叫 <strong>rolling upgrade</strong>(滾動升版),替換過程中暫時多出來的那一台叫 <strong>surge</strong>。</p>
+<p>拿 <code>k8s-lab</code> 的 control plane 來看。Day 6 介紹過,control plane 節點由 KubeadmControlPlane 管理,<code>k8s-lab</code> 只有 1 台。把升版過程依時間順序畫出來:</p>
+<p><img alt="三個時間點:升版前只有一台 v1.34.8 的 control plane;第二步新開一台 v1.35.5,舊的那台被 cordon 和 drain,兩台並存;第三步刪掉舊的,回到一台 v1.35.5。圖下註明第二步多出來的那一台需要 Nova 找得到地方放,worker 接著用同樣方式替換" src="../../assets/diagrams/os-s3d9-rolling-upgrade.svg" /></p>
+<p>照著圖上的編號看:</p>
+<ol>
+<li>升版前是一台 v1.34.8。</li>
+<li>KubeadmControlPlane 先把數量從 1 調到 2,開出一台 v1.35.5,等它加入 cluster、etcd 同步完成。接著把舊的那台 cordon(標記成不再接收新的 pod)和 drain(把上面的 pod 移走)。</li>
+<li>刪掉舊的,數量回到 1。</li>
+</ol>
+<p>worker 由 MachineDeployment 管理,接著用同樣的方式替換。這樣換完的節點都是從乾淨的目標版本 image 開起來的,不會帶著舊版升級留下的東西。代價是第 ② 步:替換期間 cluster 會比平常多一台 VM,Nova 必須有空間放它。</p>
+<h2 id="step-disk">步驟 1:讓 Nova 的 disk 帳放得下 surge 那一台<a class="headerlink" href="#step-disk" title="Permanent link">&para;</a></h2>
+<p>Day 8 遇過一次 <code>No valid host</code>:Nova 計算一台主機還剩多少 disk 時,加總的是每台 VM 的 flavor 宣告的磁碟大小,不是實際用量,而且關機(SHUTOFF)的 VM 也算在內。這筆帳記在 placement,也就是記錄每台主機還剩多少資源、Nova 排程時會去問的那個服務。</p>
+<p>workload cluster 的節點都是 m1.medium,一台在帳上記 40 GB。以本課的 VM 為例,Nova 帳上的 disk 容量是 122 GB(Day 8 從 hypervisor 資訊看到的數字)。升版開始前,帳上已經有 control plane 和 worker 各 40 GB,再加上 Octavia 的 amphora;surge 再要 40 GB,就超過 122 GB。實際上,nested VM(在這台 Azure VM 裡面再開的 VM)的磁碟是 thin provisioning 的 qcow2 檔,只佔真正寫進去的部分,遠小於 flavor 宣告的 40 GB。</p>
+<p>placement 對每種資源有一個 <strong>allocation ratio</strong>(超額分配比例):可分配的量 = 實際容量 × 這個比例。disk 的比例由 Nova 的 <code>disk_allocation_ratio</code> 設定。這個選項預設沒有值,新登記的 resource provider 會套用另一個選項 <code>initial_disk_allocation_ratio</code> 的 1.0。把兩種比例並排看:</p>
+<p><img alt="比例 1.0 時可分配量是 122 GB,control plane 和 worker 各記 40 GB,加上一台 amphora,升版多開的那台 40 GB 超出可分配量,出現 No valid host;比例 3.0 時可分配量是 366 GB,放得下。下方另一列是實際寫入量,每台都只佔一小段" src="../../assets/diagrams/os-s3d9-disk-ratio.svg" /></p>
+<p>比例 1.0 時,帳上剩下的空間不夠 surge 那台的 40 GB,排程就失敗;調成 3.0,可分配的量從 122 GB 變成 366 GB,surge 那台就排得進去。最下面那一列說明了為什麼這樣調在 lab 裡可行:每台 VM 實際寫進磁碟的量都很小。正式環境要依實際的超賣風險決定比例,因為所有 VM 真的把磁碟寫滿時,主機的磁碟會不夠用。</p>
+<p>用 Day 1 的方式,在 <code>/etc/kolla/config/</code> 下放 Nova 的自訂設定,再只重新部署 Nova:</p>
+<p><div class="language-ini highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># /etc/kolla/config/nova.conf</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">[DEFAULT]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="na">disk_allocation_ratio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">3.0</span>
 </span></code></pre></div>
-<p>好處:節點永遠是「乾淨的目標版本 image」,沒有升級殘留;壞處:<strong>每次滾動要有多開一台 VM 的資源</strong>(本 lab 的 disk 關卡)。升版目標由 template 的 <code>kube_tag</code> + <code>image</code> 決定,<code>openstack coe cluster upgrade &lt;cluster&gt; &lt;new-template&gt;</code> 觸發。</p>
-<h3 id="2-disk_allocation_ratio">2. 為什麼要調 <code>disk_allocation_ratio</code><a class="headerlink" href="#2-disk_allocation_ratio" title="Permanent link">&para;</a></h3>
-<p>單機 compute 上,Nova 的 disk 用 <strong>flavor 磁碟總和</strong>計帳(不是實際用量),SHUTOFF 也算。nested VM 是 thin qcow2,實際用量遠低於 flavor 宣告(m1.medium 宣告 40GB,實裝可能 3-5GB)。升版 surge 一台 40GB 會撞 <code>No valid host</code>。解:<code>[DEFAULT] disk_allocation_ratio = 3.0</code> → placement 的 DISK_GB 可分配量 ×3(122→366),surge 有空間。這是 lab thin-provisioning 的正確調校,生產環境依實際超賣風險設定。</p>
-<h3 id="3-node-group-machinedeployment-clusterclass-topology">3. node group ↔ MachineDeployment ↔ ClusterClass topology<a class="headerlink" href="#3-node-group-machinedeployment-clusterclass-topology" title="Permanent link">&para;</a></h3>
-<p>magnum-cluster-api 用 <strong>ClusterClass(managed topology)</strong>:cluster 的 <code>spec.topology.workers.machineDeployments[]</code> 是 node group 的宣告源,topology controller 據此建/管 MachineDeployment。<code>openstack coe nodegroup create</code> = 在 topology 陣列多加一格。<strong>踩雷</strong>:driver 對新 MD 若沒帶 <code>availability_zone</code> label,<code>failureDomain</code> 會是 <code>null</code>,被 CAPI v1.13 topology schema 拒(見<a href="#mine-2">地雷 2</a>)。</p>
-<h3 id="4-cluster-autoscaler-capi">4. cluster-autoscaler 在 CAPI 上怎麼運作<a class="headerlink" href="#4-cluster-autoscaler-capi" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>provider <code>clusterapi</code></strong>:autoscaler 不直接開 VM,而是<strong>改 MachineDeployment 的 replicas</strong>,CAPO 再去 Nova 開節點。</li>
-<li>靠 MD(或 topology MD)的兩個 annotation 界定範圍:<code>cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size</code> / <code>max-size</code>。</li>
-<li>拓樸(本 lab,autoscaler 跑在 kind mgmt):in-cluster 讀/寫 MachineDeployment、<code>--kubeconfig</code> 指 workload 看 pending pod。</li>
-<li><strong>managed topology 的所有權陷阱</strong>:topology 若硬寫 <code>replicas: N</code>,topology controller 會把 autoscaler 的調整打回去(replicas 一直 1↔3 flap)。<strong>要把該 MD 在 topology 的 <code>replicas</code> 拿掉</strong>(交給 autoscaler 擁有)。driver 的 <code>auto_scaling_enabled=true</code> label 正是在建立時做這件事;本 lab cluster 沒帶該 label,故手動 patch topology 示範。</li>
-</ul>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="a-disk">A. disk 準備<a class="headerlink" href="#a-disk" title="Permanent link">&para;</a></h3>
-<p><div class="language-ini highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># /etc/kolla/config/nova.conf</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">[DEFAULT]</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="na">disk_allocation_ratio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">3.0</span>
-</span></code></pre></div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># 驗證:pip install osc-placement; openstack resource provider inventory list &lt;rp&gt; → DISK_GB allocation_ratio=3.0</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># 驗證:pip install osc-placement; openstack resource provider inventory list &lt;rp&gt; → DISK_GB allocation_ratio=3.0</span>
 </span></code></pre></div></p>
-<h3 id="b-v1348-v1355">B. 升版 v1.34.8 → v1.35.5<a class="headerlink" href="#b-v1348-v1355" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 1. 目標版本 node image + template(3 個 Azure label 齊全)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>curl<span class="w"> </span>-fLO<span class="w"> </span>https://github.com/vexxhost/capo-image-elements/releases/download/2026.05-7/ubuntu-24.04-v1.35.5.qcow2
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>ubuntu-24.04-v1.35.5<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--file<span class="w"> </span>ubuntu-24.04-v1.35.5.qcow2<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>ubuntu<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_version</span><span class="o">=</span><span class="m">24</span>.04
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.35.5-azure<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.35.5<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.35.5<span class="w"> </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># 2. 觸發 rolling upgrade,監控 machine 版本滾動</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>upgrade<span class="w"> </span>k8s-lab<span class="w"> </span>k8s-v1.35.5-azure
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>watch<span class="w"> </span><span class="s1">&#39;KUBECONFIG=~/.kube/config kubectl -n magnum-system get machine -o custom-columns=P:.status.phase,V:.spec.version&#39;</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="c1"># UPDATE_COMPLETE 後 kubectl get nodes 全 v1.35.5</span>
+<p>註解那一行是驗證方式:<code>openstack</code> 指令要先裝 <code>osc-placement</code> 外掛才有 <code>resource provider</code> 系列子指令。<code>&lt;rp&gt;</code> 是 resource provider 的 UUID,單機部署只有一個,就是這台主機,可以用 <code>openstack resource provider list</code> 查到。<code>DISK_GB</code> 那一列的 <code>allocation_ratio</code> 變成 3.0,就是生效了。</p>
+<h2 id="2-v1348-v1355">步驟 2:升版 v1.34.8 → v1.35.5<a class="headerlink" href="#2-v1348-v1355" title="Permanent link">&para;</a></h2>
+<p>升版的目標由 ClusterTemplate 決定。所以要先準備兩樣東西:v1.35.5 的 node image,以及一份指向它的新 template。新 template 和 Day 8 的 <code>k8s-v1.34.8-azure</code> 一樣帶齊三個 label:<code>kube_tag</code>(指定 Kubernetes 版本的 label)改成 v1.35.5,<code>fixed_subnet_cidr</code> 和 <code>octavia_provider</code> 照抄;image 換成新上傳的那一個,其他參數不變。準備好之後,<code>openstack coe cluster upgrade</code> 把 cluster 換到新 template,CAPI 就開始滾動替換:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 1. 目標版本 node image + template(3 個 Azure label 齊全)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-fLO<span class="w"> </span>https://github.com/vexxhost/capo-image-elements/releases/download/2026.05-7/ubuntu-24.04-v1.35.5.qcow2
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>ubuntu-24.04-v1.35.5<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--public<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--file<span class="w"> </span>ubuntu-24.04-v1.35.5.qcow2<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_distro</span><span class="o">=</span>ubuntu<span class="w"> </span>--property<span class="w"> </span><span class="nv">os_version</span><span class="o">=</span><span class="m">24</span>.04
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>template<span class="w"> </span>create<span class="w"> </span>k8s-v1.35.5-azure<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--image<span class="w"> </span>ubuntu-24.04-v1.35.5<span class="w"> </span>--external-network<span class="w"> </span>ext-net<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span>--master-lb-enabled<span class="w"> </span>--master-flavor<span class="w"> </span>m1.medium<span class="w"> </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span>--network-driver<span class="w"> </span>calico<span class="w"> </span>--docker-storage-driver<span class="w"> </span>overlay2<span class="w"> </span>--coe<span class="w"> </span>kubernetes<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span>--label<span class="w"> </span><span class="nv">kube_tag</span><span class="o">=</span>v1.35.5<span class="w"> </span>--label<span class="w"> </span><span class="nv">fixed_subnet_cidr</span><span class="o">=</span><span class="m">10</span>.6.0.0/24<span class="w"> </span>--label<span class="w"> </span><span class="nv">octavia_provider</span><span class="o">=</span>amphora
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="c1"># 2. 觸發 rolling upgrade,監控 machine 版本滾動</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>openstack<span class="w"> </span>coe<span class="w"> </span>cluster<span class="w"> </span>upgrade<span class="w"> </span>k8s-lab<span class="w"> </span>k8s-v1.35.5-azure
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>watch<span class="w"> </span><span class="s1">&#39;KUBECONFIG=~/.kube/config kubectl -n magnum-system get machine -o custom-columns=P:.status.phase,V:.spec.version&#39;</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="c1"># UPDATE_COMPLETE 後 kubectl get nodes 全 v1.35.5</span>
 </span></code></pre></div>
-<h3 id="c-node-group">C. node group<a class="headerlink" href="#c-node-group" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># ⚠️ 必帶 availability_zone label,否則 failureDomain=null 被拒(地雷 2)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>ng-app<span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--role<span class="w"> </span>app<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--labels<span class="w"> </span><span class="nv">availability_zone</span><span class="o">=</span>nova
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>list<span class="w"> </span>k8s-lab<span class="w">           </span><span class="c1"># ng-app CREATE_COMPLETE</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-L<span class="w"> </span>node.cluster.x-k8s.io/nodegroup<span class="w">   </span><span class="c1"># 新節點 role=app</span>
+<p><code>watch</code> 那一行在 kind 上列出每個 Machine 的狀態(P 欄)和版本(V 欄)。對照前面的圖看:先多出一個 v1.35.5 的 Machine,原本 v1.34.8 的那個接著消失,control plane 換完再換 worker。整個替換在本課的環境大約花 5 分半鐘。如果新的 Machine 一直沒出現,先看 Nova 有沒有報 <code>No valid host</code>,見<a href="#mine-1">疑難排解:升版時新節點開不出來</a>。</p>
+<p><code>openstack coe cluster show k8s-lab</code> 的狀態變成 <code>UPDATE_COMPLETE</code> 後,切到 workload cluster 看節點,VERSION 欄應該全部是 v1.35.5:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>&lt;Day<span class="w"> </span><span class="m">8</span><span class="w"> </span>的<span class="w"> </span>workload<span class="w"> </span>kubeconfig&gt;
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
 </span></code></pre></div>
-<h3 id="d-cluster-autoscaler-capi">D. cluster-autoscaler(手動 CAPI 示範)<a class="headerlink" href="#d-cluster-autoscaler-capi" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>~/.kube/config<span class="w">          </span><span class="c1"># kind mgmt</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1"># 1. 標註 ng-app MD 的 min/max</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nv">MD</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span>machinedeployment<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ng-app<span class="k">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>annotate<span class="w"> </span><span class="nv">$MD</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size<span class="o">=</span><span class="m">3</span><span class="w"> </span>--overwrite
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># 2. topology 交出 replicas 擁有權(關鍵,原因見地雷 3)</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>patch<span class="w"> </span>cluster<span class="w"> </span>kube-plpuz<span class="w"> </span>--type<span class="o">=</span>json<span class="w"> </span>-p<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w"> </span><span class="s1">&#39;[{&quot;op&quot;:&quot;remove&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/replicas&quot;},</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s1">   {&quot;op&quot;:&quot;add&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/metadata/annotations&quot;,</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s1">    &quot;value&quot;:{&quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size&quot;:&quot;1&quot;,</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="s1">             &quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size&quot;:&quot;3&quot;}}]&#39;</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)——關鍵 image/args:</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="c1">#    image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1">#    args: --cloud-provider=clusterapi --clusterapi-cloud-config-authoritative</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1">#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=&lt;你的cluster名&gt;</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="c1"># 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3</span>
+<h2 id="step-nodegroup">步驟 3:新增一組 node group<a class="headerlink" href="#step-nodegroup" title="Permanent link">&para;</a></h2>
+<p><strong>node group</strong> 是 Magnum 的用語:一組規格相同、角色相同的節點。<code>k8s-lab</code> 建立時自帶一組 worker,現在要再加一組名為 <code>ng-app</code>、角色(role)為 <code>app</code> 的節點,讓指定的工作只跑在這組節點上。</p>
+<p>node group 在 CAPI 那邊對應一個 MachineDeployment。不過 Magnum 使用的 driver(vexxhost 的 magnum-cluster-api)不會直接建立 MachineDeployment,中間還隔了一層。</p>
+<p>這一層是 CAPI 的 <strong>ClusterClass</strong>:一份 cluster 範本,規定 control plane 和 worker 該長什麼樣子。Magnum 開的每座 cluster 都套用同一份範本。</p>
+<p>每座 cluster 自己的參數,例如有哪幾組 worker、各要幾台,寫在 Cluster 物件的 <code>spec.topology</code> 欄位裡。其中 <code>spec.topology.workers.machineDeployments</code> 是一個陣列,每個 node group 佔一格。</p>
+<p>CAPI 有一個 <strong>topology controller</strong>,讀這個陣列,替每一格建立並持續更新對應的 MachineDeployment。這種「Cluster 只寫 topology,底下的 MachineDeployment 由 topology controller 產生」的方式,叫 <strong>managed topology</strong>。</p>
+<p>所以 <code>openstack coe nodegroup create</code> 做的事,就是在這個陣列裡加一格。</p>
+<p>陣列的每一格都有一個 <code>failureDomain</code> 欄位,填的是節點要放在哪個 <strong>availability zone</strong>(AZ,Nova 把主機分組的單位;單機部署只有預設的 <code>nova</code>)。driver 從 node group 的 <code>availability_zone</code> label 讀這個值。沒給這個 label,driver 會填入 <code>null</code>,而 CAPI 只接受字串,整個 node group 會直接 <code>CREATE_FAILED</code>。建立 cluster 時自帶的 default-worker 走另一條路徑,值是空字串 <code>""</code>,所以沒有問題(見<a href="#mine-2">疑難排解:nodegroup 立刻 CREATE_FAILED</a>)。所以建立時一定要帶上這個 label。最後一行要對 workload cluster 下,先切換 kubeconfig:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>&lt;Day<span class="w"> </span><span class="m">8</span><span class="w"> </span>的<span class="w"> </span>workload<span class="w"> </span>kubeconfig&gt;
 </span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">cluster 名別照抄,autoscaler 完整 manifest 從哪來</p>
-<p>上面的 <code>kube-plpuz</code> 是<strong>本課環境</strong>的 cluster 名(Magnum 帶隨機後綴),你的不一樣——先查再代入(patch 指令、autoscaler 的 <code>clusterName</code> args 都要換):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>cluster<span class="w"> </span>-n<span class="w"> </span>magnum-system
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>create<span class="w"> </span>k8s-lab<span class="w"> </span>ng-app<span class="w"> </span>--node-count<span class="w"> </span><span class="m">1</span><span class="w"> </span>--role<span class="w"> </span>app<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span>--labels<span class="w"> </span><span class="nv">availability_zone</span><span class="o">=</span>nova
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>openstack<span class="w"> </span>coe<span class="w"> </span>nodegroup<span class="w"> </span>list<span class="w"> </span>k8s-lab<span class="w">           </span><span class="c1"># ng-app CREATE_COMPLETE</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes<span class="w"> </span>-L<span class="w"> </span>node.cluster.x-k8s.io/nodegroup<span class="w">   </span><span class="c1"># 新節點 role=app</span>
 </span></code></pre></div>
-<p>步驟 3 的完整 Deployment + ServiceAccount/RBAC 是 <a href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md">cluster-autoscaler 官方 <code>clusterapi</code> provider 範例</a> 的標準組態——本課只改三處:image/args 如上、autoscaler 跑在 kind mgmt(in-cluster 讀寫 MachineDeployment)、<code>--kubeconfig</code> 指向 workload cluster 的 kubeconfig secret(讓它看得到 pending pod)。這份 manifest 依你的 secret 名稱與 RBAC 而定,故不逐字附上。</p>
-</div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>disk ratio</td>
-<td>placement DISK_GB allocation_ratio=3.0</td>
-<td>surge master 排得進</td>
-</tr>
-<tr>
-<td><strong>升版</strong></td>
-<td>rolling 完成、nodes 全新版</td>
-<td>v1.34.8 → <strong>v1.35.5</strong>(surge→drain→replace,~5.5 分)</td>
-</tr>
-<tr>
-<td><strong>node group</strong></td>
-<td>ng-app CREATE_COMPLETE、節點 role=app join</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>autoscaler 發現</td>
-<td>discovered MachineDeployment ng-app (min:1 max:3)</td>
-<td>符合</td>
-</tr>
-<tr>
-<td><strong>autoscaler 觸發</strong></td>
-<td>pending pod → ng-app 自動 1→3、pods 全排上</td>
-<td>3/3 Running,2 新節點自動 join</td>
-</tr>
-<tr>
-<td>scale-down</td>
-<td>移除負載後回 min</td>
-<td>刪 scale-test 後 autoscaler 縮回</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:升版 surge 撞 Nova <code>No valid host</code><a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p>見原理 §2。單機 compute disk 用 flavor 總和計帳,升版多開一台就爆。解:<code>disk_allocation_ratio=3.0</code>(thin qcow2 可安全超賣)。</p>
-<h3 id="mine-2">地雷 2:nodegroup <code>failureDomain: null</code> 被 CAPI 拒(solutions 級)<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><code>openstack coe nodegroup create</code> 直接 CREATE_FAILED:<code>spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string</code>。driver 對新 MD 設 <code>failureDomain = labels.get("availability_zone")</code>,沒這 label 就是 <code>None→null</code>,CAPI v1.13 topology schema 不收 null(第一個 default-worker 是 <code>""</code> 合法)。解:<code>--labels availability_zone=nova</code>。完整記錄見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/">nodegroup failureDomain null</a>。</p>
-<h3 id="mine-3">地雷 3:autoscaler 在 managed topology 上 replicas 被打回(flap)<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p>autoscaler 正確偵測 pending、把 MD replicas 設 3,但 <strong>topology controller 依 <code>spec.topology...replicas: 1</code> 一直打回 1</strong>(監控看到 1↔3 來回)。managed topology 下 replicas 由 topology 擁有。解:把該 MD 在 topology 的 <code>replicas</code> <strong>移除</strong>(交給 autoscaler)。生產做法是建 cluster 時帶 <code>auto_scaling_enabled=true</code> + nodegroup min/max,driver 會自動配好 topology;本 lab cluster 未帶該 label,故手動 patch。</p>
-<h3 id="mine-4">地雷 4:autoscaler 拓樸選擇(kind vs workload)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p>autoscaler 跑 kind(mgmt)最省事:in-cluster 讀 MachineDeployment、<code>--kubeconfig</code> 指 workload(其 API FIP <code>172.24.4.x</code> 從 kind 可達)。若跑 workload 內,要餵 mgmt 的 kubeconfig,但 kind API 綁 <code>127.0.0.1:33689</code>(host loopback)workload pod 打不到,得額外 port-forward + skip-TLS,較麻煩。</p>
-<h2 id="_4">從儀表板看成果<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p><img alt="skyline-instances" src="../../assets/screenshots/skyline-instances.png" /></p>
-<p><em>Instance 列表(Skyline 檢視):三台 Active 的節點就是 workload cluster 的全部家當——注意第一台 <code>ng-app</code> 開頭的節點,它是本日 node group 操作的產物。</em></p>
-<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>AZ 的名稱可以用 <code>openstack availability zone list --compute</code> 確認。<code>kubectl get nodes</code> 加上 <code>-L</code> 會多印一欄節點所屬的 node group,新加入的那台應該屬於 <code>ng-app</code>,也就是註解說的 role 為 app 的那組節點。</p>
+<h2 id="4-cluster-autoscaler-ng-app">步驟 4:讓 cluster-autoscaler 管 ng-app 的節點數<a class="headerlink" href="#4-cluster-autoscaler-ng-app" title="Permanent link">&para;</a></h2>
+<p><strong>cluster-autoscaler</strong> 是 Kubernetes 的元件,發現有 pod 因為資源不夠而卡在 Pending 時加節點,節點閒置時再把它移除。它支援很多種雲,在 CAPI 上用的是 <code>clusterapi</code> provider:autoscaler 自己不開 VM,只改 MachineDeployment 的 <code>replicas</code>(要幾台),接下來由 CAPO(Day 6 裝的 CAPI OpenStack provider)呼叫 Nova API 開 VM 或刪 VM。</p>
+<p>哪些 MachineDeployment 歸 autoscaler 管,由兩個 annotation 決定:<code>cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size</code> 和 <code>...-max-size</code>,分別是最少和最多幾台。同時有這兩個 annotation 的 MachineDeployment,autoscaler 才會去調整。</p>
+<h3 id="autoscaler-cluster">autoscaler 放在哪一座 cluster<a class="headerlink" href="#autoscaler-cluster" title="Permanent link">&para;</a></h3>
+<p>autoscaler 要同時看兩座 cluster:在 workload cluster 看哪些 pod 卡在 Pending,在 kind 讀寫 MachineDeployment。本課把它放在 kind 裡:讀寫 MachineDeployment 直接用 kind 內的身分,再用 <code>--kubeconfig</code> 指向 workload cluster。workload cluster 的 API 位址在 ext-net 上,從 kind 連得到。</p>
+<p>反過來放進 workload cluster 也可以,但要另外給它 kind 的 kubeconfig,而 kind 的 API 只綁在主機的 127.0.0.1 上(Day 7 放進 Magnum 的那份 kubeconfig 就是這個位址),workload cluster 裡的 pod 連不到,還得另外做 port-forward 和略過 TLS 驗證。</p>
+<h3 id="machinedeployment-min-max">先在 MachineDeployment 標上 min 和 max<a class="headerlink" href="#machinedeployment-min-max" title="Permanent link">&para;</a></h3>
+<p>在 kind 上找到 ng-app 對應的 MachineDeployment,標上最少 1 台、最多 3 台:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>~/.kube/config<span class="w">          </span><span class="c1"># kind mgmt</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># 1. 標註 ng-app MD 的 min/max</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nv">MD</span><span class="o">=</span><span class="k">$(</span>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>get<span class="w"> </span>machinedeployment<span class="w"> </span>-o<span class="w"> </span>name<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ng-app<span class="k">)</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>annotate<span class="w"> </span><span class="nv">$MD</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span>cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size<span class="o">=</span><span class="m">3</span><span class="w"> </span>--overwrite
+</span></code></pre></div>
+<h3 id="replicas-owner">replicas 只能由一個控制器決定<a class="headerlink" href="#replicas-owner" title="Permanent link">&para;</a></h3>
+<p>到這裡如果直接部署 autoscaler,會遇到一個問題。步驟 3 說過,MachineDeployment 是 topology controller 照 Cluster 的 <code>spec.topology</code> 建出來的,而 <code>ng-app</code> 那一格寫著 <code>replicas: 1</code>。topology controller 會持續把 MachineDeployment 校正成 topology 寫的樣子(Day 6 講的 reconcile)。autoscaler 把 replicas 改成 3,topology controller 就改回 1:</p>
+<p><img alt="上半部:Cluster topology 寫著 ng-app replicas: 1,topology controller 把 MachineDeployment 的 replicas 改回 1,cluster-autoscaler 依 pending pod 改成 3,兩邊輪流改寫,replicas 在 1 和 3 之間來回。下半部:topology 移除 replicas 後,只剩 cluster-autoscaler 依負載調整 MachineDeployment 的 replicas,再由 CAPO 呼叫 Nova 開或刪節點 VM" src="../../assets/diagrams/os-s3d9-replicas-owner.svg" /></p>
+<p>我們可以從圖上看到,上下兩半差在 topology 裡有沒有 replicas。上半部有兩個控制器寫同一個欄位,節點數會在 1 和 3 之間來回;下半部 topology 不寫 replicas,這個欄位只剩 autoscaler 在改。CAPI 和 cluster-autoscaler 的文件對 ClusterClass 的要求也是這樣:要讓 autoscaler 管,Cluster topology 裡的 replicas 就不能設定。</p>
+<p>所以下一步要改 Cluster 物件:移除 ng-app 那一格的 <code>replicas</code>,並把 min 和 max 的 annotation 寫進同一格的 <code>metadata</code>,讓 topology 宣告的內容和剛才直接標在 MachineDeployment 上的一致。</p>
+<p>改之前先查兩件事。第一,CAPI 那邊 Cluster 物件的名稱:它由 Magnum 產生,是 <code>kube-</code> 開頭加一段隨機字串,跟 <code>openstack coe</code> 用的 <code>k8s-lab</code> 不同:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>cluster<span class="w"> </span>-n<span class="w"> </span>magnum-system
+</span></code></pre></div>
+<p>第二,<code>ng-app</code> 在陣列裡的位置。下面的 patch 用的是陣列位置 <code>1</code>,因為建立 cluster 時自帶的 <code>default-worker</code> 佔了第 0 格,<code>ng-app</code> 是後來加的第 1 格。如果你的 cluster 加過其他 node group,先看 Cluster 物件的 YAML 裡 <code>spec.topology.workers.machineDeployments</code> 底下各格的 <code>name</code>,從 0 開始數到 <code>ng-app</code>,把 patch 裡的兩個 <code>1</code> 換成那個位置。</p>
+<p>確認之後再 patch,<code>&lt;capi-cluster-name&gt;</code> 換成上一條查到的名稱:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># 2. topology 交出 replicas 擁有權</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>kubectl<span class="w"> </span>-n<span class="w"> </span>magnum-system<span class="w"> </span>patch<span class="w"> </span>cluster<span class="w"> </span>&lt;capi-cluster-name&gt;<span class="w"> </span>--type<span class="o">=</span>json<span class="w"> </span>-p<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w"> </span><span class="s1">&#39;[{&quot;op&quot;:&quot;remove&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/replicas&quot;},</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="s1">   {&quot;op&quot;:&quot;add&quot;,&quot;path&quot;:&quot;/spec/topology/workers/machineDeployments/1/metadata/annotations&quot;,</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="s1">    &quot;value&quot;:{&quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size&quot;:&quot;1&quot;,</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="s1">             &quot;cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size&quot;:&quot;3&quot;}}]&#39;</span>
+</span></code></pre></div>
+<p>magnum-cluster-api 有一個 <code>auto_scaling_enabled=true</code> 的 label,建立 cluster 時帶上,driver 就會在 topology 裡做好同樣的設定。<code>k8s-lab</code> 建立時沒帶,所以這裡手動 patch;用 label 的做法本課沒有驗證。</p>
+<h3 id="autoscaler">部署 autoscaler<a class="headerlink" href="#autoscaler" title="Permanent link">&para;</a></h3>
+<p>autoscaler 的 Deployment、ServiceAccount 和 RBAC 用 <a href="https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md">cluster-autoscaler 官方 <code>clusterapi</code> provider 範例</a>的組態,部署到 kind。本課改了 image、args,並加上 <code>--kubeconfig</code>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 3. 部署 autoscaler 到 kind(clusterapi provider,--kubeconfig 指 workload)——關鍵 image/args:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1">#    image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.35.1</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1">#    args: --cloud-provider=clusterapi --clusterapi-cloud-config-authoritative</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1">#          --node-group-auto-discovery=clusterapi:namespace=magnum-system,clusterName=&lt;你的cluster名&gt;</span>
+</span></code></pre></div>
+<p>這幾個參數的作用:</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/scheduling.html">Nova 排程與資源配置</a></strong> —— allocation ratio 的官方說明;本章調 <code>disk_allocation_ratio</code> 的理論依據。</li>
-<li><strong><a href="https://docs.openstack.org/magnum/2025.1/user/">Magnum User Guide</a></strong> —— rolling upgrade 與 node group 的官方參數定義,本章兩個主題的出處。</li>
-<li><strong><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Kubernetes Cluster Autoscaler</a></strong> —— 自動擴縮的上游專案;各雲 provider(含 Magnum)的支援狀態與設定。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html">Kolla-Ansible 維運指南</a></strong> —— reconfigure/upgrade 這些日常操作的官方工作流。</li>
+<li><code>--cloud-provider=clusterapi</code>:用 CAPI 的方式加減節點,也就是改 MachineDeployment 的 replicas。</li>
+<li><code>--clusterapi-cloud-config-authoritative</code>:讀寫 MachineDeployment 時用 kind 內的身分,不要改用 <code>--kubeconfig</code> 指向的 workload cluster。官方 README 裡「management cluster 用 in-cluster 設定、另外指定 workload kubeconfig」的範例就是這樣搭配。</li>
+<li>
+<p><code>--node-group-auto-discovery</code>:只找 <code>magnum-system</code> namespace 裡、屬於指定 cluster 的 MachineDeployment。<code>clusterName</code> 填前面 <code>kubectl get cluster</code> 查到的名稱。</p>
+</li>
+<li>
+<p><code>--kubeconfig</code>:指向掛進 Pod 的 workload cluster kubeconfig,讓 autoscaler 看得到 workload cluster 的 pod 和節點。</p>
+</li>
 </ul>
-<h2 id="day-10">下一步(Day 10)<a class="headerlink" href="#day-10" title="Permanent link">&para;</a></h2>
-<p>Terraform 接管(terraform-provider-openstack 管 network/VM/LB)+ teardown 演練(<code>kolla-ansible destroy</code> → 重部速度驗證)+ 寫 <code>sprint3-reflection.md</code>。開工前照 Day8 Pre-flight 確認 kind/magnum/octavia o-hm0 就緒。</p>
+<p>本課沒有保留當時用的完整 manifest,你要以官方範例為底,自己準備這幾樣:</p>
+<ul>
+<li>在 kind 上選一個 namespace 放 autoscaler 的 Deployment 和 ServiceAccount。</li>
+<li>RBAC:讓這個 ServiceAccount 能讀寫 <code>magnum-system</code> namespace 裡的 MachineDeployment 等 CAPI 資源。官方範例裡有對應的 ClusterRole 和 binding 可以參考。</li>
+<li>一個 Secret,內容是 workload cluster 的 kubeconfig。kind 的 <code>magnum-system</code> 裡已經有一個,就是 Day 8 取 kubeconfig 的那個 secret;把它複製到 autoscaler 所在的 namespace,或改用你自己存下的那份建立。</li>
+<li>Deployment:用上面的 image 和 args,把 Secret 掛成檔案,<code>--kubeconfig</code> 指向掛載的路徑。</li>
+</ul>
+<p>autoscaler 起來之後,它的 log 會列出發現的 node group,應該看到 <code>discovered MachineDeployment ng-app (min:1 max:3)</code> 這樣的內容。</p>
+<h2 id="5">步驟 5:觸發擴充,再看它縮回<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>這一步的 Deployment 要自己寫,本課沒有保留當時的 YAML。規格是:名稱 <code>scale-test</code>,3 個副本,每個 pod 的 <code>resources.requests.cpu</code> 是 1,<code>nodeSelector</code> 用 <code>node.cluster.x-k8s.io/nodegroup</code> 這個 label 指向 ng-app 的節點(值以步驟 3 <code>kubectl get nodes -L</code> 那一欄印出的為準),image 用任何長時間執行的就可以。原本的 ng-app 只有一台 m1.medium,放不下 3 個各要 1 CPU 的 pod,多出來的 pod 會停在 Pending。</p>
+<p>先切回 workload cluster,再套用你寫好的 Deployment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>&lt;Day<span class="w"> </span><span class="m">8</span><span class="w"> </span>的<span class="w"> </span>workload<span class="w"> </span>kubeconfig&gt;
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3</span>
+</span></code></pre></div>
+<p>autoscaler 看到 Pending 的 pod,把 ng-app 的 replicas 從 1 改成 3;CAPO 呼叫 Nova 開兩台新 VM,加入 cluster 之後,3 個 pod 全部變成 Running。在 kind 上看 MachineDeployment,replicas 應該停在 3,不會再跳回 1。</p>
+<p>接著把負載移除,讓 autoscaler 把多出來的節點縮回去(KUBECONFIG 仍指向 workload cluster):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>kubectl<span class="w"> </span>delete<span class="w"> </span>deployment<span class="w"> </span>scale-test
+</span></code></pre></div>
+<p>這兩台節點閒置一段時間後,autoscaler 會把 replicas 調回 min 的 1,多開的兩台 VM 也會被刪掉。</p>
+<h2 id="_2">從儀表板看成果<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p><img alt="skyline-instances" src="../../assets/screenshots/skyline-instances.png" /></p>
+<p><em>Skyline 的 Instance 列表:workload cluster 有三台 Active 的節點,分別是 control plane、自帶的 worker 和 ng-app 的一台。名稱以 <code>ng-app</code> 開頭的那一台,就是步驟 3 加的 node group。</em></p>
+<h2 id="_3">疑難排解<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>下面三個問題,跳過或做錯對應步驟時會遇到,依出現順序排列。</p>
+<h3 id="mine-1">升版時新節點開不出來,Nova 報 <code>No valid host</code><a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>openstack coe cluster upgrade</code> 之後,新版本的 Machine 一直沒有起來,Nova 端報 <code>No valid host</code>。</p>
+<p><strong>原因</strong>:Nova 的 disk 帳用 flavor 總和計算,surge 多開的那一台 40 GB 超出可分配量。修法見<a href="#step-disk">步驟 1</a>;如果 Day 2–4 留下的 VM 或 Octavia amphora 還在,也會佔掉 disk 帳,見 Day 8 的<a href="../sprint3-day8-e2e-workload-cluster/#mine-4">「LB 的 amphora 開不出來,Nova 報 <code>No valid host was found</code>」</a>。</p>
+<h3 id="mine-2">nodegroup 立刻 CREATE_FAILED,<code>failureDomain</code> 是 null<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>openstack coe nodegroup create</code> 直接 <code>CREATE_FAILED</code>,錯誤訊息是 <code>spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string</code>。建立 cluster 時自帶的 default-worker 沒有問題,只有後加的 node group 會遇到。</p>
+<p><strong>原因</strong>:driver 用 node group 的 <code>availability_zone</code> label 填 <code>failureDomain</code>,沒有這個 label 就填 <code>null</code>,CAPI v1.13 的 topology 檢查只接受字串;default-worker 的值是 <code>""</code>,所以合法。修法是建立時帶 <code>--labels availability_zone=nova</code>,見<a href="#step-nodegroup">步驟 3</a>。完整記錄見排錯手冊:<a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/">nodegroup failureDomain null</a>。</p>
+<h3 id="mine-3">autoscaler 調了 replicas,節點數卻在 1 和 3 之間來回<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:autoscaler 正確看到 Pending 的 pod,把 MachineDeployment 的 replicas 設成 3,但很快又變回 1,接著又變成 3。</p>
+<p><strong>原因</strong>:Cluster topology 裡還寫著 <code>replicas: 1</code>,topology controller 一直把它改回去。修法是把 topology 裡那一格的 <code>replicas</code> 移除,見<a href="#replicas-owner">步驟 4 的「replicas 只能由一個控制器決定」</a>。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一位同學的 cluster 是 3 台 control plane 加 5 台 worker,他準備升版。替換過程中,他的 Nova 至少要多容納幾台節點 VM?如果他的主機 disk 帳只夠再放一台,升版能完成嗎?</li>
+<li>另一位同學想讓 autoscaler 也管另一組 node group <code>ng-batch</code>。他只在 <code>ng-batch</code> 的 MachineDeployment 標上 min 和 max 的 annotation 就部署了,觸發擴充時會看到什麼?他漏了哪一步?</li>
+<li>有人建議乾脆把 <code>disk_allocation_ratio</code> 設成 10,這樣以後都不會遇到 <code>No valid host</code>。在什麼情況下這會出問題?</li>
+</ul>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>這一章的三件維運工作,最後都落在 Nova 多開或少開 VM。CAPI 升版是開新 VM 換掉舊的,替換期間會多一台,所以先用 <code>disk_allocation_ratio</code> 讓 placement 的 disk 帳放得下它;thin qcow2 實際只佔一小部分,lab 裡這樣超賣是安全的。node group 是 Cluster topology 陣列裡的一格,由 topology controller 建成 MachineDeployment,在 magnum-cluster-api 上新增時要帶 <code>availability_zone</code> label。cluster-autoscaler 透過改 MachineDeployment 的 replicas 來加減節點,前提是 topology 不再寫 replicas。之後遇到節點數或設定值「自己變回去」,先找出是哪幾個控制器在寫同一個欄位;遇到新節點開不出來,先看 Nova 的 disk 帳。</p>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>想再深入,可以從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/scheduling.html">Nova 排程與資源配置</a></strong> —— allocation ratio 的官方說明,包括 <code>disk_allocation_ratio</code> 和 placement 的關係。</li>
+<li><strong><a href="https://docs.openstack.org/magnum/2025.1/user/">Magnum User Guide</a></strong> —— cluster 升版與 node group 的官方參數定義。</li>
+<li><strong><a href="https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler">Kubernetes Cluster Autoscaler</a></strong> —— 自動擴縮的上游專案;<code>cloudprovider/clusterapi</code> 目錄下的 README 有 min/max annotation、ClusterClass 不設 replicas 的說明,以及部署範例。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html">Kolla-Ansible 維運指南</a></strong> —— reconfigure、upgrade 這些日常操作的官方流程。</li>
+</ul>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>這幾天的網路、VM、LB 都是用指令一個個建的。<a href="../sprint3-day10-terraform-teardown/">Day 10</a> 改用 Terraform 的 OpenStack provider 管理這些資源,並演練整朵雲拆掉再重建的流程。</p>
 
 
 

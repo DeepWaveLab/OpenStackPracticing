@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,12 +22,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Day 19 · server create 的完整路徑 - OpenStack Lab Course</title>
+        <title>Day 19 · server create 的請求路徑 - OpenStack Lab Course</title>
       
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-19-server-create-token-qemu" class="md-skip">
+        <a href="#day-19-server-create-tokenrequest-idrabbitmqqemu" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -114,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Day 19 · server create 的完整路徑
+              Day 19 · server create 的請求路徑
             
           </span>
         </div>
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1195,7 +1195,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1213,7 +1213,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1242,7 +1242,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼要做這件事
+        開始之前
       
     </span>
   </a>
@@ -1253,7 +1253,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        今天要追的這條鏈
+        這一章要看的五個地方
       
     </span>
   </a>
@@ -1261,10 +1261,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fernet-token" class="md-nav__link">
+  <a href="#keystone-token" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一站 · 身分:fernet token 是一份加密憑證
+        第一站:Keystone 發的 token
       
     </span>
   </a>
@@ -1272,10 +1272,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#request-id" class="md-nav__link">
+  <a href="#nova-api-nova-compute-log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第二站 · 追蹤:request-id 是這個請求的追蹤線
+        第二站:nova-api 和 nova-compute 的 log
       
     </span>
   </a>
@@ -1283,10 +1283,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rabbitmq" class="md-nav__link">
+  <a href="#nova-api-nova-compute-rabbitmq" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第三站 · 傳遞:服務之間靠 RabbitMQ 交棒
+        第三站:nova-api 和 nova-compute 之間的 RabbitMQ
       
     </span>
   </a>
@@ -1294,10 +1294,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#vm-qemu" class="md-nav__link">
+  <a href="#qemu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第四站 · 落地:VM 最終是主機上一個 qemu 進程
+        第四站:主機上的 qemu 程序
       
     </span>
   </a>
@@ -1305,10 +1305,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#vm-nova" class="md-nav__link">
+  <a href="#nova" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第五站 · 記帳:VM 在 Nova 資料庫裡的那一列
+        第五站:Nova 資料庫裡的一列
       
     </span>
   </a>
@@ -1319,18 +1319,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        全鏈總結
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        想一想
       
     </span>
   </a>
@@ -1341,7 +1330,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        小結
       
     </span>
   </a>
@@ -1756,7 +1745,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1784,7 +1773,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1812,7 +1801,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1932,7 +1921,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -3973,7 +3962,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼要做這件事
+        開始之前
       
     </span>
   </a>
@@ -3984,7 +3973,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        今天要追的這條鏈
+        這一章要看的五個地方
       
     </span>
   </a>
@@ -3992,10 +3981,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fernet-token" class="md-nav__link">
+  <a href="#keystone-token" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一站 · 身分:fernet token 是一份加密憑證
+        第一站:Keystone 發的 token
       
     </span>
   </a>
@@ -4003,10 +3992,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#request-id" class="md-nav__link">
+  <a href="#nova-api-nova-compute-log" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第二站 · 追蹤:request-id 是這個請求的追蹤線
+        第二站:nova-api 和 nova-compute 的 log
       
     </span>
   </a>
@@ -4014,10 +4003,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rabbitmq" class="md-nav__link">
+  <a href="#nova-api-nova-compute-rabbitmq" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第三站 · 傳遞:服務之間靠 RabbitMQ 交棒
+        第三站:nova-api 和 nova-compute 之間的 RabbitMQ
       
     </span>
   </a>
@@ -4025,10 +4014,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#vm-qemu" class="md-nav__link">
+  <a href="#qemu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第四站 · 落地:VM 最終是主機上一個 qemu 進程
+        第四站:主機上的 qemu 程序
       
     </span>
   </a>
@@ -4036,10 +4025,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#vm-nova" class="md-nav__link">
+  <a href="#nova" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第五站 · 記帳:VM 在 Nova 資料庫裡的那一列
+        第五站:Nova 資料庫裡的一列
       
     </span>
   </a>
@@ -4050,18 +4039,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        全鏈總結
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
+        想一想
       
     </span>
   </a>
@@ -4072,7 +4050,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        小結
       
     </span>
   </a>
@@ -4118,35 +4096,31 @@
 
 
 
-<h1 id="day-19-server-create-token-qemu">Day 19: server create 的完整路徑——從 token 到 qemu<a class="headerlink" href="#day-19-server-create-token-qemu" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>階段二開始,換一種學法:不再加新服務,改為<strong>拆開你已經用了三個星期的東西</strong>。今天的目標很單純也很硬——挑一個 <code>openstack server create</code>,不靠任何抽象層,徒手把它從一張 token 一路追到主機上的 qemu 進程。做完之後,「開一台 VM」在你眼裡不再是一行指令,而是一條看得見每一段的鏈。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 0–18</strong>:一直站在 <code>openstack</code> CLI 這一側「使用」這朵雲。</li>
-<li><strong>今天</strong>:潛到 CLI 底下,看一個請求在 Keystone、Nova、RabbitMQ、libvirt、資料庫之間怎麼流動。<strong>不部署任何東西</strong>,驗收標準是「你能不能把整條鏈重建出來」。</li>
-<li><strong>今天之後</strong>:Day 20 用同樣的精神拆網路(追一個封包)。</li>
-</ul>
-</div>
-<h2 id="_1">為什麼要做這件事<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>前 18 天你累積了大量「用過的東西」——現在它們全都是解剖的對象。理解底層有個很實際的回報:<strong>當某天出事、而 CLI 只回你一句沒頭沒尾的錯誤時,能自己往下挖的人和只能重開機的人,差距就在這裡。</strong> 這也是本課程一路強調的:知道它為什麼會動,才有辦法在它不動時判斷卡在哪。</p>
-<h2 id="_2">今天要追的這條鏈<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>當你打下 <code>openstack server create</code>,從按下 Enter 到主機上真的有一台 VM 在跑,中間經過五個環節。今天就是<strong>沿著這條鏈,一站一站把它拆給你看</strong>——每一站用一個實際的指令,親眼確認「這裡發生了什麼」:</p>
-<pre class="mermaid"><code>flowchart TB
-    A["① 身分:fernet token&lt;br/&gt;你是誰,憑什麼開 VM"] --&gt; B["② 追蹤:request-id&lt;br/&gt;怎麼跟蹤這個請求"]
-    B --&gt; C["③ 傳遞:RabbitMQ&lt;br/&gt;服務之間怎麼交棒"]
-    C --&gt; D["④ 落地:qemu 進程&lt;br/&gt;VM 最終是主機上什麼"]
-    D --&gt; E["⑤ 記帳:Nova 資料庫&lt;br/&gt;狀態存在哪一列"]</code></pre>
-<p>不需要一次記住五站,跟著往下走就好。走完你會發現:所謂「一台 VM」,其實是一份身分憑證、一串 log、幾則佇列訊息、一個 Linux 進程、和資料庫裡的一列——全部對得起來。</p>
-<h2 id="fernet-token">第一站 · 身分:fernet token 是一份加密憑證<a class="headerlink" href="#fernet-token" title="Permanent link">&para;</a></h2>
-<p>一切從身分開始——沒有身分,連 <code>server create</code> 都發不出去。跟 Keystone 換一張 token:</p>
+<h1 id="day-19-server-create-tokenrequest-idrabbitmqqemu">Day 19: server create 的完整路徑——token、request-id、RabbitMQ、qemu 程序與資料庫的一列<a class="headerlink" href="#day-19-server-create-tokenrequest-idrabbitmqqemu" title="Permanent link">&para;</a></h1>
+<p><a href="../sprint3-day2-openstack-resource-flow/">Day 2</a> 開第一台 VM 時,看過一張 <code>server create</code> 背後的流程圖:CLI 向 Keystone 換 token、scheduler 挑主機、nova-compute 接手、libvirt/qemu 把 VM 開起來。那張圖說了請求經過哪幾站,但每一站在主機上留下什麼、去哪裡看,還沒有實際看過。等到哪天 <code>server create</code> 回了一台 VM,狀態卻一直停在 <code>BUILD</code>,或直接變成 <code>ERROR</code>,CLI 只給一句錯誤訊息,你就得自己去找證據。</p>
+<p>這一章不部署新服務。我們開一台 VM,沿著它的請求走一遍,在五個地方各用一兩個指令找到它留下的紀錄:Keystone 發的 token、Nova 的 log、RabbitMQ 的佇列、主機上的 qemu 程序,以及 Nova 資料庫裡的一列。讀完之後,建 VM 出問題時,你能判斷該先查這五處的哪一處,並用 server 的 UUID 對照 Nova log、libvirt/qemu 與資料庫;token 和佇列則用來理解認證與工作傳遞。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>需要 <a href="../sprint3-day1-kolla-aio-core/">Day 1</a> 部署好的單機雲,以及 <a href="../sprint4-day17-designate-dns/">Day 17</a> 建的 <code>day17-net</code> 網路。沒有 <code>day17-net</code> 的話,把下面指令裡的網路名稱換成任何一個你自己建過的網路即可。以下指令都在部署 OpenStack 的那台 VM 上執行。</p>
+<h2 id="_2">這一章要看的五個地方<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>把 Day 2 那張流程圖換個畫法:每個方塊是一個服務,橘色編號是這一章要去查證的地方。</p>
+<p><img alt="請求從 openstack server create 出發:先和 Keystone 換 token(編號 1),再送到 nova-api(編號 2);nova-api 把工作交給 RabbitMQ(編號 3),RabbitMQ 連到 nova-conductor 與 nova-scheduler,也連到 nova-compute(編號 2);nova-compute 往下是 libvirt domain 和主機上的 qemu 程序(編號 4);conductor 以虛線寫入 Nova 資料庫的 nova.instances 表(編號 5)" src="../../assets/diagrams/os-s4d19-path.svg" /></p>
+<p>照著編號看:</p>
+<ol>
+<li><strong>Keystone</strong>:CLI 送出任何請求之前,先拿到的那張 token。</li>
+<li><strong>nova-api 與 nova-compute 的 log</strong>:一個收到請求,一個真正開機,兩者各留下紀錄。</li>
+<li><strong>RabbitMQ</strong>:nova-api 和 nova-compute 之間沒有直接連線,中間隔著它。</li>
+<li><strong>qemu 程序</strong>:VM 最後在主機上跑起來的樣子。</li>
+<li><strong>Nova 資料庫</strong>:Nova 用來記住這台 VM 的地方。</li>
+</ol>
+<p>接下來照這個順序,一站一站看。</p>
+<h2 id="keystone-token">第一站:Keystone 發的 token<a class="headerlink" href="#keystone-token" title="Permanent link">&para;</a></h2>
+<p>每次 CLI 操作會先取得或沿用有效 token,同一次操作的後續 API 請求可以重用它,不會每個 HTTP 請求都重新發一張。Keystone 是負責身分認證與發 token 的服務。先手動換一張,印出開頭和長度:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">TOKEN</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>token<span class="w"> </span>issue<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">TOKEN</span><span class="p">:</span><span class="nv">0</span><span class="p">:</span><span class="nv">20</span><span class="si">}</span><span class="s2">…  (長度 </span><span class="si">${#</span><span class="nv">TOKEN</span><span class="si">}</span><span class="s2">)&quot;</span>
 </span></code></pre></div>
-<p>這一長串以 <code>gAAAAA</code> 開頭的字串就是 <strong>fernet token</strong>。它值得拆開看,因為它顛覆了一個直覺——<strong>token 不是「資料庫裡的一筆 session 記錄」,而是一份自帶簽章的加密憑證</strong>:</p>
+<p>印出來的字串以 <code>gAAAAA</code> 開頭。這種 token 叫 <strong>fernet token</strong>,是 Keystone 預設的 token 格式,名稱來自它採用的 Fernet 加密規格。</p>
+<p>Keystone 收到一張 token 時,要怎麼確認它是自己發的、還沒過期?最直覺的做法是把發出去的每張 token 存進資料庫,收到時去查。fernet token 走的是另一條路,把它拆開就看得出來。下面這段 Python 先做 base64 解碼,再把前面幾段印出來。執行前用 <code>echo $TOKEN</code> 印出完整的 token,貼進 <code>tok =</code> 那一行:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python3<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt; &#39;PY&#39;</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="s">import base64, struct</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="s">tok = &quot;貼上你的 token&quot;</span>
@@ -4154,35 +4128,37 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s">print(f&quot;版本位元組: 0x{raw[0]:02x}   (0x80 = fernet)&quot;)</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s">print(f&quot;時間戳     : {struct.unpack(&#39;&gt;Q&#39;, raw[1:9])[0]}&quot;)</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="s">print(f&quot;IV (16B)   : {raw[9:25].hex()}&quot;)</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="s">print(f&quot;密文+HMAC  : {len(raw)-25} bytes  ← 要 keystone 的金鑰才解得開&quot;)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="s">print(f&quot;密文+HMAC  : {len(raw)-25} bytes  ← 密文須用金鑰解密，HMAC 須用金鑰驗證&quot;)</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="s">PY</span>
 </span></code></pre></div>
-<p>結構是 <code>[版本][時間戳][IV][密文+HMAC]</code>。<strong>payload 是加密的</strong>,解密金鑰在 Keystone 手上:</p>
+<p>把腳本切開的這幾段排成一列,就是 fernet token 的結構:</p>
+<p><img alt="fernet token 解碼後由左到右是版本(1 byte,固定 0x80)、時間戳(8 bytes)、IV(16 bytes)、密文(長度不定)、HMAC(32 bytes);前三段 base64 解碼後就讀得到,密文要金鑰解密,HMAC 要金鑰驗證;密文解開後是使用者、專案、認證方式和到期時間,HMAC 用來確認 token 沒被改過" src="../../assets/diagrams/os-s4d19-fernet.svg" /></p>
+<p>我們可以看到,token 分成兩半。左半段的版本、時間戳(token 產生的時間)和 IV(加密時使用的隨機起始值)不需要任何金鑰,腳本印出的就是這幾段。右半段的密文才是 token 的內容:使用者、專案、認證方式、到期時間,由 Keystone 用金鑰加密;最後 32 bytes 的 HMAC 是訊息鑑別碼,用來驗證完整性,確認 token 沒被竄改。它使用對稱金鑰驗證,不是非對稱的數位簽章。解開密文與驗證 HMAC 都要用到 Keystone 的金鑰。</p>
+<p>金鑰放在 <code>keystone</code> 容器裡:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>keystone<span class="w"> </span>ls<span class="w"> </span>/etc/keystone/fernet-keys/
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># 0  1   ← 兩把輪替金鑰</span>
 </span></code></pre></div>
-<p>這個設計的意義:Keystone <strong>不必查資料庫</strong>就能驗證一張 token——它只要用金鑰解密、驗簽章、看時間戳有沒有過期。這就是為什麼 OpenStack 的認證能水平擴展:任何一台 Keystone 都能獨立驗證任何一張 token,不需要共享 session 狀態。</p>
-<h2 id="request-id">第二站 · 追蹤:request-id 是這個請求的追蹤線<a class="headerlink" href="#request-id" title="Permanent link">&para;</a></h2>
-<p>每個 API 請求,OpenStack 都發一個 <code>request-id</code>。用 <code>--debug</code> 看得到:</p>
+<p>目錄裡每個檔案是一把金鑰,檔名是編號。Keystone 用編號最大的那把(primary key)加密新發的 token;編號 0 是預備的金鑰(staged key),下次輪替時升為 primary;解 token 時,目錄裡的每一把都會拿來試。所以輪替之後,用舊金鑰發出、還沒過期的 token 仍然能用。</p>
+<p>有了金鑰,Keystone 不必把 token 存進資料庫:收到 token 時,用金鑰驗證 HMAC、解開密文、看有沒有過期,就知道它是不是自己發的。有好幾台 Keystone 時,只要每一台都持有同一組金鑰,任何一台都能驗證另一台發出的 token。但驗證並沒有完全不碰資料庫:Keystone 仍會檢查這張 token 有沒有被撤銷(例如使用者改了密碼或被停用),回傳驗證結果時也要從資料庫讀出使用者在專案上的角色。金鑰目錄本身也必須在每台 Keystone 之間保持一致,某一台的金鑰沒同步,其他台發的 token 到它那裡就驗不過。</p>
+<p>建 VM 時若 CLI 回 401(認證失敗),先看是哪個 HTTP 請求被拒絕。取得 token 失敗就查 Keystone;若 Nova 收到請求後拒絕 token,也要檢查它的認證設定。401 不能單獨證明請求尚未到達 Nova。</p>
+<h2 id="nova-api-nova-compute-log">第二站:nova-api 和 nova-compute 的 log<a class="headerlink" href="#nova-api-nova-compute-log" title="Permanent link">&para;</a></h2>
+<p>有了 token,CLI 就能送出建立請求。OpenStack 的服務每收到一個 HTTP 請求,就給它一個編號,叫 <strong>request-id</strong>,寫在回應的 <code>x-openstack-request-id</code> 標頭裡,也寫進該服務的 log。加上 <code>--debug</code> 讓 CLI 印出所有 HTTP 往來,就看得到這個標頭。下面保留原有的 debug 範例,用來說明為什麼不能只取第一條 id。它會建立一台叫 <code>trace-vm</code> 的 VM,同名 VM 已存在時不要重跑;後面的 UUID 對照使用這台 VM:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>openstack<span class="w"> </span>--debug<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>trace-vm<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>day17-net<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>x-openstack-request-id<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>x-openstack-request-id: req-30b85aef-a444-465d-8cb6-e97dc924b8f4
 </span></code></pre></div>
-<p>理論上這條 id 能串起整個請求的旅程。但<strong>這裡有個實務上的雷</strong>——</p>
-<div class="admonition warning">
-<p class="admonition-title">request-id 的鏈是斷的,server UUID 才是可靠線索</p>
-<p>OpenStack 預設的 log 等級是 INFO,而一個請求進到內部後會經過多次 RPC 呼叫,<strong>每一段內部呼叫會產生自己的 request-id</strong>。所以你拿 API 回傳的那條 id 去 grep,往往只找得到 nova-api 那一段,追不到 compute。
-<strong>更可靠的追蹤線索是 server 的 UUID</strong>——它從頭到尾不變,而且會出現在每個經手服務的 log 裡。</p>
-</div>
+<p>看起來拿這條 id 去 grep 各服務的 log 就能追到底,但要小心它屬於哪一個請求。<code>--debug</code> 會印出 CLI 送出的每一個 HTTP 請求:真正送出建立請求之前,CLI 要先向 Keystone 拿 token,再用名稱查出 flavor、image、network 的 ID,這些請求各有自己的 request-id,<code>head -1</code> 拿到的是最前面那一條,不一定是建立 VM 的請求。</p>
+<p>追一台 VM,有一個不用挑的線索:<strong>server UUID</strong>。它是 Nova 在建立時給這台 VM 的 ID,也就是 <code>openstack server show</code> 的 <code>id</code> 欄,從建立到刪除都不會變。拿它搜整個 Nova 的 log 目錄,列出哪些檔案提到這台 VM:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">UUID</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>trace-vm<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sudo<span class="w"> </span>grep<span class="w"> </span>-rl<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$UUID</span><span class="s2">&quot;</span><span class="w"> </span>/var/log/kolla/nova/<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|/var/log/kolla/||&#39;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>nova/nova-api.log
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>nova/nova-compute.log
 </span></code></pre></div>
-<p>用 UUID 就能看到 VM 在不同服務的軌跡:</p>
+<p>清單上只有兩個檔:nova-api 收到建立請求,nova-compute 真正開機。conductor 和 scheduler 也經手了這台 VM(第三站會看到),但在預設的 INFO log 等級下,它們的 log 沒有留下含這個 UUID 的紀錄。</p>
+<p>再分別看這兩個檔裡跟這台 VM 有關的行:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># ① nova-api 收到請求</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$UUID</span><span class="s2">&quot;</span><span class="w"> </span>/var/log/kolla/nova/nova-api.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-1
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># ② nova-compute 真正開機(claims 資源 → spawn)</span>
@@ -4191,102 +4167,74 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>nova.compute.claims  Claim successful on node openstack-lab
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>nova.virt.libvirt.driver [instance: 206aa8b3-…] Instance spawned successfully
 </span></code></pre></div>
-<h2 id="rabbitmq">第三站 · 傳遞:服務之間靠 RabbitMQ 交棒<a class="headerlink" href="#rabbitmq" title="Permanent link">&para;</a></h2>
+<p>nova-compute 的這兩行對應開機的兩個階段。<code>Claim successful</code> 表示 nova-compute 已經在這台主機上預留 VM 要用的 CPU、記憶體和磁碟,這個動作叫 claim;<code>Instance spawned successfully</code> 表示 VM 已經開起來了。</p>
+<p>VM 停在 <code>BUILD</code> 時,就用 UUID 查這兩個檔:nova-api 有紀錄、nova-compute 完全沒有,先檢查排程、RPC 與 compute 是否可用,不能只因沒有某行 log 就斷定停在哪裡;nova-compute 有 claim 卻沒有 spawned,優先查 compute 的後續錯誤與 VM 啟動階段,對應第四站。</p>
+<h2 id="nova-api-nova-compute-rabbitmq">第三站:nova-api 和 nova-compute 之間的 RabbitMQ<a class="headerlink" href="#nova-api-nova-compute-rabbitmq" title="Permanent link">&para;</a></h2>
 <p><img align="right" alt="RabbitMQ 官方標誌" src="../../assets/logos/rabbitmq.png" width="72" /></p>
-<p>上一站你看到請求出現在 nova-api 和 nova-compute 兩個服務——但這兩者中間還隔著 conductor 和 scheduler,它們是怎麼把請求傳過去的?答案不是互相直接呼叫,而是透過 <strong>RabbitMQ</strong> 傳訊息(這套機制叫 oslo.messaging)。看佇列:</p>
+<p>第二站的 log 只出現在 nova-api 和 nova-compute,而 Day 1 確認過的 Nova 元件還有 conductor 和 scheduler。nova-api 是怎麼把工作交到 nova-compute 手上的?Nova 的元件之間不直接呼叫對方,而是用 <strong>RPC</strong>(remote procedure call,遠端程序呼叫:像呼叫函式一樣,請另一個程式做一件事)溝通。這些呼叫由 oslo.messaging 這個函式庫包成訊息,送進 Day 1 提過的 RabbitMQ。</p>
+<p>列出 RabbitMQ 上跟這三個元件有關的佇列:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>rabbitmq<span class="w"> </span>rabbitmqctl<span class="w"> </span>list_queues<span class="w"> </span>name<span class="w"> </span>messages<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-iE<span class="w"> </span><span class="s2">&quot;conductor|scheduler|compute&quot;</span>
 </span></code></pre></div>
-<p>你會看到 <code>conductor</code>、<code>scheduler</code> 等佇列——<code>server create</code> 的請求就是以訊息的形式在這些佇列間流動:api 把任務丟進佇列,scheduler 撿起來挑主機、再丟回去,compute 撿起來真的去開機。<strong>這是 OpenStack 各元件解耦的核心機制</strong>,也是為什麼你能單獨擴充某一種服務。</p>
-<h2 id="vm-qemu">第四站 · 落地:VM 最終是主機上一個 qemu 進程<a class="headerlink" href="#vm-qemu" title="Permanent link">&para;</a></h2>
-<p>訊息一路傳到 nova-compute,它真的動手開機了——那「開機」到底開出了什麼?追到最底會發現:一台 VM 對主機來說,就是一個 <strong>qemu 進程</strong> + 一個 libvirt domain。先找到這台 VM 對應的 domain(注意:<code>virsh list</code> 的順序不等於建立順序,<strong>必須用 UUID 比對</strong>):</p>
+<p>輸出的每一行是一個佇列的名稱和目前積著的訊息數,名稱裡帶著 <code>conductor</code>、<code>scheduler</code>、<code>compute</code>。這些佇列在 <code>server create</code> 時怎麼用,依 Nova 官方架構文件畫成時間順序,由上往下看:</p>
+<p><img alt="四條直線由左到右是 nova-api、nova-conductor、nova-scheduler、nova-compute。第 1 則:nova-api 把建立 VM 的工作送進 conductor 佇列,並立刻回 CLI 202 與 BUILD 狀態;第 2 則:conductor 經 scheduler 佇列詢問要放哪台主機;第 3 則:scheduler 經 conductor 的回覆佇列回覆選定的主機;第 4 則:conductor 把開機的工作送進 compute.主機名 佇列。1 和 4 送出後不等回覆,2 送出後 conductor 等到回覆 3 才往下做" src="../../assets/diagrams/os-s4d19-rpc.svg" /></p>
+<p>照著編號看:</p>
+<ol>
+<li>nova-api 把建立 VM 的工作送進 conductor 的佇列,不等結果就回應 CLI。這就是為什麼 <code>server create</code> 一回來,狀態是 <code>BUILD</code>。</li>
+<li>nova-conductor 問 nova-scheduler 這台 VM 該放哪台主機。scheduler 向 Placement(記錄每台主機還剩多少 CPU、記憶體的服務,Day 1 部署 Nova 時一起裝上)查詢,挑出合適的主機,也就是 Day 2 那張圖上「挑實體機」那一步。</li>
+<li>scheduler 把選定的主機回覆給 conductor。第 2 則是唯一一則要等回覆的訊息。</li>
+<li>conductor 把開機的工作送進那台主機專屬的 compute 佇列,那台主機上的 nova-compute 取出後開始 claim、開機,也就是第二站看到的那兩行。</li>
+</ol>
+<p>元件之間隔著佇列,nova-api 不需要知道有哪幾台 compute 主機,也不必等開機完成;多開幾個 conductor,它們就從同一個佇列輪流取工作。反過來說,某個元件停了,送給它的訊息會留在佇列裡。所以 nova-api 有紀錄、nova-compute 沒有時,看 <code>list_queues</code> 的訊息數:某個佇列的訊息一直增加、沒有減少,可能是消費端停止,也可能是處理速度跟不上。這個清單只有佇列總數,不能指出哪一則訊息屬於 <code>trace-vm</code>,還要配合服務狀態與錯誤 log。</p>
+<h2 id="qemu">第四站:主機上的 qemu 程序<a class="headerlink" href="#qemu" title="Permanent link">&para;</a></h2>
+<p>nova-compute 取到工作後,透過 libvirt(主機上管理 VM 的服務,Kolla 把它放在 <code>nova_libvirt</code> 容器裡)開機。libvirt 管理的每一台 VM 叫一個 <strong>domain</strong>。domain 的名稱由 Nova 產生,是 <code>instance-</code> 加一串十六進位編號,跟你在 OpenStack 裡取的名字 <code>trace-vm</code> 無關,但它的設定(一份 XML)裡記著 server UUID。</p>
+<p>下面這個迴圈列出執行中的 domain,逐一比對 UUID,找出 <code>trace-vm</code> 對應哪一個。<code>virsh list</code> 的順序不等於建立順序,主機上有好幾台 VM 時,不能只挑最後一個。這一步用來對照已啟動的 <code>trace-vm</code>;停止的 domain 不會列在這個清單裡,查不到不等於不存在:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">for</span><span class="w"> </span>d<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_libvirt<span class="w"> </span>virsh<span class="w"> </span>list<span class="w"> </span>--name<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nv">u</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_libvirt<span class="w"> </span>virsh<span class="w"> </span>dumpxml<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$d</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">&#39;&lt;uuid&gt;[^&lt;]+&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="s1">&#39;&gt;&#39;</span><span class="w"> </span>-f2<span class="k">)</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$u</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$UUID</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;這台 VM 的 domain = </span><span class="nv">$d</span><span class="s2">&quot;</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="k">done</span>
 </span></code></pre></div>
-<p>拿到 domain 後,主機上真的有一個帶著這個 UUID 的 qemu 進程:</p>
+<p>把印出的 domain 名稱,填進下面指令的 <code>&lt;你的domain&gt;</code>。每個 domain 在主機上就是一個 qemu 程序,qemu 的啟動參數 <code>guest=</code> 後面接的是 domain 名稱,所以用它就能找到那個程序,再挑出其中兩個參數:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>pgrep<span class="w"> </span>-af<span class="w"> </span><span class="s2">&quot;guest=&lt;你的domain&gt;&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">&#39;\-uuid [a-f0-9-]+|accel=kvm&#39;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>-uuid 206aa8b3-a51a-4868-9145-4798420394f4
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>accel=kvm
 </span></code></pre></div>
-<p><strong><code>-uuid</code> 參數就是 nova instance 的 UUID</strong>——你手上那個抽象的「VM 物件」,在這裡對上了一個實體的 Linux 進程;<code>accel=kvm</code> 證明它走硬體虛擬化(Day 0 用 <code>kvm-ok</code> 驗過的那件事,在這裡兌現)。順帶看它的磁碟:</p>
+<p><code>-uuid</code> 後面就是 server UUID。你在 OpenStack 裡看到的 <code>trace-vm</code>,在主機上是一個普通的 Linux 程序,啟動參數裡帶著同一個 UUID。<code>accel=kvm</code> 表示這個程序用 KVM 硬體虛擬化執行。<a href="../sprint3-day0-azure-vm/">Day 0</a> 選支援巢狀虛擬化的機型、用 <code>kvm-ok</code> 確認,就是為了這裡;QEMU 也可設定使用 TCG 軟體模擬,但本課 Nova 配置不保證在 KVM 不可用時自動切換到 TCG。</p>
+<p>最後看這台 VM 的磁碟放在哪裡。把下面的 <code>&lt;domain&gt;</code> 同樣換成剛才那個名稱:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>nova_libvirt<span class="w"> </span>virsh<span class="w"> </span>dumpxml<span class="w"> </span>&lt;domain&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;source file&#39;</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="c1"># .../instances/&lt;uuid&gt;/disk        ← 這台 VM 專屬的差異磁碟(overlay)</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># .../instances/_base/&lt;hash&gt;       ← 所有同 image 的 VM 共用的底圖</span>
 </span></code></pre></div>
-<h2 id="vm-nova">第五站 · 記帳:VM 在 Nova 資料庫裡的那一列<a class="headerlink" href="#vm-nova" title="Permanent link">&para;</a></h2>
-<p>進程跑起來了,但 OpenStack 怎麼「記得」這台 VM 的存在與狀態?答案在資料庫——這台 VM 在 Nova 的 DB 裡就是一列記錄:</p>
+<p>第一個檔案在以 UUID 命名的目錄裡,是這台 VM 自己的磁碟,只存它跟 image 不一樣的部分,這種只記差異的磁碟叫 overlay。第二個在 <code>_base</code> 目錄,是從 image 轉出來的底圖,用同一個 image 開的 VM 都共用它,所以開第二台同 image 的 VM 時,不用再複製一份完整的 image。</p>
+<h2 id="nova">第五站:Nova 資料庫裡的一列<a class="headerlink" href="#nova" title="Permanent link">&para;</a></h2>
+<p>VM 跑起來了,OpenStack 又是怎麼記得它存在、目前是什麼狀態?答案在 Nova 的資料庫裡,也就是 Kolla 部署的 MariaDB。每台 VM 是 <code>nova</code> 資料庫 <code>instances</code> 表裡的一列。查詢要用 MariaDB 的 root 密碼,它存在 <code>passwords.yml</code> 的 <code>database_password</code> 欄位:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^database_password&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>mariadb<span class="w"> </span>mysql<span class="w"> </span>-uroot<span class="w"> </span>-p<span class="s2">&quot;</span><span class="nv">$PW</span><span class="s2">&quot;</span><span class="w"> </span>-N<span class="w"> </span>-e<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="s2">&quot;SELECT uuid, host, vm_state, power_state FROM nova.instances WHERE uuid=&#39;</span><span class="nv">$UUID</span><span class="s2">&#39;;&quot;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>206aa8b3-…  openstack-lab  active  1
 </span></code></pre></div>
-<p><code>vm_state=active</code>、<code>power_state=1</code>(執行中)——CLI 上 <code>openstack server show</code> 給你看的狀態,源頭就是這一列。</p>
-<h2 id="_3">全鏈總結<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>把五站串起來,就是一個 <code>server create</code> 從指令到 qemu 進程的完整路徑:</p>
-<pre class="mermaid"><code>flowchart TB
-    A["openstack CLI&lt;br/&gt;(拿 fernet token)"] --&gt; B["nova-api&lt;br/&gt;(驗身分、發 request-id)"]
-    B --&gt;|"RabbitMQ RPC"| C["conductor + scheduler&lt;br/&gt;(挑中 openstack-lab)"]
-    C --&gt;|"RabbitMQ RPC"| D["nova-compute&lt;br/&gt;(claims 資源 → spawn)"]
-    D --&gt; E["libvirt domain&lt;br/&gt;→ 主機 qemu 進程(-uuid 對上)"]
-    D -.-&gt;|"寫入狀態"| F["Nova DB&lt;br/&gt;(instances 表:active)"]</code></pre>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>今天沒有部署,驗收標準是「能不能徒手重建整條鏈」:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>fernet token</td>
-<td>能解出版本/時間戳/IV/密文的分段結構</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>追蹤線索</td>
-<td>用 server UUID 串起 nova-api → nova-compute 的 log</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>RPC</td>
-<td><code>rabbitmqctl list_queues</code> 看到 conductor/scheduler 佇列</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>qemu</td>
-<td>主機 qemu 進程的 <code>-uuid</code> == nova instance UUID</td>
-<td>徒手對上</td>
-</tr>
-<tr>
-<td>資料庫</td>
-<td><code>nova.instances</code> 一列對應一台 VM,狀態 active</td>
-<td>符合</td>
-</tr>
-</tbody>
-</table>
-<p>清理:<code>openstack server delete trace-vm</code>。</p>
-<h2 id="_4">帶得走的東西<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>四欄依序是 UUID、VM 所在的主機、<code>vm_state</code> 和 <code>power_state</code>。<code>vm_state</code> 是 Nova 記錄的 VM 狀態;<code>power_state</code> 是 nova-compute 從 libvirt 讀到的電源狀態,<code>1</code> 代表執行中。<code>openstack server show</code> 顯示的 <code>ACTIVE</code>,就是從這一列的狀態換算出來的。</p>
+<p>nova-compute 本身不直接連資料庫,狀態有變化時,也是經過 RabbitMQ 交給 conductor 寫入,所以開頭那張圖上,寫入資料庫的虛線是從 conductor 出發。</p>
+<p>五站都看完了,用 <code>openstack server delete trace-vm</code> 刪掉這台 VM。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>token 是加密憑證不是 session</strong> → Keystone 能無狀態驗證 → 認證可水平擴展。</li>
-<li><strong>追請求用 server UUID,不要迷信單一 request-id</strong>(內部 RPC 各有各的 id)。</li>
-<li><strong>每個抽象物件底下都有一個實體</strong>:VM = qemu 進程、狀態 = DB 的一列——出事時,你知道往哪一層挖。</li>
+<li>一位同學說:「既然 fernet token 不存在資料庫裡,把某個使用者停用之後,他手上還沒過期的 token 應該照樣能用。」你同意嗎?本章哪一段可以回答?</li>
+<li>一台 VM 停在 <code>BUILD</code> 好幾分鐘。你用 UUID 搜 log,<code>nova-api.log</code> 有紀錄,<code>nova-compute.log</code> 沒有。下一步你會看哪裡、看什麼?如果 <code>nova-compute.log</code> 有 <code>Claim successful</code>,卻一直沒有 <code>Instance spawned successfully</code> 呢?</li>
+<li>你把 Keystone 擴充成三台,其中一台的 <code>fernet-keys</code> 目錄跟另外兩台不一樣。使用者會遇到什麼現象?為什麼不是每次都發生?</li>
 </ul>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>一次 <code>server create</code> 會在五個地方留下紀錄:Keystone 發出一張用金鑰加密、不必存進資料庫的 fernet token;nova-api 和 nova-compute 各在 log 裡留下請求與開機的紀錄;兩者之間的工作經過 RabbitMQ 的佇列,由 conductor 和 scheduler 轉手;VM 最後是主機上一個帶著 <code>-uuid</code> 參數的 qemu 程序;狀態則記在 <code>nova.instances</code> 的一列。其中 Nova log、libvirt/qemu 和資料庫能用同一個 server UUID 對照;token 代表使用者認證,佇列清單則只有總數。下次建 VM 出問題,先拿 UUID 查 nova-api 和 nova-compute 的 log,看請求停在哪一段:還沒進 Nova 就失敗,回頭看 token;到不了 nova-compute,看 RabbitMQ 的佇列;開機那一段出錯,看主機上的 domain 和 qemu 程序。</p>
 <h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong><a href="https://docs.openstack.org/keystone/2025.1/admin/fernet-token-faq.html">Keystone Fernet Token FAQ</a></strong> —— fernet 設計的官方問答:為什麼不用資料庫、金鑰怎麼輪替;第一站的完整版。</li>
-<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/architecture.html">Nova 架構說明</a></strong> —— api/conductor/scheduler/compute 分工的權威版本;本章那條鏈的官方圖。</li>
-<li><strong><a href="https://docs.openstack.org/oslo.messaging/2025.1/">oslo.messaging 文件</a></strong> —— 第三站看到的 RPC 機制就是這個函式庫;RabbitMQ 之上的抽象層怎麼設計。</li>
+<li><strong><a href="https://docs.openstack.org/keystone/2025.1/admin/fernet-token-faq.html">Keystone Fernet Token FAQ</a></strong> —— fernet 設計的官方問答:為什麼不用存進資料庫、primary 與 staged 金鑰怎麼輪替;第一站的完整版。</li>
+<li><strong><a href="https://docs.openstack.org/nova/2025.1/admin/architecture.html">Nova 架構說明</a></strong> —— api、conductor、scheduler、compute 怎麼分工,以及 conductor 為什麼替 compute 寫資料庫;第三站那張時間順序圖的依據。</li>
+<li><strong><a href="https://docs.openstack.org/oslo.messaging/2025.1/">oslo.messaging 文件</a></strong> —— 第三站看到的 RPC 就是這個函式庫提供的;cast(送出不等回覆)和 call(等回覆)兩種呼叫的差別寫在這裡。</li>
 </ul>
 <h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>運算面拆完了,還有網路面。<a href="../sprint4-day20-ovn-packet-trace/">Day 20</a> 用同樣的精神拆網路:追一個封包從 VM 送出,看它經過哪些邏輯關卡、在哪一刻被 NAT 改寫——而且全程不用真的發一個封包。</p>
+<p>運算這一側追完了,還有網路那一側。<a href="../sprint4-day20-ovn-packet-trace/">Day 20</a> 追一個封包從 VM 送出,看它經過哪些邏輯關卡、在哪一刻被 NAT 改寫,而且全程不用真的發一個封包。</p>
 <hr />
 <p><em>RabbitMQ 標誌為其商標持有者之資產,此處作社群教學用途。</em></p>
 

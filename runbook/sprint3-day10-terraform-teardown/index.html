@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-10-terraform-teardown" class="md-skip">
+        <a href="#day-10-terraform-openstack-providerstatedepends_on-kolla-ansible-destroy" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -894,61 +894,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="原理與架構">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-terraform-vs-heat-iac" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Terraform vs Heat:兩種 IaC 的定位
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-teardown-disaster-recovery" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Teardown/重建 = disaster recovery 驗證
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟(Terraform,已實作)
+        Terraform 把狀態記在雲的外面
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟(Terraform,已實作)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 裝 terraform
+        步驟 1:安裝 terraform
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-maintf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:把資源寫成 main.tf
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 2:把資源寫成 main.tf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#providerterraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        provider:Terraform 怎麼連到這朵雲
       
     </span>
   </a>
@@ -956,10 +939,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-hcltf-demomaintf" class="md-nav__link">
+  <a href="#resource-data-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. HCL(~/tf-demo/main.tf)
+        resource 和 data source
       
     </span>
   </a>
@@ -967,10 +950,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-apply-verify-destroy" class="md-nav__link">
+  <a href="#why-depends-on" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. apply / verify / destroy
+        為什麼 VM 要加 depends_on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        負載平衡器與 output
       
     </span>
   </a>
@@ -983,13 +977,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3planapplydestroy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3:plan、apply、確認、destroy
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拆掉整朵 OpenStack 要做什麼
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VM 建立失敗,Nova 回 400
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -997,57 +1030,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mine-1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 2:provider 認證
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#teardown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Teardown 程序(僅記錄,本次未執行)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sprint-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sprint 3 完結
+        想一想
       
     </span>
   </a>
@@ -1058,7 +1041,29 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
       
     </span>
   </a>
@@ -1405,7 +1410,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1796,7 +1801,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1824,7 +1829,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1852,7 +1857,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1972,7 +1977,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4010,61 +4015,44 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="原理與架構">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-terraform-vs-heat-iac" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Terraform vs Heat:兩種 IaC 的定位
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-teardown-disaster-recovery" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Teardown/重建 = disaster recovery 驗證
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟(Terraform,已實作)
+        Terraform 把狀態記在雲的外面
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟(Terraform,已實作)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#1-terraform" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. 裝 terraform
+        步驟 1:安裝 terraform
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-maintf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:把資源寫成 main.tf
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 2:把資源寫成 main.tf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#providerterraform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        provider:Terraform 怎麼連到這朵雲
       
     </span>
   </a>
@@ -4072,10 +4060,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-hcltf-demomaintf" class="md-nav__link">
+  <a href="#resource-data-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. HCL(~/tf-demo/main.tf)
+        resource 和 data source
       
     </span>
   </a>
@@ -4083,10 +4071,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-apply-verify-destroy" class="md-nav__link">
+  <a href="#why-depends-on" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. apply / verify / destroy
+        為什麼 VM 要加 depends_on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        負載平衡器與 output
       
     </span>
   </a>
@@ -4099,13 +4098,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
+  <a href="#3planapplydestroy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        驗收 checkpoint
+        步驟 3:plan、apply、確認、destroy
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        拆掉整朵 OpenStack 要做什麼
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        疑難排解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="疑難排解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VM 建立失敗,Nova 回 400
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -4113,57 +4151,7 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#mine-1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 2:provider 認證
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#teardown" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Teardown 程序(僅記錄,本次未執行)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sprint-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Sprint 3 完結
+        想一想
       
     </span>
   </a>
@@ -4174,7 +4162,29 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
       
     </span>
   </a>
@@ -4198,57 +4208,30 @@
 
 
 
-<h1 id="day-10-terraform-teardown">Day 10: Terraform 接管 + Teardown 演練<a class="headerlink" href="#day-10-terraform-teardown" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>課程定位:Sprint 3 最後一天。用 <strong>terraform-provider-openstack</strong>(Sprint 1 未竟項)以 HCL 管 network/VM/LB,並整理 <strong>teardown/重建</strong>程序。回顧另見 <code>docs/sprint3-reflection.md</code>。</p>
-</blockquote>
-<h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="1-terraform-vs-heat-iac">1. Terraform vs Heat:兩種 IaC 的定位<a class="headerlink" href="#1-terraform-vs-heat-iac" title="Permanent link">&para;</a></h3>
+<h1 id="day-10-terraform-openstack-providerstatedepends_on-kolla-ansible-destroy">Day 10: 用 Terraform 建立與拆除 OpenStack 資源——provider、state、depends_on 與 kolla-ansible destroy<a class="headerlink" href="#day-10-terraform-openstack-providerstatedepends_on-kolla-ansible-destroy" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Terraform 官方標誌" src="../../assets/logos/terraform.png" width="90" /></p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>Heat(Day 5)</th>
-<th><strong>Terraform(本日)</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>狀態</td>
-<td>存在 heat DB(OpenStack 內)</td>
-<td>外部 tfstate(檔案/後端)</td>
-</tr>
-<tr>
-<td>範圍</td>
-<td>只管 OpenStack</td>
-<td>跨雲/跨 provider(同一份 workflow 管 OpenStack + AWS + DNS…)</td>
-</tr>
-<tr>
-<td>介面</td>
-<td>HOT(YAML)</td>
-<td>HCL + <code>plan</code>/<code>apply</code>/<code>destroy</code></td>
-</tr>
-<tr>
-<td>適用</td>
-<td>OpenStack 原生編排、Magnum 舊 driver</td>
-<td>企業 IaC 標準、多雲、CI 整合</td>
-</tr>
-</tbody>
-</table>
-<p>Terraform 的價值:<strong><code>plan</code> 先看 diff 再 <code>apply</code></strong>、狀態可版控、一份 HCL 管全棧。provider <code>terraform-provider-openstack/openstack</code>(v3.x)認證直接吃 <code>OS_*</code> 環境變數(<code>source admin-openrc.sh</code>)。</p>
-<h3 id="2-teardown-disaster-recovery">2. Teardown/重建 = disaster recovery 驗證<a class="headerlink" href="#2-teardown-disaster-recovery" title="Permanent link">&para;</a></h3>
-<p>IaC 的終極測試:<strong>能不能一鍵拆、一鍵重建</strong>。本 lab 分兩層:
-- <strong>TF 層</strong>(本日實作):<code>terraform destroy</code> 把 HCL 管的資源一次清乾淨。
-- <strong>Kolla 層</strong>(本日僅記錄程序,見 §Teardown):<code>kolla-ansible destroy</code> 拆整套 OpenStack,再 <code>deploy</code> 重建 —— 極破壞性,實務上是換機/災難重建的演練。</p>
-<h2 id="terraform">步驟(Terraform,已實作)<a class="headerlink" href="#terraform" title="Permanent link">&para;</a></h2>
-<h3 id="1-terraform">1. 裝 terraform<a class="headerlink" href="#1-terraform" title="Permanent link">&para;</a></h3>
+<p>Day 2 開第一台 VM 時,network、subnet、router、VM 是一行一行 <code>openstack ... create</code> 建出來的。如果明天要替另一個專案再建一套一樣的環境,或做完實驗想全部清掉,只能翻筆記照順序重打,刪的時候還得倒過來刪。Day 5 的 Heat 可以用一份範本一次建好,但範本建出來的紀錄存在這朵雲自己的資料庫裡,雲一拆,紀錄也跟著消失。</p>
+<p>這一章用 Terraform 把一組 network、VM 和負載平衡器寫成一個檔案,建立、查看、一次拆掉;再整理把整朵 OpenStack 拆掉重建時要做哪些事。讀完之後,拿到一套環境,你能判斷拆掉之後各部分靠什麼重建:哪些 <code>terraform apply</code> 就能回來,哪些要重跑 Kolla,哪些只能照前幾章的步驟手動補。</p>
+<h2 id="terraform">Terraform 把狀態記在雲的外面<a class="headerlink" href="#terraform" title="Permanent link">&para;</a></h2>
+<p>Terraform 是 HashiCorp 的工具:你在一個文字檔裡描述想要哪些資源,它負責呼叫 API 把資源建出來,事後也能照同一份描述把它們刪掉。描述檔用的語言叫 <strong>HCL</strong>(HashiCorp Configuration Language),副檔名是 <code>.tf</code>。</p>
+<p>Heat 和 Terraform 都是「寫範本、一次建好」,最大的差別在於「建過哪些資源」這份紀錄放在哪裡。下面這張圖把兩者並排:</p>
+<p><img alt="左邊是 Heat:HOT 範本透過 openstack stack create 交給 OpenStack 裡的 heat-engine,stack 狀態存在 OpenStack 裡的 heat 資料庫;右邊是 Terraform:主機上的 ~/tf-demo/ 目錄裡有 main.tf 和 terraform.tfstate,terraform 指令讀這兩個檔案,用 OS_* 環境變數呼叫 OpenStack 的 Nova、Neutron、Octavia API" src="../../assets/diagrams/os-s3d10-state.svg" /></p>
+<p>圖上標成橘色的兩個框,就是這份紀錄。我們可以看到兩件事:</p>
+<ol>
+<li><strong>Heat 的紀錄在 OpenStack 裡面。</strong> Day 5 建的 stack,狀態存在 heat 的資料庫,跟其他服務的資料庫一起由 Kolla 部署。</li>
+<li><strong>Terraform 的紀錄在 OpenStack 外面。</strong> 它是你工作目錄裡的一個檔案 <code>terraform.tfstate</code>,這個檔案叫 <strong>state</strong>。Terraform 靠它知道自己建過哪些資源、各自的 ID 是什麼,之後要刪的時候就照這份紀錄逐一刪除。</li>
+</ol>
+<p>另一個差別是範圍:Heat 只管 OpenStack,Terraform 透過不同的 provider(下一節會講)可以在同一份描述裡同時管 OpenStack、其他公有雲和 DNS 這類外部服務。</p>
+<h2 id="1-terraform">步驟 1:安裝 terraform<a class="headerlink" href="#1-terraform" title="Permanent link">&para;</a></h2>
+<p>在 OpenStack 主機上安裝。下面先向 HashiCorp 查目前的最新版號,下載對應的 zip,解壓後放進 <code>/usr/local/bin</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">VER</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-s<span class="w"> </span>https://checkpoint-api.hashicorp.com/v1/check/terraform<span class="w"> </span><span class="p">|</span><span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sys,json;print(json.load(sys.stdin)[&#39;current_version&#39;])&quot;</span><span class="k">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-fsSLo<span class="w"> </span>/tmp/tf.zip<span class="w"> </span><span class="s2">&quot;https://releases.hashicorp.com/terraform/</span><span class="si">${</span><span class="nv">VER</span><span class="si">}</span><span class="s2">/terraform_</span><span class="si">${</span><span class="nv">VER</span><span class="si">}</span><span class="s2">_linux_amd64.zip&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import zipfile; zipfile.ZipFile(&#39;/tmp/tf.zip&#39;).extractall(&#39;/tmp&#39;)&quot;</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>sudo<span class="w"> </span>install<span class="w"> </span>-m0755<span class="w"> </span>/tmp/terraform<span class="w"> </span>/usr/local/bin/terraform<span class="w">    </span><span class="c1"># v1.15.8</span>
 </span></code></pre></div>
-<h3 id="2-hcltf-demomaintf">2. HCL(<code>~/tf-demo/main.tf</code>)<a class="headerlink" href="#2-hcltf-demomaintf" title="Permanent link">&para;</a></h3>
+<p>解壓用的是 Python 內建的 <code>zipfile</code>,所以主機上不必另外裝 <code>unzip</code>。行尾的版號是本課安裝時拿到的版本,你裝到的可能更新。</p>
+<h2 id="2-maintf">步驟 2:把資源寫成 main.tf<a class="headerlink" href="#2-maintf" title="Permanent link">&para;</a></h2>
+<p>建一個目錄 <code>~/tf-demo/</code>,把下面的內容存成 <code>~/tf-demo/main.tf</code>。先整份看過,接著逐段說明:</p>
 <div class="language-hcl highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">terraform</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">required_providers</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nb">openstack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="na">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;terraform-provider-openstack/openstack&quot;, version = &quot;~&gt; 3.0&quot;</span><span class="w"> </span><span class="p">}</span>
@@ -4281,7 +4264,7 @@
 </span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
 </span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="kr">resource</span><span class="w"> </span><span class="nc">&quot;openstack_compute_instance_v2&quot;</span><span class="w"> </span><span class="nv">&quot;tf_vm&quot;</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">  </span><span class="na">name</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tf-vm&quot;</span>
-</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="na">depends_on</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">openstack_networking_router_interface_v2.tf_ri</span><span class="p">]</span><span class="c1">   # ← 原因見下方地雷 1</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="na">depends_on</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">openstack_networking_router_interface_v2.tf_ri</span><span class="p">]</span>
 </span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">  </span><span class="na">image_name</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;cirros&quot;</span>
 </span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">  </span><span class="na">flavor_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;m1.tiny&quot;</span>
 </span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">  </span><span class="na">key_pair</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;k8s-admin&quot;</span>
@@ -4301,61 +4284,52 @@
 </span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">  </span><span class="na">loadbalancer_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_lb_loadbalancer_v2.tf_lb.id</span>
 </span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="p">}</span>
 </span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>
-</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="c1"># checkpoint 的 `terraform output` 靠這兩個(值見驗收表:tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234)</span>
-</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="kr">output</span><span class="w"> </span><span class="nv">&quot;tf_vm_ip&quot;</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="na">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_compute_instance_v2.tf_vm.access_ip_v4</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="kr">output</span><span class="w"> </span><span class="nv">&quot;tf_lb_vip&quot;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="na">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_lb_loadbalancer_v2.tf_lb.vip_address</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="kr">output</span><span class="w"> </span><span class="nv">&quot;tf_vm_ip&quot;</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="na">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_compute_instance_v2.tf_vm.access_ip_v4</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a><span class="kr">output</span><span class="w"> </span><span class="nv">&quot;tf_lb_vip&quot;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="na">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">openstack_lb_loadbalancer_v2.tf_lb.vip_address</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="3-apply-verify-destroy">3. apply / verify / destroy<a class="headerlink" href="#3-apply-verify-destroy" title="Permanent link">&para;</a></h3>
+<h3 id="providerterraform">provider:Terraform 怎麼連到這朵雲<a class="headerlink" href="#providerterraform" title="Permanent link">&para;</a></h3>
+<p>開頭的 <code>terraform { required_providers ... }</code> 宣告這份檔案要用哪個 <strong>provider</strong>。Terraform 本身不認得 OpenStack,呼叫 OpenStack API 的工作由 provider 這個外掛負責;這裡用的是社群維護的 <code>terraform-provider-openstack/openstack</code>,<code>~&gt; 3.0</code> 表示接受 3.x 的任何版本。</p>
+<p><code>provider "openstack" {}</code> 是空的,裡面沒有帳號密碼。provider 會改讀環境變數 <code>OS_AUTH_URL</code>、<code>OS_USERNAME</code>、<code>OS_PASSWORD</code>、<code>OS_PROJECT_NAME</code> 和網域相關的 <code>OS_*_DOMAIN_NAME</code>,也就是 Day 1 <code>admin-openrc.sh</code> 設定的那一組。所以帳密不必寫進 HCL,只要執行前先 <code>source</code> 憑證檔。要給多個環境或自動化流程用時,provider 也支援用 <code>cloud = "..."</code> 指向 <code>clouds.yaml</code> 裡的一個項目,或改用 application credential,不必拿管理員密碼。</p>
+<h3 id="resource-data-source">resource 和 data source<a class="headerlink" href="#resource-data-source" title="Permanent link">&para;</a></h3>
+<p>檔案裡的區塊分成兩種:</p>
+<ul>
+<li><strong><code>resource</code></strong> 是要 Terraform 建立並管理的東西,這裡有七個:network、subnet、router、router interface(把 subnet 接上 router)、VM、負載平衡器、listener。</li>
+<li><strong><code>data</code></strong> 是 <strong>data source</strong>,只讀取一個已經存在的資源,不建立、也不會刪除。<code>ext-net</code> 是 Day 2 建的對外網路,這朵雲的其他東西也在用它,所以只用 data source 查出它的 ID,交給 router 當對外閘道。</li>
+</ul>
+<p>一個區塊可以引用另一個區塊的屬性,例如 subnet 的 <code>network_id = openstack_networking_network_v2.tf_net.id</code>。Terraform 從這些引用推出資源之間的相依:subnet 引用了 network,就要等 network 建好才能建 subnet。彼此沒有引用關係的資源,Terraform 會同時建立。</p>
+<h3 id="why-depends-on">為什麼 VM 要加 depends_on<a class="headerlink" href="#why-depends-on" title="Permanent link">&para;</a></h3>
+<p>把這七個資源的引用關係畫成圖,箭頭方向就是建立順序:</p>
+<p><img alt="八個方塊:tf_net 指向 tf_subnet;ext-net(灰色虛線框的 data source)指向 tf_router;tf_subnet 指向 tf_lb 和 tf_ri;tf_router 指向 tf_ri;tf_lb 指向 tf_listener;tf_ri 用一條橘色、標著 depends_on 的箭頭指向橘色的 tf_vm;另有一條線從 tf_net 繞到底部再接到 tf_vm,標註 VM 只透過 network { uuid } 引用 tf_net,沒有引用 subnet" src="../../assets/diagrams/os-s3d10-graph.svg" /></p>
+<p>先看底部那條繞過整張圖的線。VM 的 <code>network { uuid = ... }</code> 只引用了 network,沒有引用 subnet,所以單看引用關係,Terraform 只知道 VM 要等 network 建好。network 一建好,VM 和 subnet 就會同時開始建。VM 送到 Nova 的時候 subnet 可能還沒建好,Nova 會拒絕:這個 network 上沒有 subnet,沒辦法分 IP 給 VM。</p>
+<p>VM 需要 subnet,但 HCL 裡沒有任何一行把這件事寫出來,Terraform 也就推不出來。這種情況要用 <strong><code>depends_on</code></strong> 明確告訴 Terraform 順序。圖上那條橘色箭頭就是 <code>depends_on = [openstack_networking_router_interface_v2.tf_ri]</code>:router interface 本身引用了 subnet 和 router,等它建好時,subnet 已經存在,也已經接上 router,這時再建 VM。只寫 <code>depends_on = [openstack_networking_subnet_v2.tf_subnet]</code> 也能解決 subnet 的問題。漏掉這一行會看到什麼錯誤,見<a href="#mine-1">疑難排解：VM 建立失敗,Nova 回 400</a>。</p>
+<h3 id="output">負載平衡器與 output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
+<p>負載平衡器明確指定 <code>loadbalancer_provider = "amphora"</code>。Day 4 提過,這朵雲的 Octavia 有 amphora 和 ovn 兩個 provider,ovn provider 只處理 TCP、UDP 這類 L4 流量;這裡的 listener 用的是 <code>HTTP</code>,所以要指定 amphora,由 Octavia 開一台跑 haproxy 的 amphora VM 來處理。</p>
+<p>最後兩個 <code>output</code> 區塊,讓 Terraform 建完之後印出 VM 的 IP 和負載平衡器的 VIP(對外服務用的那個 IP),不必再用 <code>openstack</code> 指令去查。</p>
+<h2 id="3planapplydestroy">步驟 3:plan、apply、確認、destroy<a class="headerlink" href="#3planapplydestroy" title="Permanent link">&para;</a></h2>
+<p>在 <code>~/tf-demo/</code> 目錄裡依序執行:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>terraform<span class="w"> </span>init
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>terraform<span class="w"> </span>plan<span class="w">          </span><span class="c1"># 7 to add</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>terraform<span class="w"> </span>apply<span class="w"> </span>-auto-approve<span class="w">      </span><span class="c1"># LB amphora ~56s、VM ~20s</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>terraform<span class="w"> </span>apply<span class="w"> </span>-auto-approve
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>terraform<span class="w"> </span>output<span class="w">        </span><span class="c1"># tf_vm_ip / tf_lb_vip</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>terraform<span class="w"> </span>destroy<span class="w"> </span>-auto-approve<span class="w">    </span><span class="c1"># 一鍵拆 7 資源(含 amphora)</span>
 </span></code></pre></div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>。「本課環境的結果」欄是我們實測的參考值——你的 IP、耗時等數字會不同,但判準必須成立:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>provider auth</td>
-<td>OS_* env 認證成功</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>apply</td>
-<td>network/subnet/router/VM/LB/listener 全建</td>
-<td>7 資源;LB amphora ACTIVE</td>
-</tr>
-<tr>
-<td>outputs</td>
-<td>VM/LB IP 取得</td>
-<td>tf_vm_ip=10.20.0.46 / tf_lb_vip=10.20.0.234</td>
-</tr>
-<tr>
-<td><strong>teardown</strong></td>
-<td><code>terraform destroy</code> 清乾淨、OpenStack 端 0 殘留</td>
-<td>7 destroyed</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_2">地雷記錄<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:instance vs subnet 的 ordering(terraform-provider-openstack 經典地雷)<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><code>openstack_compute_instance_v2</code> 只用 <code>network { uuid = ... }</code> 引用 network、<strong>沒引用 subnet</strong>,TF 會並行建、VM 送到 Nova 時 subnet 還沒掛上 → <code>Network ... requires a subnet in order to boot instances on</code> (HTTP 400)。修:給 instance 加 <code>depends_on = [openstack_networking_router_interface_v2.tf_ri]</code>(或 subnet),強制順序。這是 provider 的 dependency graph 抓不到隱性依賴的典型情況。</p>
-<h3 id="mine-2">地雷 2:provider 認證<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>不必在 HCL 寫死帳密 —— <code>provider "openstack" {}</code> 空 block 直接吃 <code>OS_AUTH_URL</code>/<code>OS_USERNAME</code>/<code>OS_PASSWORD</code>/<code>OS_PROJECT_NAME</code>/<code>OS_*_DOMAIN_NAME</code> env(<code>source admin-openrc.sh</code>)。生產環境用 <code>clouds.yaml</code> + <code>cloud = "..."</code> 或 application credential 更佳。</p>
-<h2 id="teardown">Teardown 程序(僅記錄,本次未執行)<a class="headerlink" href="#teardown" title="Permanent link">&para;</a></h2>
-<blockquote>
-<p>決策:TF 層 teardown 已完整示範;full <code>kolla-ansible destroy</code> 會清掉整套 OpenStack + workload cluster,重建 ~30-60 分且多花 VM 費用,故本次只記錄程序供未來災難重建演練參考。</p>
-</blockquote>
-<p><strong>完整拆除 + 重建步驟:</strong></p>
+<p>一行一行看:</p>
+<ul>
+<li><strong><code>terraform init</code></strong> 照 <code>required_providers</code> 下載 OpenStack provider,放進目錄裡的 <code>.terraform/</code>。每個新目錄只要做一次。</li>
+<li><strong><code>terraform plan</code></strong> 比對 HCL、state 和雲上的現況,列出接下來要建立、修改或刪除什麼,但不會真的動手。第一次執行時 state 還是空的,所以結果是 <code>7 to add</code>:正好是七個 <code>resource</code>。<code>ext-net</code> 是 data source,不在其中。先看 plan 再動手,是 Terraform 最常用的習慣:改了 HCL 之後,plan 會告訴你這次改動會不會把某個資源刪掉重建。</li>
+<li><strong><code>terraform apply</code></strong> 真正呼叫 API 建立資源,完成後把每個資源的 ID 寫進 <code>terraform.tfstate</code>。平常 apply 會先印出 plan 並等你輸入 <code>yes</code>;<code>-auto-approve</code> 省略這個確認,只適合在你已經看過 plan 的時候用。七個資源裡最慢的是負載平衡器,約一分鐘,因為要等 Octavia 開好 amphora VM;VM 約 20 秒。</li>
+<li><strong><code>terraform output</code></strong> 印出兩個 output 的值。本課執行時拿到的是 <code>tf_vm_ip</code> 10.20.0.46、<code>tf_lb_vip</code> 10.20.0.234,兩個 IP 都落在 HCL 裡 subnet 設定的 <code>10.20.0.0/24</code>;你的數字會不同,但應該也在這個範圍內。</li>
+</ul>
+<p>destroy 之前,可以先用 <code>openstack server list</code>、<code>openstack network list</code>、<code>openstack loadbalancer list</code> 看看,名稱是 <code>tf-</code> 開頭的資源都在。amphora VM 建在 Octavia 自己的 service project 裡,<code>openstack server list</code> 列不到,要用 <code>openstack loadbalancer amphora list</code> 看。</p>
+<ul>
+<li><strong><code>terraform destroy</code></strong> 照 state 裡的紀錄,依相依關係的反方向刪除:listener 先於負載平衡器、VM 先於 router interface,最後才刪 network。刪除負載平衡器時,Octavia 會把它的 amphora VM 一起刪掉。</li>
+</ul>
+<p>destroy 跑完再列一次,<code>tf-</code> 開頭的資源應該全部不見,<code>openstack loadbalancer amphora list</code> 裡也不再有這個負載平衡器的 amphora。這一步確認的是:Terraform 建的東西,它都能自己收回去,不會在 OpenStack 留下殘留。</p>
+<h2 id="openstack">拆掉整朵 OpenStack 要做什麼<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h2>
+<p><code>terraform destroy</code> 拆的只是建在 OpenStack 上面的資源。如果要把 OpenStack 本身拆掉重建,例如換一台主機、或者環境壞到不值得修,要用的是 Kolla-Ansible 的 <strong><code>kolla-ansible destroy</code></strong>:它把 Kolla 部署的所有容器和 Docker volume 清掉,資料庫的資料和上傳到 Glance 的 image 都存在 Docker volume 裡,所以一併消失,無法復原。主機上的 <code>/etc/kolla/</code> 則是部分保留:<code>globals.yml</code>、<code>passwords.yml</code> 和自訂設定目錄 <code>config/</code> 會留下,其餘產生出來的檔案會被刪掉,包括 Day 1 <code>post-deploy</code> 產生的 <code>admin-openrc.sh</code>。</p>
+<p>這一段<strong>本課沒有實際執行</strong>。下面的程序是把前幾章的手動步驟整理成的清單,沒有從頭到尾跑過一次;重建需要的時間也只是估計。</p>
+<p>清單分四段:先備份設定,再拆,再用 Kolla 重新部署,最後補上 Kolla 管不到的東西。第 3 段的註解是一串提醒,各自對應前面某一章的步驟:CAPI mgmt cluster 是 Day 6 用 kind 建的 Cluster API 管理叢集,ORC 是它呼叫 OpenStack API 用的元件;<code>o-hm0</code> 是 Day 4 讓 Octavia 連到 amphora 管理網路的介面。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># 0. 先備份會遺失的狀態(node image 已在 Glance repo 外、magnum kubeconfig、globals.yml)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cp<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span>~/globals.backup.yml
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
@@ -4373,19 +4347,45 @@
 </span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="c1">#    - magnum kubeconfig 換新 kind API port,重放 /etc/kolla/config/magnum/kubeconfig(Day 7)</span>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1">#    - kind MASQUERADE / octavia o-hm0 / disk_allocation_ratio 等 host 級設定(有 systemd unit / config 的會自動回)</span>
 </span></code></pre></div>
-<p><strong>重建速度的教訓</strong>:Kolla 的 <code>deploy</code> 本身是冪等、可重跑的,但 lab 有一堆<strong>手動 host 級設定與外部狀態</strong>(kind cluster、MASQUERADE、image、kubeconfig)不在 Kolla 管轄內 —— 真正的「一鍵重建」要把這些也 IaC 化(這正是 Terraform/Ansible 該補的一層)。</p>
-<h2 id="sprint-3">Sprint 3 完結<a class="headerlink" href="#sprint-3" title="Permanent link">&para;</a></h2>
-<p>十天走完:Azure lab → Kolla AIO → OpenStack 全資源流 → Cinder/Octavia/Barbican/Heat → Magnum CAPI driver → E2E workload cluster(Sprint 1 三個未完成項全數補完)→ Day-2 ops → Terraform。</p>
-<p>還有一篇不用動手的<a href="../sprint3-day11-openstack-service-map/">後日談:OpenStack 服務全景圖</a>,把這次用過與沒用過的服務一次盤點;回顧與產業對照見 <a href="../../sprint3-reflection/">Sprint 3 回顧</a>。</p>
+<p><code>--yes-i-really-really-mean-it</code> 是 <code>kolla-ansible destroy</code> 要求的確認參數,少了它不會執行。destroy 會保留 <code>globals.yml</code>、<code>passwords.yml</code> 和 <code>config/</code>,但拆除前把它們另外複製一份仍然值得,萬一要換一台主機重建,這幾個檔案就是全部的設定。</p>
+<p>deploy 跑完之後,<code>admin-openrc.sh</code> 已經在拆除時被刪掉,要先重新產生,才能 <code>source</code> 它、執行 <code>openstack</code> 或 <code>terraform</code> 指令:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>kolla-ansible<span class="w"> </span>post-deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>第 3 段那串 post-steps 要分成兩類看。放在 <code>/etc/kolla/config/</code> 底下的東西,destroy 會保留,deploy 重跑時自動帶回:Day 4 產生的 Octavia 憑證、Day 9 調整 <code>disk_allocation_ratio</code> 的 <code>nova.conf</code>、Day 7 交給 Magnum 的 kubeconfig 檔案。其中 kubeconfig 只有在 kind 叢集也重建、API port 換了的時候,才需要換成新內容。</p>
+<p>真正要手動補的是 Kolla 以外的東西:Day 4 和 Day 7 上傳的 amphora image 與 Kubernetes 節點 image(它們在 Glance 的 Docker volume 裡,跟著消失)、Day 6 用 kind 建的管理叢集,以及 Day 6 讓 kind 節點連得到外網的 MASQUERADE 規則。</p>
+<p>把拆除和重建按層次畫出來:</p>
+<p><img alt="三層由上而下:最上層是 Terraform 管的資源(network、subnet、router、VM、LB、listener),用 terraform destroy 拆、terraform apply 建;中間橘色框是 Kolla 以外的東西(Glance 裡的 image 隨 volume 消失、kind 管理叢集、MASQUERADE 規則),要照 Day 4–7 的步驟手動補;最下層灰色是 Kolla 部署的服務(所有服務的 Docker 容器與 volume,含資料庫;/etc/kolla/config/ 的自訂設定如 Octavia 憑證、nova.conf、magnum kubeconfig 會保留),用 kolla-ansible destroy 拆、deploy 與 post-deploy 建。拆的時候由上往下,重建的時候由下往上" src="../../assets/diagrams/os-s3d10-layers.svg" /></p>
+<p>照著圖由下往上看重建的順序:</p>
+<ol>
+<li><strong>最下層有現成的指令。</strong> <code>kolla-ansible deploy</code> 是冪等的(Day 1),設定都在保留下來的 <code>globals.yml</code> 和 <code>config/</code> 裡,重跑就能把服務帶回來,再用 <code>post-deploy</code> 產生憑證檔。</li>
+<li><strong>最上層也有。</strong> 只要 <code>main.tf</code> 還在,<code>terraform apply</code> 就能把這一層建回來。但要等下面兩層都就緒:Glance 裡還沒有 amphora image,負載平衡器就建不起來。</li>
+<li><strong>中間那一層只有筆記。</strong> 這些資料和設定散在 Day 4 到 Day 7 的步驟裡,沒有一個指令能一次重建。</li>
+</ol>
+<p>所以「能不能一次拆掉、一次重建」,取決於中間那一層有沒有也寫成程式。這一層可以用 Ansible 劇本或 Terraform 補上,這門課沒有做。</p>
+<h2 id="_1">疑難排解<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">VM 建立失敗,Nova 回 400<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>terraform apply</code> 建 VM 時失敗,錯誤訊息是 <code>Network ... requires a subnet in order to boot instances on</code>(HTTP 400)。</p>
+<p><strong>原因</strong>:VM 只引用了 network,沒有引用 subnet,Terraform 把 VM 和 subnet 同時建,VM 送到 Nova 時 subnet 還沒建好。詳細的說明和修法見<a href="#why-depends-on">步驟 2「為什麼 VM 要加 depends_on」</a>:在 VM 加上 <code>depends_on</code>,指向 router interface 或 subnet。</p>
+<h2 id="_2">想一想<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一位同學覺得 <code>depends_on</code> 那行多餘,把它刪掉之後 apply 了三次:兩次成功、一次在 VM 那一步失敗。為什麼結果會不一樣?</li>
+<li>另一位同學做完實驗,把整個 <code>~/tf-demo/</code> 目錄刪掉了,才想起資源還沒清。他重新寫了一份一模一樣的 <code>main.tf</code>,在新目錄裡執行 <code>terraform destroy</code>,能把舊的那七個資源刪掉嗎?為什麼?</li>
+<li>主管問你:「我們的網路和 VM 都寫成 Terraform 了,這朵雲哪天壞了,是不是 <code>terraform apply</code> 就能全部建回來?」你會怎麼回答,還需要準備什麼?</li>
+</ul>
+<h2 id="_3">小結<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Terraform 用 HCL 描述想要的資源,透過 provider 呼叫 OpenStack API,並把建過的資源記在雲外的 state 檔案裡;<code>plan</code> 先列出差異,<code>apply</code> 照著建,<code>destroy</code> 照 state 刪乾淨。資源之間的順序靠引用推導,HCL 裡沒寫出來的需求,例如 VM 需要 subnet,要用 <code>depends_on</code> 補上。之後判斷一套環境能不能重建時,把它分成三層看:Terraform 管的資源、Kolla 部署的服務,以及 Kolla 以外、只存在於前幾章步驟裡的 image、kind 叢集和主機設定。最後這一層沒有寫成程式之前,拆掉整朵雲就要照筆記一件件補回來。</p>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想再深入,可以從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs">Terraform OpenStack Provider 文件</a></strong> —— 每種資源(instance、network、loadbalancer)的完整參數,以及 provider 支援的各種認證方式。</li>
+<li><strong><a href="https://developer.hashicorp.com/terraform/intro">Terraform 官方入門</a></strong> —— state、plan、apply 的第一手說明。</li>
+<li><strong><a href="https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on">Terraform:depends_on</a></strong> —— 官方說明什麼時候 Terraform 推不出相依、為什麼建議把 <code>depends_on</code> 當最後手段。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html">Kolla-Ansible 維運指南</a></strong> —— <code>destroy</code>、<code>reconfigure</code>、升級這些日常操作的官方說明。</li>
+</ul>
+<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>Sprint 3 的動手部分到這裡結束:從一台空的 Azure VM 開始,部署了 OpenStack,一路做到在上面開 Kubernetes 叢集,最後用 Terraform 管理資源。<a href="../sprint3-day11-openstack-service-map/">Day 11</a> 不用動手,把這十天用過與沒用過的 OpenStack 服務放在一張圖上;回顧與產業對照見 <a href="../../sprint3-reflection/">Sprint 3 回顧</a>。</p>
 <hr />
 <p><em>Terraform 標誌為 HashiCorp 之商標,此處作社群教學用途。</em></p>
-<h2 id="_3">延伸閱讀<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
-<ul>
-<li><strong><a href="https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs">Terraform OpenStack Provider 文件</a></strong> —— 每種資源(instance/network/volume)的完整參數;本章範本的字典。</li>
-<li><strong><a href="https://developer.hashicorp.com/terraform/intro">Terraform 官方入門</a></strong> —— state、plan、apply 這套心智模型的第一手說明。</li>
-<li><strong><a href="https://learn.microsoft.com/en-us/azure/virtual-machines/states-billing">Azure VM 狀態與計費</a></strong> —— 為什麼 deallocate 才停止計費、stop 不會;本課「用完就關」習慣的依據。</li>
-</ul>
 
 
 

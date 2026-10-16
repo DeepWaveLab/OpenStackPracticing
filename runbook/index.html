@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -18,12 +18,12 @@
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>OpenStack 學習 Runbook - OpenStack Lab Course</title>
+        <title>OpenStack 課程章節與歷史紀錄 - OpenStack Lab Course</title>
       
     
     
@@ -48,6 +48,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#openstack-runbook" class="md-skip">
+        <a href="#openstack" class="md-skip">
           跳轉到
         </a>
       
@@ -92,8 +94,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href=".." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -110,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              OpenStack 學習 Runbook
+              OpenStack 課程章節與歷史紀錄
             
           </span>
         </div>
@@ -351,8 +352,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1165,7 +1165,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1553,7 +1553,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1581,7 +1581,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1609,7 +1609,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1729,7 +1729,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -3760,80 +3760,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        環境資訊
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        目錄
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2026-04-19-nova-compute" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ✅ 2026-04-19 nova-compute 重建完成
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        尚未完成
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        快速重登 VM
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        省錢指令
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -3849,110 +3775,10 @@
 
 
 
-<h1 id="openstack-runbook">OpenStack 學習 Runbook<a class="headerlink" href="#openstack-runbook" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>此目錄記錄<strong>實際執行過且驗證成功</strong>的指令。與 <code>docs/plans/</code> 的差異：</p>
-<ul>
-<li><code>docs/plans/</code> = 要學什麼（計畫）</li>
-<li><code>docs/runbook/</code> = 實際跑過的指令（replay 時照抄即可）</li>
-</ul>
-</blockquote>
-<h2 id="_1">環境資訊<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>項目</th>
-<th>值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Azure subscription</td>
-<td><code>&lt;subscription-name&gt;</code> (id: <code>&lt;subscription-id&gt;</code>)</td>
-</tr>
-<tr>
-<td>Resource group</td>
-<td><code>souch-openstack</code></td>
-</tr>
-<tr>
-<td>Region</td>
-<td><code>japaneast</code></td>
-</tr>
-<tr>
-<td>VM</td>
-<td><code>openstack-lab</code> (Standard_E16s_v5, Ubuntu 24.04)</td>
-</tr>
-<tr>
-<td>VM Public IP</td>
-<td><code>20.210.233.133</code></td>
-</tr>
-<tr>
-<td>VM Private IP</td>
-<td><code>10.0.0.4</code></td>
-</tr>
-<tr>
-<td>SSH key</td>
-<td><code>~/.ssh/juju_id_rsa</code></td>
-</tr>
-<tr>
-<td>SSH user</td>
-<td><code>azureuser</code></td>
-</tr>
-</tbody>
-</table>
-<h2 id="_2">目錄<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<ol>
-<li><a href="day-0-azure-vm/">Day 0: Azure VM 建置</a> ✅</li>
-<li><a href="day-1-lxd-juju-install/">Day 1: LXD + Juju 安裝</a> ✅</li>
-<li><a href="day-1-juju-bootstrap/">Day 1: Juju bootstrap + 第一個 model</a> ✅</li>
-<li><a href="day-1-first-relation/">Day 1: 第一次觀察 Juju Relation</a> ✅（用 mysql + self-signed-certificates）</li>
-<li><a href="day-2-openstack-charm-map/">Day 2: OpenStack Charm 架構地圖</a> ✅（18 charm + 部署順序）</li>
-<li><a href="day-3-rabbitmq/">Day 3: RabbitMQ 部署</a> ✅（amqp broker + TLS）</li>
-<li><a href="day-3-mysql-innodb-cluster/">Day 3: MySQL InnoDB Cluster</a> ✅（⚠️ 含 mysql charm 不相容 OpenStack 的踩雷紀錄）</li>
-<li><a href="day-3-keystone/">Day 3: Keystone</a> ✅（第一個 OpenStack 服務 + openrc 設定，注意 port 5000 是 HTTP）</li>
-<li><a href="day-3-glance/">Day 3: Glance</a> ✅（Image Registry，file backend，cirros upload 成功）</li>
-<li><a href="day-3-placement/">Day 3: Placement</a> ✅（Resource Inventory；⚠️ charm 有 db sync bug，手動補）</li>
-<li><a href="day-3-nova-cloud-controller/">Day 3: Nova Cloud Controller</a> ✅（Nova 控制面，scheduler + conductor up）</li>
-<li><a href="day-3-nova-compute/">Day 3: Nova Compute</a> ✅（Hypervisor，LXD VM + KVM；⚠️ 必須接 <code>cloud-credentials</code>）</li>
-<li><a href="day-3-network-stack/">Day 3: Network Stack (OVN + Neutron)</a> ✅（4 charm + 13 relation；⚠️ SSC interface 不合 → 要 Vault）</li>
-<li><a href="day-3-vault-tls/">Day 3: Vault TLS for OVN</a> ✅（Vault 1.8/stable；OVN legacy interface 解藥）</li>
-<li><a href="day-3-horizon/">Day 3: Horizon (openstack-dashboard)</a> ✅（Web UI，走 HTTP + SSH tunnel）</li>
-<li><a href="day-4-configure-openstack/">Day 4: Configure OpenStack — 開第一台 VM</a> ✅（Ubuntu VM end-to-end SSH 通）</li>
-<li><a href="day-5-heat/">Day 5: Heat (Orchestration)</a> ✅（Magnum 前置，demo stack 驗證）</li>
-<li><a href="day-6-magnum/">Day 6: Magnum (Container Infra)</a> ✅（API 上線 + domain-setup）</li>
-<li><a href="day-7-magnum-k8s-cluster/">Day 7: Magnum K8s Cluster 實建</a> 🟡（2 nodes Ready；workload 卡在 Magnum upstream 舊 image URL）</li>
-<li><a href="day-8-storage-attempts/">Day 8: Storage 嘗試與 LXD 限制</a> ❌（Ceph / Cinder LVM 在 LXD container 撞 kernel 權限，沒跑完）</li>
-<li><a href="../reflection/">Sprint 回顧 + 下一步規劃</a> 📝 整個 9 天總結</li>
-</ol>
-<h2 id="2026-04-19-nova-compute">✅ 2026-04-19 nova-compute 重建完成<a class="headerlink" href="#2026-04-19-nova-compute" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>nova-compute</code> 從 2023.2/stable 升級到 2024.1/stable（Caracal 一致）</li>
-<li>v66/v67 版本錯位問題解決，<code>openstack compute service list</code> 看到 daemon up</li>
-<li>QEMU hypervisor up，resource provider 有 4 VCPU / 7956 MB / 48 GB</li>
-<li>詳見 <a href="day-3-nova-compute/#nova-caracal-redeploy">day-3-nova-compute.md §第二次部署</a></li>
-</ul>
-<h2 id="_3">尚未完成<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Configure OpenStack</strong> — external network、flavor、security group、keypair、first VM 開機</li>
-<li><strong>Ceph / Cinder</strong>（刻意跳過，Glance file backend 已夠；未來 Magnum 要 persistent volume 再補）</li>
-</ul>
-<h2 id="vm">快速重登 VM<a class="headerlink" href="#vm" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ssh<span class="w"> </span>-i<span class="w"> </span>~/.ssh/juju_id_rsa<span class="w"> </span>azureuser@20.210.233.133
-</span></code></pre></div>
-<h2 id="_4">省錢指令<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># 停機（保留 disk，compute 不收費）</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>az<span class="w"> </span>vm<span class="w"> </span>deallocate<span class="w"> </span>-g<span class="w"> </span>souch-openstack<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># 開機</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>az<span class="w"> </span>vm<span class="w"> </span>start<span class="w"> </span>-g<span class="w"> </span>souch-openstack<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># 查狀態</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>az<span class="w"> </span>vm<span class="w"> </span>show<span class="w"> </span>-g<span class="w"> </span>souch-openstack<span class="w"> </span>-n<span class="w"> </span>openstack-lab<span class="w"> </span>-d<span class="w"> </span>--query<span class="w"> </span>powerState<span class="w"> </span>-o<span class="w"> </span>tsv<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span>--subscription<span class="w"> </span>&lt;subscription-id&gt;
-</span></code></pre></div>
-<p>⚠️ Public IP 是 <strong>Standard static</strong>，deallocate 不會變。但若你換本機網路，NSG 的 SSH 來源要更新（見 Day 0 §NSG 重設）。</p>
+<h1 id="openstack">OpenStack 課程章節與歷史紀錄<a class="headerlink" href="#openstack" title="Permanent link">&para;</a></h1>
+<p>目前課程從 <a href="sprint3-day0-azure-vm/">Day 0 的 Azure 實驗環境</a>開始，使用 Kolla-Ansible 2025.1 部署 OpenStack，接著練習資源管理、Kubernetes 叢集服務、多節點維運與租戶治理。完整順序、先備知識及 Day 0–35 的連結請見<a href="../">課程總覽</a>。</p>
+<p>本目錄也保存前兩次部署嘗試。<code>day-*</code> 是 Juju／Charms 路線，<code>sprint2-*</code> 是 OpenStack-Helm 路線；它們使用不同的環境與版本，閱讀入口在<a href="../previous-attempts/">前兩次嘗試</a>。目前主線的檔名則是 <code>sprint3-day*</code>、<code>sprint4-day*</code>、<code>sprint5-day*</code> 及 <code>epilogue.md</code>。</p>
+<p>章節中的輸出來自當時的驗證環境。重做時須先確認版本、網路、認證與所需檔案；沒有保存完整建置步驟或沒有驗證過的部分，會在正文交代。範例中的位址、資源名稱與識別碼須依自己的環境替換。</p>
 
 
 

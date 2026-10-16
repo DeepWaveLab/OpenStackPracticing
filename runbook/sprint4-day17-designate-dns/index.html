@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-17-designate-vm" class="md-skip">
+        <a href="#day-17-designate-dnszonerecordset-floating-ip" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1183,10 +1183,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dnsaas" class="md-nav__link">
+  <a href="#designate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸 DNSaaS?先讀這段
+        Designate 由哪些部分組成
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-globalsyml-designate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:在 globals.yml 開啟 Designate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-port-53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:確認 port 53 沒被佔用,再部署
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:建立 zone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm-fip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:開一台 VM,用 FIP 帶出網域名稱
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dig-fip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:用 dig 查詢,再確認記錄會跟著 FIP 刪除
       
     </span>
   </a>
@@ -1197,113 +1252,19 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1globals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:globals(一個點決定成敗)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2port-53" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:port 53 檢查與部署
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-zone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:建 zone
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:開一台 VM,看域名自己長出來
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:真的解析看看
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:私有網路的 VM 沒有 DNS 記錄——是設計,不是故障
+        網路設了 dns_domain,VM 卻沒有 DNS 記錄
       
     </span>
   </a>
@@ -1314,7 +1275,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:neutron_dns_domain 的結尾點
+        部署成功,但 FIP 一直沒有產生 A 記錄
       
     </span>
   </a>
@@ -1325,7 +1286,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:subnet 沒設 DNS nameserver 的長尾
+        VM 裡解析不了外部網域名稱
       
     </span>
   </a>
@@ -1334,6 +1295,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1410,7 +1393,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1801,7 +1784,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1829,7 +1812,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1857,7 +1840,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1977,7 +1960,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4015,10 +3998,65 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dnsaas" class="md-nav__link">
+  <a href="#designate" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸 DNSaaS?先讀這段
+        Designate 由哪些部分組成
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-globalsyml-designate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:在 globals.yml 開啟 Designate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-port-53" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:確認 port 53 沒被佔用,再部署
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-zone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:建立 zone
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-vm-fip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:開一台 VM,用 FIP 帶出網域名稱
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dig-fip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5:用 dig 查詢,再確認記錄會跟著 FIP 刪除
       
     </span>
   </a>
@@ -4029,113 +4067,19 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1globals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:globals(一個點決定成敗)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2port-53" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:port 53 檢查與部署
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-zone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:建 zone
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:開一台 VM,看域名自己長出來
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:真的解析看看
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:私有網路的 VM 沒有 DNS 記錄——是設計,不是故障
+        網路設了 dns_domain,VM 卻沒有 DNS 記錄
       
     </span>
   </a>
@@ -4146,7 +4090,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:neutron_dns_domain 的結尾點
+        部署成功,但 FIP 一直沒有產生 A 記錄
       
     </span>
   </a>
@@ -4157,7 +4101,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:subnet 沒設 DNS nameserver 的長尾
+        VM 裡解析不了外部網域名稱
       
     </span>
   </a>
@@ -4166,6 +4110,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
   
 </li>
       
@@ -4208,41 +4174,25 @@
 
 
 
-<h1 id="day-17-designate-vm">Day 17: Designate——讓 VM 自動擁有域名<a class="headerlink" href="#day-17-designate-vm" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>到目前為止,你都是用 IP 存取雲裡的資源。今天部署 <strong>Designate</strong>(DNS 即服務),並打通它與 Neutron 的整合——掛上 floating IP 的瞬間,DNS 記錄自動誕生;刪掉的瞬間,自動消失。本章還有一個「看起來像故障、其實是設計」的行為,幾乎每個學員都會在那裡卡住,我們正面教它。</p>
-</blockquote>
+<h1 id="day-17-designate-dnszonerecordset-floating-ip">Day 17: Designate DNS——zone、recordset 與 floating IP 的自動發布<a class="headerlink" href="#day-17-designate-dnszonerecordset-floating-ip" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Designate 官方吉祥物" src="../../assets/mascots/designate.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>今天</strong>:部署 Designate(bind9 後端)+ Neutron DNS 整合,驗證「開 VM 掛 FIP → 域名自動出現 → dig 解析成功」全鏈。</li>
-<li><strong>今天之後</strong>:Day 18 用一鍵資料庫收尾階段一;你今天建的網路會直接沿用。</li>
-</ul>
-</div>
-<h2 id="dnsaas">第一次接觸 DNSaaS?先讀這段<a class="headerlink" href="#dnsaas" title="Permanent link">&para;</a></h2>
-<p><strong>Designate 是 OpenStack 的 Route 53</strong>:多租戶的 DNS 管理服務。兩個核心名詞:</p>
-<ul>
-<li><strong>zone</strong>:一個網域的管轄區,例如 <code>oslab.test.</code>(注意結尾的點——DNS 世界的完整域名都以點結尾)</li>
-<li><strong>recordset</strong>:zone 裡的一筆記錄,例如「<code>vm-dns.oslab.test.</code> 的 A 記錄指向 172.24.4.152」</li>
-</ul>
-<p>它真正的殺手級能力是<strong>與 Neutron 的整合</strong>:網路掛上 <code>dns_domain</code> 之後,資源的生命週期會自動同步到 DNS——不需要任何人手動加記錄。</p>
-<h2 id="_1">原理與架構<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>Designate 是本課程目前容器最多的服務(六個),分工是一條「意圖 → 權威資料 → 對外服務」的流水線:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph intent["意圖層(API 與工人)"]
-        direction LR
-        API["designate-api&lt;br/&gt;(收單)"] --&gt; CEN["designate-central&lt;br/&gt;(狀態的真相)"] --&gt; WRK["designate-worker&lt;br/&gt;(去改後端)"]
-    end
-    subgraph auth["權威層"]
-        direction LR
-        MDNS["designate-mdns(:5354)&lt;br/&gt;(對後端做 zone 轉送)"] ~~~ BIND["bind9(:53)&lt;br/&gt;(真正回答查詢的 DNS 伺服器)"]
-    end
-    intent ==&gt;|"worker 寫入、mdns 餵資料"| auth
-    PROD["designate-producer&lt;br/&gt;(週期性任務)"] -.-&gt; CEN</code></pre>
-<p>Neutron 那側的整合,Kolla <strong>全自動接好</strong>:開了 <code>enable_designate</code> 之後,neutron.conf 的 <code>external_dns_driver</code>、ML2 的 extension、通知 Designate 的認證段落,全部由模板代勞——你只需要供應兩個值(見步驟 1)。</p>
-<h2 id="_2">步驟<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="1globals">步驟 1:globals(一個點決定成敗)<a class="headerlink" href="#1globals" title="Permanent link">&para;</a></h3>
+<p>到 Day 16 為止,要連到雲裡的 VM,用的都是 IP。假設你開了一台 VM,掛上 floating IP(FIP)<code>172.24.4.152</code>,用這個位址存取它。過幾天 FIP 刪掉重建,位址換了,原來的 IP 就失效。可以在 DNS 裡維護一個名字,例如 <code>vm-dns.oslab.test</code>,而且讓這個名字跟著 FIP 走:FIP 建立時名字指向它,FIP 刪除時名字一起移除,不需要有人去改 DNS。</p>
+<p>這一章用指定 DNS 伺服器的查詢來驗證名稱,不設定公司 resolver 或公開網域委派。我們部署 OpenStack 的 DNS 服務 <strong>Designate</strong>(對應 AWS 的 Route 53),再讓 Neutron 在 FIP 建立和刪除時自動通知它。讀完之後,遇到「VM 開了、網路也設了網域,卻查不到 DNS 記錄」時,你能判斷這是 Neutron 的預設行為、設定寫錯,還是問錯了 DNS 伺服器。</p>
+<p>先看要維護的資料:<code>vm-dns.oslab.test.</code> 這個名字,對應一個 IPv4 位址,就是一筆 <strong>A 記錄</strong>。同一個名字、同一種類型的記錄放成一組,叫 <strong>recordset</strong>;<code>oslab.test.</code> 及其下未另行委派的名稱,構成一個管理範圍,叫 <strong>zone</strong>。稍後先建 zone,Neutron 才能把 FIP 的 A 記錄放進去。</p>
+<h2 id="designate">Designate 由哪些部分組成<a class="headerlink" href="#designate" title="Permanent link">&para;</a></h2>
+<p>先講 DNS 本身。每個網域的名字,最後都由某一台 DNS 伺服器負責回答「這個名字對應到哪個 IP」,這台伺服器叫這個網域的<strong>權威伺服器</strong>(authoritative server)。這門課用的權威伺服器是 <strong>bind9</strong>,一套很常見的開源 DNS 伺服器軟體。</p>
+<p>一般用戶端的 DNS 查詢由 bind9 回答。Designate 另有供後端使用的 mdns,稍後會用它比較資料是否已同步。它提供 API 讓人和其他 OpenStack 服務管理記錄,把記錄存進自己的資料庫,再交給 bind9 對外回答。部署完之後主機上會多出六個容器,下面這張圖畫出它們的分工,由上往下是一筆記錄從要求到能被查到的順序:</p>
+<p><img alt="上層是發出要求的 openstack CLI 與 neutron-server,兩者都呼叫 designate-api;中層的 designate-api 把要求交給存放 zone 與記錄的 central,central 再交給 worker,producer 負責定期作業;下層的 worker 通知 bind9(port 53)建立 zone,designate-mdns(port 5354)從共用資料庫讀 zone 資料,回應 bind9 取區域內容的請求;最下方的 dig 可以分別問 mdns 和 bind9" src="../../assets/diagrams/os-s4d17-architecture.svg" /></p>
+<p>照著圖由上往下看:</p>
+<ol>
+<li><strong>要求只有一個入口。</strong> 不管是你用 CLI 建 zone,還是 Neutron 在 FIP 建立時要加記錄,都是呼叫 designate-api。</li>
+<li><strong>central 管理的是 Designate 認定的內容。</strong> 它把 zone 和記錄寫進資料庫;worker 負責管理 bind9 上對應的 zone,並通知它有內容更新。producer 跑定期作業,不在一筆記錄的必經路上。</li>
+<li><strong>bind9 的資料來自 designate-mdns。</strong> mdns 是 Designate 內建的小型 DNS 伺服器,聽在 5354 port,bind9 收到更新通知後向它取得 zone 的內容;mdns 從 Designate 共用的資料庫讀取記錄,並不向 central 要資料。bind9 聽在標準的 53 port,真正對外回答查詢。步驟 5 會分別問這兩台,出問題時可以藉此判斷是哪一段斷了。</li>
+</ol>
+<p>Neutron 那一側的整合由 Kolla 自動設定:開啟 Designate 之後,Kolla 會在 Neutron 的設定裡加上呼叫 Designate 的驅動程式和認證資訊,你只需要在步驟 1 提供兩個值。</p>
+<h2 id="1-globalsyml-designate">步驟 1:在 globals.yml 開啟 Designate<a class="headerlink" href="#1-globalsyml-designate" title="Permanent link">&para;</a></h2>
+<p>DNS 裡的名字寫完整時,結尾會有一個點,例如 <code>oslab.test.</code>。這個點代表 DNS 階層的最上層(根),有寫點的名字是一個完整的名字;沒寫點的名字,在某些地方會被當成還要再接上其他後綴。等一下 <code>neutron_dns_domain</code>、zone 名稱與 FIP 的 <code>--dns-domain</code> 都要保留結尾的點。</p>
+<p>把下面四行附加到 <code>globals.yml</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="s">enable_designate: &quot;yes&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s">designate_ns_record:</span>
@@ -4250,28 +4200,40 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="s">neutron_dns_domain: &quot;oslab.test.&quot;</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="s">EOF</span>
 </span></code></pre></div>
-<p>兩個細節都是翻車熱點:<code>designate_ns_record</code> 是 <strong>list</strong>(舊版教學常寫成字串);<code>neutron_dns_domain</code> <strong>必須以 <code>.</code> 結尾</strong>、且不能是預設的 <code>openstacklocal</code>——忘了那個點,部署會過、整合會靜靜地壞。</p>
-<h3 id="2port-53">步驟 2:port 53 檢查與部署<a class="headerlink" href="#2port-53" title="Permanent link">&para;</a></h3>
-<p>bind9 要綁主機的 53。Ubuntu 的 systemd-resolved 只聽 <code>127.0.0.53</code>,不衝突,但部署前確認是好習慣:</p>
+<ul>
+<li><code>designate_ns_record</code>:每個 zone 都要宣告由哪台 DNS 伺服器負責,這裡填的名字會寫進 zone 的 NS 記錄(步驟 3 會在 Horizon 看到它)。它是一個 <strong>list</strong>,Kolla 的預設值也是 list 格式,不要寫成單一字串。</li>
+<li><code>neutron_dns_domain</code>:Neutron 預設使用的網域。Kolla 官方文件要求這個值<strong>必須以 <code>.</code> 結尾</strong>,而且不能是預設的 <code>openstacklocal</code>。少了結尾的點,部署照樣成功,但 Neutron 不會替 FIP 建立任何 DNS 記錄,也不會報錯,症狀見<a href="#mine-2">疑難排解：FIP 一直沒有產生 A 記錄</a>。</li>
+</ul>
+<h2 id="2-port-53">步驟 2:確認 port 53 沒被佔用,再部署<a class="headerlink" href="#2-port-53" title="Permanent link">&para;</a></h2>
+<p>bind9 要佔用主機的 53 port。Ubuntu 內建的 systemd-resolved 也是 DNS 服務,但它只聽在 <code>127.0.0.53</code> 這類本機位址,跟 bind9 不衝突。部署前還是先看一眼:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>ss<span class="w"> </span>-tlnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;:53 &quot;</span><span class="w">     </span><span class="c1"># 應該只看到 127.0.0.53/127.0.0.54</span>
 </span></code></pre></div>
-<p>部署要<strong>三個 tag 一起</strong>——designate 本體加上 neutron/nova 的整合設定:</p>
+<p>部署時要帶<strong>三個 tag</strong>:<code>designate</code> 部署 Designate 本身,<code>neutron</code> 和 <code>nova</code> 則把 DNS 整合的設定寫進這兩個服務。只帶 <code>designate</code>,Designate 會裝好,但 Neutron 不會去呼叫它。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>designate,neutron,nova
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>PLAY RECAP: ok=129  changed=47  failed=0
 </span></code></pre></div>
-<h3 id="3-zone">步驟 3:建 zone<a class="headerlink" href="#3-zone" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-designateclient<span class="w">     </span><span class="c1"># 同型雷第四次:CLI 外掛</span>
+<p><code>failed=0</code> 之後,可以用 <code>docker ps</code> 確認上一節圖裡的六個容器都在:<code>designate_api</code>、<code>designate_central</code>、<code>designate_worker</code>、<code>designate_producer</code>、<code>designate_mdns</code> 和 <code>designate_backend_bind9</code>(也就是 bind9),狀態都應該是 healthy。</p>
+<h2 id="3-zone">步驟 3:建立 zone<a class="headerlink" href="#3-zone" title="Permanent link">&para;</a></h2>
+<p><strong>zone</strong> 是一個網域和它底下所有名字的管理範圍。建立 <code>oslab.test.</code> 這個 zone,就是告訴 Designate:<code>oslab.test.</code> 和 <code>xxx.oslab.test.</code> 這些名字由你負責。Neutron 只會把記錄寫進已經存在的 zone,所以 zone 要在開 VM 之前建好。</p>
+<p>zone 相關的指令來自 Designate 的 CLI 外掛,跟 Day 1 裝 <code>python-openstackclient</code> 一樣要另外裝。<code>--email</code> 是這個 zone 的管理員信箱,會寫進 zone 的基本資料:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-designateclient
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>openstack<span class="w"> </span>zone<span class="w"> </span>create<span class="w"> </span>--email<span class="w"> </span>admin@oslab.test<span class="w"> </span>oslab.test.
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>openstack<span class="w"> </span>zone<span class="w"> </span>show<span class="w"> </span>oslab.test.<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>status<span class="w">    </span><span class="c1"># PENDING → 約 10 秒 → ACTIVE</span>
 </span></code></pre></div>
-<p>zone 一建好,主控台就看得到。Skyline 目前沒有 DNS 頁,但 <strong>Horizon 有 designate-dashboard</strong>(專案 → DNS → Zones)——點進 <code>oslab.test.</code> 的「Record Sets」,可以看到 Designate 自動幫新 zone 建好的 NS 與 SOA 兩筆記錄:</p>
+<p><code>PENDING</code> 表示 worker 還在 bind9 上建立 zone,變成 <code>ACTIVE</code> 表示後端更新狀態已完成;實際能否從用戶端查到,仍要由步驟 5 的 dig 確認。</p>
+<p>zone 建好之後,網頁主控台也看得到。這一章使用 Horizon 的 designate-dashboard(專案 → DNS → Zones),點進 <code>oslab.test.</code> 的「Record Sets」:</p>
 <p><img alt="Horizon 的 DNS zone 頁:oslab.test. 的 NS 與 SOA record set" src="../../assets/screenshots/day17-horizon-dns-zone.png" /></p>
-<p>等一下步驟 4 讓 VM 掛上 FIP 後,這裡還會自動長出一筆 A 記錄——不用你手動加。</p>
-<h3 id="4-vm">步驟 4:開一台 VM,看域名自己長出來<a class="headerlink" href="#4-vm" title="Permanent link">&para;</a></h3>
-<p>建一個掛上 <code>dns_domain</code> 的網路、開一台 VM:</p>
+<p>畫面上的每一列是一個 <strong>recordset</strong>:同一個名字、同一種類型的記錄。新的 zone 會自動帶兩筆:</p>
+<ul>
+<li><strong>NS</strong>:這個 zone 由哪台 DNS 伺服器負責,值就是步驟 1 填的 <code>ns1.oslab.test</code>。</li>
+<li><strong>SOA</strong>:zone 的基本資料,包括剛才填的管理員信箱。</li>
+</ul>
+<p>我們要的是第三種類型 <strong>A 記錄</strong>:把一個名字對應到一個 IPv4 位址。這一筆不用手動加,下一步建立帶有 DNS 名稱與網域的 FIP 時,就會自動出現在這個列表裡。</p>
+<h2 id="4-vm-fip">步驟 4:開一台 VM,用 FIP 帶出網域名稱<a class="headerlink" href="#4-vm-fip" title="Permanent link">&para;</a></h2>
+<p>Neutron 的網路可以設定 <strong><code>dns_domain</code></strong> 屬性:這個網路上的 port 要用哪個網域。建網路時用 <code>--dns-domain</code> 指定成剛才的 zone,再照 Day 2 的方式接上 router、開一台 VM:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openstack<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>day17-net<span class="w"> </span>--dns-domain<span class="w"> </span>oslab.test.
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>openstack<span class="w"> </span>subnet<span class="w"> </span>create<span class="w"> </span>day17-sub<span class="w"> </span>--network<span class="w"> </span>day17-net<span class="w"> </span>--subnet-range<span class="w"> </span><span class="m">10</span>.17.0.0/24<span class="w"> </span>--dns-nameserver<span class="w"> </span><span class="m">8</span>.8.8.8
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>openstack<span class="w"> </span>router<span class="w"> </span>create<span class="w"> </span>day17-r
@@ -4280,79 +4242,64 @@
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>vm-dns<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span>--network<span class="w"> </span>day17-net<span class="w"> </span>--wait
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>openstack<span class="w"> </span>recordset<span class="w"> </span>list<span class="w"> </span>oslab.test.
 </span></code></pre></div>
-<p><strong>這時你會發現:沒有 A 記錄。</strong> 這不是故障——見<a href="#mine-1">地雷 1</a>。私有網路的 port 預設<strong>不會</strong>發布到外部 DNS(私有 IP 不該外洩)。會自動發布的是 <strong>floating IP</strong>:</p>
+<p>subnet 的 <code>--dns-nameserver 8.8.8.8</code> 跟 Designate 無關:它是 VM 透過 DHCP 拿到的 DNS 伺服器,VM 要解析外部網域名稱就靠它。少了它,問題要等到 VM 裡的程式需要連外才會出現,見<a href="#mine-3">疑難排解：VM 裡解析不了外部網域名稱</a>。</p>
+<p>最後一行 <code>recordset list</code> 的結果裡<strong>只有 NS 和 SOA,沒有 A 記錄</strong>。網路設了 <code>dns_domain</code>,VM 也開好了,為什麼沒有記錄?</p>
+<p>原因是 Neutron 的發布規則。<code>day17-net</code> 是一般的租戶網路,VM 在上面拿到的是 <code>10.17.0.x</code> 的私有 IP。依照 Neutron 官方文件,port 的位址要直接寫進 DNS,所在的網路必須是管理員為此特別建立的網路(VXLAN 這類網路的 segmentation ID 要落在租戶網路的範圍之外),本章未啟用額外的固定 IP 發布選項,所以這個租戶網路不符合。其他 DNS 擴充可以按 subnet 或網路設定發布,不能把本章結果推成所有私有 IP 一律不能進 DNS。本章改用 <strong>FIP</strong> 驗證發布。下面這張圖把同一台 VM 的兩個位址並排比較:</p>
+<p><img alt="VM vm-dns 在 day17-net 上(dns_domain 為 oslab.test.),它的私有 IP 10.17.0.x 不寫進 DNS;它的 FIP 172.24.4.152 寫進 zone oslab.test.,成為 vm-dns.oslab.test. A 172.24.4.152。下半部是 FIP 的生命週期:建 FIP 並給 dns-name 時記錄寫進 zone,掛到 VM 時記錄還在、名字指向這台 VM,刪 FIP 時記錄跟著刪除" src="../../assets/diagrams/os-s4d17-publish-rule.svg" /></p>
+<p>圖上半部是本章設定下的發布結果:租戶網路的私有 IP 不進 DNS,具名 FIP 會進。下半部是接下來三個動作對記錄的影響。</p>
+<p>建 FIP 時用 <code>--dns-name</code> 和 <code>--dns-domain</code> 直接替它取名。依官方文件,這兩個值要在建立時一起給、之後不能改,記錄在 FIP 建立時就寫進 zone。第一個指令會印出 FIP 的位址,把它填進第二個指令的 <code>&lt;上一步的FIP&gt;</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>--dns-name<span class="w"> </span>vm-dns<span class="w"> </span>--dns-domain<span class="w"> </span>oslab.test.<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>floating_ip_address
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>add<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-dns<span class="w"> </span>&lt;上一步的FIP&gt;
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>sleep<span class="w"> </span><span class="m">10</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>openstack<span class="w"> </span>recordset<span class="w"> </span>list<span class="w"> </span>oslab.test.<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>name<span class="w"> </span>-c<span class="w"> </span><span class="nb">type</span><span class="w"> </span>-c<span class="w"> </span>records<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;SOA\|NS&quot;</span>
 </span></code></pre></div>
+<p><code>sleep 10</code> 是留時間給 worker 把記錄同步到 bind9。過濾掉 NS 和 SOA 之後,剩下的就是新的 A 記錄:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>vm-dns.oslab.test. A 172.24.4.152
 </span></code></pre></div>
-<h3 id="5">步驟 5:真的解析看看<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
-<p>對 bind9(權威伺服器)與 mdns 各問一次:</p>
+<p>名字是 <code>--dns-name</code> 加上 <code>--dns-domain</code>,位址是這個 FIP。你的 FIP 位址會不一樣。</p>
+<h2 id="5-dig-fip">步驟 5:用 dig 查詢,再確認記錄會跟著 FIP 刪除<a class="headerlink" href="#5-dig-fip" title="Permanent link">&para;</a></h2>
+<p>記錄在 Designate 裡,不代表 DNS 伺服器已經能回答。要用 <strong><code>dig</code></strong> 實際查一次:它是命令列的 DNS 查詢工具,<code>@</code> 後面指定要問哪台伺服器,<code>-p</code> 指定 port,<code>+short</code> 只印出答案。</p>
+<p>bind9 和 mdns 都聽在主機的管理網卡上(Kolla 的 <code>dns_interface</code> 預設就是 <code>network_interface</code>,也就是 Day 1 設的 <code>eth0</code>)。下面的 <code>10.0.0.4</code> 請換成你的主機私有 IP(<code>ip -4 addr show eth0</code> 可查)。先問 bind9,再問 mdns:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>dig<span class="w"> </span>+short<span class="w"> </span>@10.0.0.4<span class="w"> </span>vm-dns.oslab.test.<span class="w"> </span>A
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>dig<span class="w"> </span>+short<span class="w"> </span>-p<span class="w"> </span><span class="m">5354</span><span class="w"> </span>@10.0.0.4<span class="w"> </span>vm-dns.oslab.test.<span class="w"> </span>A
 </span></code></pre></div>
-<p>兩者都應回 FIP 位址。最後做生命週期驗證:把 FIP 刪掉,記錄應<strong>自動消失</strong>——</p>
+<p>兩個查詢都應該印出你的 FIP 位址。這只證明指定伺服器的回答正確;一般用戶端要用這個名字,還需要讓它的 resolver 能查到這個 zone。如果只有 mdns 答得出來,記錄已經在 Designate 裡,問題在 mdns 傳給 bind9 的那一段;兩個都答不出來,就回到步驟 4 用 <code>recordset list</code> 確認記錄有沒有建立。</p>
+<p>最後確認記錄的生命週期:把 FIP 從 VM 拿下來並刪除,記錄應該自動消失。兩個 <code>&lt;FIP&gt;</code> 都換成你的 FIP 位址:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>remove<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>vm-dns<span class="w"> </span>&lt;FIP&gt;<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>delete<span class="w"> </span>&lt;FIP&gt;
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>openstack<span class="w"> </span>recordset<span class="w"> </span>list<span class="w"> </span>oslab.test.<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>vm-dns<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;記錄已自動清除&quot;</span>
 </span></code></pre></div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>六容器</td>
-<td>api/central/mdns/producer/worker/backend_bind9 全 healthy</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>zone</td>
-<td><code>oslab.test.</code> ACTIVE</td>
-<td>PENDING→ACTIVE 約 10 秒</td>
-</tr>
-<tr>
-<td><strong>自動發布</strong></td>
-<td>FIP 掛上後 A 記錄自動誕生</td>
-<td><code>vm-dns.oslab.test. A 172.24.4.152</code></td>
-</tr>
-<tr>
-<td>解析</td>
-<td>bind9(:53)與 mdns(:5354)都答對</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>生命週期</td>
-<td>FIP 刪除後記錄自動消失</td>
-<td>符合</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_3">地雷記錄<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:私有網路的 VM 沒有 DNS 記錄——是設計,不是故障<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:網路明明掛了 <code>dns_domain</code>,VM 開起來了,<code>recordset list</code> 卻空空如也。</p>
-<p><strong>根因</strong>:Neutron 刻意<strong>不把 tenant(overlay)網路的 port 發布到外部 DNS</strong>——那些是私有 IP,發布出去等於洩漏內部拓樸。會自動發布的是:<strong>floating IP</strong>、以及 provider 網路上的 port。</p>
-<p><strong>教訓</strong>:這是每個學員必卡的點,而卡住的原因是「安全預設」。驗證 DNS 整合,請用 FIP。</p>
-<h3 id="mine-2">地雷 2:<code>neutron_dns_domain</code> 的結尾點<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>已在步驟 1 預拆。忘了結尾的 <code>.</code>,一切照常部署、只有整合默默不動作——屬於「錯了不會叫」的最陰險類型。</p>
-<h3 id="mine-3">地雷 3:subnet 沒設 DNS nameserver 的長尾<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p>本日步驟已在建 subnet 時就給了 <code>--dns-nameserver 8.8.8.8</code>。這不是為了 Designate——是為了<strong>網路裡未來的住戶</strong>:少了它,VM 對外解析全部失敗,而症狀往往在幾天後才爆(Day 18 的資料庫實例就差點死在這裡)。把「建 subnet 必給 DNS」當肌肉記憶。</p>
-<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>只有先確認 <code>recordset list</code> 查詢成功,印出「記錄已自動清除」才表示 <code>grep</code> 找不到 <code>vm-dns</code>;API 查詢失敗也會讓這個 pipeline 走到 echo,不能單看文字判定。從建立、解析到刪除,這筆記錄都沒有人手動處理過。</p>
+<h2 id="_1">疑難排解<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">網路設了 dns_domain,VM 卻沒有 DNS 記錄<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>:依本章未啟用額外固定 IP 發布選項的配置,這個租戶網路上的 port 位址不會寫進 DNS,說明見步驟 4。</p>
+<p><strong>修法</strong>:依步驟 4 建立帶 <code>--dns-name</code> 與 <code>--dns-domain</code> 的 FIP,再掛到 VM。只掛上一個沒有 DNS 屬性的既有 FIP,不能視為相同流程。</p>
+<p>Kolla 官方 Designate 指南的驗證範例裡,私有網路的 VM 也有 A 記錄,那是因為範例另外開了 designate-sink:它接收 Nova 和 Neutron 的事件通知來建立記錄,是另一條機制。Kolla 預設不開它(<code>designate_enable_notifications_sink: "no"</code>),這門課也沒有開,沒有驗證過那條路。</p>
+<h3 id="mine-2">部署成功,但 FIP 一直沒有產生 A 記錄<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>kolla-ansible deploy</code> 是 <code>failed=0</code>,zone 也是 <code>ACTIVE</code>,建了帶 <code>--dns-name</code> 的 FIP 之後,<code>recordset list</code> 還是只有 NS 和 SOA,也沒有任何錯誤訊息。</p>
+<p><strong>原因</strong>:<code>neutron_dns_domain</code> 少了結尾的點,或沒改掉預設的 <code>openstacklocal</code>,見步驟 1。</p>
+<p><strong>修法</strong>:改好 <code>globals.yml</code>,重跑步驟 2 的 deploy 指令。</p>
+<h3 id="mine-3">VM 裡解析不了外部網域名稱<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:VM 裡要先解析網域名稱的動作(例如拉容器映像檔)失敗,用 IP 指定對象的連線卻不受影響。</p>
+<p><strong>原因</strong>:建 subnet 時沒有給 <code>--dns-nameserver</code>,VM 沒有可用的 DNS 伺服器。這跟 Designate 無關,Designate 只管 <code>oslab.test.</code> 這個 zone,不負責替 VM 解析外部名稱。</p>
+<p><strong>修法</strong>:步驟 4 建 subnet 時已經加了 <code>--dns-nameserver 8.8.8.8</code>。已經建好的 subnet 可以用 <code>openstack subnet set &lt;subnet&gt; --dns-nameserver 8.8.8.8</code> 補上,再重建受影響的 VM。Day 18 的資料庫實例就是因為這個原因建立失敗,症狀判讀見 Day 18 的<a href="../sprint4-day18-trove-dbaas/#mine-1">「subnet 沒有 DNS」</a>。</p>
+<h2 id="_2">想一想<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/designate-guide.html">Kolla-Ansible 的 Designate 指南</a></strong> —— 本章設定的官方對照,包含 sink 等本章沒開的進階選項。</li>
-<li><strong><a href="https://docs.openstack.org/neutron/2025.1/admin/config-dns-int.html">Neutron 的 DNS 整合說明</a></strong> —— 「哪些 port 會發布到外部 DNS」的權威答案;本章地雷 1(私網不發布)的官方出處。</li>
-<li><strong><a href="https://docs.openstack.org/designate/2025.1/">Designate 官方文件</a></strong> —— zone/recordset/pool 的完整概念與 API。</li>
+<li>同事在 <code>day17-net</code> 上又開了一台 <code>vm-b</code>,沒有掛 FIP,問你為什麼 <code>dig</code> 查不到 <code>vm-b.oslab.test.</code>。你會怎麼回答?要讓它查得到,他該做什麼?</li>
+<li>另一位同學照這章操作,deploy 和建 zone 都成功,掛上帶 <code>--dns-name</code> 的 FIP 之後,<code>recordset list</code> 還是只有 NS 和 SOA。他的 <code>globals.yml</code> 裡寫的是 <code>neutron_dns_domain: "oslab.test"</code>。你會請他改什麼、重跑哪個指令?</li>
+<li><code>dig -p 5354 @&lt;主機IP&gt;</code> 查得到記錄,<code>dig @&lt;主機IP&gt;</code> 查不到。照架構圖,問題比較可能出在哪一段?為什麼不必先懷疑 Neutron?</li>
+</ul>
+<h2 id="_3">小結<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>Designate 把 DNS 變成一個有 API 的服務:central 將 zone 和記錄寫入資料庫,worker 通知 bind9 更新,bind9 向 mdns 取得內容,再由 bind9 在 53 port 對外回答。開啟它時要給 Kolla 兩個值,<code>designate_ns_record</code> 是 list,<code>neutron_dns_domain</code> 結尾要有點,部署時帶上 <code>designate,neutron,nova</code> 三個 tag,Neutron 就會在 FIP 建立時寫入 A 記錄、刪除時移除。之後遇到查不到名字的情況,先確認位址符合本章的發布條件,以及 FIP 建立時是否帶了 DNS 屬性,再看 <code>recordset list</code> 裡有沒有記錄,最後用 <code>dig</code> 分別問 mdns 和 bind9,判斷是哪一段沒有接上。</p>
+<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/designate-guide.html">Kolla-Ansible 的 Designate 指南</a></strong> —— 本章設定的官方對照,包含 <code>neutron_dns_domain</code> 的格式要求,以及本章沒有開的 designate-sink。</li>
+<li><strong><a href="https://docs.openstack.org/neutron/2025.1/admin/config-dns-int.html">Neutron 的 DNS 整合說明</a></strong> —— Neutron 的 port、網路、FIP 上各有哪些 DNS 屬性,彼此怎麼搭配。</li>
+<li><strong><a href="https://docs.openstack.org/neutron/2025.1/admin/config-dns-int-ext-serv.html">Neutron 與外部 DNS 服務的整合</a></strong> —— 哪些位址會寫進 Designate 的完整規則;步驟 4 的 FIP 用法和私有網路不發布的條件都在這一頁。</li>
+<li><strong><a href="https://docs.openstack.org/designate/2025.1/">Designate 官方文件</a></strong> —— zone、recordset、pool 的完整概念與 API。</li>
 </ul>
 <h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>你的雲現在會自己管理域名了。階段一只剩最後一塊積木:<a href="../sprint4-day18-trove-dbaas/">Day 18</a> 的 <strong>Trove</strong>——資料庫即服務,今天建的 <code>day17-net</code> 直接當它的家。</p>
+<p>雲現在會替 FIP 自動維護網域名稱了。<a href="../sprint4-day18-trove-dbaas/">Day 18</a> 部署資料庫服務 <strong>Trove</strong>,它的資料庫實例直接開在今天建的 <code>day17-net</code> 上。</p>
 
 
 

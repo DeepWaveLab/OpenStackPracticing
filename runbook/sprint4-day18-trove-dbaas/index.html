@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-18-trove" class="md-skip">
+        <a href="#day-18-troveguest-vmdatastore" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1211,51 +1211,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dbaas" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第一次接觸 DBaaS?先讀這段
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#guest" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構:guest 怎麼連回家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-trove-flag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:部署 Trove(就一行 flag)
+        代管資料庫由哪些東西組成
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
+  <a href="#1-trove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:部署 Trove
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#2-guest" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1265,8 +1242,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#3-datastore" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1276,9 +1253,20 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#guest-rabbitmq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        guest 怎麼連回 RabbitMQ
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4" class="md-nav__link">
     <span class="md-ellipsis">
       
         步驟 4:建立資料庫實例
@@ -1287,28 +1275,12 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
         步驟 5:驗證它是一台真的資料庫
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
       
     </span>
   </a>
@@ -1319,19 +1291,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:subnet 沒 DNS——「有心跳但起不來」的元兇
+        實例約兩分鐘後轉 ERROR,fault 是 failed to spawn
       
     </span>
   </a>
@@ -1342,7 +1314,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:失敗清理會滅證
+        失敗的 guest VM 會被自動刪除
       
     </span>
   </a>
@@ -1353,7 +1325,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:backup 指令的新版語法
+        backup create 只印出 usage
       
     </span>
   </a>
@@ -1364,7 +1336,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:備份的最後一哩(開放項)
+        備份卡在 guest 拉取備份工具容器
       
     </span>
   </a>
@@ -1380,7 +1352,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        階段一完成 🎉
+        想一想
       
     </span>
   </a>
@@ -1391,7 +1363,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        延伸閱讀
+        小結
       
     </span>
   </a>
@@ -1400,6 +1372,17 @@
       
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1432,7 +1415,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1823,7 +1806,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1851,7 +1834,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1879,7 +1862,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1999,7 +1982,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4037,51 +4020,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dbaas" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        第一次接觸 DBaaS?先讀這段
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#guest" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        原理與架構:guest 怎麼連回家
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-trove-flag" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:部署 Trove(就一行 flag)
+        代管資料庫由哪些東西組成
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
+  <a href="#1-trove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:部署 Trove
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#2-guest" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4091,8 +4051,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#3-datastore" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4102,9 +4062,20 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#guest-rabbitmq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        guest 怎麼連回 RabbitMQ
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4" class="md-nav__link">
     <span class="md-ellipsis">
       
         步驟 4:建立資料庫實例
@@ -4113,28 +4084,12 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
         步驟 5:驗證它是一台真的資料庫
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
       
     </span>
   </a>
@@ -4145,19 +4100,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷記錄
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:subnet 沒 DNS——「有心跳但起不來」的元兇
+        實例約兩分鐘後轉 ERROR,fault 是 failed to spawn
       
     </span>
   </a>
@@ -4168,7 +4123,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:失敗清理會滅證
+        失敗的 guest VM 會被自動刪除
       
     </span>
   </a>
@@ -4179,7 +4134,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:backup 指令的新版語法
+        backup create 只印出 usage
       
     </span>
   </a>
@@ -4190,7 +4145,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:備份的最後一哩(開放項)
+        備份卡在 guest 拉取備份工具容器
       
     </span>
   </a>
@@ -4206,7 +4161,7 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        階段一完成 🎉
+        想一想
       
     </span>
   </a>
@@ -4217,7 +4172,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        延伸閱讀
+        小結
       
     </span>
   </a>
@@ -4226,6 +4181,17 @@
       
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4252,54 +4218,31 @@
 
 
 
-<h1 id="day-18-trove">Day 18: Trove——代管資料庫服務<a class="headerlink" href="#day-18-trove" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>階段一的收官戰:<strong>資料庫即服務</strong>。今天結束時,你的雲能像 AWS RDS 一樣——使用者下一行指令,幾分鐘後拿到一台會自己照顧自己的 MySQL。本章有一顆幾乎人人會撞的雷,而且症狀非常具有誤導性——判讀方法會完整教給你。</p>
-</blockquote>
+<h1 id="day-18-troveguest-vmdatastore">Day 18: Trove——代管資料庫服務:guest VM、datastore 與建立失敗時的判讀<a class="headerlink" href="#day-18-troveguest-vmdatastore" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Trove 官方吉祥物" src="../../assets/mascots/trove.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>今天</strong>:部署 Trove、準備 guest 映像檔、註冊 datastore、開出第一台代管 MySQL 並實際讀寫。</li>
-<li><strong>今天之後</strong>:階段一(服務擴充)完成;Day 19 起換腦袋——不再加新服務,改為拆解既有服務的內部。</li>
-</ul>
-</div>
-<h2 id="dbaas">第一次接觸 DBaaS?先讀這段<a class="headerlink" href="#dbaas" title="Permanent link">&para;</a></h2>
-<p>「在 VM 裡自己裝 MySQL」和「用 RDS」的差別,用過的人都懂:前者要自己管安裝、設定、備份、升版;後者下一張單,這些全是雲的事。<strong>Trove 就是 OpenStack 的 RDS</strong>。</p>
-<p>它的現代架構值得先認識,因為這決定了今天的雷區分布:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph ctl["控制面(Kolla 容器)"]
-        direction LR
-        API["trove-api&lt;br/&gt;(收單)"] --&gt; TM["trove-taskmanager&lt;br/&gt;(編排建立流程)"] ~~~ CD["trove-conductor&lt;br/&gt;(收 guest 回報)"]
-    end
-    TM ==&gt;|"請 Nova 開一台 guest VM&lt;br/&gt;(用專屬映像檔)"| G
-    subgraph G["guest VM(使用者專屬)"]
-        direction LR
-        AGENT["trove-guestagent&lt;br/&gt;(住在 VM 裡的管家)"] --&gt; DOCKER["Docker 容器:mysql:8.0&lt;br/&gt;(真正的資料庫)"]
-    end
-    AGENT -.-&gt;|"RabbitMQ 回報心跳與狀態"| CD</code></pre>
-<p>兩個要點:</p>
+<p>團隊要一台 MySQL。在雲上自己開一台 VM 裝,安裝、設定、建帳號、備份、升版都得自己來;用過 AWS RDS 的人知道另一種做法:下一行指令,幾分鐘後拿到一台已經建好資料庫和帳號的 MySQL,底下的機器不用管。這種服務叫 <strong>DBaaS</strong>(Database as a Service,資料庫即服務),OpenStack 裡負責這件事的服務是 <strong>Trove</strong>。</p>
+<p>這一章在 Day 17 的雲上部署 Trove,開出第一台代管 MySQL,實際讀寫。第一次建立實例時,很可能等兩分鐘後看到它轉成 <code>ERROR</code>,錯誤訊息只有一句 <code>failed to spawn</code>。讀完之後,遇到這種狀況,你能從「guest 有沒有回報狀態」判斷問題出在 guest 連回控制面的那條路,還是 guest 內部,並且知道要趁失敗的 VM 被自動清掉之前先把 console log 拿到手。</p>
+<h2 id="_1">代管資料庫由哪些東西組成<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>使用者下一行「給我一台 MySQL」,Trove 實際做的事是:請 Nova 開一台專門跑這個資料庫的 VM,掛上 Cinder volume 當資料碟,在 VM 裡把 MySQL 跑起來,建好你要的資料庫和帳號。之後建帳號、建資料庫這類操作,也是由 Trove 轉交給 VM 裡的程式去執行。</p>
+<p>把參與的元件畫出來,上半部是主機上的控制面,下半部是每個資料庫實例各自的一台 VM:</p>
+<p><img alt="上半部是主機上的三個 Kolla 容器:trove-api 收使用者的請求並交給 trove-taskmanager,trove-taskmanager 與 trove-conductor 都連到主機 10.0.0.4:5672 的 RabbitMQ;下半部是 taskmanager 請 Nova 開出的 guest VM,裡面的 trove-guestagent 經 RabbitMQ 收指令、回報狀態,並管理 Docker 容器 mysql:8.0,資料放在 Cinder volume 上" src="../../assets/diagrams/os-s4d18-architecture.svg" /></p>
+<p>我們可以從圖上看到兩件事:</p>
 <ol>
-<li><strong>資料庫跑在 guest VM 內的 Docker 容器裡</strong>——guest 映像檔只含作業系統 + 管家(guest-agent)+ Docker;MySQL 版本由容器映像檔決定。這個設計讓「映像檔斷代」的古老風險大幅降低(這正是我們預先查證後把風險降級的原因:官方 guest 映像檔每天自動建置,資料庫容器另行每日更新)。</li>
-<li><strong>guest-agent 要連得回控制面的 RabbitMQ</strong>——這是 Trove 部署最經典的卡點。好消息:在我們的網路架構下,它<strong>自然就通</strong>(原理見下)。</li>
+<li><strong>控制面有三個元件。</strong> <code>trove-api</code> 收使用者的請求;<code>trove-taskmanager</code> 負責建立流程,包括請 Nova 開 VM;<code>trove-conductor</code> 接收 VM 裡回報的狀態。三個都跑在主機上,步驟 1 部署完會看到這三個容器。</li>
+<li><strong>資料庫跑在一台 VM 裡的 Docker 容器中。</strong> 這台 VM 叫 <strong>guest VM</strong>,裡面除了作業系統,只有兩樣東西:Trove 的代理程式 <strong>guest-agent</strong>(<code>trove-guestagent</code>),以及 Docker。MySQL 本身是 guest-agent 用 Docker 拉下來啟動的容器。所以 guest 映像檔不用跟著 MySQL 版本走,要換資料庫版本,換的是容器映像檔的版本標籤。</li>
 </ol>
-<h2 id="guest">原理與架構:guest 怎麼連回家<a class="headerlink" href="#guest" title="Permanent link">&para;</a></h2>
-<p>官方文件教你為 Trove 建一條專用管理網路。但回想 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a>:K8s 節點(tenant 網的 VM)一直都連得到 <code>10.0.0.4</code> 的 Keystone 與 RabbitMQ——路徑是 <strong>tenant 網 → router SNAT → 主機</strong>。Trove 的 guest 走同一條路即可,<strong>一個管理網路都不用建</strong>:</p>
-<pre class="mermaid"><code>flowchart TB
-    A["guest VM(10.17.0.x,day17-net)"] ==&gt;|"router SNAT(Day 2 的老朋友)"| B["主機 10.0.0.4"]
-    B ==&gt; C["RabbitMQ :5672(host network)"]</code></pre>
-<p>這就是本課程「極簡路徑優先」的原則:先走已驗證的路,不夠再加料。生產環境基於隔離與安全,仍應建立專用管理網——但理解了上面這條路,再讀官方的管理網設計就只是加一層而已。</p>
-<h2 id="_1">步驟<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<h3 id="1-trove-flag">步驟 1:部署 Trove(就一行 flag)<a class="headerlink" href="#1-trove-flag" title="Permanent link">&para;</a></h3>
+<p>控制面和 guest-agent 之間不直接連線,而是透過 RabbitMQ(Day 1 提過,OpenStack 服務內部互傳工作和通知用的訊息佇列)傳遞:taskmanager 把「建資料庫」「建使用者」這類指令放進佇列,guest-agent 取出來執行;guest-agent 也定期把狀態送回 conductor。這表示 <strong>guest VM 必須連得到主機上的 RabbitMQ</strong>,步驟 4 之前會再回來看這條路怎麼走。</p>
+<h2 id="1-trove">步驟 1:部署 Trove<a class="headerlink" href="#1-trove" title="Permanent link">&para;</a></h2>
+<p>跟前幾章加服務的做法一樣,在 <code>globals.yml</code> 打開 Trove,只部署它這一組:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_trove: &quot;yes&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>trove
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PLAY RECAP: ok=24  changed=17  failed=0
 </span></code></pre></div>
-<p>三個容器(api/taskmanager/conductor)healthy 即可續行。</p>
-<h3 id="2-guest">步驟 2:準備 guest 映像檔<a class="headerlink" href="#2-guest" title="Permanent link">&para;</a></h3>
-<p>官方每天自動建置 guest 映像檔(1.4 GB),下載、上傳 Glance、打上 Trove 用來找映像檔的 tag:</p>
+<p><code>failed=0</code> 之後,用 <code>docker ps</code> 確認 <code>trove_api</code>、<code>trove_taskmanager</code>、<code>trove_conductor</code> 三個容器都是 healthy,再進下一步。</p>
+<h2 id="2-guest">步驟 2:準備 guest 映像檔<a class="headerlink" href="#2-guest" title="Permanent link">&para;</a></h2>
+<p>Trove 開 guest VM 時,要從 Glance 找一份裝好 guest-agent 和 Docker 的映像檔。Trove 專案在 tarballs.opendev.org 提供每天自動建置的 guest 映像檔(約 1.4 GB),下載後上傳到 Glance,並打上兩個 tag:Trove 開 VM 時是用 tag 找映像檔,不是用名稱,步驟 3 會設定要找哪兩個 tag。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>~/trove-guest-noble.qcow2<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>https://tarballs.opendev.org/openstack/trove/images/trove-master-guest-ubuntu-noble.qcow2
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
@@ -4307,17 +4250,32 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--file<span class="w"> </span>~/trove-guest-noble.qcow2<span class="w"> </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--tag<span class="w"> </span>trove<span class="w"> </span>--tag<span class="w"> </span>mysql
 </span></code></pre></div>
-<h3 id="3-datastore">步驟 3:註冊 datastore<a class="headerlink" href="#3-datastore" title="Permanent link">&para;</a></h3>
-<p>告訴 Trove:「有一種叫 mysql 8.0 的資料庫,guest 映像檔用 tag 找,容器用 8.0 這個版本標籤拉」:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-troveclient<span class="w">        </span><span class="c1"># CLI 外掛,同型雷第 N 次</span>
+<p>檔名裡的 <code>master</code> 表示這份映像檔是從 Trove 的開發主線建出來的,不是 2025.1 的穩定分支。原驗證使用這個路徑當時提供的 Ubuntu 24.04(noble)映像檔,搭配 2025.1 控制面成功建立實例;這不能保證現在下載的 daily 映像仍相容。但它每天都會被新版覆蓋,今天下載的跟幾個月後下載的不一定相同。要長期使用或之後升級控制面時,照<a href="https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html">官方 guest 映像檔建置指南</a>用對應分支自己建一份,版本才固定得住。</p>
+<h2 id="3-datastore">步驟 3:註冊 datastore<a class="headerlink" href="#3-datastore" title="Permanent link">&para;</a></h2>
+<p>映像檔準備好了,還要告訴 Trove 有哪些資料庫可以開。Trove 把「一種資料庫」叫 <strong>datastore</strong>(例如 mysql),把它底下的每個版本叫 <strong>datastore version</strong>(例如 8.0)。每個 datastore version 記著兩件事:開 guest VM 時用哪些 tag 找映像檔,以及 guest-agent 要拉哪個版本的資料庫容器。</p>
+<p>先安裝 Trove 的 CLI 外掛。跟 Day 16 的 Manila 一樣,<code>openstack</code> 指令預設沒有 <code>database</code>、<code>datastore</code> 這些子命令,要另外裝(見 Day 16 的<a href="../sprint4-day16-manila-cephfs/#mine-1">「<code>openstack</code> 沒有 <code>share</code> 子命令」</a>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>python-troveclient
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>openstack<span class="w"> </span>datastore<span class="w"> </span>version<span class="w"> </span>create<span class="w"> </span><span class="m">8</span>.0<span class="w"> </span>mysql<span class="w"> </span>mysql<span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--image-tags<span class="w"> </span>trove,mysql<span class="w"> </span>--active<span class="w"> </span>--default<span class="w"> </span>--version-number<span class="w"> </span><span class="m">8</span>.0
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>openstack<span class="w"> </span>datastore<span class="w"> </span>version<span class="w"> </span>list<span class="w"> </span>mysql
 </span></code></pre></div>
-<h3 id="4">步驟 4:建立資料庫實例<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
-<p>網路沿用 Day 17 建立的 <code>day17-net</code>。<strong>動手前先確認 subnet 設有 DNS nameserver</strong>——guest 開機時要從網路拉取資料庫容器,沒有 DNS 必定失敗(完整的症狀判讀見<a href="#mine-1">地雷 1</a>):</p>
+<p><code>datastore version create</code> 後面四個位置參數依序是:版本名稱 <code>8.0</code>、datastore 名稱 <code>mysql</code>、資料庫管理類型 <code>mysql</code>(guest-agent 用哪一套邏輯管理這個資料庫),最後的 <code>""</code> 是映像檔 ID,這裡留空,改用 <code>--image-tags trove,mysql</code> 讓 Trove 找帶著這兩個 tag 的映像檔,也就是步驟 2 上傳的那份。<code>--version-number 8.0</code> 決定拉哪個版本的 MySQL 容器,<code>--default</code> 讓使用者建立實例時不指定版本也會用它。</p>
+<h2 id="guest-rabbitmq">guest 怎麼連回 RabbitMQ<a class="headerlink" href="#guest-rabbitmq" title="Permanent link">&para;</a></h2>
+<p>建立實例之前,先看 guest VM 要往外連的兩條路。官方文件的做法是替 Trove 另外建一條<strong>管理網路</strong>(management network):每台 guest VM 多掛一張網卡在這條網路上,只用來跟控制面溝通,資料庫的流量則走使用者自己的網路。</p>
+<p>本課先不建管理網路,讓 guest VM 只接在 Day 17 建好的 <code>day17-net</code> 上。Day 2 看過,租戶網路的 VM 經過 router 的 SNAT 到達主機,而主機上的 RabbitMQ 就在 <code>10.0.0.4</code>,所以這條路本來就通。下面這張圖把 guest 往外的兩條路分開畫:</p>
+<p><img alt="guest VM 10.17.0.x 裡有兩條往外的連線,都先經過 day17-r 的 router SNAT 到主機 10.0.0.4。路徑一是 guest-agent 用 IP 連主機上的 RabbitMQ :5672,不需要 DNS;路徑二是 docker pull,經主機的 MASQUERADE 從 eth0 出去,要先向外部的 DNS 8.8.8.8 查網域名稱,再從 Docker Hub 拉映像檔,DNS 解析失敗就無法下載" src="../../assets/diagrams/os-s4d18-guest-paths.svg" /></p>
+<p>照著圖上的編號看:</p>
+<ol>
+<li><strong>路徑 ①:guest-agent 連 RabbitMQ。</strong> guest-agent 的設定裡寫的是 IP,所以這條路不需要 DNS。</li>
+<li><strong>路徑 ②:guest-agent 拉 MySQL 容器。</strong> 容器映像檔是用網域名稱找的,guest 要先查 DNS,查不到就拉不到,MySQL 也就起不來。</li>
+</ol>
+<p>這兩條路需要的東西不同,所以會出現一種狀況:路徑 ① 通了,guest-agent 能回報狀態,但路徑 ② 斷了,MySQL 起不來。步驟 4 動手前先檢查的就是路徑 ② 需要的 DNS。</p>
+<p>少建一條管理網路,換來的是安全上的代價。guest-agent 要連 RabbitMQ,它的設定檔裡就有 RabbitMQ 的帳號密碼;官方文件也指出,guest VM 被攻破,這組帳密就跟著外洩,等於訊息系統被攻破。本課的做法還讓租戶網路直接連得到主機上的 RabbitMQ。正式環境要建專用的管理網路,讓租戶網路碰不到控制面,並照官方文件啟用 Trove 的訊息加密(<code>enable_secure_rpc_messaging</code>),降低跨實例訊息遭讀取或偽造的風險,不能將它視為 guest 遭入侵後的完整隔離保證。本課沒有檢查 Kolla 預設是否啟用這項加密。</p>
+<h2 id="step-4">步驟 4:建立資料庫實例<a class="headerlink" href="#step-4" title="Permanent link">&para;</a></h2>
+<p>網路沿用 Day 17 建立的 <code>day17-net</code>。動手前先確認 subnet 設有 DNS nameserver,也就是上一節路徑 ② 需要的東西。Day 17 建 subnet 時已經加了 <code>--dns-nameserver 8.8.8.8</code>,換用其他 subnet 的話更要先查:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>openstack<span class="w"> </span>subnet<span class="w"> </span>show<span class="w"> </span>day17-sub<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>dns_nameservers<span class="w">   </span><span class="c1"># 必須非空,例如 [&#39;8.8.8.8&#39;]</span>
 </span></code></pre></div>
+<p>結果是空的,就先用 <code>openstack subnet set &lt;subnet&gt; --dns-nameserver 8.8.8.8</code> 補上。接著建立實例:<code>--size 2</code> 是資料碟大小(GB,會建成一顆 Cinder volume),<code>--databases</code> 和 <code>--users</code> 讓 Trove 在 MySQL 起來後順便建好資料庫和帳號:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">NET</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>network<span class="w"> </span>show<span class="w"> </span>day17-net<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>id<span class="k">)</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>openstack<span class="w"> </span>database<span class="w"> </span>instance<span class="w"> </span>create<span class="w"> </span>day18-db<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span>--flavor<span class="w"> </span>m1.medium<span class="w"> </span>--size<span class="w"> </span><span class="m">2</span><span class="w"> </span>--nic<span class="w"> </span>net-id<span class="o">=</span><span class="nv">$NET</span><span class="w"> </span><span class="se">\</span>
@@ -4325,94 +4283,78 @@
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span>--databases<span class="w"> </span>demo<span class="w"> </span>--users<span class="w"> </span>demo:&lt;你的密碼&gt;
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>watch<span class="w"> </span>openstack<span class="w"> </span>database<span class="w"> </span>instance<span class="w"> </span>show<span class="w"> </span>day18-db<span class="w"> </span>-c<span class="w"> </span>status<span class="w"> </span>-c<span class="w"> </span>operating_status
 </span></code></pre></div>
-<p>背後發生的事:Nova 開 guest VM(掛一顆 2G 的 Cinder volume 當資料碟)→ guest-agent 開機自啟、連回 RabbitMQ → 從網路拉 <code>mysql:8.0</code> 容器 → 啟動並初始化你指定的資料庫與使用者。本課環境全程約 <strong>2.5 分鐘</strong>,終態:</p>
+<p><code>watch</code> 會每兩秒刷新一次狀態。這段時間裡,Nova 開出 guest VM 並掛上資料碟,guest-agent 開機後連回 RabbitMQ,拉 <code>mysql:8.0</code> 容器、啟動,再建好 <code>demo</code> 資料庫和使用者。幾分鐘後會停在下面的狀態:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>status: ACTIVE
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>operating_status: HEALTHY
 </span></code></pre></div>
-<h3 id="5">步驟 5:驗證它是一台真的資料庫<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
-<p>讀路徑(這些查詢會經 API → RabbitMQ → guest-agent → MySQL 全鏈):</p>
+<p>這裡有兩個狀態欄位。<code>status</code> 是 Trove 對整個實例的狀態,<code>ACTIVE</code> 代表建立流程走完了;<code>operating_status</code> 是 guest-agent 回報的資料庫服務狀態,<code>HEALTHY</code> 代表 MySQL 真的在跑。兩個都到位才算可以用。</p>
+<p>如果等了兩分鐘左右,<code>status</code> 變成 <code>ERROR</code>,先用 <code>openstack database instance show day18-db</code> 看 <code>fault</code> 欄位。訊息是 <code>Service not active, status: failed to spawn</code> 的話,這句話是 guest-agent 自己回報的:它能回報,代表路徑 ① 是通的,問題在 guest 內部,本章原有的失敗案例是路徑 ② 的 DNS 沒設;其他映像檔下載或 MySQL 啟動問題也可能產生相同狀態,還要查 guest 的紀錄。另外,Trove 會自動刪掉建立失敗的 guest VM,要看 VM 的開機訊息就得馬上動手,見<a href="#mine-2">疑難排解:失敗的 guest VM 會被自動刪除</a>。</p>
+<h2 id="5">步驟 5:驗證它是一台真的資料庫<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p><code>ACTIVE</code> 加 <code>HEALTHY</code> 只是狀態,接下來實際操作它。先讀:下面兩個查詢會從 Trove API 經 RabbitMQ 轉給 guest-agent,再由 guest-agent 查 MySQL,所以能回結果代表整條路都通:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>database<span class="w"> </span>db<span class="w"> </span>list<span class="w"> </span>day18-db<span class="w">        </span><span class="c1"># demo</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>openstack<span class="w"> </span>database<span class="w"> </span>user<span class="w"> </span>list<span class="w"> </span>day18-db<span class="w">      </span><span class="c1"># demo</span>
 </span></code></pre></div>
-<p>寫路徑(叫管家真的動手):</p>
+<p>再寫:新建一個使用者和一個資料庫,讓 guest-agent 真的去改 MySQL 的內容:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>openstack<span class="w"> </span>database<span class="w"> </span>user<span class="w"> </span>create<span class="w"> </span>day18-db<span class="w"> </span>u2<span class="w"> </span>&lt;密碼&gt;
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>openstack<span class="w"> </span>database<span class="w"> </span>db<span class="w"> </span>create<span class="w"> </span>day18-db<span class="w"> </span>demo2
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openstack<span class="w"> </span>database<span class="w"> </span>db<span class="w"> </span>list<span class="w"> </span>day18-db<span class="w">        </span><span class="c1"># demo、demo2 都在</span>
 </span></code></pre></div>
-<p>寫得進去 = guest 裡的 MySQL 真實運作中。</p>
-<p>Skyline 的「Database」頁把這台代管實例列得跟 RDS 主控台一樣:datastore、版本、配發到的位址、磁碟大小、狀態一欄到位——使用者不需要知道底下是一台 Nova VM:</p>
+<p><code>demo2</code> 出現在清單裡,代表 guest 裡的 MySQL 在運作,也接受了寫入。</p>
+<p>如果 Day 13 已部署 Skyline,這次只跑 Trove tag 不會更新 Skyline 的代理路由。先讓 Skyline 套用新服務設定,再開下一張頁面。下列命令是依部署模板補齊的前提,沒有獨立的本課執行輸出:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>skyline
+</span></code></pre></div>
+<p>接著從使用者的角度看。Skyline 的「Database」頁列出這台實例,欄位有 datastore、版本、配發到的位址、磁碟大小和狀態,完全沒有提到底下的 Nova VM:</p>
 <p><img alt="Skyline 的資料庫實例頁:day18-db,mysql 8.0、2GiB、Active" src="../../assets/screenshots/day18-skyline-trove.png" /></p>
-<p>而從使用者的角度,這就是<strong>一台普通的 MySQL</strong>:拿任何 MySQL client 連上去,SQL 照打——建表、寫入、查詢,跟你平常用的資料庫沒有兩樣:</p>
+<p>這是 Trove 的預設設計:從 Ussuri 版開始,guest VM、Cinder volume 這些底層資源都建在 Trove 自己的 service project 裡,使用者看不到,只能透過 Trove API 操作實例。</p>
+<p>最後看 MySQL 的資料連線。這條連線不經 Trove API:用戶端必須裝好 <code>mysql</code> CLI,並且能從所在網路連到實例的 MySQL 位址與 3306 port。單機 lab 的租戶私有位址不會直接開放給你的電腦;可使用已接入 <code>day17-net</code> 的用戶端,或先依既有網路章節建立可達的連線。這份素材沒有保留用戶端建置過程,因此下列 SQL 只適用於已具備這些前提的用戶端。</p>
+<p>用前面的 <code>openstack database instance show day18-db</code> 查看實例位址,填入 <code>&lt;database-ip&gt;</code>;登入帳號與密碼用建立實例時的 <code>demo</code> 那組。以下命令與 SQL 來自原有截圖,沒有另補結果:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>mysql<span class="w"> </span>-h<span class="w"> </span>&lt;database-ip&gt;<span class="w"> </span>-u<span class="w"> </span>demo<span class="w"> </span>-p
+</span></code></pre></div>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">SHOW</span><span class="w"> </span><span class="n">DATABASES</span><span class="p">;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">USE</span><span class="w"> </span><span class="n">demo</span><span class="p">;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="nb">INT</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="w"> </span><span class="n">AUTO_INCREMENT</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="p">);</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="n">notes</span><span class="w"> </span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="s1">&#39;hello from a Trove-managed MySQL&#39;</span><span class="p">);</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">body</span><span class="p">,</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">notes</span><span class="p">;</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">VERSION</span><span class="p">()</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">mysql_version</span><span class="p">,</span><span class="w"> </span><span class="o">@@</span><span class="n">hostname</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">served_by</span><span class="p">;</span>
+</span></code></pre></div>
+<p>下圖依序呈現查資料庫、建表、寫入、查詢的結果:</p>
 <p><img alt="用 mysql client 連進 day18-db:SHOW DATABASES、建表、寫入、查詢" src="../../assets/screenshots/day18-mysql-terminal.png" /></p>
-<p>最後一行的 <code>served_by</code> 洩了底:真正回答你的是 guest VM 裡那個 mysql 容器(<code>--datastore mysql</code> 拉下來的那個)。但這是實作細節——<strong>使用者只看到一台 MySQL,這正是 DBaaS 的意義</strong>。</p>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>控制面</td>
-<td>api / taskmanager / conductor healthy</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>映像檔</td>
-<td>官方每日版上傳 + tag,datastore 註冊 default</td>
-<td>mysql 8.0</td>
-</tr>
-<tr>
-<td><strong>實例</strong></td>
-<td><code>ACTIVE</code> + <code>HEALTHY</code></td>
-<td>BUILD→HEALTHY 約 2.5 分</td>
-</tr>
-<tr>
-<td>讀路徑</td>
-<td>db list / user list 走全鏈成功</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>寫路徑</td>
-<td>新建 user 與 db 生效</td>
-<td>u2 / demo2 到位</td>
-</tr>
-<tr>
-<td>備份</td>
-<td>見地雷 4(本課程留為開放項)</td>
-<td>△</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_2">地雷記錄<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:subnet 沒 DNS——「有心跳但起不來」的元兇<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:第一次建立在約兩分鐘後轉 <code>ERROR</code>,fault 訊息 <code>Service not active, status: failed to spawn</code>。</p>
-<p><strong>判讀關鍵</strong>:「failed to spawn」是 guest-agent <strong>自己回報的</strong>——agent 能回報 = RabbitMQ 路是通的,死因在 guest 內部。</p>
-<p><strong>根因</strong>:當時 subnet 沒設 DNS nameserver。agent 連 RabbitMQ 用 IP(不需要 DNS)所以活著;但 guest 內 <code>docker pull mysql</code> 要解析網域名——沒有 DNS,拉不到容器,spawn 失敗。</p>
-<p><strong>解法</strong>:<code>openstack subnet set day17-sub --dns-nameserver 8.8.8.8</code>,重建實例,一次過。</p>
-<p><strong>金句</strong>:<strong>「agent 有心跳但 spawn 失敗 → 先查 subnet 有沒有 DNS。」</strong> 兩個症狀的組合直接指向根因,不用進 guest 就能判案。</p>
-<h3 id="mine-2">地雷 2:失敗清理會滅證<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>Trove 對建立失敗的實例會自動刪除 guest VM——<strong>連 console log 一起帶走</strong>。發現 ERROR 時,<code>openstack console log show</code> 要趁早;晚了就只剩 taskmanager 的 log 可查(<code>/var/log/kolla/trove/</code>)。</p>
-<h3 id="mine-3">地雷 3:backup 指令的新版語法<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p>新版 troveclient 的備份指令是 <code>openstack database backup create --instance &lt;實例&gt; &lt;備份名&gt;</code>——舊教學裡「實例當第一個位置參數」的寫法會直接吐 usage。</p>
-<h3 id="mine-4">地雷 4:備份的最後一哩(開放項)<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p>備份功能會把資料上傳到 object-store(正是 Day 15 的 RGW,依賴鏈設計如此)。實測:備份任務成功派送(<code>storage_driver: swift</code> 正確),但 guest 內拉取<strong>備份工具容器</strong>時卡住——修法已知:在 <code>/etc/kolla/config/trove/trove-guestagent.conf</code> 覆寫備份容器來源後重部。本章先如實記錄現象與修法方向;完整步驟驗證後會補進本頁。</p>
-<h2 id="_3">階段一完成 🎉<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>六天、六塊積木:Skyline、Ceph、RGW、Manila、Designate、Trove——首頁那張「還沒拼上的積木」表,一半已經拼上了。更重要的是方法論的複利:<strong>同型雷第 N 次出現時,你已經能在錯誤出現之前說出答案</strong>(CLI 外掛、行首錨定、subnet DNS)。</p>
-<h2 id="_4">延伸閱讀<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p>我們可以看到最後一行的 <code>served_by</code> 欄位,回答查詢的是 guest VM 裡那個 mysql 容器,也就是步驟 3 註冊、步驟 4 拉下來的那個版本。使用者不需要知道這件事,拿到的就是一台可以連的 MySQL。</p>
+<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">實例約兩分鐘後轉 <code>ERROR</code>,fault 是 <code>failed to spawn</code><a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:<code>openstack database instance show</code> 的 <code>fault</code> 是 <code>Service not active, status: failed to spawn</code>。</p>
+<p><strong>原因</strong>:這份失敗案例的 subnet 沒設 DNS nameserver,但 <code>failed to spawn</code> 本身不能唯一證明是 DNS。guest-agent 用 IP 連 RabbitMQ,所以還能回報狀態;但 guest 裡拉 <code>mysql</code> 容器要查網域名稱,查不到就啟動失敗。判讀方式見<a href="#step-4">步驟 4</a>最後一段。</p>
+<p><strong>修法</strong>:<code>openstack subnet set day17-sub --dns-nameserver 8.8.8.8</code>,刪掉失敗的實例後重新建立。</p>
+<h3 id="mine-2">失敗的 guest VM 會被自動刪除<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:實例轉 <code>ERROR</code> 後,想用 <code>openstack console log show</code> 看 guest 的開機訊息,卻找不到那台 VM。</p>
+<p><strong>原因</strong>:Trove 會自動刪除建立失敗的 guest VM,console log 跟著一起消失。</p>
+<p><strong>修法</strong>:用管理員身分在 Nova 的所有專案列表中找到對應的 guest VM,確認實例 ID 後立即取得 console log。Trove 實例名稱不等於 Nova server ID;先取得對應關係才能把 <code>openstack console log show</code> 指向正確的 VM。來不及的話,只剩主機上 taskmanager 的 log 可以查(<code>/var/log/kolla/trove/</code>)。</p>
+<h3 id="mine-3"><code>backup create</code> 只印出 usage<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:照舊教學把實例名稱當第一個位置參數執行 <code>openstack database backup create</code>,指令直接印出 usage。</p>
+<p><strong>原因</strong>:新版 troveclient 改了參數格式。</p>
+<p><strong>修法</strong>:寫成 <code>openstack database backup create --instance &lt;實例&gt; &lt;備份名&gt;</code>。</p>
+<h3 id="mine-4">備份卡在 guest 拉取備份工具容器<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>:備份會把資料上傳到物件儲存,也就是 Day 15 的 RGW。備份任務可以成功送出(<code>storage_driver: swift</code>),但 guest 在拉取備份工具的容器時卡住,備份沒有完成。</p>
+<p><strong>原因</strong>:guest 拉不到備份工具容器的映像檔。</p>
+<p><strong>修法</strong>:方向是在 <code>/etc/kolla/config/trove/trove-guestagent.conf</code> 覆寫備份容器的來源,再重新部署 Trove。本課沒有驗證這個修法,備份與還原在本課沒有走完。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong><a href="https://docs.openstack.org/trove/2025.1/admin/run_trove_in_production.html">Trove 生產環境部署指南</a></strong> —— 官方的管理網設計;本章「極簡路徑」的正式版對照組。</li>
-<li><strong><a href="https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html">Trove guest image 建置指南</a></strong> —— 自建映像檔(本章 Plan B)的官方流程與 <code>trovestack</code> 用法。</li>
-<li><strong><a href="https://tarballs.opendev.org/openstack/trove/images/">官方 guest image 出貨處</a></strong> —— 每日自動建置的映像檔就放在這;本章步驟 2 下載的來源。</li>
-<li><strong><a href="https://docs.openstack.org/trove/2025.1/user/">Trove User Guide</a></strong> —— 實例、備份、設定群組的使用者操作大全。</li>
+<li>另一個專案的使用者在自己建的網路上開 Trove 實例,兩分鐘後轉 <code>ERROR</code>,fault 是 <code>failed to spawn</code>。他問你是不是 RabbitMQ 連不上。你會怎麼回答,第一個要他查的是什麼?</li>
+<li>如果沒有收到 guest-agent 的狀態回報,還能用上一題的理由排除 RabbitMQ 連線問題嗎?接下來應先查哪一條路?</li>
+<li>主管想讓租戶自己開 Trove 實例,但不希望租戶的 VM 碰得到控制面的 RabbitMQ。這一章的網路做法要改哪裡?</li>
 </ul>
-<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p><a href="../sprint4-day19-api-request-lifecycle/">Day 19</a> 起進入階段二:不再加新東西,改為<strong>拆開你已經用了三個星期的東西</strong>——一個 API 請求從 token 到 qemu 的完整生命週期。</p>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>Trove 用一台專屬的 guest VM 承載每個資料庫實例:控制面的 api、taskmanager、conductor 跑在主機上,VM 裡的 guest-agent 透過 RabbitMQ 收指令、回報狀態,真正的 MySQL 是它拉下來的 Docker 容器。所以 guest VM 往外有兩條路,用 IP 連 RabbitMQ,用網域名稱拉容器,第二條需要 subnet 設好 DNS。之後遇到 Trove 實例建立失敗,先看 fault 是不是 guest-agent 自己回報的:是的話,路徑 ① 沒問題,往 guest 內部查,並趁 VM 被刪掉之前抓 console log。Day 13 到 Day 18 加上的 Skyline、Ceph、RGW、Manila、Designate、Trove,到這裡都已經接進這朵雲。</p>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/trove/2025.1/admin/run_trove_in_production.html">Trove 生產環境部署指南</a></strong> —— 官方的管理網路設計、guest 裡 RabbitMQ 帳密的安全考量與訊息加密設定;本章省略管理網路的做法可以拿來對照。</li>
+<li><strong><a href="https://docs.openstack.org/trove/2025.1/admin/building_guest_images.html">Trove guest image 建置指南</a></strong> —— 自己建 guest 映像檔的官方流程與 <code>trovestack</code> 用法,要固定映像檔版本時從這裡開始。</li>
+<li><strong><a href="https://tarballs.opendev.org/openstack/trove/images/">官方 guest image 下載處</a></strong> —— 每日自動建置的映像檔放在這裡,步驟 2 從這裡下載。</li>
+<li><strong><a href="https://docs.openstack.org/trove/2025.1/user/">Trove User Guide</a></strong> —— 實例、備份、設定群組的使用者操作說明。</li>
+</ul>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>到這一章為止,每一天都在替這朵雲加新服務。<a href="../sprint4-day19-api-request-lifecycle/">Day 19</a> 換個方向,不再加東西,改為拆開已經用了三個星期的服務:追一個 API 請求從取得 token 到 qemu 開出 VM 的完整過程。</p>
 
 
 
@@ -4467,13 +4409,13 @@
         
         
           
-          <a href="../sprint4-day19-api-request-lifecycle/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 19 · server create 的完整路徑">
+          <a href="../sprint4-day19-api-request-lifecycle/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 19 · server create 的請求路徑">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 下一頁
               </span>
               <div class="md-ellipsis">
-                Day 19 · server create 的完整路徑
+                Day 19 · server create 的請求路徑
               </div>
             </div>
             <div class="md-footer__button md-icon">

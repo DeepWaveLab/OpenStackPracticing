@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1577,7 +1577,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        監控與計量,不是同一件事
+        開始之前
       
     </span>
   </a>
@@ -1585,10 +1585,76 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#gnocchi" class="md-nav__link">
+  <a href="#prometheus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gnocchi 去哪了
+        資料怎麼到 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-pushgateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1：準備 Pushgateway 的接收端
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：讓 Prometheus 抓取並保留標籤
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：部署收集器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：確認通知來源也更新了設定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-team-a-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：用 team-a 的 VM 確認標籤
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ceilometer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在哪裡觀察 Ceilometer
       
     </span>
   </a>
@@ -1599,113 +1665,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-pushgateway" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:起一個 Pushgateway
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-prometheus" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:讓 Prometheus 去抓它
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-ceilometer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:部署 Ceilometer
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:打開通知——第一次驗收會失敗
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:產生用量,然後分租戶查
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:kolla 的 docker 沒有 iptables,-p 是死的
+        容器 Up，9092 健康檢查卻連不上
       
     </span>
   </a>
@@ -1716,7 +1688,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:Pushgateway 預設 9091,正好撞上 kolla 的 Prometheus
+        Pushgateway 與 Prometheus 使用同一個埠
       
     </span>
   </a>
@@ -1727,7 +1699,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:--tags ceilometer 不會回頭打開別人的通知
+        收集器正常，卻沒有服務事件
       
     </span>
   </a>
@@ -1738,29 +1710,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:指標名稱沒有 ceilometer_ 前綴
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 5:Pushgateway 永遠記得已經刪掉的機器
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 6:無認證、可寫的計費輸入端點
+        搜尋 ceilometer_ 沒有指標
       
     </span>
   </a>
@@ -1773,10 +1723,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        已刪 VM 的讀數為什麼還在
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="已刪 VM 的讀數為什麼還在">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        無認證的計量入口可被其他來源讀寫
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
       
     </span>
   </a>
@@ -1784,7 +1762,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1795,7 +1784,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1856,7 +1845,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1884,7 +1873,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1912,7 +1901,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -2032,7 +2021,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4073,7 +4062,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        監控與計量,不是同一件事
+        開始之前
       
     </span>
   </a>
@@ -4081,10 +4070,76 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#gnocchi" class="md-nav__link">
+  <a href="#prometheus" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Gnocchi 去哪了
+        資料怎麼到 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-pushgateway" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1：準備 Pushgateway 的接收端
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2：讓 Prometheus 抓取並保留標籤
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3：部署收集器
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4：確認通知來源也更新了設定
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-team-a-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 5：用 team-a 的 VM 確認標籤
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ceilometer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        在哪裡觀察 Ceilometer
       
     </span>
   </a>
@@ -4095,113 +4150,19 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        疑難排解
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-pushgateway" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:起一個 Pushgateway
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-prometheus" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:讓 Prometheus 去抓它
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-ceilometer" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:部署 Ceilometer
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:打開通知——第一次驗收會失敗
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:產生用量,然後分租戶查
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:kolla 的 docker 沒有 iptables,-p 是死的
+        容器 Up，9092 健康檢查卻連不上
       
     </span>
   </a>
@@ -4212,7 +4173,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:Pushgateway 預設 9091,正好撞上 kolla 的 Prometheus
+        Pushgateway 與 Prometheus 使用同一個埠
       
     </span>
   </a>
@@ -4223,7 +4184,7 @@
   <a href="#mine-3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 3:--tags ceilometer 不會回頭打開別人的通知
+        收集器正常，卻沒有服務事件
       
     </span>
   </a>
@@ -4234,29 +4195,7 @@
   <a href="#mine-4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 4:指標名稱沒有 ceilometer_ 前綴
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-5" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 5:Pushgateway 永遠記得已經刪掉的機器
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-6" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 6:無認證、可寫的計費輸入端點
+        搜尋 ceilometer_ 沒有指標
       
     </span>
   </a>
@@ -4269,10 +4208,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#mine-5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        帶得走的東西
+        已刪 VM 的讀數為什麼還在
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="已刪 VM 的讀數為什麼還在">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        無認證的計量入口可被其他來源讀寫
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
       
     </span>
   </a>
@@ -4280,7 +4247,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4291,7 +4269,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_7" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4318,114 +4296,25 @@
 
 
 
-<h1 id="day-28">Day 28: 計量管線——誰用了多少<a class="headerlink" href="#day-28" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>Day 27 把租戶結構蓋好了,現在有了分帳的對象。今天處理分帳的<strong>依據</strong>:部署 Ceilometer,讓「誰開了幾台 VM、跑了多久、用了幾 GB」變成 Day 21 那座 Prometheus 裡查得到的數字。本章要先講清楚一件事——<strong>這條管線跟 Day 21 的監控不是同一條</strong>,把它們搞混,Day 30 的帳單就永遠算不對。</p>
-</blockquote>
+<h1 id="day-28">Day 28: 計量管線——把用量對回租戶，並確認資料仍有效<a class="headerlink" href="#day-28" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Telemetry 官方吉祥物" src="../../assets/mascots/telemetry.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 21</strong>:Prometheus + Grafana + 集中式 log 上線,你看得見<strong>機器</strong>的健康。</li>
-<li><strong>Day 27</strong>:domains、專案、額度就緒,有了租戶邊界。</li>
-<li><strong>今天</strong>:讓雲說得出<strong>每個租戶各用了多少</strong>——計量資料流進 Day 21 那座 Prometheus。</li>
-<li><strong>今天之後</strong>:<a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 讓這些數字觸發自動反應,<a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 把它們換成錢。</li>
-</ul>
-</div>
-<h2 id="_1">監控與計量,不是同一件事<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>這是今天最容易誤會、也最該先講的一段。Day 21 之後,你可能會想:Prometheus 不是已經有一堆指標了嗎?為什麼還要裝 Ceilometer?</p>
-<p>因為那兩批資料<strong>回答的是不同問題</strong>:</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>Day 21 的 exporters</th>
-<th>今天的 Ceilometer</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>誰產生的</td>
-<td>node / libvirt / mysqld exporter</td>
-<td>OpenStack 服務本身</td>
-</tr>
-<tr>
-<td>回答什麼</td>
-<td>這台<strong>主機</strong>還好嗎</td>
-<td>這個<strong>租戶</strong>用了多少</td>
-</tr>
-<tr>
-<td>典型指標</td>
-<td>主機記憶體剩幾 GB、磁碟水位</td>
-<td>這顆 VM 屬於哪個 project、開機幾小時</td>
-</tr>
-<tr>
-<td>帶不帶租戶身分</td>
-<td><strong>不帶</strong></td>
-<td><strong>帶 <code>project_id</code></strong></td>
-</tr>
-<tr>
-<td>用途</td>
-<td>維運告警</td>
-<td>分帳、稽核、容量規劃</td>
-</tr>
-</tbody>
-</table>
-<p>差別的關鍵在最後兩列。libvirt exporter 知道「這台 hypervisor 上有 12 顆 VM 在跑」,但它<strong>不知道哪顆是誰的</strong>——那是 OpenStack 資料庫裡的事實,只有 OpenStack 自己說得出來。</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph infra["Day 21:基礎設施指標"]
-        E["node / libvirt&lt;br/&gt;exporter"]
-    end
-    subgraph meter["Day 28:租戶計量"]
-        C["Ceilometer&lt;br/&gt;(帶 project_id)"]
-    end
-    infra ==&gt; P["同一座 Prometheus&lt;br/&gt;(Day 21 建的)"]
-    meter ==&gt; P
-    P ==&gt; USE["Day 29 告警&lt;br/&gt;Day 30 帳單"]</code></pre>
-<p><strong>兩條路平行前進,最後匯進同一座 Prometheus。</strong> 這是這門課的設計紅利:Day 21 的地基直接變成 Sprint 5 的計量骨幹,不用為了計費再養一顆資料庫。</p>
-<h2 id="gnocchi">Gnocchi 去哪了<a class="headerlink" href="#gnocchi" title="Permanent link">&para;</a></h2>
-<p>翻開任何一本 OpenStack 教材,遙測都是三件套:<strong>Ceilometer 蒐集 → Gnocchi 儲存 → Aodh 告警</strong>。今天的課表卻只有頭尾兩位。</p>
-<p><a href="../sprint4-day26-sprint5-preview/">Day 26</a> 已經把判決攤開過:Gnocchi 在 2017 年離開 OpenStack 官方治理後逐漸沉寂,主流發行版的新一代遙測架構已經把它排除在外(截至 2026-07);而官方現行路線是 <strong>Ceilometer → Prometheus → Aodh</strong>,下一步的 Aetos(在 Prometheus 前面加租戶隔離與 Keystone 認證的代理)更說明方向已定。</p>
-<p>所以 Gnocchi 在這門課只以兩種身分出現:<strong>歷史脈絡</strong>,以及 <strong>Aodh 部分告警型別名稱的由來</strong>——<a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 會看到 Heat 至今仍列著三種 <code>OS::Aodh::Gnocchi*</code> 資源型別,和一個 <code>OS::Aodh::PrometheusAlarm</code> 並排。那張清單本身就是這段歷史的化石。</p>
-<p>繞過 Gnocchi 有代價,而且代價在 <a href="../sprint5-day29-aodh-autoscaling/#architecture">Day 29</a> 會現形:Prometheus 這條路<strong>存不住 resource metadata</strong>,教科書那套「幫 VM 貼標籤再用標籤圈選機群」的做法直接失效。今天先記著這件事。</p>
-<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>Ceilometer 用<strong>兩種</strong>方式取得資料,這決定了今天要動哪些服務:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph src["資料來源"]
-        NOTI["各服務發的通知&lt;br/&gt;(開機、刪除…事件)"]
-        POLL["主動輪詢&lt;br/&gt;(CPU、磁碟…讀數)"]
-    end
-    NOTI ==&gt; CN["ceilometer-notification"]
-    POLL ==&gt; CC["ceilometer-central&lt;br/&gt;ceilometer-compute"]
-    CN ==&gt; PIPE["pipeline&lt;br/&gt;(publisher 決定送去哪)"]
-    CC ==&gt; PIPE
-    PIPE ==&gt;|"push"| PG["Pushgateway :9092"]
-    PG -.-&gt;|"Prometheus 來抓"| PROM["Prometheus :9091"]</code></pre>
-<p>兩個要點決定今天的雷區:</p>
-<ol>
-<li><strong>通知那條路要對方配合</strong>——Nova、Cinder、Neutron 得先「願意發通知」,而它們預設是關的。這需要動到那些服務,不是裝好 Ceilometer 就有(<a href="#mine-3">地雷 3</a>)。</li>
-<li><strong>Ceilometer 是 push,Prometheus 是 pull</strong>——兩邊方向相反,中間要塞一個 <strong>Pushgateway</strong> 當轉接頭。而<strong>kolla 不會幫你部署它</strong>,得自己起。</li>
-</ol>
-<div class="admonition warning">
-<p class="admonition-title">Pushgateway 是個妥協,不是好設計</p>
-<p>Prometheus 官方文件明講 Pushgateway <strong>不該拿來把 Prometheus 變成推送式系統</strong>——它是為「短命的批次任務」設計的。用它接 Ceilometer 是目前 kolla 提供的路,但它有個會直接影響帳單正確性的副作用,見<a href="#mine-5">地雷 5</a>。動手前先知道你在用什麼。</p>
-</div>
-<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1-pushgateway">步驟 1:起一個 Pushgateway<a class="headerlink" href="#1-pushgateway" title="Permanent link">&para;</a></h3>
-<p>kolla 有 <code>enable_ceilometer_prometheus_pushgateway</code> 這個開關,但它只負責<strong>叫 Ceilometer 把資料推去某個位址</strong>——<strong>那個位址上的服務要你自己準備</strong>。</p>
+<p>Prometheus 已經能查主機 CPU 與記憶體，現在同事要問的是「team-a 用了多少」。你需要把 VM 的讀數對回 OpenStack 專案，而不是把整台主機的用量當作某個租戶的用量。這一章加入 Ceilometer，將帶有 <code>project_id</code> 的計量資料送到現有 Prometheus。讀完之後，查不到資料時，你能逐段確認來源、轉送與查詢；查得到資料時，也能判斷它是否仍代表存在的資源。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>沿用 Day 21 的 Prometheus、Day 27 的 team-a 與 <code>team-a-net</code>。指令在 Kolla 部署主機執行；<code>10.0.0.4</code>、inventory、服務埠與 project UUID 都需對照自己的環境。下面保留歷史輸出，UUID 不可直接套用。</p>
+<p><strong>Ceilometer</strong> 蒐集 OpenStack 的資源用量與事件，資料包含專案歸屬。Day 21 的主機 exporter 指標主要用來觀察主機健康；是否帶租戶資訊要看 exporter 與設定，不能只看指標存在哪套資料庫。</p>
+<p>本課選擇 Prometheus 作為後端。舊教材也可能使用 Gnocchi；那是另一種資料模型與整合方式，不能把其資源 metadata 查詢直接套用到本章。本章 publisher 實際送出的 labels 才是後續告警可用的條件，不能從「Prometheus 支援 label」推定它已收到所有 VM metadata。</p>
+<h2 id="prometheus">資料怎麼到 Prometheus<a class="headerlink" href="#prometheus" title="Permanent link">&para;</a></h2>
+<p>Ceilometer 有兩種來源：<strong>polling</strong> 定期讀取 CPU、磁碟等讀數；<strong>notification</strong> 接收 Nova、Cinder 等服務發出的事件。<strong>Pipeline</strong> 決定資料交給哪個 <strong>publisher</strong>，也就是發送到後端的元件。</p>
+<p>下圖從來源往下看。來源服務要開通知，Ceilometer 才收得到；Prometheus 則主動抓取 Pushgateway 的 <code>/metrics</code>。</p>
+<p><img alt="服務通知與定期輪詢進入Ceilometer，publisher推送到Pushgateway，Prometheus定期抓取；標籤含project_id" src="../../assets/diagrams/os-s5d28-pipeline.svg" /></p>
+<p><strong>Pushgateway</strong> 保存推送的最新值，供 Prometheus 的 <strong>scrape（定期抓取）</strong>讀取。這個保存動作與 VM 的生命週期分開，刪掉 VM 不會自動刪掉指標。後面會看到這為何影響計費；先把資料路徑接起來。</p>
+<h2 id="1-pushgateway">步驟 1：準備 Pushgateway 的接收端<a class="headerlink" href="#1-pushgateway" title="Permanent link">&para;</a></h2>
+<p>Kolla 的 <code>enable_ceilometer_prometheus_pushgateway</code> 設定 Ceilometer 的目的地，這份部署仍需自行啟動接收服務。先檢查主機上的監聽埠；本課 Prometheus 已使用 9091，因此 Pushgateway 改用 9092。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>pushgateway<span class="w"> </span>--restart<span class="w"> </span>unless-stopped<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>quay.io/prometheus/pushgateway:latest<span class="w"> </span>--web.listen-address<span class="o">=</span>:9092
 </span></code></pre></div>
-<p>兩個參數都是被雷炸出來的:</p>
-<ul>
-<li><strong><code>--network host</code></strong>——kolla 的 docker daemon 設了 <code>iptables: false</code> + <code>bridge: none</code>,<strong><code>-p</code> 埠映射是死的</strong>(<a href="#mine-1">地雷 1</a>)。</li>
-<li><strong><code>:9092</code></strong>——Pushgateway 預設聽 9091,而那正是 Day 21 kolla Prometheus 的埠(<a href="#mine-2">地雷 2</a>)。</li>
-</ul>
-<div class="admonition warning">
-<p class="admonition-title">教學用 <code>:latest</code>;生產要 pin,而且這個埠是無認證的計費輸入端點</p>
-<p>這裡刻意用 <code>:latest</code> 是為了少一個變數,但它不可重現、日後無法稽核「當時到底是哪版」——正好和 <a href="../sprint4-day22-upgrade-backup/">Day 22 教的「別把 tag 當不變保證」</a> 自打臉,生產請 pin 到 digest 或明確版本。更重的是:它跑在 <strong>host network、完全無認證</strong>,餵的卻是 <a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 的帳單來源——完整的曝險分析見<a href="#mine-6">地雷 6</a>。</p>
-</div>
-<p>驗證它活著,並確認兩個服務各據一埠:</p>
+<p>這份歷史命令使用 <code>latest</code>，沒有留下固定 digest，不能用它保證重現同一版本。重建環境時應先選定並記錄測試版本。它也沒有啟用認證，且監聽所有主機介面；只應放在已限制來源的實驗網路，讀寫邊界見<a href="#mine-6">疑難排解：無認證的計量入口</a>。</p>
+<p>本課 Docker 的 bridge／iptables 設定不能使用一般 <code>-p</code> 對映，因此使用主機網路；這是此部署的限制，不是所有 Kolla 環境都只能這樣做。確認服務健康與埠分布：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-o<span class="w"> </span>/dev/null<span class="w"> </span>-w<span class="w"> </span><span class="s2">&quot;%{http_code}\n&quot;</span><span class="w"> </span>http://10.0.0.4:9092/-/healthy
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>ss<span class="w"> </span>-tlnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;:909[12]&quot;</span>
 </span></code></pre></div>
@@ -4433,8 +4322,9 @@
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>10.0.0.4:9091  users:((&quot;prometheus&quot;,pid=10788,fd=6))
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>*:9092         users:((&quot;pushgateway&quot;,pid=1319183,fd=4))
 </span></code></pre></div>
-<h3 id="2-prometheus">步驟 2:讓 Prometheus 去抓它<a class="headerlink" href="#2-prometheus" title="Permanent link">&para;</a></h3>
-<p>kolla 支援用檔案片段擴充 Prometheus 的 scrape 設定,不必改動它自己的模板:</p>
+<p>200 表示健康端點回應；<code>*:9092</code> 表示所有主機介面都在監聽，不能解讀為只有本機可連。</p>
+<h2 id="2-prometheus">步驟 2：讓 Prometheus 抓取並保留標籤<a class="headerlink" href="#2-prometheus" title="Permanent link">&para;</a></h2>
+<p>把 scrape 設定放進 Kolla 支援的片段目錄：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/etc/kolla/config/prometheus/prometheus.yml.d
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/kolla/config/prometheus/prometheus.yml.d/10-pushgateway.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">scrape_configs:</span>
@@ -4445,11 +4335,9 @@
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">        - &#39;10.0.0.4:9092&#39;</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="s">EOF</span>
 </span></code></pre></div>
-<div class="admonition danger">
-<p class="admonition-title"><code>honor_labels: true</code> 不能省</p>
-<p>Prometheus 抓取時<strong>預設會用自己的 <code>job</code> / <code>instance</code> 覆蓋掉指標原本的標籤</strong>。Ceilometer 推上來的資料自帶 <code>job="openstack-telemetry"</code>,被覆蓋掉的話,後面 Day 30 的 CloudKitty 就對不到它要的東西。這一行保住原始標籤。</p>
-</div>
-<h3 id="3-ceilometer">步驟 3:部署 Ceilometer<a class="headerlink" href="#3-ceilometer" title="Permanent link">&para;</a></h3>
+<p><code>honor_labels: true</code> 讓來源的 <code>job</code>／<code>instance</code> 在衝突時優先保留；否則 Prometheus 會使用目標標籤，來源衝突值可能改名為 <code>exported_job</code>／<code>exported_instance</code>。後續 CloudKitty 查 <code>job="openstack-telemetry"</code>，需要這些標籤保持一致。</p>
+<h2 id="3">步驟 3：部署收集器<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
+<p>開啟 Ceilometer 與 publisher，填入自己的 Pushgateway 位址：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="s"># Day 28:計量管線(Ceilometer → Prometheus,不用 Gnocchi)</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="s">enable_ceilometer: &quot;yes&quot;</span>
@@ -4462,39 +4350,44 @@
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>PLAY RECAP: ok=49  changed=18  failed=0
 </span></code></pre></div>
-<p>三個容器起來(central / compute / notification),Prometheus 也認得新目標了:</p>
+<p>部署後確認 central、compute、notification 三個容器，以及 Prometheus 中的 scrape target。原紀錄顯示目標健康：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>job=ceilometer-pushgateway  health=up
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>總 targets: 38
 </span></code></pre></div>
-<h3 id="4">步驟 4:打開通知——第一次驗收會失敗<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
-<p>檢查 Nova 等服務願不願意發通知:</p>
+<p><code>up</code> 只能證明 Prometheus 抓得到 Pushgateway，不能證明每個 VM 的資料都有更新；Pushgateway 仍可能回傳已停止更新的值。</p>
+<h2 id="4">步驟 4：確認通知來源也更新了設定<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>只部署 Ceilometer，不會重新產生 Nova、Cinder、Neutron 的設定。先查來源服務的 <code>oslo_messaging_notifications</code> driver。Nova、Cinder 使用各自的 API 容器；Neutron 的容器名是 <code>neutron_server</code>，不能沿用 <code>${s}_api</code>：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">for</span><span class="w"> </span>s<span class="w"> </span><span class="k">in</span><span class="w"> </span>nova<span class="w"> </span>cinder<span class="w"> </span>neutron<span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$s</span><span class="s2">: &quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="si">${</span><span class="nv">s</span><span class="si">}</span>_api<span class="w"> </span>grep<span class="w"> </span>-A2<span class="w"> </span><span class="s2">&quot;^\[oslo_messaging_notifications\]&quot;</span><span class="w"> </span>/etc/<span class="nv">$s</span>/<span class="nv">$s</span>.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>driver
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">done</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nv">container</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">s</span><span class="si">}</span><span class="s2">_api&quot;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$s</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>neutron<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nv">container</span><span class="o">=</span>neutron_server<span class="p">;</span><span class="w"> </span><span class="k">fi</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$container</span><span class="s2">&quot;</span><span class="w"> </span>grep<span class="w"> </span>-A2<span class="w"> </span><span class="s2">&quot;^\[oslo_messaging_notifications\]&quot;</span><span class="w"> </span>/etc/<span class="nv">$s</span>/<span class="nv">$s</span>.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>driver
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">done</span>
 </span></code></pre></div>
+<p>原紀錄的來源狀態是：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>nova:   driver = noop
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cinder: driver = noop
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>neutron:driver = noop
 </span></code></pre></div>
-<p><strong>全是 <code>noop</code>——沒有人在發通知。</strong> <code>--tags ceilometer</code> 只部署了 Ceilometer 自己,不會回頭去改別人的設定(<a href="#mine-3">地雷 3</a>)。把會發通知的服務全部重跑一次:</p>
+<p><code>noop</code> 表示不發送通知。更新這些來源服務，而不只是接收端：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova,neutron,cinder,glance,keystone,heat
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>PLAY RECAP: ok=190  changed=52  failed=0
 </span></code></pre></div>
-<p>再驗一次:</p>
+<p>更新後再查對應容器中的 driver 與 topics：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>nova-api        driver=messagingv2  topics=notifications
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>cinder-api      driver=messagingv2  topics=notifications
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>neutron-server  driver=messagingv2  topics=notifications
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>glance-api      driver=messagingv2  topics=notifications
 </span></code></pre></div>
-<h3 id="5">步驟 5:產生用量,然後分租戶查<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
-<p>開一台 VM 在 Day 27 建的租戶裡:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+<p><code>messagingv2</code> 會把通知送到訊息系統。這與 Day 34 的 API 稽核日誌是不同設定與用途，不要為了輸出稽核 log 把計量通知來源關掉。</p>
+<h2 id="5-team-a-vm">步驟 5：用 team-a 的 VM 確認標籤<a class="headerlink" href="#5-team-a-vm" title="Permanent link">&para;</a></h2>
+<p>先依 Day 27 清除 application credential 變數與 <code>OS_SYSTEM_SCOPE</code>，再載入 team-a 的 openrc。Day 27 的兩台額度測試 VM 應已刪除；本章需要至少一台的剩餘額度。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">source</span><span class="w"> </span>~/team-a-openrc.sh
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>meter-vm<span class="w"> </span>--flavor<span class="w"> </span>m1.tiny<span class="w"> </span>--image<span class="w"> </span>cirros<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span>--network<span class="w"> </span>team-a-net<span class="w"> </span>--wait
 </span></code></pre></div>
-<p>等一兩分鐘讓輪詢跑過,直接看 Pushgateway 收到什麼:</p>
+<p>等待輪詢產生樣本，再看 Pushgateway 原始資料：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:9092/metrics<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;^#&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>compute_instance_booting_time{...} 13.29833
@@ -4503,8 +4396,8 @@
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>disk_device_read_requests{...} 1035
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>disk_device_write_bytes{...} 7.303168e+07
 </span></code></pre></div>
-<p>指標叫 <strong><code>cpu</code></strong>,不是 <code>ceilometer_cpu</code>——<strong>名稱沒有服務前綴</strong>,照著猜會什麼都查不到(<a href="#mine-4">地雷 4</a>)。</p>
-<p>最後是今天真正的驗收。<strong>這一條查詢就是 Day 30 帳單的全部基礎</strong>:</p>
+<p>這裡的 <code>cpu</code> 是累積 CPU 時間讀數，不是百分比。<code>project_id</code> 是租戶歸屬，<code>resource_id</code> 是 VM；之後要查指定租戶時，用自己的 team-a project ID。指標名稱沒有 <code>ceilometer_</code> 前綴。</p>
+<p>先按專案計算目前看見的 cpu 時間序列數：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^prometheus_password:&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>--get<span class="w"> </span>http://10.0.0.4:9091/api/v1/query<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--data-urlencode<span class="w"> </span><span class="s2">&quot;query=count by (project_id) (cpu)&quot;</span>
@@ -4513,147 +4406,87 @@
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>project_id=37cdb341…(Trove)   → 1 台
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>project_id=d2b25822…(team-a)  → 1 台      ← Day 27 建的租戶
 </span></code></pre></div>
-<p>同一條查詢在 Prometheus 的畫面上長這樣——右上角 <code>Result series: 3</code>,三個 <code>project_id</code> 各一台:</p>
-<p><img alt="Prometheus 執行 count by (project_id) (cpu),回傳三個租戶各一台" src="../../assets/screenshots/day28-prometheus-perproject.png" /></p>
-<p><strong>雲說得出每個租戶各有幾台機器了。</strong> 縮到單一租戶也對:</p>
+<p><img alt="Prometheus依project_id分組計算cpu時間序列，原紀錄列出三組結果" src="../../assets/screenshots/day28-prometheus-perproject.png" /></p>
+<p>這個結果代表各專案有幾條符合條件的 <code>cpu</code> 序列。只有每台 VM 對應一條序列、資料沒有重複且已刪資源已清理時，才可把它當 VM 台數。下面再縮到單一 project；命令內的 UUID 請替換成自己的 team-a ID：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>-u<span class="w"> </span>admin:<span class="nv">$PW</span><span class="w"> </span>--get<span class="w"> </span>http://10.0.0.4:9091/api/v1/query<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>--data-urlencode<span class="w"> </span><span class="s1">&#39;query=cpu{project_id=&quot;d2b258226e6b4d4493d93b5411726c97&quot;}&#39;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>resource=83b15110-76b4-4f3b-9…   cpu=3.16e+09 ns
 </span></code></pre></div>
-<p>那個 <code>project_id</code> label 就是 Sprint 5 後半段的命脈:<strong>它讓 Day 29 的告警圈得出範圍、讓 Day 30 的帳單分得出租戶——全部不需要 Gnocchi。</strong></p>
-<div class="admonition question">
-<p class="admonition-title">為什麼今天沒有主控台畫面?</p>
-<p>前幾天每個服務都有 Skyline 或 Horizon 的頁面可看,今天沒有——<strong>因為 Ceilometer 根本沒有介面</strong>。</p>
-<p>這不是 kolla 沒開,是這個服務就沒有面板。看 kolla 的 horizon role 怎麼列各服務就懂了:</p>
+<p>這筆資料確認了 VM 讀數與專案標籤的連結。它還沒有證明資料完整、沒有重複或可直接用於收費。</p>
+<h2 id="ceilometer">在哪裡觀察 Ceilometer<a class="headerlink" href="#ceilometer" title="Permanent link">&para;</a></h2>
+<p>本課沒有部署 Ceilometer 的網頁面板。Kolla 的 Horizon 設定中，Ceilometer 這一列只有政策檔，其他服務才有面板開關：</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;ceilometer&quot;</span><span class="p p-Indicator">,</span><span class="nt"> enabled</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">enable_ceilometer_horizon_policy_file</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w">   </span><span class="c1"># 只有政策檔</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cloudkitty&quot;</span><span class="p p-Indicator">,</span><span class="nt"> enabled</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">enable_horizon_cloudkitty</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w">               </span><span class="c1"># 有面板</span>
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;designate&quot;</span><span class="p p-Indicator">,</span><span class="nt">  enabled</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{</span><span class="nv"> </span><span class="s">enable_horizon_designate</span><span class="nv"> </span><span class="s">}}&quot;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w">                </span><span class="c1"># 有面板</span>
 </span></code></pre></div>
-<p>Ceilometer 那列只有<strong>政策檔</strong>,沒有面板;<a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 的 Aodh 更是連一列都沒有。</p>
-<p><strong>這其實很合理</strong>:Ceilometer 是一隻沒有 API 的背景收集器,它的產出就是 Prometheus 裡的時間序列——<strong>上面那張 Prometheus 畫面就是它的介面</strong>。真正給人看的畫面在 <a href="../sprint5-day30-cloudkitty-rating/">Day 30</a>:CloudKitty 把這些數字變成帳單之後,Horizon 才有東西可以顯示。</p>
-</div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Pushgateway</td>
-<td><code>:9092</code> 健康檢查回 200,與 Prometheus 的 9091 不衝突</td>
-<td>兩者並存</td>
-</tr>
-<tr>
-<td>Prometheus 目標</td>
-<td><code>ceilometer-pushgateway</code> 這個 job 為 <code>up</code></td>
-<td>up(總 targets 38)</td>
-</tr>
-<tr>
-<td>Ceilometer 容器</td>
-<td>central / compute / notification 全起來</td>
-<td>符合</td>
-</tr>
-<tr>
-<td><strong>通知已開</strong></td>
-<td>nova/cinder/neutron 的 driver 為 <code>messagingv2</code></td>
-<td>重跑後符合(見地雷 3)</td>
-</tr>
-<tr>
-<td>資料進來</td>
-<td>Pushgateway <code>/metrics</code> 有 <code>job="openstack-telemetry"</code> 的指標</td>
-<td>48 行</td>
-</tr>
-<tr>
-<td><strong>分租戶計量</strong></td>
-<td><code>count by (project_id) (cpu)</code> 查得到各租戶</td>
-<td>3 個 project,含 team-a</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:kolla 的 docker 沒有 iptables,<code>-p</code> 是死的<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:第一次用標準寫法起 Pushgateway:</p>
+<p>因此，操作時看來源服務、Ceilometer 日誌、Pushgateway 原始資料，再到 Prometheus 查詢。Day 30 才會透過 CloudKitty 查看費用計算結果。</p>
+<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">容器 Up，9092 健康檢查卻連不上<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>下列是此環境失敗的埠對映方式，不要跟步驟 1 同時執行：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>pushgateway<span class="w"> </span>-p<span class="w"> </span><span class="m">10</span>.0.0.4:9092:9091<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span>quay.io/prometheus/pushgateway:latest
 </span></code></pre></div>
-<p>容器 <code>Up</code>,健康檢查卻是:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>pushgateway :9092 → HTTP 000
 </span></code></pre></div>
-<p><strong>根因</strong>:kolla 的 docker daemon 設了 <strong><code>iptables: false</code> + <code>bridge: none</code></strong>。埠映射(<code>-p</code>)靠的正是 docker 寫 iptables 規則——這兩個關掉,<strong><code>-p</code> 完全失效</strong>,而且不會報錯,只是沒人在聽。</p>
-<p><strong>解法</strong>:跟 kolla 自己的容器一樣走主機網路。</p>
+<p><strong>原因</strong>：本課 Docker 的 <code>iptables: false</code> 與 <code>bridge: none</code> 使這條對映路徑不可用。<strong>修法</strong>：先移除同名失敗容器，再採主機網路版本；不要直接重跑而留下名稱衝突：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>pushgateway<span class="w"> </span>--restart<span class="w"> </span>unless-stopped<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span>quay.io/prometheus/pushgateway:latest<span class="w"> </span>--web.listen-address<span class="o">=</span>:9092
 </span></code></pre></div>
-<p><strong>教訓</strong>:<strong>在 kolla 主機上自己跑容器,一律 <code>--network host</code></strong>,埠用參數指定而不是用 <code>-p</code> 映射。這是 kolla 的網路設計(它把網路完全交給主機)必然的長尾效應,在這台機器上會一犯再犯。</p>
-<h3 id="mine-2">地雷 2:Pushgateway 預設 9091,正好撞上 kolla 的 Prometheus<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p>已在步驟 1 預拆。Pushgateway 官方預設埠是 <strong>9091</strong>,而 <a href="../sprint4-day21-observability/">Day 21</a> 記過 kolla 把 Prometheus 放在 <strong>9091</strong>(不是慣例的 9090)——兩個 9091 對撞。</p>
-<p>這是本課程的老主旋律了:Day 14 的監控套件、Day 15 的 port 80、今天的 9091。<strong>在同一台機器上堆越多服務,「預設埠相撞」就從意外變成常態</strong>——裝任何新東西之前,先 <code>ss -tlnp</code> 看一眼。</p>
-<h3 id="mine-3">地雷 3:<code>--tags ceilometer</code> 不會回頭打開別人的通知<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:Ceilometer 三個容器全部健康、log 沒有任何錯誤、pollster 也確實在跑,但通知那條路一筆資料都沒有。查下去發現 nova/cinder/neutron 的 <code>oslo_messaging_notifications</code> driver 全是 <code>noop</code>。</p>
-<p><strong>根因</strong>:Ceilometer 的通知來源是<strong>別的服務</strong>發出來的訊息。<code>enable_ceilometer</code> 會讓 kolla 在<strong>下次部署那些服務時</strong>把它們的 driver 改成 <code>messagingv2</code>——但 <code>--tags ceilometer</code> 只跑 Ceilometer 自己的 role,<strong>那些服務根本沒被碰到</strong>,設定檔停在舊版。</p>
-<p><strong>解法</strong>:把所有會發通知的服務重跑一次。</p>
+<p>主機網路仍需檢查監聽位址、埠衝突與防火牆。</p>
+<h3 id="mine-2">Pushgateway 與 Prometheus 使用同一個埠<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p><strong>症狀</strong>：服務無法綁定 9091。<strong>原因</strong>：Pushgateway 預設埠與本課 Kolla Prometheus 相同。<strong>修法</strong>：依步驟 1 使用 9092，並同步修改 Ceilometer publisher 與 Prometheus scrape target。</p>
+<h3 id="mine-3">收集器正常，卻沒有服務事件<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p><strong>原因</strong>：來源服務仍使用 <code>noop</code>，僅部署 Ceilometer 沒有更新它們。<strong>修法</strong>：檢查來源設定後，執行步驟 4 的部署範圍：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>nova,neutron,cinder,glance,keystone,heat
 </span></code></pre></div>
-<p><strong>教訓</strong>:這是 <a href="../sprint4-day22-upgrade-backup/">Day 22</a> 那顆「<code>--tags</code> 的檢查盲區」的同族,而且更陰險——Day 22 那顆至少會在部署時失敗,這顆<strong>部署全綠、服務全健康、log 全乾淨,只是資料默默不來</strong>。</p>
-<p><strong>通則</strong>:當某個開關的效果<strong>跨越服務邊界</strong>(A 服務開了,要 B 服務配合),<code>--tags A</code> 一定不夠。開之前先問一句:<strong>這個 flag 會改到誰的設定檔?</strong></p>
-<h3 id="mine-4">地雷 4:指標名稱沒有 <code>ceilometer_</code> 前綴<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:VM 開好了、pollster 在跑、pipeline 的 publisher 也對:</p>
+<p>之後再確認 <code>messagingv2</code>；不要只以部署成功判定通知已送達。</p>
+<h3 id="mine-4">搜尋 ceilometer_ 沒有指標<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
+<p>publisher 設定可能已正確：</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>publishers:
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    - prometheus://10.0.0.4:9092/metrics/job/openstack-telemetry
 </span></code></pre></div>
-<p>但這樣查,連續十次都是 0:</p>
+<p>錯誤的名稱假設卻會查到零筆：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:9092/metrics<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;^ceilometer_&quot;</span>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>0
 </span></code></pre></div>
-<p><strong>根因</strong>:<strong>問題出在 grep,不在管線。</strong> Ceilometer 推出來的指標就叫 <code>cpu</code>、<code>memory_usage</code>、<code>disk_device_read_bytes</code>,<strong>沒有任何前綴</strong>。管線從頭到尾都是好的,只有我的假設是錯的。</p>
-<p><strong>解法</strong>:別假設名字,把原始輸出直接看一遍:</p>
+<p><strong>修法</strong>：先查看原始資料，再以實際名稱與 labels 查詢：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:9092/metrics<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;^#&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head
 </span></code></pre></div>
-<p><strong>教訓</strong>:這顆的教訓不是關於 Ceilometer,是關於<strong>除錯姿勢</strong>。「查不到」有兩種可能:東西不在,或<strong>你問錯問題</strong>。而錯的問題問十次還是錯的。<strong>當一個查詢回傳空值時,先確認那個查詢本身是對的</strong>——最快的方法是把過濾條件全部拿掉,看看原始資料長什麼樣。這一招在 <a href="../sprint5-day29-aodh-autoscaling/#mine-4">Day 29</a> 會再救一次命。</p>
-<h3 id="mine-5">地雷 5:Pushgateway 永遠記得已經刪掉的機器<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:Prometheus 裡有一筆 <code>vcpus</code> 指標,拿它的 <code>resource_id</code> 去查:</p>
+<h2 id="mine-5">已刪 VM 的讀數為什麼還在<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h2>
+<p>原紀錄用一筆指標的 resource ID 查 VM，目前認證身分查不到這個資源：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>a0500345-2306-4b09-90d2-82b2b7c209b9
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>No Server found for a0500345-2306-4b09-90d2-82b2b7c209b9
 </span></code></pre></div>
-<p><strong>這台 VM 早就被刪了,它的指標卻還在,而且會一直在。</strong></p>
-<p><strong>根因</strong>:Pushgateway 的設計就是<strong>保存最後一次推送的值,直到被覆蓋或明確刪除</strong>。它是為「跑完就消失的批次任務」設計的——任務死了,值還要留著給 Prometheus 抓。用在計量上,這個特性變成:<strong>VM 刪掉之後,它最後的讀數永遠留在那裡</strong>。</p>
-<p><strong>影響</strong>:對 <a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 的帳單來說,這代表<strong>可能對不存在的機器持續收錢</strong>。本課環境的帳單之所以沒被汙染,是因為 CloudKitty 用 <code>max_over_time(...[1h])</code> 這種<strong>帶時間窗口</strong>的查詢——窗口滑過去之後,舊資料就落在窗外了。但如果你用的是 instant query(<code>count(cpu)</code> 這種),幽靈機器會直接算進去。</p>
-<p><strong>教訓</strong>:這是整條管線最根本的設計債,而它來自一個<strong>用途錯配</strong>——Prometheus 官方文件明確說 Pushgateway 不該拿來當推送式監控的通用轉接頭,而 kolla 的 <code>enable_ceilometer_prometheus_pushgateway</code> 就是這樣用的。這不是 kolla 的錯,是 push 型計量硬要接上 pull 型監控的必然代價,也正是官方推 <strong>Aetos</strong> 想解決的問題之一。</p>
-<p><strong>實務上要記得</strong>:計費查詢一律帶時間窗口,別用 instant query;定期清理 Pushgateway(<code>DELETE /metrics/job/openstack-telemetry/...</code>)也是一種辦法,但要小心別刪到還在用的。</p>
-<h3 id="mine-6">地雷 6:無認證、可寫的計費輸入端點<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
-<p><strong>問題</strong>:步驟 1 起的 Pushgateway 跑在 <strong>host network 的 <code>:9092</code>、沒有任何認證</strong>,而它正是 <a href="../sprint5-day30-cloudkitty-rating/">Day 30</a> 帳單的資料來源。Pushgateway 的 API 本來就是「誰都能 POST 一筆指標進去」——放在計費鏈的入口,就成了破口:</p>
+<p><code>No Server found</code> 也可能是專案範圍或權限造成，不能單靠這一行判定 VM 已刪除。先以有權查看該專案的管理員核對正確 UUID 與歸屬，再比對實際刪除前後的記錄。以下說明的是已確認刪除時的資料生命週期。</p>
+<p>Pushgateway 會持續曝露已保存的序列，直到對應資料被明確刪除或替換。Prometheus 每次 scrape 都會把仍曝露的值記成新的樣本，因此「VM 不再推送」和「Prometheus 不再取得樣本」是兩件事。</p>
+<p>圖中最後一條箭頭會持續發生，這正是只加時間窗口不能解決的原因：</p>
+<p><img alt="VM刪除後Ceilometer停止更新，但Pushgateway仍保存最後值；Prometheus繼續抓取並產生新時間戳樣本" src="../../assets/diagrams/os-s5d28-stale.svg" /></p>
+<p><code>max_over_time(...[1h])</code> 仍會看見窗口內新抓到的舊值；它不會自動排除已刪 VM。<code>count(cpu)</code> 也可能把它算進台數。不能據此聲稱 Day 30 帳單已避免這項誤差。</p>
+<p>要把這份資料用於費用計算，必須另外管理資源刪除與 Pushgateway grouping key 的同步，並核對資料的新鮮度與租戶清單。清理前先確認 grouping key 對應範圍，避免刪到仍存在的 VM；本課沒有完成自動同步與刪除後停止計費的端到端驗證。<a href="https://github.com/prometheus/pushgateway#about-timestamps">Pushgateway 官方說明</a>明確區分推送時間與抓取樣本的時間。</p>
+<h3 id="mine-6">無認證的計量入口可被其他來源讀寫<a class="headerlink" href="#mine-6" title="Permanent link">&para;</a></h3>
+<p>步驟 1 的服務沒有認證且監聽 <code>*:9092</code>。只要網路可達，來源就可能讀取租戶標籤或寫入指標；單機部署也不自動等於只有本機可達。這些數值會影響告警與費用，必須確認寫入者可信。</p>
+<p>要限制的來源包括需要寫入的 Ceilometer 與需要讀取的 Prometheus；可用網路限制及具認證的代理建立邊界。本課未部署這套完整保護，也沒有驗證跨租戶的讀寫隔離，不能把實驗設定直接視為計費平台的完成配置。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>可讀</strong>:任何搆得到這個埠的人 <code>curl .../metrics</code> 就拿到<strong>全租戶的用量</strong>(哪個 project 開了幾台、跑多久),連 <code>resource_id</code>、<code>project_id</code> 都在裡面。</li>
-<li><strong>可寫</strong>:同一個埠能 <code>POST</code> 假指標——<strong>低報自己的用量少付錢、灌爆對手的帳單、注入根本不存在的幽靈機器</strong>。帳單是拿這些數字積分出來的,汙染源頭等於偽造帳單。</li>
+<li>Pushgateway target 是 up，但沒有 VM 的新讀數。你會依資料路徑先查哪幾處？</li>
+<li>某台 VM 已刪除一週，<code>max_over_time(cpu[1h])</code> 卻仍有值。為什麼縮短窗口不一定有效？</li>
+<li>Prometheus 已有密碼，但 Pushgateway 沒有。這是否足以保護計量資料？還要允許哪些來源連線？</li>
 </ul>
-<p><strong>為什麼 lab 沒事、多節點會出事</strong>:單機時 <code>10.0.0.4:9092</code> 只有本機搆得到;一旦多節點、或計算節點與租戶網路可路由到它,曝險面就打開了。對照 <a href="../sprint4-day21-observability/">Day 21</a>:kolla 自己的 Prometheus 是有 basic auth 的,這個轉接頭卻沒有——這個不對稱課程先前沒點破。</p>
-<p><strong>修法</strong>:把 Pushgateway 綁到只有 Prometheus 搆得到的內部位址、或擋在有認證的反向代理後面;pin 住 image 版本(見步驟 1 的 note);多節點部署前把「誰能讀/寫這條計費鏈」當成威脅模型的一部分。這是 <a href="../sprint5-day27-multi-tenant-governance/">Day 27 <code>[oslo_limit]</code> 手寫覆寫</a>、<a href="../sprint5-day32-full-tls/">Day 32 VIP unit</a>、<a href="../sprint5-day34-cadf-audit/">Day 34 config.json 手改</a> 之外,另一筆「lab 便宜省略、prod 要補」的債。</p>
-<h2 id="_5">帶得走的東西<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>Ceilometer 將用量和專案歸屬一起送出，Prometheus 才能按租戶查詢。驗證資料路徑時，來源通知、publisher、scrape 與 labels 都要確認。資料到達之後仍要檢查生命週期：Pushgateway 保留的舊值會被持續抓成新樣本，時間窗口不能代替資源刪除同步，也不能單憑有數字就認定可以正確收費。</p>
+<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li><strong>監控與計量回答的是不同問題,差別在「帶不帶身分」。</strong> exporter 知道機器上有 12 顆 VM,但不知道哪顆是誰的;租戶歸屬只有 OpenStack 自己說得出來,這就是 Ceilometer 存在的理由。</li>
-<li><strong>當一個開關的效果跨越服務邊界,<code>--tags A</code> 一定不夠。</strong> 開之前先問:這個 flag 會改到誰的設定檔?改到別人的,就要把別人也重跑一次。</li>
-<li><strong>查詢回空有兩種可能:東西不在,或你問錯問題。</strong> 先把過濾條件全部拿掉看原始資料,再回頭修查詢——這比連問十次同一個錯問題快。</li>
-<li><strong>Pushgateway 記得所有推送過的東西,包括已經不存在的資源。</strong> push 型計量硬接 pull 型監控,這是必然的代價;計費查詢一律帶時間窗口。</li>
-<li><strong>背景服務沒有畫面是設計,不是缺漏。</strong> 計量給機器讀,帳單才給人看。</li>
+<li><a href="https://docs.openstack.org/ceilometer/2025.1/">Ceilometer 2025.1</a>：polling、通知與 publisher。</li>
+<li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html">Kolla 監控與日誌指南</a>：部署設定的入口。</li>
+<li><a href="https://prometheus.io/docs/practices/pushing/">Pushgateway 適用情境</a>：保存序列與資源生命週期不同的限制。</li>
+<li><a href="https://github.com/prometheus/pushgateway#about-timestamps">Pushgateway 時間戳</a>：推送、曝露與 scrape 的區別。</li>
 </ul>
-<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
-<ul>
-<li><strong><a href="https://docs.openstack.org/ceilometer/2025.1/">Ceilometer 官方文件</a></strong> —— 計量、pipeline、publisher 的完整概念;<code>polling.yaml</code> 與 <code>pipeline.yaml</code> 的權威說明。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html">Kolla-Ansible 的 Ceilometer 指南</a></strong> —— 本章 globals 設定的官方對照。</li>
-<li><strong><a href="https://prometheus.io/docs/practices/pushing/">Prometheus Pushgateway:什麼時候不該用它</a></strong> —— 官方親自說明 Pushgateway 的正確用途與陷阱;本章<a href="#mine-5">地雷 5</a> 的理論出處。</li>
-<li><strong><a href="https://docs.openstack.org/aetos/latest/">Aetos(遙測的下一步)</a></strong> —— 在 Prometheus 前面加租戶隔離與 Keystone 認證的官方代理;<a href="../sprint4-day26-sprint5-preview/">Day 26</a> 判定「方向已定」的證據之一。</li>
-</ul>
-<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
-<p>雲說得出誰用了多少了。<a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 讓這些數字<strong>產生後果</strong>:Aodh 盯著它們,超標時叫 Heat 自己加機器——順便補完 Day 5 沒教的 autoscaling。</p>
+<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint5-day29-aodh-autoscaling/">Day 29</a> 讓 Aodh 查這些序列，並在條件成立時通知 Heat 調整 VM 數量。告警條件也必須使用正確租戶與有效資料，否則會對錯誤的讀數採取動作。</p>
 
 
 

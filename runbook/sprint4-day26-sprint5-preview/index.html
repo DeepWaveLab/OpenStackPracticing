@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-26-sprint-5" class="md-skip">
+        <a href="#day-26sprint-5" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1186,7 +1186,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1438,18 +1438,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從「敢動」到「當生意經營」
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#day-2735" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        預定課表(Day 27–35)
+        從租戶開始，再解讀用量
       
     </span>
   </a>
@@ -1460,49 +1449,43 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        三個先講清楚的設計決定
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="三個先講清楚的設計決定">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prometheus-gnocchi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        為什麼計量儲存用 Prometheus,不是教科書上的 Gnocchi
+        各章要回答的問題
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
+  <a href="#prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼繼續使用 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#horizon" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼帳單畫面要回 Horizon 看
+        為什麼有些畫面仍使用 Horizon
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼多機環境只回來一天
+        哪一段需要多節點環境
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1510,7 +1493,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        查資料時會撞到的過期名字
+        查資料前先確認版本
       
     </span>
   </a>
@@ -1519,6 +1502,39 @@
       
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1718,7 +1734,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1746,7 +1762,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1774,7 +1790,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1894,7 +1910,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -3935,18 +3951,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        從「敢動」到「當生意經營」
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#day-2735" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        預定課表(Day 27–35)
+        從租戶開始，再解讀用量
       
     </span>
   </a>
@@ -3957,49 +3962,43 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        三個先講清楚的設計決定
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="三個先講清楚的設計決定">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#prometheus-gnocchi" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        為什麼計量儲存用 Prometheus,不是教科書上的 Gnocchi
+        各章要回答的問題
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
+  <a href="#prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        為什麼繼續使用 Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#horizon" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼帳單畫面要回 Horizon 看
+        為什麼有些畫面仍使用 Horizon
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        為什麼多機環境只回來一天
+        哪一段需要多節點環境
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -4007,7 +4006,7 @@
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        查資料時會撞到的過期名字
+        查資料前先確認版本
       
     </span>
   </a>
@@ -4016,6 +4015,39 @@
       
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4042,177 +4074,86 @@
 
 
 
-<h1 id="day-26-sprint-5">Day 26: 下一步的地圖——Sprint 5 預告<a class="headerlink" href="#day-26-sprint-5" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>Sprint 3 的雲<strong>會動</strong>,Sprint 4 的雲<strong>敢動</strong>。但有一種問題,前 25 天完全沒碰過:這朵雲一個月燒多少錢?哪個部門用掉的?憑什麼收他這個價?客戶問 SLA 怎麼回答?稽核員來了拿什麼給他看?——這些是把雲<strong>當成生意經營</strong>的問題,也是 Sprint 5 的全部內容。</p>
-</blockquote>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
-<ul>
-<li><strong>Day 13–24</strong>:動手,雲長出 18 個服務、變成多節點、敢升級敢擴張。</li>
-<li><strong>Day 25</strong>:Sprint 4 總結。</li>
-<li><strong>Day 26(本篇)</strong>:下一段的地圖。不動手,講清楚 Sprint 5 要學什麼、為什麼是這些。</li>
-</ul>
-</div>
-<h2 id="_1">從「敢動」到「當生意經營」<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>一朵技術上完美的雲,放到企業裡馬上會被問四個問題:</p>
+<h1 id="day-26sprint-5">Day 26：Sprint 5 預告——用量、費率與操作責任<a class="headerlink" href="#day-26sprint-5" title="Permanent link">&para;</a></h1>
+<p>兩個部門開始共用這朵雲之後，問題會變成：資源算在哪個專案名下、每個部門能用多少、費用怎麼計算，以及發生異常時該從哪份紀錄追查。Sprint 4 提供了部署與維護的基礎；Sprint 5 接著處理使用者、資源歸屬與操作責任。</p>
+<h2 id="_1">從租戶開始，再解讀用量<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>先有清楚的 project 與角色，後續用量才有歸屬。<strong>計量（metering）</strong> 收集資源使用資料；<strong>計價（rating）</strong> 依規則把資料換算成金額。計價結果仍不等於完整收款與帳務系統，這個差異會在 CloudKitty 章裡說明。</p>
+<p>另外一條路徑是服務維護：用告警觸發動作、在特定故障下復原 VM，再處理 API 加密與登入身分。<strong>SLA</strong> 是對可用性等服務條件的約定，不能只因部署了自動復原工具就宣稱已達成。</p>
+<p>下圖呈現章節的依賴順序：</p>
+<p><img alt="租戶與權限先行，再學計量計價、復原加密與企業身分稽核" src="../../assets/diagrams/os-s4d26-roadmap.svg" /></p>
+<p>Day 35 會回顧這些能力的適用範圍，也練習查核官方專案與版本資訊。</p>
+<h2 id="_2">各章要回答的問題<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>章節</th>
+<th>要處理的問題</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../sprint5-day27-multi-tenant-governance/">Day 27：多租戶治理</a></td>
+<td>使用者屬於哪個 project？角色、application credential 與額度如何配合？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day28-ceilometer-metering/">Day 28：Ceilometer 計量</a></td>
+<td>VM 用量怎麼收集，又如何進入 Prometheus？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day29-aodh-autoscaling/">Day 29：Aodh 告警與擴縮</a></td>
+<td>數值達到條件後，告警怎麼觸發 Heat？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day30-cloudkitty-rating/">Day 30：CloudKitty 計價</a></td>
+<td>用量、單位與費率如何形成可解釋的計價結果？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day31-masakari-ha/">Day 31：Masakari 復原</a></td>
+<td>VM 程序故障與 compute 故障，各需要哪些偵測及復原前提？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day32-full-tls/">Day 32：TLS</a></td>
+<td>哪段連線受到加密，用戶端要信任哪個 CA？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day33-keycloak-federation/">Day 33：企業身分</a></td>
+<td>Keycloak 身分如何透過 Keystone federation 對應到角色？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day34-cadf-audit/">Day 34：CADF 稽核</a></td>
+<td>事件如何描述誰對哪個資源做了什麼，哪些操作尚未涵蓋？</td>
+</tr>
+<tr>
+<td><a href="../sprint5-day35-sprint5-recap/">Day 35：總結</a></td>
+<td>如何依使用情境選擇這些能力，並查核專案狀態？</td>
+</tr>
+</tbody>
+</table>
+<h2 id="prometheus">為什麼繼續使用 Prometheus<a class="headerlink" href="#prometheus" title="Permanent link">&para;</a></h2>
+<p>Day 21 已部署 Prometheus，接下來會沿用它，讓計量、告警與計價的資料路徑能相互對照。這是本課選用的路線，不能據此推論 Gnocchi 在所有部署中都已被取代。遇到其他教材時，要核對它使用的 Ceilometer publisher、Aodh 告警型別與 CloudKitty collector，不能只按專案名稱替換元件。</p>
+<p>本課也不把直接開放 Prometheus API 當作租戶隔離。資料收集與存取控制是兩個不同問題，查詢入口要依實際權限設計。</p>
+<h2 id="horizon">為什麼有些畫面仍使用 Horizon<a class="headerlink" href="#horizon" title="Permanent link">&para;</a></h2>
+<p>前面的 Skyline 與 Horizon 會繼續並存。CloudKitty 的操作示範使用 Horizon 外掛；選擇介面時看該版本支援的功能，而不是把兩個介面當成完全可互換。CLI 與 API 則用來確認畫面背後的資源與設定。</p>
+<h2 id="_3">哪一段需要多節點環境<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>多數章節沿用單機 lab。Day 31 的 compute 故障復原需要另一台可接收 VM 的 compute，因此回到 Day 23–24 的獨立多節點環境。兩邊的 endpoint、openrc 與資源不能混用；每章會先說明操作落點。</p>
+<h2 id="_4">查資料前先確認版本<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>OpenStack 專案可能更名、移出治理範圍，或在不同系列中採用不同整合方式。先看課程使用的 2025.1 文件，再查目標版本的 release notes、官方治理頁與程式碼活動。某個專案不在 OpenStack 治理名單，不等於程式已無人維護；反過來，找到舊教學也不代表仍適用。</p>
+<h2 id="_5">想一想<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>誰用了多少?</strong>——計量(metering)</li>
-<li><strong>怎麼換算成錢?</strong>——計費(rating/chargeback)</li>
-<li><strong>對使用者承諾什麼?</strong>——SLA 與自動復原</li>
-<li><strong>對稽核員交代什麼?</strong>——身分治理、加密、稽核軌跡</li>
+<li>計量資料沒有 project 歸屬時，即使能畫出 CPU 圖表，還缺什麼才能分配部門費用？</li>
+<li>自動復原演練通過，是否足以直接承諾某個 SLA？還需要量測哪些範圍？</li>
 </ol>
-<p>Sprint 5 用 <strong>9 天、四個階段</strong>回答這四個問題:</p>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段一 · 治理基礎</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 27 · 先有租戶結構,才有分帳對象</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/keystone.png" width="28" style="display:block;"><span><b>27</b>&nbsp;多租戶治理與額度</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段二 · 計量與反應</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 28–29 · 看見用量,然後讓雲自己反應</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/telemetry.png" width="28" style="display:block;"><span><b>28</b>&nbsp;計量管線(Ceilometer)</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/heat.png" width="28" style="display:block;"><span><b>29</b>&nbsp;告警與自動擴縮(Aodh)</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段三 · 計費</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 30 · 用量變成帳單</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/cloudkitty.png" width="28" style="display:block;"><span><b>30</b>&nbsp;計費(CloudKitty)</span></div>
-  </div>
-</div>
-<div style="text-align:center; color:var(--md-default-fg-color--light); line-height:1.6; font-size:1.1em;">▼</div>
-<div style="border:1px solid var(--md-default-fg-color--lightest); border-radius:10px; padding:14px 18px; background:var(--md-code-bg-color);">
-  <strong>階段四 · SLA 與合規</strong>&ensp;<span style="color:var(--md-default-fg-color--light); font-size:.85em;">Day 31–34 · 自癒、加密、企業身分、稽核</span>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><img src="../../assets/mascots/masakari.png" width="28" style="display:block;"><span><b>31</b>&nbsp;SLA 與自癒(Masakari)</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🔐</span><span><b>32</b>&nbsp;全站 TLS</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">🪪</span><span><b>33</b>&nbsp;企業身分 SSO</span></div>
-    <div style="display:flex; align-items:center; gap:7px; border:1px solid var(--md-default-fg-color--lightest); border-radius:20px; padding:5px 14px 5px 8px; background:var(--md-default-bg-color);"><span style="font-size:22px; line-height:1;">📋</span><span><b>34</b>&nbsp;稽核軌跡(CADF)</span></div>
-  </div>
-</div>
-
-<p style="text-align:center;"><em>最後以 Day 35 總結收尾——含一堂「怎麼判斷 OpenStack 專案生死」的版圖課。</em></p>
-
-<h2 id="day-2735">預定課表(Day 27–35)<a class="headerlink" href="#day-2735" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Day</th>
-<th>主題</th>
-<th>一句話</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="../sprint5-day27-multi-tenant-governance/">27</a> ✅</td>
-<td><strong>多租戶治理與額度</strong></td>
-<td>Keystone domains 分層、application credentials、<strong>unified limits(2025.1 剛轉正)</strong>、新一代權限模型現況</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day28-ceilometer-metering/">28</a> ✅</td>
-<td><strong>計量管線(Ceilometer)</strong></td>
-<td>誰開了幾台 VM、用了幾 GB——資料流進 Day 21 建好的 Prometheus;Gnocchi 為什麼繞過,證據攤給你看</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day29-aodh-autoscaling/">29</a> ✅</td>
-<td><strong>告警與自動擴縮(Aodh)</strong></td>
-<td>Aodh 盯著 Prometheus 的數字,Heat 接到告警自己長 VM——收 Day 5 的伏筆</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day30-cloudkitty-rating/">30</a> ✅</td>
-<td><strong>計費(CloudKitty)</strong></td>
-<td>訂價規則、算錢、出報表——兩個租戶各拿各的帳單;帳單畫面在 Horizon(原因見設計決定)</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day31-masakari-ha/">31</a> ✅</td>
-<td><strong>SLA 與自癒(Masakari)</strong></td>
-<td>回多機環境一天:VM 程序死掉自動重啟、compute 整台掛掉自動搬家</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day32-full-tls/">32</a> ✅</td>
-<td><strong>全站 TLS</strong></td>
-<td>所有 API 換上 https;內建 CA 為什麼不能上生產</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day33-keycloak-federation/">33</a> ✅</td>
-<td><strong>企業身分 SSO(Federation)</strong></td>
-<td>公司的 Keycloak 帳號直接登入這朵雲——Keystone 聯邦身分與角色對應</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day34-cadf-audit/">34</a> ✅</td>
-<td><strong>稽核軌跡(CADF)</strong></td>
-<td>「誰在何時對哪個資源做了什麼」——稽核事件接回 Day 21 的集中式 log</td>
-</tr>
-<tr>
-<td><a href="../sprint5-day35-sprint5-recap/">35</a> ✅</td>
-<td><strong>Sprint 5 總結 + 版圖課</strong></td>
-<td>前後對比;怎麼判斷一個 OpenStack 專案的生死——用四個真實案例教你驗屍</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_2">三個先講清楚的設計決定<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="prometheus-gnocchi">為什麼計量儲存用 Prometheus,不是教科書上的 Gnocchi<a class="headerlink" href="#prometheus-gnocchi" title="Permanent link">&para;</a></h3>
-<p>翻開任何一本 OpenStack 教材,遙測這一章都是同一組三件套:Ceilometer 蒐集、Gnocchi 儲存、Aodh 告警。課表裡卻只見前後兩位,中間的儲存層不見了——因為這條管線的中段,上游已經換人:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph OLD["教科書路線(2015 年代)"]
-        direction LR
-        C1["Ceilometer&lt;br/&gt;蒐集"] --&gt; G["Gnocchi&lt;br/&gt;儲存"] --&gt; A1["Aodh&lt;br/&gt;告警"]
-    end
-    subgraph NEW["官方現行路線(2025+)"]
-        direction LR
-        C2["Ceilometer&lt;br/&gt;蒐集"] --&gt; P["Prometheus&lt;br/&gt;儲存"] --&gt; A2["Aodh&lt;br/&gt;告警"]
-    end
-    OLD -.-&gt;|"儲存層換人了"| NEW</code></pre>
-<p>Ceilometer 與 Aodh 都還照著半年一版的節奏正常前進,但 Gnocchi 在 2017 年離開 OpenStack 官方治理後逐漸沉寂——最新版本距今近一年,主流發行版的新一代遙測架構也已經把它排除在外(截至 2026-07)。取而代之的儲存層就是 Prometheus:Aodh 這幾年的主力開發正是 Prometheus 告警,CloudKitty 也官方支援直接向 Prometheus 取數,官方團隊的下一步 <strong>Aetos</strong>(在 Prometheus 前面加租戶隔離與 Keystone 認證的代理)更說明方向已定。</p>
-<p>對這門課來說這是好消息:<strong>Day 21 部署的 Prometheus 直接成為 Sprint 5 的計量骨幹</strong>,不用為了計費再養一顆資料庫。Gnocchi 在 Day 28 仍會出現——作為歷史脈絡,以及 Aodh 部分告警型別命名的由來。</p>
-<h3 id="horizon">為什麼帳單畫面要回 Horizon 看<a class="headerlink" href="#horizon" title="Permanent link">&para;</a></h3>
-<p>CloudKitty 的儀表板外掛只有 Horizon 版本,<strong>Skyline 目前沒有計費畫面</strong>。課程從 Day 13 起把 Skyline 當主要介面,所以 Day 30 需要說清楚:這不是走回頭路,是外掛生態的成熟度差異——Horizon 累積了十年的外掛生態,Skyline 還在補。實務上兩個並存本來就常見:日常操作用 Skyline,帳務查詢回 Horizon,CLI/API 則永遠都在。</p>
-<h3 id="_3">為什麼多機環境只回來一天<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<p>Sprint 5 的九天裡,只有 Masakari(Day 31)非多機不可——「compute 整台掛掉、VM 自動搬家」在單機上演不出來。其他八天全部在單機 lab 完成。所以多機環境平常保持關機,Day 31 開機一天,用完即關——這正是 Day 24 教過的容量紀律的自我實踐:<strong>用多少、開多少、關掉不用的</strong>。全 Sprint 預估成本約 US$90–100。</p>
-<h2 id="_4">查資料時會撞到的過期名字<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>學 OpenStack 有個特有的坑:<strong>網路上的教學文章不會過期下架</strong>。你搜「OpenStack 監控」會撞到 Monasca,搜「計量」滿頁都是 Gnocchi,搜「大數據」還有 Sahara——它們都曾是官方專案,文章寫得又多又好,但今天照著做只會走進死巷。這張表幫你在動手前先過濾(截至 2026-07):</p>
-<table>
-<thead>
-<tr>
-<th>看到這些名字</th>
-<th>現況</th>
-<th>建議</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Monasca、Murano、Sahara、Senlin、Solum、Freezer</td>
-<td>已停止維護(RETIRED)</td>
-<td>文章再完整都別照做</td>
-</tr>
-<tr>
-<td>Vitrage、Venus</td>
-<td>垂死(接連被列 inactive、無人接手)</td>
-<td>別投資學習時間</td>
-</tr>
-<tr>
-<td>Gnocchi</td>
-<td>苟延(還有心跳,不建議新部署)</td>
-<td>讀懂概念即可,見上方設計決定</td>
-</tr>
-<tr>
-<td>Watcher</td>
-<td>沉寂後於 2025 年重啟維護</td>
-<td>觀察中,<a href="../sprint5-day35-sprint5-recap/">Day 35</a> 的版圖課有提</td>
-</tr>
-</tbody>
-</table>
-<p>反過來也有專案常被誤傳已死——Mistral、Zaqar、Adjutant 至今都還正常維護,別因為一篇舊文章就跳過它們。<strong>Day 35 的版圖課會教你自己驗證的方法</strong>:看哪幾個頁面、查哪些訊號,五分鐘判斷一個專案的生死,不用等別人告訴你。</p>
-<h2 id="_5">下一步<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_6">小結<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>下一段從租戶結構開始，讓用量能歸屬、費率能解釋、操作能追查。各元件處理的是其中一部分；章節會保留它們之間的前提與限制，讓你能判斷一項需求還需要哪些資料或驗證。</p>
+<h2 id="_7">延伸閱讀<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
-<li>Sprint 5 開課後,課表每一列會變成一篇完整 runbook,工法與 Sprint 4 相同:先逐日部署驗證、gate 全過,才寫教材。</li>
-<li>想先暖身 → <a href="../sprint4-day21-observability/">Day 21 · 可觀測性</a>是 Sprint 5 計量骨幹的地基;<a href="../sprint3-day11-openstack-service-map/">Day 11 · 服務全景圖</a>裡 Masakari、Telemetry、CloudKitty 的定位都介紹過了。</li>
-<li>想回顧上一段 → <a href="../sprint4-day25-sprint4-recap/">Day 25 · Sprint 4 總結</a>。</li>
+<li><a href="https://docs.openstack.org/2025.1/">OpenStack 2025.1 文件入口</a>：依專案查找本課系列文件。</li>
+<li><a href="https://docs.openstack.org/cloudkitty/2025.1/">CloudKitty 2025.1 文件</a>：先了解計價服務的輸入、規則與輸出。</li>
+<li><a href="https://governance.openstack.org/tc/reference/projects/index.html">OpenStack 官方治理專案清單</a>：查專案治理歸屬，再搭配版本與程式碼資訊判斷。</li>
 </ul>
+<h2 id="_8">下一步<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p>從 <a href="../sprint5-day27-multi-tenant-governance/">Day 27</a> 建立租戶、角色與額度的對應關係。需要先複習資料收集時，回看 <a href="../sprint4-day21-observability/">Day 21</a>。</p>
 
 
 

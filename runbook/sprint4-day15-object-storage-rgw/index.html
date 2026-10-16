@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,7 +22,7 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
@@ -53,6 +53,8 @@
       
     
     
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#day-15-rgw-s3-swift-api" class="md-skip">
+        <a href="#day-15-ceph-rgw-s3-swift-apikeystone" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1130,7 +1130,18 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸物件儲存?先讀這段
+        區塊儲存和物件儲存差在哪
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rgw-openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RGW 和 OpenStack 怎麼接在一起
       
     </span>
   </a>
@@ -1141,7 +1152,62 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-cephadm-rgw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:用 cephadm 起 RGW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-kolla-keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:用 Kolla 在 Keystone 註冊物件儲存
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-rgw-keystone-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:告訴 RGW 怎麼向 Keystone 驗 token
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-swift-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:用 Swift API 存一個物件再拿回來
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選讀:用 S3 金鑰存取的設定方式
       
     </span>
   </a>
@@ -1152,102 +1218,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1cephadm-rgw" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:cephadm 端起 RGW
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2kolla-globals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:Kolla 端註冊(globals 每一行都有理由)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-ceph-rgw-keystone-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:回到 Ceph 端,告訴 RGW 怎麼驗 Keystone token
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:完整往返驗證
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-s3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:用 S3 憑證打一次(認證版)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:RGW 預設 port 80,會與 Horizon 對撞
+        裝完 RGW 後 Horizon 打不開,或 RGW 起不來
       
     </span>
   </a>
@@ -1258,18 +1241,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:haproxy 停用時的兩個隱形前提
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 3:自動化檢查撞到範本的註解行
+        precheck 失敗,或 endpoint 指向沒有程式在聽的位址
       
     </span>
   </a>
@@ -1282,7 +1254,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1293,7 +1287,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -1410,7 +1404,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1801,7 +1795,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1829,7 +1823,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1857,7 +1851,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1977,7 +1971,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -4018,7 +4012,18 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        第一次接觸物件儲存?先讀這段
+        區塊儲存和物件儲存差在哪
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rgw-openstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RGW 和 OpenStack 怎麼接在一起
       
     </span>
   </a>
@@ -4029,7 +4034,62 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        原理與架構
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-cephadm-rgw" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:用 cephadm 起 RGW
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-kolla-keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:用 Kolla 在 Keystone 註冊物件儲存
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-rgw-keystone-token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:告訴 RGW 怎麼向 Keystone 驗 token
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-swift-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:用 Swift API 存一個物件再拿回來
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選讀:用 S3 金鑰存取的設定方式
       
     </span>
   </a>
@@ -4040,102 +4100,19 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        步驟
+        疑難排解
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="步驟">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1cephadm-rgw" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1:cephadm 端起 RGW
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2kolla-globals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2:Kolla 端註冊(globals 每一行都有理由)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-ceph-rgw-keystone-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3:回到 Ceph 端,告訴 RGW 怎麼驗 Keystone token
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4:完整往返驗證
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-s3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5:用 S3 憑證打一次(認證版)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checkpoint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        驗收 checkpoint
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷記錄
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="地雷記錄">
+    <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#mine-1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 1:RGW 預設 port 80,會與 Horizon 對撞
+        裝完 RGW 後 Horizon 打不開,或 RGW 起不來
       
     </span>
   </a>
@@ -4146,18 +4123,7 @@
   <a href="#mine-2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        地雷 2:haproxy 停用時的兩個隱形前提
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#mine-3" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        地雷 3:自動化檢查撞到範本的註解行
+        precheck 失敗,或 endpoint 指向沒有程式在聽的位址
       
     </span>
   </a>
@@ -4170,7 +4136,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4181,7 +4169,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4208,45 +4196,47 @@
 
 
 
-<h1 id="day-15-rgw-s3-swift-api">Day 15: 物件儲存——用 RGW 提供 S3 與 Swift API<a class="headerlink" href="#day-15-rgw-s3-swift-api" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p>今天把 Day 14 的 Ceph 接上 OpenStack,開出<strong>物件儲存</strong>服務。做完之後,你的雲會多一個 <code>object-store</code> endpoint,S3 和 Swift 兩種 API 同時可用——而且你會親眼看到,為什麼業界用一個 RGW 就取代了整套 Swift。</p>
-</blockquote>
+<h1 id="day-15-ceph-rgw-s3-swift-apikeystone">Day 15: 用 Ceph RGW 開物件儲存——S3 與 Swift API、Keystone 認證<a class="headerlink" href="#day-15-ceph-rgw-s3-swift-apikeystone" title="Permanent link">&para;</a></h1>
 <p><img align="right" alt="Swift 官方吉祥物" src="../../assets/mascots/swift.png" width="100" /></p>
-<div class="admonition abstract">
-<p class="admonition-title">你在課程的哪裡</p>
+<p>假設有個團隊要把每天的資料庫備份和壓縮過的 log 存到你的雲上。他們的程式原本使用 S3 SDK,希望沿用 HTTP API 存取備份,因此需要確認新的儲存服務是否支援程式用到的操作。Day 3 的 Cinder volume 幫不上忙:volume 一次只掛在一台 VM 上,那台 VM 關機時,其他程式就拿不到裡面的檔案。他們要的是任何程式都能透過 HTTP 存取的儲存,這就是物件儲存。</p>
+<p>Day 14 在主機上立好了一套 Ceph,這一章在它上面開出物件儲存服務 RGW,並接上 OpenStack 的帳號系統 Keystone:做完之後,你的雲會多一個 <code>object-store</code> endpoint,主線會以 OpenStack 帳號驗證 Swift API 存取。S3 金鑰與工具設定另放在未驗證的選讀段落,不列入這次完成結果。讀完之後,物件儲存的請求失敗時,你能分辨問題是 RGW 本身沒起來、Keystone 裡的 endpoint 沒註冊對,還是 RGW 沒辦法向 Keystone 驗證身分,並知道該回哪一步檢查。</p>
+<h2 id="_1">區塊儲存和物件儲存差在哪<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>先把 Day 3 的 volume 和今天要開的物件儲存放在一起比:</p>
+<p><img alt="左邊是區塊儲存:一台 VM 掛載一顆 volume,裡面是 /backup/、/var/log/ 這樣的目錄樹,用檔案系統的路徑讀寫;右邊是物件儲存:備份程式、log 收集、網頁三個程式都透過 HTTP 存取同一個 bucket,bucket 裡直接放著 db-1001.sql、app-1001.log.gz 等物件,沒有掛載" src="../../assets/diagrams/os-s4d15-block-vs-object.svg" /></p>
+<p>我們可以從圖上看到兩個差別:</p>
+<ol>
+<li><strong>左邊要先掛載,右邊不用。</strong> volume 是一顆磁碟,要掛到某台 VM 上、格式化成檔案系統才能用,而且通常同一時間只掛在一台上。物件儲存不掛載,程式直接對它發 HTTP 請求:上傳是 PUT,下載是 GET。</li>
+<li><strong>右邊沒有目錄樹。</strong> 物件儲存只有兩層:一個個<strong>容器</strong>(Swift 叫 container,S3 叫 bucket,指的是同一種東西),和容器裡的<strong>物件</strong>(一個檔案加上它的名稱與屬性)。物件名稱裡可以有斜線,但那只是名字的一部分,不是真的資料夾。</li>
+</ol>
+<p>所以物件儲存適合放「寫一次、讀很多次、不需要檔案系統功能」的資料:備份、log 封存、VM 映像檔、網站的圖片。</p>
+<p>對物件儲存發 HTTP 請求,要照一套約定好的格式,這就是 API。業界有兩套:<strong>S3 API</strong> 是 AWS S3 定的格式,大部分工具和 SDK 都支援,幾乎是事實上的標準;<strong>Swift API</strong> 是 OpenStack 自家物件儲存服務 Swift 定的格式,<code>openstack container</code>、<code>openstack object</code> 這些指令和 Horizon 的物件儲存頁面用的就是它。</p>
+<p>今天要開的 <strong>RGW</strong>(RADOS Gateway)是 Ceph 的物件儲存服務:一個 daemon,同時聽得懂 S3 和 Swift 兩種 API,資料存在 Day 14 那套 Ceph 的 pool 裡。<a href="../sprint3-day12-sprint4-preview/">Day 12</a> 講過,Kolla-Ansible 已經移除了 Swift 本身的部署支援,這門課改用 RGW 提供 Swift API,同時多得到 S3 API。</p>
+<h2 id="rgw-openstack">RGW 和 OpenStack 怎麼接在一起<a class="headerlink" href="#rgw-openstack" title="Permanent link">&para;</a></h2>
+<p>Day 14 講過,主機上是兩套系統並存:cephadm 管 Ceph,Kolla 管 OpenStack。RGW 是 Ceph 的 daemon,所以由 cephadm 部署。Kolla 有一個叫 <code>ceph-rgw</code> 的角色,名字看起來像要部署 RGW,其實它不啟動任何容器,只做 OpenStack 那一側的整合:在 Keystone 註冊物件儲存服務,以及在有 haproxy 的部署裡替 RGW 做負載平衡。</p>
+<p>這一側要註冊的東西有兩個:</p>
 <ul>
-<li><strong>Day 14</strong>:Ceph 骨幹已立(mon/mgr/osd,HEALTH_OK)。</li>
-<li><strong>今天</strong>:在 Ceph 上開 <strong>RGW</strong>(RADOS Gateway),並讓 OpenStack 的使用者能用 Keystone 身分直接使用它。</li>
-<li><strong>今天之後</strong>:Day 16 用同一套 Ceph 開共享檔案系統;Day 18 的資料庫備份也會存到今天開的物件儲存裡。</li>
+<li><strong><code>object-store</code> endpoint</strong>:Keystone 裡有一份服務目錄,記著每個服務的 API 位址。<code>openstack object create</code> 這類指令會先查這份目錄,找到物件儲存的位址才知道要把請求送去哪裡。</li>
+<li><strong>service user <code>ceph_rgw</code></strong>:一個專門給 RGW 用的 Keystone 帳號。使用者拿著 token 來存取時,RGW 要用這個帳號登入 Keystone,才能問「這個 token 是誰的、有沒有效」。</li>
 </ul>
-</div>
-<h2 id="_1">第一次接觸物件儲存?先讀這段<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p>前幾天的儲存都是「掛在機器上的磁碟」(區塊儲存);<strong>物件儲存</strong>是另一種正規化:沒有目錄樹、沒有掛載,只有「容器(bucket)裝物件(檔案)」,一切透過 HTTP API 存取——AWS 的 S3 就是這個模式的代名詞。適合放備份、映像檔、log、靜態網站這類「寫一次、讀多次、不需要檔案系統語意」的資料。</p>
-<p>OpenStack 世界有兩種介面歷史:自家的 <strong>Swift API</strong> 與業界事實標準 <strong>S3 API</strong>。而 Ceph 的 <strong>RGW</strong> 一個守護行程同時實作兩種——這正是 Kolla 移除原生 Swift 支援的底氣(<a href="../sprint3-day12-sprint4-preview/">Day 12 講過這段歷史</a>)。</p>
-<h2 id="_2">原理與架構<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>今天的部署有個必須先想通的分工——<strong>Kolla 的 <code>ceph-rgw</code> 角色不部署任何容器</strong>(它的原始碼註解直接寫明這件事),RGW 守護行程由 cephadm 管:</p>
-<pre class="mermaid"><code>flowchart TB
-    subgraph cephside["cephadm 負責(Day 14 的世界)"]
-        RGW["RGW daemon(:7480)&lt;br/&gt;同時聽 S3 與 Swift API"]
-    end
-    subgraph kollaside["Kolla 負責(OpenStack 的世界)"]
-        KS["Keystone:建 service user&lt;br/&gt;+ 註冊 object-store endpoint"]
-    end
-    U["使用者(openstack CLI / s3 工具)"] ==&gt;|"1. 向 Keystone 拿 token"| KS
-    U ==&gt;|"2. 帶 token 打 RGW"| RGW
-    RGW -.-&gt;|"3. 回頭向 Keystone 驗 token"| KS</code></pre>
-<p>所以今天是「兩邊各設定一半、在 Keystone 會合」:cephadm 端起 daemon 並告訴它去哪驗 token;Kolla 端把 endpoint 與 service user 註冊好。</p>
-<h2 id="_3">步驟<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<h3 id="1cephadm-rgw">步驟 1:cephadm 端起 RGW<a class="headerlink" href="#1cephadm-rgw" title="Permanent link">&para;</a></h3>
+<p>先看稍後會實際驗證的 Swift API 請求,以及兩邊的分工:</p>
+<p><img alt="上方是使用 Swift API 的 openstack CLI;① 先向左下的 Keystone 拿 token,② 帶著 token 向右下的 RGW daemon 存取,RGW 聽 7480 port,同時接 S3 與 Swift;③ RGW 再用虛線回頭向 Keystone 驗 token。Keystone 下方標著 Kolla 負責(步驟 2):建 service user ceph_rgw、註冊 object-store endpoint;RGW 下方標著 cephadm 負責(步驟 1、3):起 RGW daemon、告訴 RGW 去哪個 Keystone、用哪個帳號驗 token" src="../../assets/diagrams/os-s4d15-division.svg" /></p>
+<p>照著圖上的編號看:① 和 ② 是使用者自己的動作,③ 是 RGW 在背後做的事。三步都要通,一次存取才會成功。今天的設定也因此分成兩半,在 Keystone 會合:步驟 1 用 cephadm 起 RGW,步驟 2 用 Kolla 在 Keystone 註冊 endpoint 和 service user,步驟 3 再回到 cephadm,告訴 RGW 去哪個 Keystone、用哪個帳號驗 token。之後存取失敗時,也照這三段分頭查。</p>
+<h2 id="_2">開始之前<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>這一章需要 Day 14 的 Ceph 叢集是 <code>HEALTH_OK</code>,以及 Day 1–3 部好的 Kolla OpenStack。<code>./cephadm</code> 指令要在 Day 14 下載 cephadm 的那個目錄(家目錄)執行;<code>kolla-ansible</code> 指令要先進 venv。</p>
+<p>以下指令裡的 <code>10.0.0.4</code> 是主機的私有 IP,請換成你自己的(<code>ip -4 addr show eth0</code> 可查),每一處都要換,包括 <code>globals.yml</code> 和 Keystone 位址。</p>
+<h2 id="1-cephadm-rgw">步驟 1:用 cephadm 起 RGW<a class="headerlink" href="#1-cephadm-rgw" title="Permanent link">&para;</a></h2>
+<p>用 cephadm 部署一個名叫 <code>kolla</code> 的 RGW 服務,放一個 daemon,聽 7480 port:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>ceph<span class="w"> </span>orch<span class="w"> </span>apply<span class="w"> </span>rgw<span class="w"> </span>kolla<span class="w"> </span>--placement<span class="o">=</span><span class="m">1</span><span class="w"> </span>--port<span class="o">=</span><span class="m">7480</span>
 </span></code></pre></div>
-<p><strong><code>--port=7480</code> 不能省</strong>:RGW 預設綁 port 80,而這台主機的 80 已被 Horizon 佔用——不指定的話兩邊都會壞。約 30 秒後驗證 daemon 活著(S3 API 對匿名請求會回一份空的 bucket 清單 XML):</p>
+<p><strong><code>--port=7480</code> 不能省。</strong> RGW 沒有指定 port 時會聽 80,而這台主機的 80 已經被 Horizon 佔用(Kolla 的容器都共用主機的網路,Day 1 講過),兩邊會搶同一個 port。</p>
+<p>約 30 秒後,<code>sudo ./cephadm shell -- ceph orch ps</code> 應該看到一個 rgw daemon 是 <code>running</code>。接著直接對它發一個 HTTP 請求,確認它在回應:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-s<span class="w"> </span>http://10.0.0.4:7480/
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>&lt;?xml version=&quot;1.0&quot;...&gt;&lt;ListAllMyBucketsResult ...&gt;&lt;Buckets&gt;&lt;/Buckets&gt;&lt;/ListAllMyBucketsResult&gt;
 </span></code></pre></div>
-<h3 id="2kolla-globals">步驟 2:Kolla 端註冊(globals 每一行都有理由)<a class="headerlink" href="#2kolla-globals" title="Permanent link">&para;</a></h3>
+<p>這是 S3 API 的回應格式。<code>curl</code> 沒帶任何身分,RGW 就當成匿名請求,回一份「你的 bucket 清單」,而匿名使用者沒有 bucket,所以 <code>&lt;Buckets&gt;</code> 是空的。看到這份 XML,代表 RGW 活著,也在 7480 上用 S3 API 回應。這時它還不認得 OpenStack 的任何帳號,接下來兩步就是要補上這一塊。</p>
+<h2 id="2-kolla-keystone">步驟 2:用 Kolla 在 Keystone 註冊物件儲存<a class="headerlink" href="#2-kolla-keystone" title="Permanent link">&para;</a></h2>
+<p>把下面六行附加到 <code>globals.yml</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>-a<span class="w"> </span>/etc/kolla/globals.yml<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="s">enable_ceph_rgw: &quot;yes&quot;</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="s">enable_ceph_rgw_loadbalancer: &quot;no&quot;</span>
@@ -4256,132 +4246,118 @@
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="s">update_keystone_service_user_passwords: &quot;no&quot;</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="s">EOF</span>
 </span></code></pre></div>
+<p><span id="mine-3"></span>附加之前如果想先確認 <code>globals.yml</code> 裡有沒有寫過這些設定,<code>grep</code> 要錨定行首,寫成 <code>grep "^enable_ceph_rgw"</code>。<code>globals.yml</code> 範本裡本來就有一行註解掉的 <code>#enable_ceph_rgw: "no"</code>,沒錨定行首的 <code>grep "enable_ceph_rgw"</code> 會比對到這行註解,誤以為已經設定過。</p>
+<p>一行行看:</p>
 <ul>
-<li><code>enable_ceph_rgw_loadbalancer: "no"</code>——我們的單機部署關掉了 haproxy,這行不設,<strong>部署前檢查會直接失敗</strong>。</li>
-<li>兩個 <code>fqdn</code> 指向主機——haproxy 停用時,預設 endpoint 會指到一個沒人在聽的位址,必須明確覆寫。</li>
-<li><code>update_keystone_service_user_passwords: "no"</code>——不設的話,之後每次 reconfigure 都會重設服務密碼、造成 token 失效(官方文件的明確警告)。</li>
+<li><code>enable_ceph_rgw: "yes"</code>:啟用 Kolla 的 RGW 整合,也就是上一節說的在 Keystone 註冊 service user 和 endpoint。</li>
+<li><code>enable_ceph_rgw_loadbalancer: "no"</code>:Kolla 預設會在 haproxy 上替 RGW 開一個入口。Day 1 的單機部署關掉了 haproxy,這行不寫,部署前的檢查會直接失敗。</li>
+<li><code>ceph_rgw_port: "7480"</code> 和兩個 <code>fqdn</code>:決定 endpoint 寫進 Keystone 的位址。Kolla 預設的 endpoint 指向 haproxy 上的 RGW 入口(port 預設是 6780),haproxy 關了,那個位址沒有程式在聽,所以要明確寫成步驟 1 的 RGW 所在的主機和 port。<code>internal</code> 和 <code>external</code> 分別對應 Keystone 目錄裡的 internal 和 public endpoint。</li>
+<li><code>update_keystone_service_user_passwords: "no"</code>:Kolla 官方文件的警告。不設的話,之後每次 reconfigure 都會重設 <code>ceph_rgw</code> 這類服務帳號的密碼,這個更新動作會使既有 token 失效,可能中斷物件儲存的存取。若另外更換了密碼檔裡的值,也要同步更新 RGW 使用的密碼。</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>ceph-rgw
+<p>另外在 <code>globals.yml</code> 明確保留以下設定。cephadm RGW 使用 <code>/swift/v1</code> 路徑；<code>false</code> 讓 Kolla 註冊的 endpoint 與 Skyline 轉送路徑維持一致。後續更新 Skyline 時也會讀到這個值。</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">ceph_rgw_swift_compatibility</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>PLAY RECAP: ok=11  changed=5  failed=0
+<p>只部署 RGW 相關的部分:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">source</span><span class="w"> </span>~/kolla-venv/bin/activate
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>ceph-rgw
 </span></code></pre></div>
-<p>這一步建立了 Keystone 的 <code>ceph_rgw</code> service user 與 <code>object-store</code> endpoint。</p>
-<h3 id="3-ceph-rgw-keystone-token">步驟 3:回到 Ceph 端,告訴 RGW 怎麼驗 Keystone token<a class="headerlink" href="#3-ceph-rgw-keystone-token" title="Permanent link">&para;</a></h3>
-<p>密碼從 Kolla 的密碼庫拿(兩邊必須一致):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^ceph_rgw_keystone_password:&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s2">ceph config set client.rgw rgw_keystone_url http://10.0.0.4:5000</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s2">ceph config set client.rgw rgw_keystone_api_version 3</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_user ceph_rgw</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_password </span><span class="nv">$PW</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_project service</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_domain Default</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s2">ceph config set client.rgw rgw_keystone_accepted_roles member,Member,admin</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">ceph config set client.rgw rgw_keystone_implicit_tenants true</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="s2">ceph config set client.rgw rgw_s3_auth_use_keystone true</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="s2">ceph config set client.rgw rgw_enable_apis s3,swift,swift_auth,admin</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="s2">ceph orch restart rgw.kolla</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="s2">&quot;</span>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>PLAY RECAP: ok=11  changed=5  failed=0
 </span></code></pre></div>
-<h3 id="4">步驟 4:完整往返驗證<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>openstack<span class="w"> </span>endpoint<span class="w"> </span>list<span class="w"> </span>--service<span class="w"> </span>object-store<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>Interface<span class="w"> </span>-c<span class="w"> </span>URL
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>openstack<span class="w"> </span>container<span class="w"> </span>create<span class="w"> </span>day15-test
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;hello-rgw&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/tmp/obj.txt
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>openstack<span class="w"> </span>object<span class="w"> </span>create<span class="w"> </span>day15-test<span class="w"> </span>/tmp/obj.txt
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>openstack<span class="w"> </span>object<span class="w"> </span>save<span class="w"> </span>day15-test<span class="w"> </span>/tmp/obj.txt<span class="w"> </span>--file<span class="w"> </span>/tmp/back.txt<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cat<span class="w"> </span>/tmp/back.txt
+<p><code>failed=0</code> 代表 Keystone 裡已經有 <code>ceph_rgw</code> 這個 service user 和 <code>object-store</code> endpoint。步驟 4 會用 <code>openstack endpoint list</code> 確認位址。</p>
+<h2 id="3-rgw-keystone-token">步驟 3:告訴 RGW 怎麼向 Keystone 驗 token<a class="headerlink" href="#3-rgw-keystone-token" title="Permanent link">&para;</a></h2>
+<p>最後一段回到 Ceph。RGW 要知道 Keystone 在哪,以及用哪個帳號、哪組密碼登入。密碼要和 Kolla 剛才在 Keystone 建帳號時用的那組一致,所以直接從 Kolla 的密碼檔讀出來,再一次寫進 RGW 的設定,最後重啟 RGW 讓設定生效:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nv">PW</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^ceph_rgw_keystone_password:&#39;</span><span class="w"> </span>/etc/kolla/passwords.yml<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>sudo<span class="w"> </span>./cephadm<span class="w"> </span>shell<span class="w"> </span>--<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="s2">ceph config set client.rgw rgw_keystone_url http://10.0.0.4:5000</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="s2">ceph config set client.rgw rgw_keystone_api_version 3</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_user ceph_rgw</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_password </span><span class="nv">$PW</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_project service</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="s2">ceph config set client.rgw rgw_keystone_admin_domain Default</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="s2">ceph config set client.rgw rgw_keystone_accepted_roles member,Member,admin</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="s2">ceph config set client.rgw rgw_keystone_implicit_tenants true</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="s2">ceph config set client.rgw rgw_s3_auth_use_keystone true</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="s2">ceph config set client.rgw rgw_enable_apis s3,swift,swift_auth,admin</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="s2">ceph orch restart rgw.kolla</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="s2">&quot;</span>
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>internal http://10.0.0.4:7480/swift/v1
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>public   http://10.0.0.4:7480/swift/v1
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>day15-test
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>/tmp/obj.txt
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>hello-rgw
+<p>這十行 <code>ceph config set</code> 可以分成四組看:</p>
+<ul>
+<li><strong>去哪裡驗</strong>:<code>rgw_keystone_url</code> 是 Keystone 的位址(5000 是 Keystone API 的 port),<code>api_version 3</code> 指定用 Keystone v3 API。</li>
+<li><strong>用誰的身分去驗</strong>:<code>admin_user</code>、<code>admin_password</code>、<code>admin_project</code>、<code>admin_domain</code> 四行合起來,就是步驟 2 建立的 <code>ceph_rgw</code> 帳號,它屬於 <code>Default</code> domain 的 <code>service</code> project。</li>
+<li><strong>誰可以用</strong>:<code>accepted_roles</code> 列出 Keystone 的哪些角色可以存取物件儲存,一般使用者的 <code>member</code> 和管理員的 <code>admin</code> 都在內。<code>implicit_tenants</code> 讓 RGW 依 Keystone 的 project 建立隱含的 tenant(RGW 裡的命名空間),同一個 project 的使用者依角色存取該 project 的物件。</li>
+<li><strong>開哪些 API</strong>:<code>rgw_s3_auth_use_keystone</code> 讓 S3 請求的金鑰也交給 Keystone 檢查,步驟 5 要靠它;<code>rgw_enable_apis</code> 列出 RGW 要提供的 API,<code>s3</code> 和 <code>swift</code> 就是這一章的兩種。</li>
+</ul>
+<h2 id="4-swift-api">步驟 4:用 Swift API 存一個物件再拿回來<a class="headerlink" href="#4-swift-api" title="Permanent link">&para;</a></h2>
+<p>三段設定都完成了,用管理員身分走一次完整的流程:查 endpoint、建容器、上傳一個小檔案,再下載回來比對內容:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>openstack<span class="w"> </span>endpoint<span class="w"> </span>list<span class="w"> </span>--service<span class="w"> </span>object-store<span class="w"> </span>-f<span class="w"> </span>value<span class="w"> </span>-c<span class="w"> </span>Interface<span class="w"> </span>-c<span class="w"> </span>URL
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openstack<span class="w"> </span>container<span class="w"> </span>create<span class="w"> </span>day15-test
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;hello-rgw&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/tmp/obj.txt
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>openstack<span class="w"> </span>object<span class="w"> </span>create<span class="w"> </span>day15-test<span class="w"> </span>/tmp/obj.txt
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>openstack<span class="w"> </span>object<span class="w"> </span>save<span class="w"> </span>day15-test<span class="w"> </span>/tmp/obj.txt<span class="w"> </span>--file<span class="w"> </span>/tmp/back.txt<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>cat<span class="w"> </span>/tmp/back.txt
 </span></code></pre></div>
-<p>上傳再下載、內容一致——<strong>Swift API 的完整認證與資料鏈全通</strong>。Ceph 端同時可以看到 RGW 自動建出六個 <code>default.rgw.*</code> pool(<code>ceph osd pool ls</code>)。</p>
-<p>同一顆 bucket 在主控台也看得到。Skyline 目前沒有物件儲存頁,但 Horizon 有(專案 → Object Store → Containers)——左邊是 container 的統計(物件數、總大小、storage policy),右邊列出裡面的物件,還能直接下載:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>internal http://10.0.0.4:7480/swift/v1
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>public   http://10.0.0.4:7480/swift/v1
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>day15-test
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>/tmp/obj.txt
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>hello-rgw
+</span></code></pre></div>
+<p>由上往下對照指令看:</p>
+<ul>
+<li>前兩行是 endpoint。<code>internal</code> 和 <code>public</code> 都指向 RGW 的 7480,路徑 <code>/swift/v1</code> 是 RGW 提供 Swift API 的位置。如果這裡出現 6780 或別的位址,回步驟 2 檢查 port 和 <code>fqdn</code> 那幾行。</li>
+<li><code>day15-test</code> 是建好的容器,<code>/tmp/obj.txt</code> 是上傳後的物件名稱。</li>
+<li>最後一行 <code>hello-rgw</code> 是從 RGW 下載回來的內容,和上傳的一樣。</li>
+</ul>
+<p>這幾行能成功,代表圖上的 ①②③ 都通了:CLI 從 Keystone 拿到 token,在服務目錄找到 RGW 的位址,RGW 也成功向 Keystone 驗證了 token。如果 <code>openstack container create</code> 回認證錯誤,而步驟 1 的 <code>curl</code> 仍然有回應,問題多半在步驟 3:密碼、Keystone 位址或 <code>ceph_rgw</code> 帳號設錯了。</p>
+<p>物件的資料存在 Ceph 裡。在 cephadm shell 裡執行 <code>ceph osd pool ls</code>,會看到 RGW 自動建出的六個 <code>default.rgw.*</code> pool,這些就是 RGW 放容器清單、物件內容和其他中繼資料的地方。</p>
+<p>同一個容器也可以在網頁主控台上看到。這一章用 Horizon 的物件儲存頁查看,路徑是「專案 → Object Store → Containers」。左邊是 container 的統計(物件數、總大小、storage policy),右邊列出裡面的物件,也能直接下載:</p>
 <p><img alt="Horizon 的 Object Store:day15-test container 與裡面的物件" src="../../assets/screenshots/day15-horizon-objectstore.png" /></p>
-<div class="admonition tip">
-<p class="admonition-title">物件名別直接吃本機路徑</p>
-<p>上面那行 <code>openstack object create day15-test /tmp/obj.txt</code> 會<strong>拿本機路徑當物件名</strong>,於是物件真的叫 <code>/tmp/obj.txt</code>——開頭那個斜線會讓 Horizon 把它當成資料夾層級,結果物件列表看起來是空的。想要乾淨的名字就明講:<code>openstack object create --name hello-rgw.txt day15-test /tmp/obj.txt</code>(圖上那個就是)。</p>
-</div>
-<h3 id="5-s3">步驟 5:用 S3 憑證打一次(認證版)<a class="headerlink" href="#5-s3" title="Permanent link">&para;</a></h3>
-<p>上面步驟 4 走的是 Swift API,步驟 0 只驗了 S3 的<strong>匿名</strong>空清單。但這章的賣點是「既有 S3 應用不改碼搬上來」——那條路要的是一組 S3 金鑰。怎麼拿?靠 Keystone 的 <strong>EC2 credentials</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># 1. 拿一組 S3 相容金鑰(access / secret)</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>openstack<span class="w"> </span>ec2<span class="w"> </span>credentials<span class="w"> </span>create<span class="w">        </span><span class="c1"># 輸出的 Access / Secret 就是 S3 金鑰</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># 2. 裝 aws-cli、設金鑰與 region,再打 RGW 的 S3 端點(RGW 走 path-style 定址)</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>awscli
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_access_key_id<span class="w"> </span>&lt;access&gt;
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_secret_access_key<span class="w"> </span>&lt;secret&gt;
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>default.region<span class="w"> </span>us-east-1<span class="w">     </span><span class="c1"># RGW 不挑 region 值,給個預設即可,不設會被 aws-cli 擋下</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>mb<span class="w"> </span>s3://day15-s3
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="nb">echo</span><span class="w"> </span>hello-s3<span class="w"> </span>&gt;<span class="w"> </span>/tmp/s3.txt
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/s3.txt<span class="w"> </span>s3://day15-s3/
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>s3://day15-s3/<span class="w">     </span><span class="c1"># 列出剛上傳的物件</span>
+<p>注意物件名稱。上面的 <code>openstack object create day15-test /tmp/obj.txt</code> 會<strong>直接拿本機路徑當物件名</strong>,所以物件真的叫 <code>/tmp/obj.txt</code>。開頭的斜線會讓 Horizon 把它當成資料夾層級,物件列表看起來會是空的。要取一個乾淨的名字,用 <code>--name</code> 指定:<code>openstack object create --name hello-rgw.txt day15-test /tmp/obj.txt</code>,截圖裡的 <code>hello-rgw.txt</code> 就是這樣上傳的。</p>
+<h2 id="s3">選讀:用 S3 金鑰存取的設定方式<a class="headerlink" href="#s3" title="Permanent link">&para;</a></h2>
+<p>步驟 4 走的是 Swift API,步驟 1 的 <code>curl</code> 只確認了 S3 API 對匿名請求有回應。開場那個團隊的程式用的是 S3 SDK,它不認得 Keystone 的 token,只認一組 <strong>access key</strong> 和 <strong>secret key</strong>:access key 是公開的帳號代號,secret key 用來簽每一個請求。</p>
+<p>以下 S3 命令是設定參考,尚未有本課的認證存取結果。主線到上一節的 Swift 上傳與下載就完成,不要把這段當成已通過驗證的 S3 操作。</p>
+<p>在這朵雲上,這組金鑰由 Keystone 的 <strong>EC2 credentials</strong> 產生。這個名稱來自 OpenStack 早年相容 AWS EC2 API 的功能:它替某個使用者在某個 project 底下產生一組 access/secret。步驟 3 設了 <code>rgw_s3_auth_use_keystone</code>,RGW 收到帶這組金鑰簽過的 S3 請求時,會交給 Keystone 檢查簽章,檢查通過就當成那位使用者在那個 project 裡的操作。兩種 API 的路線畫在一起:</p>
+<p><img alt="左邊兩個用戶端:openstack CLI 走 Swift API、帶 token;aws-cli 或 S3 SDK 走 S3 API、帶 access/secret。兩條線都進到中間的 RGW(10.0.0.4:7480),RGW 和右邊的 Keystone 之間是雙向虛線,標著驗證身分;RGW 往下連到灰色的 Ceph pool default.rgw.*,兩種 API 讀寫同一份資料" src="../../assets/diagrams/os-s4d15-two-apis.svg" /></p>
+<p>兩條路只差在用戶端帶的身分憑證不同,進的是同一個 RGW,驗證都交給 Keystone。下面用 Day 2 建的一般使用者(<code>demo-openrc.sh</code>)取得金鑰,再用 aws-cli 建 bucket、上傳、列出物件:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># 1. 拿一組 S3 相容金鑰(access / secret)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>openstack<span class="w"> </span>ec2<span class="w"> </span>credentials<span class="w"> </span>create<span class="w">        </span><span class="c1"># 輸出的 Access / Secret 就是 S3 金鑰</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># 2. 裝 aws-cli、設金鑰與 region,再打 RGW 的 S3 端點(RGW 走 path-style 定址)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>awscli
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_access_key_id<span class="w"> </span>&lt;access&gt;
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>aws_secret_access_key<span class="w"> </span>&lt;secret&gt;
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>aws<span class="w"> </span>configure<span class="w"> </span><span class="nb">set</span><span class="w"> </span>default.region<span class="w"> </span>us-east-1<span class="w">     </span><span class="c1"># RGW 不挑 region 值,給個預設即可,不設會被 aws-cli 擋下</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>mb<span class="w"> </span>s3://day15-s3
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="nb">echo</span><span class="w"> </span>hello-s3<span class="w"> </span>&gt;<span class="w"> </span>/tmp/s3.txt
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>/tmp/s3.txt<span class="w"> </span>s3://day15-s3/
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>aws<span class="w"> </span>--endpoint-url<span class="w"> </span>http://10.0.0.4:7480<span class="w"> </span>s3<span class="w"> </span>ls<span class="w"> </span>s3://day15-s3/<span class="w">     </span><span class="c1"># 列出剛上傳的物件</span>
 </span></code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">這段是示範路徑,未附本課實測輸出</p>
-<p>上面這串是「拿 S3 金鑰、用 aws-cli 打通」的標準做法,回答「使用者怎麼拿到 S3 金鑰」這個問題;但它<strong>不在本課的逐項驗證裡</strong>(所以沒附輸出),照做前自行驗證。要點:金鑰來自 <code>ec2 credentials</code>(綁在你的 project 上)、endpoint 直指 RGW 的 <code>:7480</code>、RGW 用 path-style 而非 virtual-host style 定址。這條路一旦通,你的既有 S3 SDK 只改 endpoint 就能搬上這朵雲。</p>
-</div>
-<h2 id="checkpoint">驗收 checkpoint<a class="headerlink" href="#checkpoint" title="Permanent link">&para;</a></h2>
-<p>逐項驗證,<strong>全部符合判準才算完成今天</strong>:</p>
-<table>
-<thead>
-<tr>
-<th>驗證</th>
-<th>判準</th>
-<th>本課環境的結果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>RGW daemon</td>
-<td><code>ceph orch ps</code> 顯示 rgw running、7480 有回應</td>
-<td>符合</td>
-</tr>
-<tr>
-<td>endpoint</td>
-<td><code>object-store</code> internal+public 指向 <code>:7480/swift/v1</code></td>
-<td>符合</td>
-</tr>
-<tr>
-<td>Swift 往返</td>
-<td>container 建立、object 上傳後下載內容一致</td>
-<td><code>hello-rgw</code> 原樣取回</td>
-</tr>
-<tr>
-<td>S3 API</td>
-<td>匿名請求回 <code>ListAllMyBucketsResult</code> XML</td>
-<td>符合(雙 API 並存)</td>
-</tr>
-<tr>
-<td>Ceph 端</td>
-<td><code>default.rgw.*</code> pool 自動誕生</td>
-<td>6 個 pool</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">地雷記錄<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<h3 id="mine-1">地雷 1:RGW 預設 port 80,會與 Horizon 對撞<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
-<p>已在步驟 1 預拆(<code>--port=7480</code>)。這類「兩套系統同機、預設 port 相撞」是本 Sprint 的主旋律之一——Day 14 的監控套件、今天的 80,之後還會再見。</p>
-<h3 id="mine-2">地雷 2:haproxy 停用時的兩個隱形前提<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
-<p><code>enable_ceph_rgw_loadbalancer: "no"</code> 與 fqdn 覆寫缺一不可:前者不設 precheck 直接失敗,後者不設 endpoint 會指向空位址。這是「單機關掉 haproxy」在 Sprint 3 埋下的長尾效應——每個新服務接上來時都要重新想一次入口在哪。</p>
-<h3 id="mine-3">地雷 3:自動化檢查撞到範本的註解行<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
-<p><strong>症狀</strong>:用 <code>grep -q "enable_ceph_rgw"</code> 判斷 globals.yml 是否已設定,結果永遠判定「已存在」而跳過寫入。</p>
-<p><strong>根因</strong>:kolla 的 globals.yml 範本本來就含有<strong>註解掉的</strong> <code>#enable_ceph_rgw: "no"</code>,不錨定行首的 grep 會誤中。</p>
-<p><strong>教訓</strong>:對 globals.yml 做存在性檢查一律錨定行首(<code>grep -q "^enable_ceph_rgw"</code>)。寫自動化腳本的人一定會踩一次。</p>
-<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>想往下深挖,從這幾份開始:</p>
+<p><strong>這一步本課沒有實際跑過,所以沒有附輸出</strong>,照做時請自己確認每一行的結果。重點有三個:金鑰來自 <code>openstack ec2 credentials create</code>,綁在你目前的使用者和 project 上;<code>--endpoint-url</code> 直接指向 RGW 的 7480,不經過 Keystone 的服務目錄;<code>&lt;access&gt;</code>、<code>&lt;secret&gt;</code> 換成第一段輸出的值。既有 S3 程式還必須確認 RGW 支援它使用的 API、簽章與行為,並完成實際相容性測試;不能只改 endpoint 與金鑰就宣稱整個應用可用。</p>
+<h2 id="_3">疑難排解<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">裝完 RGW 後 Horizon 打不開,或 RGW 起不來<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>RGW 沒指定 port 時聽 80,和 Horizon 搶同一個 port。修法見步驟 1 的 <code>--port=7480</code>。</p>
+<h3 id="mine-2">precheck 失敗,或 endpoint 指向沒有程式在聽的位址<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>單機部署關掉了 haproxy,而 Kolla 的 RGW 整合預設要透過 haproxy:<code>enable_ceph_rgw_loadbalancer</code> 沒設成 <code>"no"</code> 時部署前檢查會失敗,port 和 <code>fqdn</code> 沒覆寫時 endpoint 會指向 haproxy 的入口。修法見步驟 2 的那幾行設定。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<ul>
+<li>一位同學做完步驟 3 之後,<code>curl http://&lt;主機IP&gt;:7480/</code> 還能拿到那份空的 bucket 清單 XML,但 <code>openstack container create</code> 回認證錯誤。你會請他先檢查哪一步的哪些設定?為什麼不是步驟 1?</li>
+<li>另一位同學在一套有 haproxy、三台控制節點的部署上做同樣的事。步驟 2 的六行裡,哪一行他不該照抄?</li>
+<li>有人執行 <code>kolla-ansible reconfigure</code> 調整了別的服務,隔天物件儲存全部回認證錯誤,其他服務都正常。你會先懷疑 <code>globals.yml</code> 少了哪一行?</li>
+</ul>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>物件儲存不掛載、沒有目錄樹,程式用 HTTP 對容器裡的物件做 PUT 和 GET。Ceph 的 RGW 一個 daemon 同時提供 S3 和 Swift 兩種 API,資料存在 Ceph 的 pool 裡。把它接進 OpenStack 要兩邊各做一半:cephadm 起 RGW,並告訴它去哪個 Keystone、用哪個帳號驗 token;Kolla 在 Keystone 註冊 <code>object-store</code> endpoint 和 <code>ceph_rgw</code> 帳號。之後物件儲存出問題時,先用 <code>curl</code> 確認 RGW 有回應,再用 <code>openstack endpoint list</code> 確認位址,最後才查 RGW 的 Keystone 設定和密碼,三段分開查。</p>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>想再深入，可以從這幾份開始：</p>
 <ul>
 <li><strong><a href="https://docs.ceph.com/en/tentacle/radosgw/">Ceph Object Gateway 總覽</a></strong> —— RGW 的完整文件入口:S3/Swift API 相容性、multisite、進階設定。</li>
-<li><strong><a href="https://docs.ceph.com/en/tentacle/radosgw/keystone/">RGW 的 Keystone 整合</a></strong> —— 本章步驟 3 那一整批 <code>rgw_keystone_*</code> 設定的權威出處。</li>
-<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/external-ceph-guide.html">Kolla-Ansible External Ceph 指南</a></strong> —— Kolla 這側所有 ceph 整合(RGW/Glance/Cinder/Manila)的官方對照。</li>
+<li><strong><a href="https://docs.ceph.com/en/tentacle/radosgw/keystone/">RGW 的 Keystone 整合</a></strong> —— 步驟 3 那一整批 <code>rgw_keystone_*</code> 設定的說明,也包括 S3 金鑰交給 Keystone 驗證的 <code>rgw_s3_auth_use_keystone</code>。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/storage/external-ceph-guide.html">Kolla-Ansible External Ceph 指南</a></strong> —— Kolla 這側所有 Ceph 整合(RGW/Glance/Cinder/Manila)的官方說明;RadosGW 一節列出步驟 2 用到的設定與 <code>update_keystone_service_user_passwords</code> 的警告。</li>
 <li><strong><a href="https://docs.ceph.com/en/tentacle/cephadm/services/rgw/">cephadm 部署 RGW</a></strong> —— <code>ceph orch apply rgw</code> 的完整選項(placement、port、realm)。</li>
 </ul>
-<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p>物件儲存上線,三種儲存介面已有其二(區塊 Day 3、物件今天)。<a href="../sprint4-day16-manila-cephfs/">Day 16</a> 補上第三種:<strong>Manila 共享檔案系統</strong>——多台 VM 同時掛同一顆碟,也是 K8s 世界 RWX volume 的底層答案。</p>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>區塊儲存(Day 3)和物件儲存(今天)都有了,還差檔案儲存:讓多台 VM 同時掛同一個資料夾。<a href="../sprint4-day16-manila-cephfs/">Day 16</a> 用同一套 Ceph 的 CephFS,透過 Manila 提供共享檔案系統。</p>
 
 
 

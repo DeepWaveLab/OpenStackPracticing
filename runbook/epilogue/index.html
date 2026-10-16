@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenStack 實作課程 —— runbook、踩雷解法與反思">
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
       
       
       
@@ -22,12 +22,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/logos/openstack.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>結語 · 三次嘗試,才有這一朵雲 - OpenStack Lab Course</title>
+        <title>結語 · 從 API 操作找到下一個問題 - OpenStack Lab Course</title>
       
     
     
@@ -52,6 +52,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -78,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#api" class="md-skip">
           跳轉到
         </a>
       
@@ -96,8 +98,7 @@
   <nav class="md-header__inner md-grid" aria-label="頁首">
     <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -114,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              結語 · 三次嘗試,才有這一朵雲
+              結語 · 從 API 操作找到下一個問題
             
           </span>
         </div>
@@ -359,8 +360,7 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/logos/openstack.svg" alt="logo">
 
     </a>
     OpenStack Lab Course
@@ -1184,7 +1184,7 @@
   <span class="md-ellipsis">
     
   
-    Day 19 · server create 的完整路徑
+    Day 19 · server create 的請求路徑
   
 
     
@@ -1575,7 +1575,7 @@
   <span class="md-ellipsis">
     
   
-    Day 30 · 計費(CloudKitty)
+    Day 30 · 計價與費用明細(CloudKitty)
   
 
     
@@ -1603,7 +1603,7 @@
   <span class="md-ellipsis">
     
   
-    Day 31 · SLA 與自癒(Masakari)
+    Day 31 · 主機故障與 VM 恢復(Masakari)
   
 
     
@@ -1631,7 +1631,7 @@
   <span class="md-ellipsis">
     
   
-    Day 32 · 全站 TLS
+    Day 32 · API 入口 TLS
   
 
     
@@ -1760,7 +1760,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -1778,7 +1778,7 @@
   <span class="md-ellipsis">
     
   
-    結語 · 三次嘗試,才有這一朵雲
+    結語 · 從 API 操作找到下一個問題
   
 
     
@@ -1804,10 +1804,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選一個與工作有關的練習
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        接下來,往哪走
+        換一種工具時，保留判斷的方法
       
     </span>
   </a>
@@ -1818,7 +1829,18 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        最後一句
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
       
     </span>
   </a>
@@ -3858,10 +3880,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        選一個與工作有關的練習
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        接下來,往哪走
+        換一種工具時，保留判斷的方法
       
     </span>
   </a>
@@ -3872,7 +3905,18 @@
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        最後一句
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
       
     </span>
   </a>
@@ -3896,20 +3940,25 @@
 
 
 
-<h1 id="_1">結語:三次嘗試,才有這一朵雲<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<p>這門課從一台空白的 Azure VM 開始,到一朵能收錢、能自癒、能對稽核交代的雲結束。但它真正的起點,在課程開始之前——是<a href="../../previous-attempts/">兩次沒走完的嘗試</a>。</p>
-<p>第一次用 Juju + Charms,走了九天,核心是跑起來了,但三個關鍵功能被生態系卡死,過不去。第二次換 OpenStack-Helm,只撐了兩天就喊停——每個問題都夾在 K8s 和 OpenStack 兩層中間,分不清是哪一層壞的,光定位就耗掉所有力氣。這兩次都沒走完,卻不算白走:它們把這片地形的坑一個個標了出來,所以第三次用 Kolla-Ansible + Magnum CAPI 能一路走到底——不是這條路比較好走,是前兩次已經替它把雷探完了。</p>
-<p>所以別把這門課讀成一份「照著做就會成功」的食譜。它更像一份走通之前先走壞過的紀錄:每一章結尾那句「誠實的差距」,不是免責聲明,是它的骨架。它沒有一次假裝做到了其實沒做到的事——那份克制,比任何一個綠色勾勾都更接近真實的工程長什麼樣子。</p>
-<h2 id="_2">接下來,往哪走<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>這要看你是誰。</p>
-<p>剛入門、還被一堆陌生名詞淹沒的話,先別急著自己架一朵雲。這朵雲只是載體,你真正該帶走的是那套除錯的反射——找第一張骨牌、換個身分再問一次、先設判準再動手。帶著它,回頭把 Linux、網路、Kubernetes 的底子補紮實,比硬撐著蓋一朵自己看不懂的雲有用得多。</p>
-<p>寫應用的你,現在多了一台 X 光機。PVC、負載平衡、代管資料庫、額度、SSO、帳單,底下到底是誰在動工,你看得見了。拿這雙眼睛回去讀你自己平台的文件,會讀出以前讀不到的東西。</p>
-<p>如果你的主場是 K8s 這一層——容器、叢集都很熟,但底下的 IaaS 一直是個黑盒——那這門課就是寫給你的。Day 6–9 的 Magnum 和 CAPI 你一看就懂,但你未必想過:叢集裡每一台節點,底下是 Nova 排出來的一台 VM;<code>type=LoadBalancer</code> 一按,是 Octavia 真的生一顆負載平衡器;每張 PVC,是 Cinder 切一塊 volume 掛上去。看懂這層之後,回頭再看你天天在用的 EKS / GKE / AKS,你會第一次看見那層一直替你扛著、卻從沒正眼看過的地基。</p>
-<p>同樣在做平台的人,最好的下一步是把它 fork 下來、開成多節點,去踩課程誠實列出的那幾個坑:fencing、真的 CA、全服務稽核。那些難的地方都不在 OpenStack 本身,在它接的那個外部世界——也正是最值得練的地方。</p>
-<h2 id="_3">最後一句<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<p>這朵雲用的每個版本,幾年後都會被換掉;你為了讓它跑起來養成的判斷,不會。</p>
-<p>而不管你是哪一種讀者,有件事這門課用它自己的三次嘗試示範過了:第一次不會成功,第二次也不一定,而走不通的那幾次不是浪費,是在替下一次摸路。</p>
-<p>謝謝你走完這趟。現在,去蓋一朵你自己的——蓋壞了也沒關係,這門課就是這樣來的。</p>
+<h1 id="api">結語：從一次 API 操作，找到下一個問題<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
+<p>回到課程開始時，你可能只想知道怎麼開一台 VM。現在再看一次 <code>server create</code>，你能說出誰驗證身分、誰選主機、誰接上網路與儲存；如果結果不如預期，也知道先從哪個服務查起。這是後續練習最實用的起點。</p>
+<p>整門課大致走過三段：先把資源建立起來，再觀察服務如何合作，最後加入共用環境需要的權限、用量與恢復設計。下圖把這些能力連在一起：</p>
+<p><img alt="先建立 VM 網路與儲存，再追查 API 與封包，最後驗證權限、用量與恢復；每次延伸都確認前提與未驗證範圍" src="../../assets/diagrams/os-epilogue-course.svg" /></p>
+<p>圖的最後一段不表示這個 lab 已經成為可直接營運的平台。多節點環境與單機環境分開，TLS、外部身分及稽核也各有尚未驗證的部分。你已經能讀懂這些差異，接下來可以選擇一個需要的能力，把它驗得更完整。</p>
+<h2 id="_1">選一個與工作有關的練習<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>如果你正在開發應用，可以從一顆 volume 或一個負載平衡器開始。保存資料、重建 VM，再確認哪些內容留下來；或者調整後端服務，觀察健康檢查如何改變流量。先寫下預期結果，再用 API 狀態與實際讀寫一起確認，會比一次加入許多服務更容易知道自己理解了哪一段。</p>
+<p>如果你主要操作 Kubernetes，就回到 <a href="../sprint3-day8-e2e-workload-cluster/">Day 8</a>。挑一個 PVC 或 LoadBalancer Service，對照它在 OpenStack 建出的資源，確認權限、網路與儲存各由誰管理。後續若已做過 Day 22 的 provider 變更或 Day 32 的 TLS 改址，先處理那些相容與信任前提，不能直接假設早期 cluster 還能照原設定運作。</p>
+<p>如果你負責平台維運，可以從 <a href="../sprint5-day35-sprint5-recap/">Day 35</a> 選一項缺口：驗證設定在重新部署後仍保留、設計可恢復的身分服務，或補齊主機故障偵測與隔離。把範圍限制在可觀察的環境中，記下失敗時如何確認影響，以及恢復後如何檢查資料。</p>
+<h2 id="_2">換一種工具時，保留判斷的方法<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>本課採用 Kolla-Ansible。其他部署工具有不同的整合與維護方式，課程之外還有<a href="../../deployment-tools/">部署工具介紹</a>與<a href="../../previous-attempts/">先前嘗試的紀錄</a>可參考。那些記錄描述的是當時的版本與環境，不能直接推論成某工具永遠可用或不可用。</p>
+<p>換工具或升級時，先確認自己要完成的操作、相依服務與支援版本，再選一條最小流程測試。遇到失敗，分開看請求有沒有送達、設定有沒有載入、資源有沒有建立，以及應用能不能使用。課程中的指令會隨版本改變，這些檢查問題仍能幫你找到下一步。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>從你目前的工作挑一個需求，要用哪個可觀察結果判斷完成？只看容器或 VM 狀態夠不夠？</li>
+<li>換成另一個部署工具之後，哪些是工具特有的設定，哪些是仍須理解的 OpenStack 服務關係？</li>
+</ul>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>這門課讓你從建立資源走到理解服務之間的關係，也練習把成功訊息與真正想完成的結果分開確認。下一次遇到新的平台需求，可以先選一個範圍清楚的問題，查版本與前提，完成操作，再把結果與限制寫下來。下一個練習，就從你工作上最需要回答的那個問題開始。</p>
 
 
 
