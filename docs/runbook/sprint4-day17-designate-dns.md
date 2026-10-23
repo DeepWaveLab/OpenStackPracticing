@@ -4,7 +4,7 @@
 
 到 Day 16 為止,要連到雲裡的 VM,用的都是 IP。假設你開了一台 VM,掛上 floating IP(FIP)`172.24.4.152`,用這個位址存取它。過幾天 FIP 刪掉重建,位址換了,原來的 IP 就失效。可以在 DNS 裡維護一個名字,例如 `vm-dns.oslab.test`,而且讓這個名字跟著 FIP 走:FIP 建立時名字指向它,FIP 刪除時名字一起移除,不需要有人去改 DNS。
 
-這一章用指定 DNS 伺服器的查詢來驗證名稱,不設定公司 resolver 或公開網域委派。我們部署 OpenStack 的 DNS 服務 **Designate**(對應 AWS 的 Route 53),再讓 Neutron 在 FIP 建立和刪除時自動通知它。讀完之後,遇到「VM 開了、網路也設了網域,卻查不到 DNS 記錄」時,你能判斷這是 Neutron 的預設行為、設定寫錯,還是問錯了 DNS 伺服器。
+這一章用指定 DNS 伺服器的查詢來驗證名稱,不設定公司的 resolver(替用戶端查詢 DNS 名稱的服務),也不設定公開網域的委派(由上層網域指定某個子網域由哪些 DNS 伺服器負責)。我們部署 OpenStack 的 DNS 服務 **Designate**(對應 AWS 的 Route 53),再讓 Neutron 在 FIP 建立和刪除時自動通知它。讀完之後,遇到「VM 開了、網路也設了網域,卻查不到 DNS 記錄」時,你能判斷這是 Neutron 的預設行為、設定寫錯,還是問錯了 DNS 伺服器。
 
 先看要維護的資料:`vm-dns.oslab.test.` 這個名字,對應一個 IPv4 位址,就是一筆 **A 記錄**。同一個名字、同一種類型的記錄放成一組,叫 **recordset**;`oslab.test.` 及其下未另行委派的名稱,構成一個管理範圍,叫 **zone**。稍後先建 zone,Neutron 才能把 FIP 的 A 記錄放進去。
 
@@ -12,15 +12,11 @@
 
 先講 DNS 本身。每個網域的名字,最後都由某一台 DNS 伺服器負責回答「這個名字對應到哪個 IP」,這台伺服器叫這個網域的**權威伺服器**(authoritative server)。這門課用的權威伺服器是 **bind9**,一套很常見的開源 DNS 伺服器軟體。
 
-一般用戶端的 DNS 查詢由 bind9 回答。Designate 另有供後端使用的 mdns,稍後會用它比較資料是否已同步。它提供 API 讓人和其他 OpenStack 服務管理記錄,把記錄存進自己的資料庫,再交給 bind9 對外回答。部署完之後主機上會多出六個容器,下面這張圖畫出它們的分工,由上往下是一筆記錄從要求到能被查到的順序:
+一般用戶端的 DNS 查詢由 bind9 回答。Designate 另有供後端使用的 mdns,稍後會用它比較資料是否已同步。Designate 提供 API 讓人和其他 OpenStack 服務管理記錄,把記錄存進自己的資料庫,再交給 bind9 對外回答。部署完之後主機上會多出六個容器,下面這張圖畫出它們的分工,由上往下是一筆記錄從要求到能被查到的順序:
 
-![上層是發出要求的 openstack CLI 與 neutron-server,兩者都呼叫 designate-api;中層的 designate-api 把要求交給存放 zone 與記錄的 central,central 再交給 worker,producer 負責定期作業;下層的 worker 通知 bind9(port 53)建立 zone,designate-mdns(port 5354)從共用資料庫讀 zone 資料,回應 bind9 取區域內容的請求;最下方的 dig 可以分別問 mdns 和 bind9](../assets/diagrams/os-s4d17-architecture.svg)
+![Designate 元件分工:上方的 CLI 與 Neutron 透過 API 管理記錄,下方的 bind9 對外回答 DNS 查詢;步驟 5 會比較 mdns 與 bind9 的查詢結果](../assets/diagrams/os-s4d17-architecture.svg)
 
-照著圖由上往下看:
-
-1. **要求只有一個入口。** 不管是你用 CLI 建 zone,還是 Neutron 在 FIP 建立時要加記錄,都是呼叫 designate-api。
-2. **central 管理的是 Designate 認定的內容。** 它把 zone 和記錄寫進資料庫;worker 負責管理 bind9 上對應的 zone,並通知它有內容更新。producer 跑定期作業,不在一筆記錄的必經路上。
-3. **bind9 的資料來自 designate-mdns。** mdns 是 Designate 內建的小型 DNS 伺服器,聽在 5354 port,bind9 收到更新通知後向它取得 zone 的內容;mdns 從 Designate 共用的資料庫讀取記錄,並不向 central 要資料。bind9 聽在標準的 53 port,真正對外回答查詢。步驟 5 會分別問這兩台,出問題時可以藉此判斷是哪一段斷了。
+先看圖的上方與下方:CLI 和 Neutron 都透過 designate-api 管理記錄,用戶端則向 bind9 查詢名稱。中間的同步流程留到步驟 5 配合查詢結果說明。
 
 Neutron 那一側的整合由 Kolla 自動設定:開啟 Designate 之後,Kolla 會在 Neutron 的設定裡加上呼叫 Designate 的驅動程式和認證資訊,你只需要在步驟 1 提供兩個值。
 
@@ -40,7 +36,7 @@ EOF
 ```
 
 - `designate_ns_record`:每個 zone 都要宣告由哪台 DNS 伺服器負責,這裡填的名字會寫進 zone 的 NS 記錄(步驟 3 會在 Horizon 看到它)。它是一個 **list**,Kolla 的預設值也是 list 格式,不要寫成單一字串。
-- `neutron_dns_domain`:Neutron 預設使用的網域。Kolla 官方文件要求這個值**必須以 `.` 結尾**,而且不能是預設的 `openstacklocal`。少了結尾的點,部署照樣成功,但 Neutron 不會替 FIP 建立任何 DNS 記錄,也不會報錯,症狀見[疑難排解：FIP 一直沒有產生 A 記錄](#mine-2)。
+- `neutron_dns_domain`:Neutron 預設使用的網域。Kolla 官方文件要求這個值**必須以 `.` 結尾**,而且不能是預設的 `openstacklocal`。少了結尾的點,部署照樣成功,但 Neutron 不會替 FIP 建立任何 DNS 記錄,也不會顯示錯誤。
 
 ## 步驟 2:確認 port 53 沒被佔用,再部署
 
@@ -103,11 +99,17 @@ openstack server create vm-dns --flavor m1.tiny --image cirros --network day17-n
 openstack recordset list oslab.test.
 ```
 
-subnet 的 `--dns-nameserver 8.8.8.8` 跟 Designate 無關:它是 VM 透過 DHCP 拿到的 DNS 伺服器,VM 要解析外部網域名稱就靠它。少了它,問題要等到 VM 裡的程式需要連外才會出現,見[疑難排解：VM 裡解析不了外部網域名稱](#mine-3)。
+<span id="mine-3"></span>
+
+subnet 的 `--dns-nameserver 8.8.8.8` 跟 Designate 無關:它是 VM 透過 DHCP 拿到的 DNS 伺服器,VM 要解析外部網域名稱就靠它。少了它,問題要等到 VM 裡的程式需要連外才會出現。
 
 最後一行 `recordset list` 的結果裡**只有 NS 和 SOA,沒有 A 記錄**。網路設了 `dns_domain`,VM 也開好了,為什麼沒有記錄?
 
-原因是 Neutron 的發布規則。`day17-net` 是一般的租戶網路,VM 在上面拿到的是 `10.17.0.x` 的私有 IP。依照 Neutron 官方文件,port 的位址要直接寫進 DNS,所在的網路必須是管理員為此特別建立的網路(VXLAN 這類網路的 segmentation ID 要落在租戶網路的範圍之外),本章未啟用額外的固定 IP 發布選項,所以這個租戶網路不符合。其他 DNS 擴充可以按 subnet 或網路設定發布,不能把本章結果推成所有私有 IP 一律不能進 DNS。本章改用 **FIP** 驗證發布。下面這張圖把同一台 VM 的兩個位址並排比較:
+本章未啟用額外的固定 IP 發布選項。`day17-net` 是一般的租戶網路,VM 在上面拿到的 `10.17.0.x` 私有 IP 不符合這套設定下的發布條件,所以沒有 A 記錄。本章改用 **FIP** 驗證發布。
+
+若要讓 port 的位址直接寫進 DNS,依 [Neutron 官方文件](https://docs.openstack.org/neutron/2025.1/admin/config-dns-int-ext-serv.html#configuration-of-the-externally-accessible-network-for-use-cases-3b-and-3c),這套發布方式通常需要管理員特別建立網路。例如 VXLAN 這類網路的 segmentation ID(用來區分不同虛擬網路的編號),必須落在分配給租戶網路的編號範圍之外。其他 DNS 擴充可以按 subnet 或網路設定發布,所以不能把本章結果推成所有私有 IP 一律不能進 DNS。
+
+下面這張圖把同一台 VM 的兩個位址並排比較:
 
 ![VM vm-dns 在 day17-net 上(dns_domain 為 oslab.test.),它的私有 IP 10.17.0.x 不寫進 DNS;它的 FIP 172.24.4.152 寫進 zone oslab.test.,成為 vm-dns.oslab.test. A 172.24.4.152。下半部是 FIP 的生命週期:建 FIP 並給 dns-name 時記錄寫進 zone,掛到 VM 時記錄還在、名字指向這台 VM,刪 FIP 時記錄跟著刪除](../assets/diagrams/os-s4d17-publish-rule.svg)
 
@@ -133,6 +135,10 @@ vm-dns.oslab.test. A 172.24.4.152
 ## 步驟 5:用 dig 查詢,再確認記錄會跟著 FIP 刪除
 
 記錄在 Designate 裡,不代表 DNS 伺服器已經能回答。要用 **`dig`** 實際查一次:它是命令列的 DNS 查詢工具,`@` 後面指定要問哪台伺服器,`-p` 指定 port,`+short` 只印出答案。
+
+對照前面的架構圖,CLI 建 zone 或 Neutron 新增記錄時,要求都先送到 designate-api。central 管理資料庫儲存的內容,將 zone 和記錄寫入資料庫;worker 管理 bind9 上對應的 zone,並通知 bind9 有內容更新。producer 負責定期作業,不在單筆記錄的同步流程中。
+
+bind9 收到更新通知後,向 designate-mdns 取得 zone 的內容。mdns 是 Designate 內建的小型 DNS 伺服器,從共用資料庫讀取記錄,在 5354 port 提供資料;bind9 在標準的 53 port 對外回答查詢。分別查這兩個 port,就能比較資料庫裡的記錄是否已同步到 bind9。
 
 bind9 和 mdns 都聽在主機的管理網卡上(Kolla 的 `dns_interface` 預設就是 `network_interface`,也就是 Day 1 設的 `eth0`)。下面的 `10.0.0.4` 請換成你的主機私有 IP(`ip -4 addr show eth0` 可查)。先問 bind9,再問 mdns:
 
@@ -160,23 +166,7 @@ openstack recordset list oslab.test. -f value | grep vm-dns || echo "記錄已�
 
 **修法**:依步驟 4 建立帶 `--dns-name` 與 `--dns-domain` 的 FIP,再掛到 VM。只掛上一個沒有 DNS 屬性的既有 FIP,不能視為相同流程。
 
-Kolla 官方 Designate 指南的驗證範例裡,私有網路的 VM 也有 A 記錄,那是因為範例另外開了 designate-sink:它接收 Nova 和 Neutron 的事件通知來建立記錄,是另一條機制。Kolla 預設不開它(`designate_enable_notifications_sink: "no"`),這門課也沒有開,沒有驗證過那條路。
-
-### 部署成功,但 FIP 一直沒有產生 A 記錄 {#mine-2}
-
-**症狀**:`kolla-ansible deploy` 是 `failed=0`,zone 也是 `ACTIVE`,建了帶 `--dns-name` 的 FIP 之後,`recordset list` 還是只有 NS 和 SOA,也沒有任何錯誤訊息。
-
-**原因**:`neutron_dns_domain` 少了結尾的點,或沒改掉預設的 `openstacklocal`,見步驟 1。
-
-**修法**:改好 `globals.yml`,重跑步驟 2 的 deploy 指令。
-
-### VM 裡解析不了外部網域名稱 {#mine-3}
-
-**症狀**:VM 裡要先解析網域名稱的動作(例如拉容器映像檔)失敗,用 IP 指定對象的連線卻不受影響。
-
-**原因**:建 subnet 時沒有給 `--dns-nameserver`,VM 沒有可用的 DNS 伺服器。這跟 Designate 無關,Designate 只管 `oslab.test.` 這個 zone,不負責替 VM 解析外部名稱。
-
-**修法**:步驟 4 建 subnet 時已經加了 `--dns-nameserver 8.8.8.8`。已經建好的 subnet 可以用 `openstack subnet set <subnet> --dns-nameserver 8.8.8.8` 補上,再重建受影響的 VM。Day 18 的資料庫實例就是因為這個原因建立失敗,症狀判讀見 Day 18 的[「subnet 沒有 DNS」](sprint4-day18-trove-dbaas.md#mine-1)。
+Kolla 官方 Designate 指南的驗證範例裡,私有網路的 VM 也有 A 記錄,那是因為範例另外開了 designate-sink:它接收 Nova 和 Neutron 的事件通知來建立記錄,是另一條機制。Kolla 預設不開它(`designate_enable_notifications_sink: "no"`),本章也未啟用。
 
 ## 想一想
 

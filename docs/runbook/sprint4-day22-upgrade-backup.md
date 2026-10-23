@@ -4,7 +4,7 @@
 
 ## 先決定更新範圍
 
-**系列內更新**是在同一個 OpenStack 系列內套用修補；Kolla 通常以更新工具、拉取映像後重新 `deploy` 的方式處理。**跨系列升級**則要依目標版本的升級文件使用 `upgrade`，包含資料庫遷移等工作。兩者都要先讀 release notes，不能只用「同系列」推論絕對沒有相容性或 schema 變化。
+**系列內更新**是在同一個 OpenStack 系列內套用修補；Kolla 通常以更新工具、拉取映像後重新 `deploy` 的方式處理。**跨系列升級**則要依目標版本的升級文件使用 `upgrade`，包含資料庫遷移等工作。兩者都要先讀 release notes，不能只用「同系列」推論絕對沒有相容性或資料表與欄位結構的變化。
 
 本章只走 2025.1 的系列內更新。**image tag** 是映像名稱上的標籤，同一個 tag 可以指向後來重建的內容；**image ID** 用來辨識本機實際映像。`pull` 下載新映像，既有容器仍可使用舊映像；`deploy` 才依映像與設定差異重新建立需要更新的容器：
 
@@ -35,7 +35,7 @@ pip show kolla-ansible | grep Version    # 20.4.1.dev17
 git ls-remote https://opendev.org/openstack/kolla-ansible refs/heads/stable/2025.1
 ```
 
-套件版本號與 Git commit 是不同資訊，不能直接拿兩者比較是否相同。若需更新工具，依 2025.1 Operating Kolla 文件使用同系列套件，並更新 `install-deps` 所管理的依賴；本章不把這兩行查詢當作工具升級已完成的證據。
+套件版本號與 Git commit 是不同資訊，不能直接拿兩者比較是否相同。依 [2025.1 Operating Kolla 的工具版本原則](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html#tools-versioning)，應使用目標系列的最新工具。本章目標是 2025.1，在同一個虛擬環境中先執行 `pip3 install --upgrade git+https://opendev.org/openstack/kolla-ansible@stable/2025.1`，再執行 `kolla-ansible install-deps` 更新依賴。這組工具更新指令本課沒有實跑，後面的結果不代表工具更新已驗證成功。
 
 接著下載服務映像：
 
@@ -47,7 +47,9 @@ kolla-ansible pull -i all-in-one
 PLAY RECAP: ok=62  changed=28  failed=0
 ```
 
-`changed` 是 Ansible 工作回報的變更數，不能直接當成下載映像的數量。以下用 MariaDB 比較 tag 目前指向的 image ID 與執行中容器的 image ID；區塊中的註解是本課的觀察值：
+`changed` 是 Ansible 工作回報的變更數，不能直接當成下載映像的數量。以下用 MariaDB 比較 tag 目前指向的 image ID 與執行中容器的 image ID；區塊中的註解是本課的觀察值。
+
+比對時應使用 `sudo docker inspect mariadb --format "{{.Image}}" | cut -c8-19`，去除 `sha256:` 前綴後取 12 碼，才與下方記錄的短 ID 長度一致。原指令的 `cut -c8-20` 會取出 13 碼；修正後的寫法本課沒有實跑。以下保留原指令與記錄：
 
 ```bash
 sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}} {{.CreatedSince}}" | grep mariadb-server
@@ -95,7 +97,7 @@ kolla-ansible deploy -i all-in-one
 PLAY RECAP: ok=628  changed=175  failed=0
 ```
 
-部署完成後，先檢查容器健康、MariaDB image ID 與服務目錄，再驗證本次使用的服務功能：
+部署完成後，先檢查容器健康、MariaDB image ID 與服務目錄，再驗證本次使用的服務功能。下方 image ID 查詢也應改用 `sudo docker inspect mariadb --format "{{.Image}}" | cut -c8-19`，取 12 碼與步驟 2 比較；修正後的寫法本課沒有實跑。以下保留原指令與記錄：
 
 ```bash
 sudo docker ps --format "{{.Names}} {{.Status}}" | grep -i unhealthy   # (空)
@@ -107,14 +109,16 @@ MariaDB 的 ID 應對上步驟 2 下載的映像。沒有 `unhealthy`、服務�
 
 ## 步驟 5：建立資料庫備份與時間點標記
 
-**Mariabackup** 能在資料庫運作時建立實體備份。Kolla 將備份存入 Docker volume `mariadb_backup`。下面區塊列出三個動作；第一行 `enable_mariabackup` 是要寫進 `globals.yml` 的 YAML 設定，不能當成 shell 命令執行：
+**Mariabackup** 能在資料庫運作時建立實體備份。Kolla 將備份存入 Docker volume `mariadb_backup`。先在 `/etc/kolla/globals.yml` 加入以下 YAML 設定：
+
+```yaml
+enable_mariabackup: "yes"
+```
+
+接著重新設定 MariaDB，建立備份需要的帳號與權限，再執行全量備份：
 
 ```bash
-# 1. globals.yml 加一行
-enable_mariabackup: "yes"
-# 2. 讓 MariaDB 拿到備份帳號與權限
 kolla-ansible reconfigure -i all-in-one -t mariadb
-# 3. 跑全量備份(指令使用連字號)
 kolla-ansible mariadb-backup -i all-in-one
 ```
 
@@ -191,14 +195,6 @@ openstack project list | grep day22
 ### 完整 prechecks 擋下原本可用的 Octavia 設定 {#mine-1}
 
 只跑特定 tags 時，不會完整檢查其他角色。`tenant` 型 Amphora 管理網路與 OVN 的組合必須重新評估；步驟 3 說明切成 OVN provider 的代價與仍需 Amphora 時的處理範圍。不要直接對既有 LB 宣稱已完成遷移。
-
-### mariadb_backup 不是 CLI 接受的命令 {#mine-2}
-
-本章使用 2025.1 CLI 的 `mariadb-backup`，中間是連字號；文件或舊範例中出現的底線寫法不能直接照用。
-
-### copy-back 後 MariaDB 無法讀取資料 {#mine-3}
-
-臨時容器以 root 寫回檔案後，擁有者可能與服務使用者不同。步驟 6 已保留 `chown -R mysql:mysql /var/lib/mysql`；若啟動失敗，仍應先讀錯誤紀錄確認是否為檔案權限問題。
 
 ## 想一想
 

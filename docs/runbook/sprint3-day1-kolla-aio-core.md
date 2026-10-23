@@ -22,7 +22,7 @@ OpenStack 不是一個程式,而是十幾個服務的集合。以 Nova 為例,�
 我們可以從圖上看到兩件事:
 
 1. **三份輸入裡,真正要動腦的只有 `globals.yml`。** 密碼由一個指令自動產生,單機用的 inventory 直接複製官方範例。這一章大部分的篇幅都在決定 `globals.yml` 裡那幾行。
-2. **每個服務跑在自己的容器裡。** 部署完之後 `docker ps` 會看到 `keystone`、`nova_api`、`mariadb` 這些名字。哪個服務出問題,就看那個容器的 log,邊界很清楚。
+2. **每個服務跑在自己的容器裡。** 部署完之後 `docker ps` 會看到 `keystone`、`nova_api`、`mariadb` 這些名字。其中 MariaDB 是保存 OpenStack 服務資料的資料庫。哪個服務出問題,就看那個容器的 log,邊界很清楚。
 
 ## 開始之前
 
@@ -41,7 +41,7 @@ source ~/kolla-venv/bin/activate
 ```
 
 !!! warning "之後每次操作都要先進 venv"
-    這一章以及之後每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`,提示符前面出現 `(kolla-venv)` 才算進來了。沒進 venv 時,錯誤訊息常常指向一個看起來毫不相關的地方,很難聯想到真正的原因,實際的例子見[疑難排解：沒進 venv,`install-deps` 靜默失敗](#mine-1)。
+    這一章以及之後每一天,執行任何 `kolla-ansible` 指令之前都要先 `source ~/kolla-venv/bin/activate`,提示符前面出現 `(kolla-venv)` 才算進來了。`install-deps` 要靠 PATH 找到 venv 裡的 `ansible-galaxy`,沒進 venv 就無法安裝所需的 collection。
 
 接著在 venv 內安裝 kolla-ansible 本體(從 stable 分支)與它需要的 Ansible:
 
@@ -67,7 +67,7 @@ kolla-ansible 還需要一批 Ansible collection(Ansible 的擴充套件,裡面�
 kolla-ansible install-deps
 ```
 
-最後補裝兩個 Python 模組。官方文件沒有列出這一步,但少了它們,步驟 5 的 prechecks 會分別因為缺 Docker SDK 和缺 dbus 模組而失敗(見疑難排解的[「缺 docker 模組」](#mine-2)與[「缺 dbus 模組」](#mine-3))。其中 dbus-python 要從原始碼編譯,所以先裝系統的標頭檔:
+最後補裝兩個 Python 模組。官方文件沒有列出這一步,但少了它們,步驟 5 的 prechecks 會分別因為缺 Docker SDK 和缺 dbus 模組而失敗。Docker SDK 是讓 Python 程式操作 Docker 的介面,Kolla-Ansible 在 venv 裡透過它管理容器;bootstrap-servers 裝的 Docker engine 則是主機上執行容器的服務,兩者要分別安裝。其中 dbus-python 要從原始碼編譯,所以先裝系統的標頭檔:
 
 ```bash
 sudo apt-get install -y pkg-config libdbus-1-dev libdbus-glib-1-dev
@@ -185,13 +185,11 @@ EOF
 
 ![左邊是多節點:proxysql 聽 VIP:3306、mariadb 聽主機 IP:3306,位址不同,兩個程式各聽各的;右邊是單機:VIP 填成主機自己的 IP,proxysql 和 mariadb 都要聽 10.0.0.4:3306,只能有一個程式聽這個位址,mariadb 綁不上 port,容器 Exited (1)](../assets/diagrams/s3d1-port-3306.svg)
 
-左邊兩個位址不同,相安無事。右邊因為 VIP 填的就是主機 IP,兩個程式要聽同一個 IP 和 port,MariaDB 起不來,deploy 會卡在等 MariaDB 的那一步直到逾時。所以單機部署關 haproxy 時,proxysql 也要一起關。附加完上面七行之後,再補這一行:
+左邊兩個位址不同,不會衝突。右邊因為 VIP 填的就是主機 IP,兩個程式要聽同一個 IP 和 port,MariaDB 起不來,deploy 會卡在等 MariaDB 的那一步直到逾時。所以單機部署關 haproxy 時,proxysql 也要一起關。附加完上面七行之後,再補這一行:
 
 ```bash
 echo 'enable_proxysql: "no"' >> /etc/kolla/globals.yml
 ```
-
-如果漏了,症狀和完整的修法見[疑難排解：MariaDB 起不來](#mine-4)。
 
 ### 設定在部署時產生
 
@@ -238,7 +236,7 @@ PLAY RECAP *********************************************************
 localhost : ok=45   changed=8    unreachable=0    failed=0    ...
 ```
 
-這裡只有 `localhost` 一行,因為 `all-in-one` 名單裡只有本機。prechecks 沒過就不要繼續,它抓到的每個問題,到 deploy 階段都會變成更難查的失敗。如果看到 `No module named 'docker'` 或 `No module named 'dbus'`,回到步驟 1 最後補裝模組的那段(疑難排解的[「缺 docker 模組」](#mine-2)、[「缺 dbus 模組」](#mine-3))。
+這裡只有 `localhost` 一行,因為 `all-in-one` 名單裡只有本機。prechecks 沒過就不要繼續,它抓到的每個問題,到 deploy 階段都會變成更難查的失敗。如果看到 `No module named 'docker'` 或 `No module named 'dbus'`,回到步驟 1 最後補裝模組的那段。
 
 ## 步驟 6:deploy(約 25–30 分鐘)
 
@@ -259,7 +257,7 @@ localhost : ok=367  changed=214  unreachable=0    failed=0    ...
 
 如果 deploy 中途失敗,先在 log 裡找**第一個** `fatal:`,那才是真正的錯誤,後面的失敗多半是它引起的連鎖反應。
 
-找到原因、改好 `globals.yml` 之後,通常直接重跑 deploy 就好。但冪等有它的範圍:對 Kolla 認得的資源,重跑只套用差異,可以放心重來;可是像 MariaDB 這種要在第一次啟動時初始化資料的服務,如果初始化做到一半就失敗,留下來的容器和 volume 處於半完成的狀態,重跑不會替你清掉。這時要先刪掉那個容器和 volume,再重跑。疑難排解裡的[「MariaDB 起不來」](#mine-4)就是一個實際的例子。
+找到原因、改好 `globals.yml` 之後,通常直接重跑 deploy 就好。但冪等有它的範圍:對 Kolla 管理的資源,重跑只套用差異,不會自動清除初始化失敗留下的資料。MariaDB 使用的 volume 是保存資料、獨立於容器生命週期的儲存區,刪掉容器不會一併刪掉裡面的資料。如果是首次部署時 MariaDB 初始化失敗,只有在確認資料庫沒有需要保留的資料後,才可刪除相關容器與 volume 再重跑。已有資料或無法確認資料狀態時,不要刪除 volume,應先查明失敗原因。
 
 ## 步驟 7:第一次使用你的雲
 
@@ -298,9 +296,11 @@ openstack service list
 - **heat** 和 **heat-cfn** 是編排服務 Heat(用一份範本檔一次建立 VM、網路等多項資源),Kolla 預設就會啟用,Day 5 會直接用到。
 - **Horizon 不在清單上**,因為它是網頁介面,不提供 API 給其他服務呼叫。
 
-服務清單只代表「登記了」,不代表每個元件都活著。還可以再確認三件事:`openstack compute service list` 裡 Nova 的 scheduler、conductor、compute 三個元件狀態都是 `up`;`openstack network agent list` 裡的 OVN agent 都是 Alive;`docker ps` 列出的 33 個容器都是 `Up`,沒有 `Exited` 或 `Restarting`。
+服務清單只代表「登記了」,不代表每個元件都活著。還可以再確認三件事:`openstack compute service list` 裡 Nova 的 scheduler、conductor、compute 三個元件狀態都是 `up`;`openstack network agent list` 裡的 OVN agent 都是 Alive;`sudo docker ps -a` 列出的 33 個容器都是 `Up`,沒有 `Exited` 或 `Restarting`。`-a` 會列出包含已停止容器在內的所有容器,才能檢查是否有 `Exited`。
 
 最後打開網頁儀表板 Horizon。Horizon 聽在 VM 的私有 IP 上,而 Day 0 的 NSG 只對你的 IP 開了 SSH,所以要**在 Mac 上**開一條 SSH tunnel(透過 SSH 連線轉送某個 port),把 Mac 的 8080 port 轉到 VM 上 Horizon 的 80 port:
+
+下面保留的實跑指令漏了 Day 0 的金鑰參數。沿用 Day 0 的登入方式時,應寫成 `ssh -i ~/.ssh/<ssh-key> -L 8080:<VM私有IP>:80 azureuser@<VM公網IP>`,將 `<ssh-key>` 換成 Day 0 使用的金鑰檔名,兩個 IP 換成你的 VM 位址。修正後的寫法本課沒有實跑。
 
 ```bash
 # 在 Mac 上執行;<VM公網IP> 換成你 Day 0 拿到的
@@ -319,35 +319,13 @@ grep keystone_admin_password /etc/kolla/passwords.yml
 
 ## 疑難排解
 
-照官方文件操作、或漏掉本章某一步時,會遇到下面四個問題,依出現順序排列。
-
-### 沒進 venv,`install-deps` 靜默失敗 {#mine-1}
-
-**症狀**:bootstrap-servers 報 `role openstack.kolla.baremetal` 解析錯誤,看起來像是劇本本身壞了。
-
-**原因**:沒有 activate venv,而是直接用完整路徑呼叫 `~/kolla-venv/bin/kolla-ansible install-deps`。install-deps 要靠 PATH 找到 venv 裡的 `ansible-galaxy`,沒進 venv 就找不到,collection 根本沒裝進去,到了 bootstrap-servers 才出錯。
-
-**修法**:kolla 相關的指令一律在 `source ~/kolla-venv/bin/activate` 之後執行,然後重跑 `kolla-ansible install-deps`。
-
-### prechecks 報 `No module named 'docker'`(缺 docker 模組) {#mine-2}
-
-**原因**:bootstrap-servers 裝的是 Docker **engine**,也就是主機上跑容器的服務。kolla-ansible 在 venv 裡操作 Docker 時用的是 Docker 的 **Python SDK**,那是另一個東西,要自己裝。
-
-**修法**:在 venv 裡 `pip install docker`。
-
-### prechecks 報 `No module named 'dbus'`(缺 dbus 模組) {#mine-3}
-
-**原因**:`dbus-python` 要從原始碼編譯,系統上沒有 dbus 的標頭檔時,直接 pip 裝會編譯失敗。
-
-**修法**:先 `apt install pkg-config libdbus-1-dev libdbus-glib-1-dev`,再 `pip install dbus-python`。
-
 ### MariaDB 起不來,port 3306 被 proxysql 佔走 {#mine-4}
 
 **症狀**:deploy 卡在 `Wait for first MariaDB service port liveness` 直到逾時;`docker ps -a` 看到 `mariadb Exited (1)`;`ss -tlnp | grep 3306` 發現聽 3306 的是 **proxysql**。
 
 **原因**:Kolla 的 `enable_proxysql` 預設是 `yes`,而且它跟 `enable_haproxy` 是**獨立的開關**。關了 haproxy、把 VIP 設成主機 IP 之後,proxysql 綁 VIP:3306、mariadb 綁主機 IP:3306,兩者是同一個 IP 和 port(見步驟 4 的對照圖)。
 
-**修法**:關掉 proxysql,並清掉初始化到一半的 MariaDB,再重跑 deploy。如果步驟 4 已經補過 `enable_proxysql` 那一行,下面第一行就跳過,免得 `globals.yml` 出現重複的設定:
+**修法**:以下清理方式只適用於首次部署、MariaDB 初始化失敗,且已確認資料庫沒有需要保留的資料。關掉 proxysql,並清掉初始化到一半的 MariaDB,再重跑 deploy。如果步驟 4 已經補過 `enable_proxysql` 那一行,下面第一行就跳過,免得 `globals.yml` 出現重複的設定:
 
 ```bash
 echo 'enable_proxysql: "no"' >> /etc/kolla/globals.yml
@@ -366,7 +344,7 @@ kolla-ansible deploy -i ~/all-in-one   # 冪等,直接重跑
 
 ## 小結
 
-Kolla-Ansible 把 OpenStack 的每個服務放進各自的容器,你只要提供 `globals.yml`、`passwords.yml` 和 inventory 三份輸入,它就在部署當下產生所有服務的設定並依序啟動。單機部署要多做兩個決定:用一張沒有 IP 的 dummy 網卡給 Neutron 的對外網路,以及把 VIP 設成主機 IP 時,haproxy 和 proxysql 要一起關。之後改設定,改 `globals.yml` 或 `/etc/kolla/config/` 底下的覆寫檔,再重跑部署;重跑失敗時,先從 log 裡第一個 `fatal:` 找原因,再想想是不是有服務初始化到一半,得先把它的容器和 volume 清掉。
+Kolla-Ansible 把 OpenStack 的每個服務放進各自的容器,你只要提供 `globals.yml`、`passwords.yml` 和 inventory 三份輸入,它就在部署當下產生所有服務的設定並依序啟動。單機部署要多做兩個決定:用一張沒有 IP 的 dummy 網卡給 Neutron 的對外網路,以及把 VIP 設成主機 IP 時,haproxy 和 proxysql 要一起關。之後改設定,改 `globals.yml` 或 `/etc/kolla/config/` 底下的覆寫檔,再重跑部署;重跑失敗時,先從 log 裡第一個 `fatal:` 找原因。首次部署的 MariaDB 初始化失敗時,也要先確認沒有需要保留的資料,才可清除容器與 volume。
 
 ## 延伸閱讀
 

@@ -8,40 +8,21 @@ Prometheus 圖上 CPU 已經上升，VM 數量卻沒有變。可能是告警查�
 
 需要 Day 28 的 Ceilometer／Prometheus、Day 27 的 team-a 身分與網路，以及 Day 5 的 Heat。指令在 Kolla 部署主機執行，位址、UUID 與 inventory 請換成自己的值。切換 admin、system 與 team-a 身分時，沿用 Day 27 的認證變數清理方式。
 
-Day 27 把 team-a 的 servers 限為 2，本章卻要觀察最多 3 台。先以 system 管理員查出 team-a 的 `servers` limit ID，將該筆上限調到至少 3，並確認 VCPU、記憶體與磁碟額度可容納三台 `m1.tiny`。可依 Nova 的 limit 更新方式使用 `openstack limit set --resource-limit 3 <servers-limit-id>`；這是補足跨章前提的命令，原紀錄沒有保存這一步輸出。不能把 registered limit 改大就假設覆寫值也跟著變。
+Day 27 把 team-a 的 servers 限為 2，本章卻要觀察最多 3 台。先以 system 管理員查出 team-a 的 `servers` limit ID，將該筆上限調到至少 3，並確認 VCPU、記憶體與磁碟額度可容納三台 `m1.tiny`。可依 Nova 的 limit 更新方式使用 `openstack limit set --resource-limit 3 <servers-limit-id>`。不能把 registered limit 改大就假設覆寫值也跟著變。
 
 第一段用 Day 28 的 `meter-vm` 測告警；建立 autoscaling stack 前再刪除它，並確認 team-a 沒有其他無關 VM。因為本章以 project 分組，其他 VM 的指標也會影響平均值。Day 28 所述 Pushgateway 舊序列的清理與新鮮度問題仍然存在。
 
 ## 先看要追查的四段 {#architecture}
 
-**Aodh** 定期評估一條 **alarm（告警規則）**，再依結果決定 **state（狀態）**：`ok`、`alarm` 或 `insufficient data`。**Action** 是指定狀態下要呼叫的通知端點；本章把它設為 Heat 的擴縮訊號網址。
+**Aodh** 是 OpenStack 的告警服務，將 Day 28 的計量結果轉成通知，讓 Heat 依規則執行擴縮，免去人工判讀數據後再操作 Heat。
+
+Aodh 定期評估一條 **alarm（告警規則）**，再依結果決定 **state（狀態）**：`ok`、`alarm` 或 `insufficient data`。**Action** 是指定狀態下要呼叫的通知端點；本章把它設為 Heat 的擴縮訊號網址。
 
 圖中每一段都要有可觀察的結果，才能把 VM 增減連回告警。
 
 ![Prometheus查詢結果交給Aodh評估，notifier發送Heat訊號，Heat調整AutoScalingGroup；新增VM又影響之後的計量](../assets/diagrams/os-s5d29-chain.svg)
 
 `alarm` 不表示通知已送達，通知回 200 也不單獨表示新 VM 已完成。另一方面，新增 VM 會改變後續樣本與平均值，因此擴縮本身也會影響下一次判斷。
-
-### 用哪些標籤選工作負載
-
-其他教材可能以 Gnocchi 資源 metadata 選群組，例如：
-
-```yaml
-metadata: {"metering.server_group": {get_param: "OS::stack_id"}}   # 幫 VM 貼標籤
-type: OS::Aodh::GnocchiAggregationByResourcesAlarm                 # 再用標籤篩
-```
-
-本章保存的 Prometheus 樣本卻是以下欄位：
-
-```text
-__name__      = cpu
-job           = openstack-telemetry
-project_id    = d2b258226e6b4d4493d93b5411726c97
-resource_id   = dd3cfe9a-0301-470c-bef5-c8620dc4e3f5
-user_id       = 1384190dc01245789ea1465816402146
-```
-
-沒有 `server_group`，所以這份 publisher 設定不能直接使用上面的查詢。本章以 team-a 的 `project_id` 選定範圍，前提是該 project 只承載這組實驗。這不是 Prometheus 不能儲存自訂 label，而是目前資料沒有送出該 label；同一專案混合多種工作負載時，需要另外設計可靠的分組資料。
 
 ## 步驟 1：部署 Aodh
 
@@ -55,12 +36,39 @@ kolla-ansible deploy -i ~/all-in-one --tags aodh
 
 ## 步驟 2：建立查詢並設定 Prometheus 連線
 
-在 CLI 虛擬環境安裝外掛，再以管理員建立一條只測「是否有 cpu 序列」的告警。先清除前一章殘留的認證變數：
+### 用哪些標籤選工作負載
+
+其他教材可能以 Gnocchi 資源 metadata 選群組，例如：
+
+```yaml
+metadata: {"metering.server_group": {get_param: "OS::stack_id"}}
+type: OS::Aodh::GnocchiAggregationByResourcesAlarm
+```
+
+建立告警查詢前，先沿用 Day 28 的指令查看 Pushgateway 原始指標，確認自己的 `cpu` 序列有哪些標籤：
+
+```bash
+curl -s http://10.0.0.4:9092/metrics | grep -v "^#" | head
+```
+
+以下 CPU 樣本可用來對照欄位；查詢時請使用自己資料中的標籤值：
+
+```text
+__name__      = cpu
+job           = openstack-telemetry
+project_id    = d2b258226e6b4d4493d93b5411726c97
+resource_id   = dd3cfe9a-0301-470c-bef5-c8620dc4e3f5
+user_id       = 1384190dc01245789ea1465816402146
+```
+
+這筆樣本沒有 `server_group`，因此不能直接照搬 Gnocchi 的 metadata 分組方式。本章以 team-a 的 `project_id` 選定範圍，前提是該 project 只承載這組實驗。這不是 Prometheus 不能儲存自訂 label，而是目前資料沒有送出該 label；同一專案混合多種工作負載時，需要另外設計可靠的分組資料。
+
+在 CLI 虛擬環境安裝外掛，再以管理員建立一條只測「是否有 cpu 序列」的告警。先清除前一章殘留的認證變數。如果不同 domain 有同名的 team-a，`project show` 要加 `--domain day27-corp`（修正後的寫法本課沒有實跑）：
 
 ```bash
 pip install python-aodhclient
 source /etc/kolla/admin-openrc.sh
-TEAM_A=$(openstack project show team-a --domain day27-corp -f value -c id)
+TEAM_A=$(openstack project show team-a -f value -c id)
 openstack alarm create --type prometheus --name day29-vm-count \
   --query "count(cpu{project_id=\"$TEAM_A\"})" \
   --comparison-operator ge --threshold 1 --evaluation-periods 1 --granularity 60
@@ -164,7 +172,7 @@ kolla-ansible deploy -i ~/all-in-one --tags ceilometer
 
 ## 步驟 5：讓 Heat 接收擴縮訊號 {#step-5}
 
-Heat 的 **AutoScalingGroup** 保存同規格 VM 的目標數量與上下限；**ScalingPolicy** 定義一次增加或減少多少台，以及動作之間的 cooldown。Aodh 的 PrometheusAlarm 則把符合條件的結果送給政策。
+Heat 的 **AutoScalingGroup** 保存同規格 VM 的目標數量與上下限；**ScalingPolicy** 定義一次增加或減少多少台，以及動作之間的 **cooldown（冷卻時間）**。cooldown 以秒為單位，限制同一政策過於頻繁地執行；本章設定為 60 秒，政策執行後須等待冷卻時間結束，才能再次執行。Aodh 的 PrometheusAlarm 則把符合條件的結果送給政策。
 
 先確認 Heat 支援這些資源型別：
 
@@ -183,7 +191,7 @@ openstack orchestration resource type list | grep -i aodh
 | OS::Aodh::PrometheusAlarm                    |
 ```
 
-清單同時有 Gnocchi 與 Prometheus 型別；這證明目前安裝的 Heat 認得它們，不表示各後端都已部署。
+清單同時有 Gnocchi 與 Prometheus 型別；目前安裝的 Heat 支援清單中的資源型別，不表示各後端都已部署。
 
 將[完整範本](#full-template)存為 `~/day29-autoscale.yaml`。關鍵段落如下：
 
@@ -205,7 +213,7 @@ openstack orchestration resource type list | grep -i aodh
               url: { get_attr: [scale_out, signal_url] }
 ```
 
-`project_id` 限定 team-a，門檻 0.4 是每條 VM CPU 序列速率的平均值。`trust+url` 經字串替換形成 `trust+http://...`，讓 Aodh 透過 Keystone **trust（委派授權）**取得 token，再通知 Heat 原生 API。這是本課替代失敗 `alarm_url` 的方式，並不是宣稱所有環境的 `alarm_url` 都不可用。
+`project_id` 限定 team-a，門檻 0.4 是每條 VM CPU 序列速率的平均值。`trust+url` 經字串替換形成 `trust+http://...`，讓 Aodh 透過 Keystone **trust（委派授權）**取得 token，再通知 Heat 原生 API。
 
 建立 stack 前，在 team-a 身分刪除 Day 28 的 `meter-vm`，確認額度和指標範圍符合開頭前提，再載入 team-a openrc。`TEAM_A` 必須是同一個專案的 ID：
 
@@ -322,13 +330,9 @@ rate(cpu[2m]) → 0.0
 rate(cpu[5m]) → 0.0
 ```
 
-這個結果只證明當時一分鐘窗口算不出 rate；沒有同時保存完整 scrape 時序，不能將原因唯一歸為 Ceilometer 的 polling 間隔。回步驟 4 檢查來源更新、scrape 樣本、label 條件與窗口。
+這個結果顯示一分鐘窗口算不出 rate，但不能單憑窗口結果將原因歸為 Ceilometer 的 polling 間隔。回步驟 4 檢查來源更新、scrape 樣本、label 條件與窗口。
 
 `insufficient data` 不會走本章的 alarm／ok actions；Aodh 另有 `insufficient_data_actions`，本範本未設定。正式部署需要另外處理「資料不夠」的通知，不能把沒有擴縮動作當成沒有問題。整體反應時間也受這三種間隔、窗口平滑與 VM 建立時間影響，並非固定相加或相乘即可算出。
-
-### CLI 的 rule 是 null {#mine-5}
-
-本課 CLI 沒把 Prometheus 型規則對到通用的 `rule` 欄。用步驟 3 的 API 查 `prometheus_rule`，再核對 state 與 query；不要因 CLI 顯示 null 就重新建一條規則。
 
 ## 完整範本 {#full-template}
 
@@ -437,7 +441,7 @@ Nova 的 ACTIVE 不保證 user_data 成功；讀數一直為零時，也要查 `
 想再深入，可以從這幾份開始：
 
 - [Aodh 2025.1](https://docs.openstack.org/aodh/2025.1/)：告警狀態與通知器。
-- [Heat 資源型別](https://docs.openstack.org/heat/2025.1/template_guide/openstack.html)：ScalingPolicy、PrometheusAlarm 與 repeat_actions。
+- [Heat 資源型別](https://docs.openstack.org/heat/2025.1/template_guide/openstack.html)：ScalingPolicy、PrometheusAlarm 與 repeat_actions。ScalingPolicy 的 [cooldown 說明](https://docs.openstack.org/heat/2025.1/template_guide/openstack.html#OS::Heat::ScalingPolicy-prop-cooldown)列出冷卻時間的單位。
 - [Prometheus rate](https://prometheus.io/docs/prometheus/latest/querying/functions/#rate)：計數器速率與窗口的意義。
 - [Kolla 監控整合](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/index.html)：服務側部署設定。
 

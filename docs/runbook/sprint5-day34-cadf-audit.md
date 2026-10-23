@@ -1,6 +1,6 @@
 # Day 34：從 Nova 的稽核事件追查 VM 操作
 
-一台 VM 不見了，同事想知道誰送出了刪除要求。Nova 的一般 log 能協助排錯，但如果每次都要從不同訊息找使用者、URL 與結果，查詢很難一致。本章把 Nova API 的請求記成 CADF 事件，再送進 Day 21 的 OpenSearch；讀完能判讀請求者、操作、資源與回應，並知道這些紀錄還不能證明什麼。
+一台 VM 不見了，同事想知道誰送出了刪除要求。Nova 的一般 log 能協助排錯，但如果每次都要從不同訊息找使用者、URL 與結果，查詢很難一致。Day 33 讓使用者以公司帳號登入 OpenStack，本章接著追查該身分送出的 API 請求。我們把 Nova API 的請求記成 CADF 事件，再送進 Day 21 的 OpenSearch；讀完能判讀請求者、操作、資源與回應，並知道這些紀錄還不能證明什麼。
 
 ## 先分清楚事件記錄的範圍
 
@@ -15,7 +15,7 @@
 
 時間由 `eventTime` 表達。欄位有一致名稱，才方便查詢；但要保留完整事件、對照 request／response，不能只看 `action=delete` 就認定 VM 已經刪完。OpenStack API 常先接受非同步要求，再由背景服務執行。
 
-**本章只接 Nova API。** 它不涵蓋所有 OpenStack 服務、VM 裡的命令或所有背景工作，也沒有驗證防竄改保存、保存期限與稽核告警。以下設定與結果來自本課實驗，但缺完整 `config.json` 持久化修改及 OpenSearch 查詢指令，應當作整合與判讀練習，不能直接視為完整部署程序。
+**本章只接 Nova API。** 這些事件不涵蓋所有 OpenStack 服務、VM 裡的命令或所有背景工作。判讀時要區分 API 請求與資源操作的最終結果；防竄改保存、保存期限與稽核告警則需另行設計及驗證。
 
 ## 事件從哪裡進 OpenSearch
 
@@ -38,7 +38,7 @@ driver = log
 
 ## 步驟 2：確認 audit filter 真的進入 Nova
 
-Nova 的 API **pipeline** 是請求依序經過的處理元件。Audit 要放在 `authtoken` 之後，才能使用它驗證後的身分資訊。本課順序節錄如下，省略號表示其他既有元件，不能把整行當成完整配置：
+Nova 的 API **pipeline** 是請求依序經過的一串處理元件；**filter** 是其中處理請求或回應的中介元件。Audit filter 用來產生 CADF 稽核事件，要放在 `authtoken` 之後，才能使用它驗證後的身分資訊。以下是 pipeline 的順序節錄，省略號表示其他既有元件，不能把整行當成完整配置：
 
 ```text
 ... authtoken audit keystonecontext osapi_compute_app_v21
@@ -56,13 +56,13 @@ service_name = nova
 
 `audit_map_file` 必須在容器內存在，並且符合服務路徑。本課使用 `/etc/nova/nova_api_audit_map.conf`；自己的映像檔若路徑不同，需明確配置並確認。
 
-接著檢查 Kolla 是否會把自訂檔案送進容器。Kolla 的 `config.json` 定義啟動時要複製的設定檔；本課最初的摘要是：
+接著檢查 Kolla 是否會把自訂檔案送進容器。Kolla 的 `config.json` 定義啟動時要複製的設定檔。檢查複製清單是否包含 `api-paste.ini` 與 audit map；下列摘要缺少這兩個檔案：
 
 ```text
 config.json COPY: nova.conf, nova-api-uwsgi.ini, ca-certificates
 ```
 
-清單沒有 `api-paste.ini`，因此只把檔案放在主機的 override 目錄不會生效。本課增加複製項目並重啟後，留下以下結果：
+清單沒有 `api-paste.ini`，因此只把檔案放在主機的 override 目錄不會生效。清單包含檔案後，還要核對容器內的 `[filter:audit]` 定義，以及 pipeline 中 `authtoken` 與 `audit` 的順序。以下摘要呈現這幾個檢查位置：
 
 ```text
 config.json COPY: ..., api-paste.ini, nova_api_audit_map.conf
@@ -70,7 +70,7 @@ config.json COPY: ..., api-paste.ini, nova_api_audit_map.conf
 pipeline: authtoken audit ...
 ```
 
-這證明當時的容器載入了 filter，卻沒有提供完整、能跨 deploy 保存的修改程序。生成的 `config.json` 下次可能被重新產生；正式採用前須把變更納入受版本管理的部署模板或自訂映像，並驗證重新部署後仍有效。本章沒有完成這項持久化驗證。
+容器內有 filter 定義及 pipeline 設定，只能確認當次載入的內容。生成的 `config.json` 下次可能被重新產生；正式採用前須把變更納入受版本管理的部署模板或自訂映像。重新部署後，要再次核對複製清單、容器內的設定與測試操作產生的事件，才能判斷設定是否持續有效。
 
 ## 步驟 3：在 Nova log 看 request 與 response
 
@@ -99,7 +99,7 @@ CADF 內容位於通知外層的 **`payload`**，也就是事件資料本體。�
 
 ## 步驟 4：確認 OpenSearch 收到稽核事件
 
-先沿用 Day 21 的 Dashboards 登入與索引查詢方式，限定 Nova API、事件類型與測試時間範圍。以下是本課查詢摘要，索引日期與數量只代表當時資料：
+先沿用 Day 21 的 Dashboards 登入與索引查詢方式，限定 Nova API、事件類型與測試時間範圍。確認結果包含 `audit.http.request` 與 `programname=nova-api`，再核對測試操作的資源與時間；命中筆數不作為驗收門檻。以下是既有查詢摘要：
 
 ```text
 flog-2026.07.16 索引  →  420419 筆
@@ -148,7 +148,7 @@ openstack server delete 5ffbfcd0-...
 
 ### 重新部署後 audit 設定消失 {#mine-4}
 
-生成的 `config.json` 會受 Kolla 部署模板管理，直接修改生成檔可能在下次 deploy 被覆蓋。應檢查持久化的模板或映像變更是否仍在、檔案是否仍被複製，再用測試操作確認事件；本課未提供完成這項修復的驗證結果。
+生成的 `config.json` 會受 Kolla 部署模板管理，直接修改生成檔可能在下次 deploy 被覆蓋。應檢查持久化的模板或映像變更是否仍在、檔案是否仍被複製，再用測試操作確認事件。判準是重新部署後設定仍在，且能產生對應的稽核事件。
 
 ## 想一想
 

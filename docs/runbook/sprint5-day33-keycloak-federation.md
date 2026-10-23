@@ -10,7 +10,7 @@
 
 ![CLI 先向 Keycloak 提交測試帳密取得 token，再向 Keystone 提交 token，由映射與角色取得專案權限](../assets/diagrams/os-s5d33-login.svg)
 
-Keystone 不替這個外部使用者保存一份本地密碼，但 CLI 仍會接觸密碼。這種 **password grant** 也叫 Direct Access Grants／ROPC，不適合需要瀏覽器互動或 MFA 的流程。Keycloak 官方不建議採用；本課只用它解讀既有實驗，沒有驗證 Horizon／Skyline 的瀏覽器 SSO。UI 上出現登入選項，也不能當成登入成功的證據。
+Keystone 不替這個外部使用者保存一份本地密碼，但 CLI 仍會接觸密碼。這種 **password grant** 也叫 Direct Access Grants／ROPC，不適合需要瀏覽器互動或 MFA（多因素驗證）的流程。Keycloak 官方不建議採用；本章限於 CLI password grant，Horizon／Skyline 的瀏覽器 SSO（單一登入，讓使用者登入一次後存取多個服務）不在本章範圍內。UI 上出現登入選項，也不能當成登入成功的證據。
 
 開始前要有 Day 32 的 HTTPS Keystone 入口與 CA 信任、Day 27 的 domain／project／role 概念。本章缺完整憑證產生參數、Keycloak 管理登入、metadata 檔案內容及資源建立命令，以下包含操作摘要與結果解讀；含 `...` 的片段不能直接執行。
 
@@ -34,7 +34,7 @@ AH00526: Syntax error on line 43 of wsgi-keystone.conf:
 
 `mod_auth_openidc` 是在 Keystone 前面處理 OIDC 的 Apache 模組。錯誤指向 IdP 的 HTTP URL，因此應先把 IdP 配成 HTTPS，並讓 Keystone 信任其憑證，再部署 federation；不要先接上這段已知會失敗的設定。
 
-本課使用 Day 32 的測試 CA 簽發 Keycloak 憑證。下面省略了 CSR、私鑰、SAN、有效期限與容器掛載等參數，只表示當時的操作方向：
+使用 Day 32 的測試 CA 簽發 Keycloak 憑證，再讓 Keycloak 以 HTTPS 提供服務。下面是簽發憑證與啟動的摘要，省略了 CSR、私鑰、SAN、有效期限與容器掛載等參數，不能直接執行：
 
 ```bash
 # 用 Day 32 的 KollaTestCA 簽一張 Keycloak 憑證
@@ -43,7 +43,7 @@ openssl x509 -req -in keycloak.csr -CA root.crt -CAkey root.key ...
 ... start-dev --https-certificate-file=... --https-port=8443
 ```
 
-留下的檢查摘要如下：
+繼續設定 federation 前，必須確認 Keycloak 的 HTTPS 與 CA 信任檢查通過。下列摘要只涵蓋這項檢查：
 
 ```text
 ✅ Keycloak https + CA 驗證通過
@@ -90,7 +90,9 @@ $K set-password -r day33 --userid <carol> --new-password ...
 
 `remote` 依序取出 username 與 email；`{0}`、`{1}` 放回 `local.user`。`local.group` 則指定 Keystone 的 `day33-sso` domain 下的 `sso-users` 群組。
 
-**這份規則沒有檢查 Keycloak 的來源群組。** 只要通過這個受信任 IdP／protocol 並符合所需屬性的使用者，都會被映射到同一個本地群組。不能解讀成「只有 Keycloak 的 sso-users 成員能進來」。正式部署若要限制部門或群組，需要另外設計並驗證 claim 條件。
+**Protocol** 是 Keystone 中連結 IdP 與 mapping 的物件，指定該 IdP 的登入要套用哪份映射規則。本章以 `openid` 連結 `keycloak` 與 `keycloak_mapping`。可參考 [Keystone 的 Create a Protocol 說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#create-a-protocol)。
+
+**這份規則沒有檢查 Keycloak 的來源群組。** 只要通過這個受信任 IdP／protocol 並符合所需屬性的使用者，都會被映射到同一個本地群組。不能解讀成「只有 Keycloak 的 sso-users 成員能進來」。正式部署若要限制部門或群組，需要另外設計並驗證 claim（IdP 傳來的身分屬性）條件。
 
 ![IdP username/email 經 mapping 進入本地 sso-users 群組，再由 group role assignment 取得 team-sso 的 member；此映射沒有來源群組條件](../assets/diagrams/os-s5d33-mapping.svg)
 
@@ -108,7 +110,7 @@ keystone_identity_mappings:
     file: ".../mapping.json"
 ```
 
-**Metadata** 描述 IdP 的 issuer、認證端點與金鑰位置。Kolla 的 metadata 目錄使用 `.provider`、`.client` 與 `.conf` JSON 檔；檔名依 issuer 編碼，示例如下：
+**Metadata** 描述 IdP 的 issuer、認證端點與金鑰位置；**issuer** 是簽發 token 的 IdP 識別值。Kolla 的 metadata 目錄使用 `.provider`、`.client` 與 `.conf` JSON 檔；檔名依 issuer 編碼，示例如下：
 
 ```text
 issuer: https://10.0.0.4:8443/realms/day33
@@ -167,32 +169,20 @@ carol 建網路 sso-net → 開 sso-vm → ACTIVE
 
 ## 疑難排解
 
-### Keystone 啟動時拒絕 IdP 的 HTTP URL {#mine-1}
-
-出現 `cannot be parsed as a "https" URL` 時，先查 IdP metadata 與相關端點。依步驟 1 配置 HTTPS 及信任鏈，再接入本課的 OIDC 模組設定。
-
-### 重建 Keycloak 後 realm 與帳號消失 {#mine-2}
-
-本課容器沒有外接資料庫或資料 volume，資料位於可寫層。刪除容器會丟失資料；重做前要有可恢復的配置與儲存安排，不能只重跑啟動命令。
-
-### password grant 回 Account is not fully set up {#mine-3}
-
-本課曾因 user profile 缺 `firstName`／`lastName` 收到 `invalid_grant`，即使 `requiredActions` 是空的仍會失敗。先核對 realm 的必填欄位與使用者 profile，補齊後再測；不是所有 realm 都有同樣要求。
-
 ### OIDC 模組找不到 metadata 檔案 {#mine-4}
 
 核對 issuer、metadata 目錄與檔名的 URL 編碼，以及三個 JSON 檔的用途。步驟 3 保留本課檔名範例，實際內容須依自己的 IdP 填寫。
 
 ### CLI 回 HTTP 400，無法判斷哪段認證失敗 {#mine-5}
 
-先分清楚 CLI 向 Keycloak 換 token，或向 Keystone 換專案 token 的哪一段失敗。以下是本課拆開檢查的摘要，沒有包含可直接執行的 HTTP 請求：
+先分清楚 CLI 向 Keycloak 取得 token，或帶著 token 向 Keystone 的 federation auth 端點認證，哪一段失敗。後者回傳的是 **unscoped token**，尚未帶有專案授權範圍；之後仍須取得指定 project 的 scoped token。以下摘要沒有包含可直接執行的 HTTP 請求：
 
 ```text
 段 1(Keycloak):換 token → 起初 invalid_grant,補完 profile 後拿到
 段 2(Keystone):帶 token 打 federation auth → HTTP 201
 ```
 
-第一段失敗要查 IdP 的 client、profile 與授權流程；第二段失敗再查信任、mapping、protocol 及 project role。檢查時不要把密碼、client secret 或有效 token 放進公開 log。
+第一段失敗要查 IdP 的 client、profile 與授權流程；第二段失敗再查信任、mapping 與 protocol。依 [Keystone 的端點說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#configure-protected-endpoints)，federation auth 用來取得 unscoped token，因此這裡的 HTTP 201 只能判定外部認證成功，不能當成取得 `team-sso` 專案授權的判準。若後續無法取得專案 token，再檢查群組的 project role 與要求的 project 範圍。檢查時不要把密碼、client secret 或有效 token 放進公開 log。
 
 ## 想一想
 
@@ -202,7 +192,7 @@ carol 建網路 sso-net → 開 sso-vm → ACTIVE
 
 ## 小結
 
-IdP 驗證帳號，mapping 把身分屬性對應到本地群組，project role 才給出可操作的範圍。本課把這三段接到 CLI，留下取得專案身分並建立 VM 的摘要；瀏覽器 SSO、MFA、持久化與停權流程仍未驗證。查錯時先找出失敗段落，再檢查該段的端點、信任與授權條件。
+IdP 驗證帳號，mapping 把身分屬性對應到本地群組，project role 才給出可操作的範圍。判讀 CLI 結果時，要分開確認外部認證與專案授權；federation auth 回 HTTP 201，仍不足以判定能操作 `team-sso`。瀏覽器 SSO、MFA、持久化與停權流程不在本章驗證範圍內。查錯時先找出失敗段落，再檢查該段的端點、信任與授權條件。
 
 ## 延伸閱讀
 

@@ -18,7 +18,7 @@
 
 如果對方要求故障後恢復，要先談可接受的中斷時間與資料損失。[Day 31](sprint5-day31-masakari-ha.md) 展示 Masakari 的恢復處理，但主機故障通知由人工送出，沒有完成自動 hostmonitor 偵測。演練先讓來源主機確實停止運作，再疏散 VM；正式設計須有 **fencing**，也就是確認或強制隔離來源主機，避免兩份 VM 同時寫同一份儲存。VM 重新變成 ACTIVE，也還要確認應用與資料正常，不能直接等同符合 SLA。
 
-如果要從其他電腦存取，則檢查真正連到哪個入口。[Day 32](sprint5-day32-full-tls.md) 保護的是用戶端到 HAProxy VIP 的 TLS 連線，沒有涵蓋所有後端通訊；測試 CA 也未取代正式的憑證管理。[Day 33](sprint5-day33-keycloak-federation.md) 驗證 CLI 經外部 IdP 取得專案身分，沒有完成瀏覽器 SSO、MFA 或停權測試。這些能力需要各自驗證，不能由「token 取得成功」一起推論。
+如果要從其他電腦存取，則檢查真正連到哪個入口。[Day 32](sprint5-day32-full-tls.md) 保護的是用戶端到 HAProxy VIP 的 TLS 連線，沒有涵蓋所有後端通訊；測試 CA 也未取代正式的憑證管理。[Day 33](sprint5-day33-keycloak-federation.md) 驗證 CLI 經外部 IdP 取得專案身分，沒有完成瀏覽器 SSO（單一登入：登入一次後使用多個服務）、MFA（多因素驗證：以兩種以上不同類型的驗證因素確認身分）或停權測試。這些能力需要各自驗證，不能由「token 取得成功」一起推論。
 
 [Day 34](sprint5-day34-cadf-audit.md) 則示範 Nova API 的 CADF 事件。它能協助找出請求者與資源，但沒有覆蓋所有服務，也未完成防竄改、保存期限與部署後設定持續存在的驗證。若要用於正式稽核，還須確認事件的完整性、帳號能否對應責任人，以及誰能讀取或刪除紀錄。
 
@@ -34,7 +34,13 @@
 
 挑一個與工作最相關的缺口，先限定範圍。想做身分整合，就用測試 realm 驗證瀏覽器登入、角色限制與停權；想做復原，就在隔離環境驗證偵測、來源主機隔離與資料可用性；想做稽核，就先確認 Nova 設定在重新部署後仍存在，再研究其他服務支援的 middleware 與事件種類。不要假設 Nova 的設定檔可以直接套到其他服務。
 
-這些工作沒有納入完整主線，是因為課內沒有留下足夠的操作與驗證資料。延伸時應依自己的版本補齊步驟，保留成功、失敗與恢復的結果，而不是把未測部分當成已完成。
+各項練習可從以下指南開始：
+
+- 身分整合：依 [Keystone 2025.1 Federation 指南](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html) 設定身分映射、群組的專案角色與 Horizon WebSSO；這裡的瀏覽器入口以 Horizon 為範圍。Keycloak 26.0 系列可參考 [26.0.8 管理指南](https://www.keycloak.org/docs/26.0.8/server_admin/index.html) 的使用者管理、認證流程與工作階段管理；停用帳號的欄位則查同版 [Admin REST API](https://www.keycloak.org/docs-api/26.0.8/rest-api/index.html) 的使用者更新與 `UserRepresentation.enabled`。停權練習須分別確認新登入與既有工作階段、Keystone token 的結果。
+- 故障復原：從 [Kolla-Ansible 2025.1 Masakari 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html) 確認 monitor 開關，再讀 [masakari-monitors 19.0.0 hostmonitor 指南](https://raw.githubusercontent.com/openstack/masakari-monitors/19.0.0/doc/source/hostmonitor.rst) 的 Pacemaker 偵測與設定；19.0.0 對應 [OpenStack 2025.1](https://releases.openstack.org/epoxy/index.html#masakari-monitors)。若選用 Pacemaker 2.1，依其 [fencing 指南](https://clusterlabs.org/projects/pacemaker/doc/2.1/Pacemaker_Explained/html/fencing.html) 選擇及測試適合平台的隔離方式；再用 [Nova 2025.1 evacuate 指南](https://docs.openstack.org/nova/2025.1/admin/evacuate.html) 核對來源主機停止、重建與共享儲存條件。應用與資料是否可用，仍須依自己的工作負載驗證。
+- 稽核：先依 [Kolla-Ansible 2025.1 設定覆寫指南](https://docs.openstack.org/kolla-ansible/2025.1/admin/advanced-configuration.html#openstack-service-configuration-in-kolla) 查各服務支援的設定路徑，作為重新部署後檢查設定是否保留的起點；再讀 [keystonemiddleware 2025.1 audit 指南](https://docs.openstack.org/keystonemiddleware/2025.1/audit.html)，了解 pipeline 插入位置、各服務的 audit map 與通知 driver。這份指南以 Nova 為例，擴到其他服務時仍須核對該版本的 pipeline 與事件，沒有涵蓋完整的保存期限或防竄改設計。
+
+延伸時應依自己的版本補齊步驟，保留成功、失敗與恢復的結果，而不是把未測部分當成已完成。
 
 ## 想一想
 

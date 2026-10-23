@@ -2,7 +2,7 @@
 
 ![Skyline 官方吉祥物:九色鹿](../assets/mascots/skyline.png){ align=right width="100" }
 
-Day 1 部署完,你用 SSH tunnel 打開過網頁儀表板 Horizon。之後幾天建了網路、router、VM,還開了一座 Magnum K8s cluster。現在想看一眼「這些網路和 VM 是怎麼接在一起的」,Horizon 能列出每一項資源,但要自己在腦中把它們拼起來。OpenStack 官方另外有一個新的儀表板 **Skyline**,內建一張資源拓樸圖,操作起來也比較像現代的網頁應用。
+Day 1 部署完,你用 SSH tunnel 打開過網頁儀表板 Horizon。之後幾天建了網路、router、VM,還開了一座 Magnum K8s cluster。現在想看一眼「這些網路和 VM 是怎麼接在一起的」,Horizon 的 [Network Topology](https://docs.openstack.org/horizon/2025.1/user/create-networks.html#create-a-router) 頁面就能查看網路拓樸,不裝 Skyline 也看得到。OpenStack 官方另外有一個新的儀表板 **Skyline**,同樣提供拓樸圖,讓你用另一套網頁介面管理這些資源。
 
 這一章在不動其他服務的前提下,把 Skyline 加進同一朵雲,讓它和 Horizon 同時存在。讀完之後,Skyline 的頁面打不開或登入失敗時,你能判斷該先查哪一個容器;也能判斷這次只部署 Skyline 一個服務的做法,什麼時候夠、什麼時候不夠。
 
@@ -25,7 +25,7 @@ Horizon 是 OpenStack 用了十多年的儀表板,以 Python 的 Django 框架�
 
 我們可以從圖上看到兩件事:
 
-1. **瀏覽器只跟 `skyline_console` 打交道。** 網頁本身、登入請求、查 VM 列表的請求,都先進 9999。console 再依請求種類,交給 apiserver 或直接轉給對應服務的 API。
+1. **瀏覽器的請求都先送到 `skyline_console`。** 網頁本身、登入請求、查 VM 列表的請求,都先進 9999。console 再依請求種類,交給 apiserver 或直接轉給對應服務的 API。
 2. **兩個儀表板最下面接的是同一組服務。** 登入用的是 Keystone 的同一組帳號,在 Skyline 刪掉的 VM,Horizon 也看不到了。
 
 這個分工就是之後除錯的順序:整個網頁打不開,先看 `skyline_console`;網頁出得來但登不進去,看 `skyline_apiserver` 和 Keystone;只有某一類資源的頁面出錯,看那個服務本身。
@@ -55,17 +55,17 @@ PLAY RECAP *********************************************************************
 localhost : ok=23  changed=16  unreachable=0  failed=0  skipped=3  ...
 ```
 
-`failed=0` 代表部署成功。Day 1 整份部署的 PLAY RECAP 是 `ok=367`,這次只有 `ok=23`,因為只跑了 Skyline 自己的步驟。
+`failed=0` 代表部署成功。這次加了 `--tags skyline`,只執行 Skyline 的部署步驟,略過其他服務。
 
 ## 步驟 2:確認兩個容器與 endpoint
 
-接下來分三層確認:容器有沒有起來、Keystone 有沒有登記、網頁有沒有回應。指令裡的 `10.0.0.4` 是本課 VM 的私有 IP(Day 1 設給 `network_interface` 的 `eth0`),請換成你自己的:
+接下來分三層確認:容器有沒有起來、Keystone 有沒有登記、網頁有沒有回應。請先在執行檢查的 shell 設定 `VM_PRIVATE_IP='<VM私有IP>'`,把 `<VM私有IP>` 換成你在 Day 1 設給 `network_interface` 的網路介面所使用的私有 IP,再執行:
 
 ```bash
 sudo docker ps --format "{{.Names}}  {{.Status}}" | grep skyline
 source /etc/kolla/admin-openrc.sh
 openstack endpoint list -f value | grep skyline
-curl -s -o /dev/null -w "%{http_code}\n" http://10.0.0.4:9999/
+curl -s -o /dev/null -w "%{http_code}\n" "http://${VM_PRIVATE_IP}:9999/"
 ```
 
 ```text
@@ -81,7 +81,7 @@ skyline_apiserver  Up (healthy)
 - **Keystone 裡多了一個 `skyline` 服務,endpoint 指向 9998。** 被登記的是 apiserver,不是 console。這跟 Day 1 看 `openstack service list` 時 Horizon 不在清單上是同一個道理:console 只送網頁,不提供 API 給別人呼叫。
 - **9999 回 `200`。** console 能把網頁送出來。
 
-## 步驟 3:打開 Skyline
+## 步驟 3:打開 Skyline {#open-skyline}
 
 跟 Horizon 一樣,Skyline 聽在 VM 的私有 IP 上,要在你的電腦上開一條 SSH tunnel 才連得到(Day 1 開 Horizon 時用過同樣的做法)。這次轉的是 9999:
 

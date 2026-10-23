@@ -6,11 +6,13 @@ VM 已經是 ACTIVE，安全群組也放行了，連線卻仍然失敗。Day 19 
 
 Neutron 接收我們建立 network、router、安全群組的要求；OVN 把這些設定轉為主機實際使用的網路規則。OVN 的 **logical switch** 是邏輯交換器，對應 Neutron network；**logical router** 是邏輯路由器，連接不同網段。
 
-設定先進入 NB（Northbound）資料庫。`ovn-northd` 讀取 NB，產生 SB（Southbound）資料庫中的 **logical flow**，也就是封包逐級比對的條件與動作。各主機的 `ovn-controller` 再把它們轉成 Open vSwitch 使用的 OpenFlow 規則。下圖把兩次轉換與查看工具分開：
+設定先進入 NB（Northbound）資料庫。`ovn-northd` 讀取 NB，產生 SB（Southbound）資料庫中的 **logical flow**，也就是封包逐級比對的條件與動作。各主機的 `ovn-controller` 再把它們轉成 Open vSwitch 使用的 OpenFlow 規則，也就是主機交換器執行的比對條件與動作規則。下圖把兩次轉換與查看工具分開：
 
 ![Neutron 設定經 NB、northd、SB，再由各主機的 ovn-controller 轉成 OpenFlow](../assets/diagrams/os-s4d20-ovn-layers.svg)
 
 所以 `ovn-nbctl` 適合看拓樸與 NAT，`ovn-sbctl` 適合看 logical flow。`ovn-trace` 是另一支讀取 SB 的程式，不是 `ovn-sbctl` 的子命令。
+
+`ovn-trace` 會根據 SB 的規則模擬封包，列出沿途比對到的條件與執行的動作，不會真的送出封包。這能協助我們追查封包在哪一級被允許、丟棄或改寫來源 IP。沒有這個工具，就得自行串接各級規則的條件與動作，推導同一個封包會走到哪裡。
 
 以下在執行 Kolla 容器的主機操作。沿用 Day 17–18 的 `day17-net`、`day17-r` 與 Trove guest；若已刪除這些資源，就改選目前仍存在的網路與 VM。先定義兩個查詢工具：
 
@@ -64,7 +66,7 @@ snat   172.24.4.125    10.17.0.0/24
 
 ## 步驟 3：讀安全群組相關的 logical flow
 
-封包會依序通過多個 **table**，每個 table 比對條件後執行動作；這一整串處理順序稱為 pipeline。ACL（存取控制規則）在其中決定流量是否放行。先看與 ACL 有關的幾行：
+封包會依序通過多個 **table**，每個 table 比對條件後執行動作；這一整串處理順序稱為 pipeline。ACL（存取控制規則）在其中決定流量是否放行。下列條件中的 `ct` 是 conntrack，也就是連線追蹤；`ct.new`、`ct.est` 分別描述新連線與已建立的連線，`!ct.trk` 表示尚未經過連線追蹤。先看與 ACL 有關的幾行：
 
 ```bash
 $SB lflow-list day17-net | grep ls_in_acl | head -4
@@ -75,14 +77,14 @@ table=7 (ls_in_acl_hint), priority=7, match=(ct.new && !ct.est), action=(...)
 table=7 (ls_in_acl_hint), priority=5, match=(!ct.trk), action=(...)
 ```
 
-`ct` 是 conntrack，也就是連線追蹤。`ct.new`、`ct.est` 分別描述新連線與已建立的連線。這兩行來自 `ls_in_acl_hint`，是在替後續 ACL 判斷整理連線狀態，還不能直接讀成某一條 Neutron 安全群組規則。追查特定允許或拒絕條件時，需要繼續看後續 ACL table 與封包走到的動作。
+這兩行來自 `ls_in_acl_hint`，是在替後續 ACL 判斷整理連線狀態，還不能直接讀成某一條 Neutron 安全群組規則。追查特定允許或拒絕條件時，需要繼續看後續 ACL table 與封包走到的動作。
 
 ## 步驟 4：模擬封包經過的規則
 
-`ovn-trace` 根據 SB 裡的規則模擬封包，不會真的送封包。以下示範 `ovn-trace` 的呼叫方式；這個版本的命令尚未重新執行驗證。先從完整拓樸輸出取得 VM 的 logical port、MAC、IP，以及 router 內側 port 的 MAC，再替換相應欄位：
+`ovn-trace` 根據 SB 裡的規則模擬封包，不會真的送封包。下面是本課實際執行的指令。`$SB` 是前面定義的 `sudo docker exec ovn_sb_db ovn-sbctl`，但 `ovn-trace` 是獨立的程式、不是 `ovn-sbctl` 的子命令，照打可能會失敗；改成 `sudo docker exec ovn_sb_db ovn-trace day17-net '...'` 比較正確（修正後的寫法本課沒有實跑）。先從完整拓樸輸出取得 VM 的 logical port、MAC、IP，以及 router 內側 port 的 MAC，再替換相應欄位：
 
 ```bash
-sudo docker exec ovn_sb_db ovn-trace day17-net '
+$SB ovn-trace day17-net '
   inport=="<vm-logical-port>" &&
   eth.src==fa:16:3e:f1:17:de && eth.dst==fa:16:3e:27:b2:65 &&
   ip4.src==10.17.0.159 && ip4.dst==8.8.8.8 && ip.ttl==64
@@ -97,12 +99,12 @@ sudo docker exec ovn_sb_db ovn-trace day17-net '
 ingress(dp="day17-r", inport="lrp-25feab")
   ...
 3. lr_out_snat: ip4.src == 10.17.0.0/24 ... priority 153
-     ct_snat(172.24.4.125);          ← 源 IP 就在這一刻被改寫!
+     ct_snat(172.24.4.125);
 6. lr_out_delivery: outport == "lrp-43d94f"
      output;                          ← 從外網埠送出
 ```
 
-`ct_snat(172.24.4.125)` 是來源位址改寫，`output` 是從選定的 logical port 送出。下圖把節錄中的動作放回處理順序：
+`ct_snat(172.24.4.125)` 表示來源 IP 改為 `172.24.4.125`，`output` 是從選定的 logical port 送出。下圖把節錄中的動作放回處理順序：
 
 ![封包經 switch ACL 與 router 路由，再於 lr_out_snat 改寫來源 IP](../assets/diagrams/os-s4d20-trace-path.svg)
 

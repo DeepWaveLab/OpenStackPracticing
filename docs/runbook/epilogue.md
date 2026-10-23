@@ -12,9 +12,13 @@
 
 如果你正在開發應用，可以從一顆 volume 或一個負載平衡器開始。保存資料、重建 VM，再確認哪些內容留下來；或者調整後端服務，觀察健康檢查如何改變流量。先寫下預期結果，再用 API 狀態與實際讀寫一起確認，會比一次加入許多服務更容易知道自己理解了哪一段。
 
-如果你主要操作 Kubernetes，就回到 [Day 8](sprint3-day8-e2e-workload-cluster.md)。挑一個 PVC 或 LoadBalancer Service，對照它在 OpenStack 建出的資源，確認權限、網路與儲存各由誰管理。後續若已做過 Day 22 的 provider 變更或 Day 32 的 TLS 改址，先處理那些相容與信任前提，不能直接假設早期 cluster 還能照原設定運作。
+如果你主要操作 Kubernetes，可以維持 [Day 8](sprint3-day8-e2e-workload-cluster.md) 的環境前提重練，包括 Octavia 的 Amphora provider 與原有 API 位址。挑一個 PVC 或 LoadBalancer Service，對照它在 OpenStack 建出的資源，確認權限、網路與儲存各由誰管理。
 
-如果你負責平台維運，可以從 [Day 35](sprint5-day35-sprint5-recap.md) 選一項缺口：驗證設定在重新部署後仍保留、設計可恢復的身分服務，或補齊主機故障偵測與隔離。把範圍限制在可觀察的環境中，記下失敗時如何確認影響，以及恢復後如何檢查資料。
+若已做過 [Day 22 的 Octavia provider 變更](sprint4-day22-upgrade-backup.md#3-prechecks-octavia)或 [Day 32 的 TLS 改址](sprint5-day32-full-tls.md#5)，延伸題目就改為自行研究既有 cluster 的遷移。Day 22 改為只啟用 OVN provider，依賴 Amphora 的指引不能原樣沿用；Day 32 則涉及各用戶端的 endpoint 更新與新 CA 信任。兩章都沒有提供完整遷移步驟，Day 32 也沒有重測 Magnum／CAPI，不能直接假設早期 cluster 還能照原設定運作。
+
+如果你負責平台維運，可以從 [Day 35](sprint5-day35-sprint5-recap.md) 選一項缺口：驗證設定在重新部署後仍保留、研究多節點部署中一個 Keystone 節點故障後的認證可用性與恢復，或補齊主機故障偵測與隔離。把範圍限制在可觀察的環境中，記下失敗時如何確認影響，以及恢復後如何檢查資料。
+
+選擇 Keystone 題目時，可以先讀 [Kolla-Ansible 2025.1 Keystone 部署文件的 Fernet Tokens 段落](https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html#fernet-tokens)，了解節點間如何同步 Fernet token 使用的金鑰，再規劃故障與恢復時的認證檢查。這是延伸研究的入口，本課沒有驗證這個故障恢復情境。
 
 ## 換一種工具時，保留判斷的方法
 
@@ -29,4 +33,4 @@
 
 ## 小結
 
-這門課讓你從建立資源走到理解服務之間的關係，也練習把成功訊息與真正想完成的結果分開確認。下一次遇到新的平台需求，可以先選一個範圍清楚的問題，查版本與前提，完成操作，再把結果與限制寫下來。下一個練習，就從你工作上最需要回答的那個問題開始。
+這門課讓你從建立資源走到理解服務之間的關係，也練習把成功訊息與真正想完成的結果分開確認。下一次遇到新的平台需求，可以先選一個範圍清楚的問題，查版本與前提，完成操作，再把結果與限制寫下來。

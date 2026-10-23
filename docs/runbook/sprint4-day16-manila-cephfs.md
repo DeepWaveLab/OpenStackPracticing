@@ -4,7 +4,7 @@
 
 假設你在這朵雲上用兩台 VM 跑同一個網站,前面放負載平衡器分流。使用者上傳的圖片存在其中一台,另一台就讀不到。直覺的做法是開一顆 Cinder volume 當共用的圖片目錄,但 [Day 3](sprint3-day3-cinder-lvm.md) 已經看過,本課 Day 3 的 LVM volume 配置一次只 attach 到一台 VM,不能直接拿來當跨機共用目錄。Cinder 另有需後端與 volume type 支援的 multiattach;即使同時掛到多台,檔案系統與應用仍須能協調共用存取。改成在兩台之間定時同步檔案,又會出現某一台還沒同步到的空窗。
 
-這一章部署 OpenStack 的共享檔案服務 **Manila**,後端用 [Day 14](sprint4-day14-ceph-bootstrap.md) 立起來的 Ceph。做完之後,你會在主機上掛載一個由 Manila 開出來的網路資料夾,寫入檔案再讀回來;章末的選讀段落再解讀它接回 [Day 8](sprint3-day8-e2e-workload-cluster.md) 的 Kubernetes cluster 後,兩個跨節點 Pod 共用檔案的結果,不提供完整 CSI 建置步驟。讀完之後,遇到「多台機器要同時讀寫同一份資料」的需求,你能判斷該開 Manila share 而不是 Cinder volume;share 掛不上時,也能分辨問題出在 Manila 這一側(share 沒建起來、沒有授權),還是 Ceph 這一側(連不到、金鑰不對)。
+這一章部署 OpenStack 的共享檔案服務 **Manila**,後端用 [Day 14](sprint4-day14-ceph-bootstrap.md) 立起來的 Ceph。做完之後,你會在主機上掛載一個由 Manila 開出來的網路資料夾,寫入檔案再讀回來;章末的選讀段落再說明它如何與 [Day 8](sprint3-day8-e2e-workload-cluster.md) 的 Kubernetes cluster 整合,以及如何判讀 PVC、Pod 與 share 的狀態。讀完之後,遇到「多台機器要同時讀寫同一份資料」的需求,你能判斷該開 Manila share 而不是 Cinder volume;share 掛不上時,也能分辨問題出在 Manila 這一側(share 沒建起來、沒有授權),還是 Ceph 這一側(連不到、金鑰不對)。
 
 ## 三種儲存怎麼分
 
@@ -20,7 +20,9 @@ Manila 管的單位叫 **share**:一個有容量上限、可以被多台機器�
 
 ## Manila 只管建立和授權,讀寫直接走 Ceph
 
-Manila 對接 CephFS 有兩種方式。這一章用的是 **CephFS native**:要掛載的機器自己當 Ceph 客戶端,用 Ceph 的協定直接連到 Ceph。另一種是在中間放一台 NFS 服務,客戶端用 NFS 掛載,本課沒有實作。
+Manila 對接 CephFS 有兩種方式。這一章用的是 **CephFS native**:要掛載的機器自己當 Ceph 客戶端,用 Ceph 的協定直接連到 Ceph。另一種是在中間放一台 NFS 服務,NFS 是透過網路存取共用檔案的協定,客戶端用它掛載,本課沒有實作。
+
+客戶端掛載時要用的位址叫 **export location**,在 CephFS native 模式下包含 Ceph MON 的位址與 share 在 CephFS 裡的路徑。建立 share 後可以向 Manila 查詢這個位址。
 
 把 Manila 的服務和 Ceph 的角色放在一起看,跟 Day 3 的 Cinder 一樣能分成控制路徑和資料路徑兩半:
 
@@ -49,6 +51,8 @@ sudo ./cephadm shell -- ceph auth get-or-create client.manila mon 'allow r' mgr 
 
 ## 步驟 2:把 Ceph 設定檔和金鑰交給 Kolla
 
+<span id="mine-2"></span>
+
 `manila-share` 容器要連 Ceph,需要兩個檔案:Ceph 的連線設定 `ceph.conf`,和 `client.manila` 的金鑰檔 keyring。Day 1 講過,某個服務需要的額外設定放在 `/etc/kolla/config/` 底下對應的目錄,deploy 時 Kolla 會把它們放進容器。Manila 對應的目錄是 `/etc/kolla/config/manila/`:
 
 ```bash
@@ -64,9 +68,7 @@ sudo ./cephadm shell -- ceph auth get client.manila | sed 's/^[[:space:]]*//' \
 這段有兩處要照做:
 
 - **兩個 `sed` 都不能省。** `generate-minimal-conf` 和 `ceph auth get` 的輸出,每一行開頭帶縮排(tab),Kolla 解析這類 ini 格式的設定檔時,遇到行首的 tab 會解析失敗。Kolla-Ansible 的外部 Ceph 指南有提到要先拿掉這些 tab。
-- **兩個檔案都直接放在 `manila/` 底下。** 官方指南在「多個 Ceph 後端」那一段,keyring 的範例路徑多了一層 `manila-share/` 子目錄。本課的單一後端照上面的路徑放,deploy 成功。
-
-漏了其中一項會遇到的狀況,見[疑難排解:keyring 放錯目錄或 ceph.conf 帶縮排](#mine-2)。
+- **兩個檔案都直接放在 `manila/` 底下。** 官方指南在「多個 Ceph 後端」那一段,keyring 的範例路徑多了一層 `manila-share/` 子目錄。這裡的單一後端使用 `/etc/kolla/config/manila/`,不要多建那層子目錄。
 
 ## 步驟 3:打開 Manila 並部署
 
@@ -92,6 +94,8 @@ PLAY RECAP: ok=29  changed=20  failed=0
 
 ## 步驟 4:裝 CLI 外掛,建 share type
 
+<span id="mine-1"></span>
+
 `openstack` 指令本身沒有 Manila 的子命令,要另外裝 Manila 的外掛 `python-manilaclient`。Day 5 的 Heat、Barbican 也是同樣的情況:每個服務的 CLI 指令來自各自的外掛套件。
 
 接下來要建一個 **share type**。使用者建 share 時要指定一種 share type,Manila 的 scheduler 依照它上面寫的條件,挑出能滿足條件的後端。最基本的條件是 **DHSS**(driver handles share servers):後端的 driver 要不要自行建立和管理「share server」,share server 是提供共用檔案並管理匯出與存取規則的後端資源,具體形式由 driver 決定,不一定是一台新 VM。CephFS native 不建立這類 share server,客戶端直接連 Ceph,所以它只接受 DHSS 為 `False` 的 share type。下面最後一行的 `False` 就是 DHSS:
@@ -106,7 +110,7 @@ openstack share type create default_share_type False
 
 ## 步驟 5:建 share、授權、掛載
 
-先建一顆 1 GB、用 CephFS 協定的 share,確認狀態,再查它的 **export location**:客戶端掛載時要用的位址,也就是 share 在 Ceph 上的路徑。
+先建一顆 1 GB、用 CephFS 協定的 share,確認狀態,再查它的 export location。
 
 ```bash
 openstack share create CEPHFS 1 --name day16-share --share-type default_share_type
@@ -124,6 +128,32 @@ share 建好了還不能掛,因為還沒有人被允許存取它。Manila 用 **
 
 先確認掛載端有 `mount.ceph` 工具。若尚未安裝,依所用 Ubuntu 與 Ceph 版本準備 `ceph-common`;這是掛載前提,不屬於前面 cephadm 的部署結果。建立 access rule 後,要等規則狀態成為 `active`,再執行取金鑰與掛載的命令。
 
+在主機上沿用 Day 14 的 `cephadm`,依 [Tentacle 套件安裝文件](https://docs.ceph.com/en/tentacle/install/get-packages/#install-packages-with-cephadm)設定 20.2.2 套件來源並安裝 `ceph-common`([官方套件庫](https://download.ceph.com/debian-20.2.2/dists/)提供 Ubuntu 24.04 的 `noble` 目錄);依官方文件補上，本課沒有實跑:
+
+```bash
+sudo ./cephadm add-repo --version 20.2.2 &&
+sudo ./cephadm install ceph-common
+```
+
+依 [Tentacle 掛載文件](https://docs.ceph.com/en/tentacle/cephfs/mount-using-kernel-driver/#is-mount-helper-present)檢查主機上的 `mount.ceph` 是否存在;依官方文件補上，本課沒有實跑:
+
+```bash
+stat /sbin/mount.ceph
+```
+
+安裝或檢查失敗就先停止,確認套件安裝完成且工具存在後再繼續。
+
+依 [python-manilaclient 2025.1 的建立授權指令](https://docs.openstack.org/python-manilaclient/2025.1/cli/osc/v2/index.html#share-access-create)等待規則建立完成,再用[授權清單指令](https://docs.openstack.org/python-manilaclient/2025.1/cli/osc/v2/index.html#share-access-list)查詢 `day16user` 的狀態;依官方文件補上，本課沒有實跑:
+
+```bash
+openstack share access create --wait day16-share cephx day16user
+openstack share access list day16-share --access-type cephx --access-to day16user
+```
+
+若已建立這條規則,只執行查詢那一行。確認查到的規則 `State` 為 `active`,才從下方原指令的 `KEY=...` 那一行接續取金鑰與掛載,跳過原本的 `openstack share access create`,不要重複建立。命令失敗、查不到規則或狀態不是 `active` 就停止;尚未完成時可重跑查詢確認。
+
+下面的指令要逐行執行,不要整段貼上。`mount` 的路徑先換成上一步查到的 export location,執行到這一行時先停下來:只有掛載成功才執行最後兩行的寫入與讀回;掛載失敗就停止,否則寫入的會是主機上的 `/mnt/day16` 目錄。若要整段執行,正確寫法應以 `&&` 串接掛載、寫入、讀回與容量檢查,讓前一步失敗時不執行後一步;修正後的寫法本課沒有實跑。以下保留原指令:
+
 ```bash
 openstack share access create day16-share cephx day16user
 KEY=$(openstack share access list day16-share -f value -c 'Access Key')
@@ -133,14 +163,14 @@ echo "manila-e2e" | sudo tee /mnt/day16/proof.txt
 sudo cat /mnt/day16/proof.txt && df -h /mnt/day16 | tail -1
 ```
 
-`mount` 那一行的路徑換成你上一步查到的 export location。結果:
+掛載成功並完成讀寫後,結果如下:
 
 ```text
 manila-e2e
 10.0.0.4:6789:/volumes/...  1.0G  0  1.0G  0% /mnt/day16
 ```
 
-第一行是寫進去再讀回來的內容。第二行的 `df` 顯示這個掛載點的大小是 1.0G,正是建 share 時給的 1 GB:Manila 設的容量上限,在 Ceph 這一側生效了。如果 `mount` 失敗而 share 狀態是 `available`,依照前面那張圖,問題在資料路徑:先確認這台機器連得到 MON,再確認能連到地圖中的 MDS 和 OSD,以及 `name=` 和 `secret=` 用的是同一個身分的金鑰。
+第一行是寫進去再讀回來的內容。第二行要先看來源是 `10.0.0.4:6789:/volumes/...`,掛載點是 `/mnt/day16`,確認讀寫的是 CephFS share,再看大小 1.0G 是否符合建立時設定的容量上限。若來源是主機磁碟,即使讀回 `manila-e2e` 也不能算成功。如果 `mount` 失敗而 share 狀態是 `available`,依照前面那張圖,問題在資料路徑:先確認這台機器連得到 MON,再確認能連到地圖中的 MDS 和 OSD,以及 `name=` 和 `secret=` 用的是同一個身分的金鑰。
 
 Day 13 已經部署 Skyline,加入 Manila 後還要更新它的代理設定,才能從網頁呼叫新服務。這沿用 Day 13 的部署方式,但下列補充命令沒有獨立的本課執行輸出:
 
@@ -158,7 +188,7 @@ kolla-ansible deploy -i ~/all-in-one --tags skyline
 
 ## 選讀:讀懂 Kubernetes 共用 share 的結果
 
-前面到主機掛載為止,Manila 已經可以用了。這一節說明既有 Kubernetes 共用儲存結果。本章未提供完整 Helm values 與 manifests,所以這裡不作為可從空白叢集重建的操作步驟;先看懂 PVC、PV 和 Manila share 的關係即可。完整部署方式見章末的 Manila CSI 文件。
+前面到主機掛載為止,Manila 已經可以用了。接到 Kubernetes 後,應用透過 PVC 提出儲存要求,PV 則是 Kubernetes 用來描述實際儲存的物件。這一節從分工圖和狀態輸出,說明如何判讀 PVC 的綁定、Pod 所在的節點與 share 的狀態。部署方式見章末的 Manila CSI 文件。
 
 ### 為什麼需要它
 
@@ -172,15 +202,11 @@ Kubernetes 透過 CSI driver(讓 Kubernetes 跟外部儲存系統對接的外掛
 
 照著圖由上往下看:中間的 Manila 做的事,跟步驟 5 你手動做的一樣,建 share 再授權一個 cephx 身分;差別是發出請求的換成了 csi-driver-manila。最後掛載的 ceph-csi 也跟步驟 5 的 `mount -t ceph` 一樣,直接連 Ceph,不經過 Manila。
 
-讀其他安裝範例時,留意以下差異:
+這裡的 **node-stage secret** 是節點準備掛載時供 CSI 使用的 Kubernetes Secret。Manila CSI 使用其中的 OpenStack 認證資訊向 Manila 查詢 share 的存取規則,它存的不是 Ceph 金鑰。
 
-- **StorageClass 的 `provisioner` 要寫對。** StorageClass 告訴 Kubernetes 哪一種 PVC 交給哪個 driver 處理。csi-driver-manila 的 CephFS driver 註冊的名稱是 `cephfs.manila.csi.openstack.org`,前面多了協定名稱;寫成 `manila.csi.openstack.org`,PVC 會一直綁不上。
-- **node-stage secret 放的是 OpenStack 的認證資訊,不是 Ceph 金鑰。** 節點要掛載時,csi-driver-manila 會用這組 OpenStack 帳號去 Manila 查這顆 share 的存取規則。
-- **先分清由哪個 driver 接受 PV。** 直接交給 ceph-csi 的靜態 PV 與交給 Manila CSI 的 PV,參數不同。前者需要 CephFS 的 `fsName`;後者引用 Manila 的 share 與 access rule,不能把兩套範例混用。
+### 判讀 PVC、Pod 與 share 的狀態
 
-### 驗證:兩個 nginx Pod 共用一顆 RWX volume
-
-下面是既有結果的摘錄:一個 `ReadWriteMany` PVC 已經綁到 PV,兩個 nginx Pod 在不同節點執行,Manila 也有一顆 available share。PVC 是應用提出的儲存要求,PV 是 Kubernetes 用來描述實際儲存的物件;要證明兩者引用這顆 share,還必須核對 PV 的 shareID 或 shareName,不能只靠名稱猜測。
+下面三組輸出分別查詢 PVC、Pod 和 Manila share。先分開看各欄位的意思,再判斷它們能否對應到同一份儲存:
 
 ```text
 $ kubectl get pvc shared-static
@@ -191,60 +217,47 @@ $ kubectl get pods -l app=shared-web -o wide
 web-reader   Running   kube-plpuz-default-worker-...    ← 節點 A
 web-writer   Running   kube-plpuz-ng-app-...            ← 節點 B(不同節點!)
 
-$ openstack share list          # 這顆 RWX 卷,就是 Manila 開的一顆 share
+$ openstack share list
 pvc-e6cbc3c7-...  CEPHFS  available
 ```
 
-要看的有三處:PVC 的 `ACCESS MODES` 是 `RWX` 而且 `Bound`;兩個 Pod 的第三欄是兩個不同的節點;`openstack share list` 多了一顆 `pvc-` 開頭的 CephFS share,描述顯示它曾由 csi-driver-manila 建立。不過這份摘錄沒有 PV 的 shareID,不能單憑它判定 `shared-static` 是否觸發了這次建立,或只是重用既有 share。終端機畫面如下:
+- PVC 的 `NAME` 是 `shared-static`,`STATUS` 為 `Bound`,表示已綁到 `VOLUME` 欄的 `manila-share-pv`。`CAPACITY` 是 `1Gi`,`ACCESS MODES` 為 `RWX`,表示這個 PVC 要求跨節點讀寫;這些欄位沒有顯示實際讀寫是否成功。
+- Pod 摘錄的第一欄是名稱,`web-reader` 與 `web-writer` 的狀態都是 `Running`,後面列出的節點名稱不同。這能看出兩個 Pod 分布在不同節點,但 `Running` 本身不代表它們掛載了同一顆 share。
+- share 摘錄列出 `pvc-e6cbc3c7-...`,協定為 `CEPHFS`,狀態為 `available`。這表示 Manila 有一顆可用的 share,沒有提供它與 `manila-share-pv` 的對應。
+
+要確認 PV 使用哪顆 share,還須核對 PV 的 shareID 或 shareName。僅憑以上輸出,無法判定 `shared-static` 是否動態建立了這顆 share,或使用了既有的 share。終端機畫面如下:
 
 ![終端機畫面:kubectl get pvc shared-static 顯示 Bound、容量 1Gi、存取模式 RWX;kubectl get pods 顯示 web-reader 和 web-writer 都在 Running,分別在兩個不同的節點;openstack share list 顯示一顆 pvc-e6cbc3c7 開頭的 CEPHFS share,狀態 available](../assets/screenshots/day16-kubectl.png)
 
-兩個 Pod 已掛好同一顆 share 時,下面的操作可檢查檔案是否跨節點可見。它依賴前述尚未附齊的安裝與 Pod 定義,請把它當作既有測試的解讀:
-
-```bash
-kubectl exec web-writer  -- sh -c 'echo "<h1>Hello, World!</h1>..." > /usr/share/nginx/html/index.html'
-kubectl exec web-reader  -- wget -qO- http://localhost/     # 讀到同一份頁面
-```
-
-`web-reader` 回應的就是 `web-writer` 剛寫入的頁面。既有的瀏覽器畫面如下;下一小節說明這個入口如何連到 Pod:
-
-![瀏覽器顯示 Hello, World! 頁面,這個頁面由 web-writer 寫入、由另一個節點上的 web-reader 提供](../assets/screenshots/day16-hello-page.png)
-
-### 既有 Pod 的網頁如何連到瀏覽器
+### 瀏覽器到 Pod 的連線路徑
 
 Pod 的位址在 cluster 的內部網路(`10.100.x.x`),你的電腦連不到。有兩種做法,下圖上下兩列分別是它們經過的路:
 
 ![上列是路徑一 port-forward:你的瀏覽器 localhost:8888 經 SSH tunnel 連到 lab VM 的 8888,再經 kubectl port-forward 連到 web-reader 的 nginx 80 port。下列是路徑二 LoadBalancer:外部使用者連到有對外 IP 的 Octavia LB,LB 分流到節點 A 和節點 B 上的 Pod。兩列最後都讀到右邊以橘色強調的同一顆 Manila RWX volume 上的 index.html](../assets/diagrams/os-s4d16-access.svg)
 
-兩條路最後讀的都是同一顆 RWX volume,差別在入口:上列限於能登入 lab VM 並建立 SSH tunnel 的操作者,下列則依負載平衡器與網路的開放範圍提供存取。
+圖中的兩條路最後讀的都是同一顆 RWX volume,差別在入口:上列透過 SSH tunnel 供操作者連線,下列則依負載平衡器與網路的開放範圍提供存取。這張圖說明連線方式,不代表前面的狀態輸出已確認 Pod 的掛載內容。
 
-**路徑一:`kubectl port-forward`。** `kubectl port-forward` 透過 Kubernetes API server 把本機的一個 port 轉到某個 Pod,不需要負載平衡器,也不需要對外 IP。你的電腦到 Pod 之間隔著 Azure 上的 lab VM 和 cluster 內部網路,所以要接兩段:先在 lab VM 上把 Pod 的 80 轉到 loopback 的 8888,再從你的電腦用 SSH tunnel 把 VM 的 8888 接到本機。
+**路徑一:`kubectl port-forward`。** `kubectl port-forward` 透過 Kubernetes API server 把本機的一個 port 轉到某個 Pod,不需要負載平衡器,也不需要對外 IP。圖中的兩段連線分別是 lab VM 到 Pod 的 port-forward,以及操作者電腦到 lab VM 的 SSH tunnel。
+
+走 SSH tunnel 時,port-forward 應使用 `--address 127.0.0.1`,只在 lab VM 的 loopback 位址監聽,與 SSH 的遠端目標 `127.0.0.1:8888` 對應。[kubectl 文件](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/#options)說明了 `--address` 的用法;修正後的寫法本課沒有實跑。下列原指令使用 `0.0.0.0`,會監聽所有 IPv4 介面,不能視為只開放給 SSH tunnel 的設定:
 
 ```bash
 # 在 lab VM 上:把 pod 的 80 埠轉發到 VM 的 8888
-kubectl port-forward --address 127.0.0.1 pod/web-reader 8888:80 &
+kubectl port-forward --address 0.0.0.0 pod/web-reader 8888:80 &
 # 在你的電腦上:把 VM 的 8888 接到本機 8888
 ssh -L 8888:127.0.0.1:8888 azureuser@<VM公網IP>
 # 瀏覽器開 http://localhost:8888 —— 就看到那個 hello world 頁
 ```
 
-這條路是臨時的,只有開著這兩段轉發的人看得到,適合除錯或展示。上面的截圖就是用這個方法打開的。
+port-forward 適合臨時除錯或展示;能否從其他機器連入 VM 的 8888,仍取決於監聽位址與網路規則。
 
 **路徑二:`Service type=LoadBalancer`。** 要給外部使用者用,做法跟 Day 8 一樣:把 Service 宣告成 `type=LoadBalancer`,cluster 裡的 CCM(cloud controller manager,替 Kubernetes 向 OpenStack 要資源的元件)會請 Octavia 建一台負載平衡器、配一個對外 IP,把流量分到各節點上的 Pod,而這些 Pod 讀寫的是同一顆 RWX volume。
 
-在這個 lab 試 LoadBalancer,CCM 建 LB 時會失敗,訊息是 `Provider 'amphorav2' is not enabled`。原因和修法跟 Day 8 的[「LoadBalancer 一直 pending,CCM 報 `Provider 'amphorav2' is not enabled`」](sprint3-day8-e2e-workload-cluster.md#mine-3)相同:CCM 預設要 `amphorav2`,這朵雲的 Octavia 只啟用了 `amphora`,所以要在 cluster 帶上 `octavia_provider=amphora` 標籤。
+Day 8 的 [cluster template](sprint3-day8-e2e-workload-cluster.md#mine-3) 已設定 `octavia_provider=amphora`,讓 CCM 使用該 provider 建立負載平衡器。
 
-不過這個修法在 Day 22 之後就不適用了。Day 22 的[「`--tags` 部署的檢查盲區」](sprint4-day22-upgrade-backup.md#mine-1)把 `octavia_provider_drivers` 收斂成只剩 `ovn`,amphora 不再可選。如果你的環境已經做過 Day 22,要走 LoadBalancer 得先依那一節的說明處理 provider,不能再直接帶 `amphora` 標籤。
+不過這個設定在 Day 22 之後就不適用了。Day 22 的[「`--tags` 部署的檢查盲區」](sprint4-day22-upgrade-backup.md#mine-1)把 `octavia_provider_drivers` 收斂成只剩 `ovn`,amphora 不再可選。如果你的環境已經做過 Day 22,要走 LoadBalancer 得先依那一節的說明處理 provider,不能再直接帶 `amphora` 標籤。
 
 ## 疑難排解
-
-### `openstack` 沒有 `share` 子命令 {#mine-1}
-
-**原因**:Manila 的 CLI 指令來自另外的外掛套件 `python-manilaclient`,`openstack` 本身沒有。修法是步驟 4 的 `pip install python-manilaclient`。之後部署其他服務、CLI 沒有對應指令時,也先裝 `python-<服務名>client`。
-
-### keyring 放錯目錄或 ceph.conf 帶縮排 {#mine-2}
-
-**原因**:Kolla 解析設定檔時遇到行首的 tab 會失敗,而 `generate-minimal-conf` 和 `ceph auth get` 的輸出都帶縮排;另外,官方指南多後端那一段的範例把 keyring 放在 `manila-share/` 子目錄,單一後端照它放會放錯位置。正確的做法見步驟 2:兩個檔案都經過 `sed` 去掉行首空白,直接放在 `/etc/kolla/config/manila/` 底下。
 
 ### CephFS 建好後出現 `too many PGs per OSD` {#mine-3}
 

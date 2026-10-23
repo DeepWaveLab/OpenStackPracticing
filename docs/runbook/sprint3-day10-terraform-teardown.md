@@ -17,9 +17,9 @@ Heat 和 Terraform 都是「寫範本、一次建好」,最大的差別在於「
 圖上標成橘色的兩個框,就是這份紀錄。我們可以看到兩件事:
 
 1. **Heat 的紀錄在 OpenStack 裡面。** Day 5 建的 stack,狀態存在 heat 的資料庫,跟其他服務的資料庫一起由 Kolla 部署。
-2. **Terraform 的紀錄在 OpenStack 外面。** 它是你工作目錄裡的一個檔案 `terraform.tfstate`,這個檔案叫 **state**。Terraform 靠它知道自己建過哪些資源、各自的 ID 是什麼,之後要刪的時候就照這份紀錄逐一刪除。
+2. **Terraform 的紀錄在 OpenStack 外面。** 它是你工作目錄裡的一個檔案 `terraform.tfstate`,這個檔案叫 **state**,記錄受管理資源及其 ID。之後要刪的時候,Terraform 就照這份紀錄逐一刪除。
 
-另一個差別是範圍:Heat 只管 OpenStack,Terraform 透過不同的 provider(下一節會講)可以在同一份描述裡同時管 OpenStack、其他公有雲和 DNS 這類外部服務。
+另一個差別是範圍:Heat 只管 OpenStack,Terraform 透過不同的 **provider**(負責呼叫各服務 API 的外掛),可以在同一份描述裡同時管 OpenStack、其他公有雲和 DNS 這類外部服務。
 
 ## 步驟 1:安裝 terraform
 
@@ -97,7 +97,7 @@ output "tf_lb_vip" { value = openstack_lb_loadbalancer_v2.tf_lb.vip_address }
 
 ### provider:Terraform 怎麼連到這朵雲
 
-開頭的 `terraform { required_providers ... }` 宣告這份檔案要用哪個 **provider**。Terraform 本身不認得 OpenStack,呼叫 OpenStack API 的工作由 provider 這個外掛負責;這裡用的是社群維護的 `terraform-provider-openstack/openstack`,`~> 3.0` 表示接受 3.x 的任何版本。
+開頭的 `terraform { required_providers ... }` 宣告這份檔案要用哪個 **provider**。這裡用的是社群維護的 `terraform-provider-openstack/openstack`,由這個外掛提供 OpenStack API 操作;`~> 3.0` 表示接受 3.x 的任何版本。
 
 `provider "openstack" {}` 是空的,裡面沒有帳號密碼。provider 會改讀環境變數 `OS_AUTH_URL`、`OS_USERNAME`、`OS_PASSWORD`、`OS_PROJECT_NAME` 和網域相關的 `OS_*_DOMAIN_NAME`,也就是 Day 1 `admin-openrc.sh` 設定的那一組。所以帳密不必寫進 HCL,只要執行前先 `source` 憑證檔。要給多個環境或自動化流程用時,provider 也支援用 `cloud = "..."` 指向 `clouds.yaml` 裡的一個項目,或改用 application credential,不必拿管理員密碼。
 
@@ -116,9 +116,9 @@ output "tf_lb_vip" { value = openstack_lb_loadbalancer_v2.tf_lb.vip_address }
 
 ![八個方塊:tf_net 指向 tf_subnet;ext-net(灰色虛線框的 data source)指向 tf_router;tf_subnet 指向 tf_lb 和 tf_ri;tf_router 指向 tf_ri;tf_lb 指向 tf_listener;tf_ri 用一條橘色、標著 depends_on 的箭頭指向橘色的 tf_vm;另有一條線從 tf_net 繞到底部再接到 tf_vm,標註 VM 只透過 network { uuid } 引用 tf_net,沒有引用 subnet](../assets/diagrams/os-s3d10-graph.svg)
 
-先看底部那條繞過整張圖的線。VM 的 `network { uuid = ... }` 只引用了 network,沒有引用 subnet,所以單看引用關係,Terraform 只知道 VM 要等 network 建好。network 一建好,VM 和 subnet 就會同時開始建。VM 送到 Nova 的時候 subnet 可能還沒建好,Nova 會拒絕:這個 network 上沒有 subnet,沒辦法分 IP 給 VM。
+先看底部那條繞過整張圖的線。VM 的 `network { uuid = ... }` 只引用了 network,沒有引用 subnet,所以單看引用關係,Terraform 只知道 VM 要等 network 建好。network 一建好,VM 和 subnet 就會同時開始建。VM 送到 Nova 的時候 subnet 可能還沒建好,Nova 會回傳 `Network ... requires a subnet in order to boot instances on`(HTTP 400):這個 network 上沒有 subnet,沒辦法分 IP 給 VM。
 
-VM 需要 subnet,但 HCL 裡沒有任何一行把這件事寫出來,Terraform 也就推不出來。這種情況要用 **`depends_on`** 明確告訴 Terraform 順序。圖上那條橘色箭頭就是 `depends_on = [openstack_networking_router_interface_v2.tf_ri]`:router interface 本身引用了 subnet 和 router,等它建好時,subnet 已經存在,也已經接上 router,這時再建 VM。只寫 `depends_on = [openstack_networking_subnet_v2.tf_subnet]` 也能解決 subnet 的問題。漏掉這一行會看到什麼錯誤,見[疑難排解：VM 建立失敗,Nova 回 400](#mine-1)。
+VM 需要 subnet,但 HCL 裡沒有任何一行把這件事寫出來,Terraform 也就推不出來。這種情況要用 **`depends_on`** 明確告訴 Terraform 順序。圖上那條橘色箭頭就是 `depends_on = [openstack_networking_router_interface_v2.tf_ri]`:router interface 本身引用了 subnet 和 router,等它建好時,subnet 已經存在,也已經接上 router,這時再建 VM。只寫 `depends_on = [openstack_networking_subnet_v2.tf_subnet]` 也能解決 subnet 的問題。
 
 ### 負載平衡器與 output
 
@@ -128,6 +128,8 @@ VM 需要 subnet,但 HCL 裡沒有任何一行把這件事寫出來,Terraform �
 
 ## 步驟 3:plan、apply、確認、destroy
 
+### 建立資源
+
 在 `~/tf-demo/` 目錄裡依序執行:
 
 ```bash
@@ -136,7 +138,6 @@ terraform init
 terraform plan          # 7 to add
 terraform apply -auto-approve
 terraform output        # tf_vm_ip / tf_lb_vip
-terraform destroy -auto-approve    # 一鍵拆 7 資源(含 amphora)
 ```
 
 一行一行看:
@@ -144,9 +145,19 @@ terraform destroy -auto-approve    # 一鍵拆 7 資源(含 amphora)
 - **`terraform init`** 照 `required_providers` 下載 OpenStack provider,放進目錄裡的 `.terraform/`。每個新目錄只要做一次。
 - **`terraform plan`** 比對 HCL、state 和雲上的現況,列出接下來要建立、修改或刪除什麼,但不會真的動手。第一次執行時 state 還是空的,所以結果是 `7 to add`:正好是七個 `resource`。`ext-net` 是 data source,不在其中。先看 plan 再動手,是 Terraform 最常用的習慣:改了 HCL 之後,plan 會告訴你這次改動會不會把某個資源刪掉重建。
 - **`terraform apply`** 真正呼叫 API 建立資源,完成後把每個資源的 ID 寫進 `terraform.tfstate`。平常 apply 會先印出 plan 並等你輸入 `yes`;`-auto-approve` 省略這個確認,只適合在你已經看過 plan 的時候用。七個資源裡最慢的是負載平衡器,約一分鐘,因為要等 Octavia 開好 amphora VM;VM 約 20 秒。
-- **`terraform output`** 印出兩個 output 的值。本課執行時拿到的是 `tf_vm_ip` 10.20.0.46、`tf_lb_vip` 10.20.0.234,兩個 IP 都落在 HCL 裡 subnet 設定的 `10.20.0.0/24`;你的數字會不同,但應該也在這個範圍內。
+- **`terraform output`** 印出 `tf_vm_ip` 和 `tf_lb_vip` 的值。兩個 IP 都應該落在 HCL 裡 subnet 設定的 `10.20.0.0/24` 範圍內。
 
-destroy 之前,可以先用 `openstack server list`、`openstack network list`、`openstack loadbalancer list` 看看,名稱是 `tf-` 開頭的資源都在。amphora VM 建在 Octavia 自己的 service project 裡,`openstack server list` 列不到,要用 `openstack loadbalancer amphora list` 看。
+### 檢查資源
+
+destroy 之前,可以先用 `openstack server list`、`openstack network list`、`openstack loadbalancer list` 看看名稱是 `tf-` 開頭的資源是否都在。amphora VM 建在 Octavia 自己的 service project 裡,`openstack server list` 列不到,要用 `openstack loadbalancer amphora list` 看(這幾條本課沒有留下實際輸出)。
+
+### 拆除資源
+
+確認資源都在之後,再執行:
+
+```bash
+terraform destroy -auto-approve    # 一鍵拆 7 資源(含 amphora)
+```
 
 - **`terraform destroy`** 照 state 裡的紀錄,依相依關係的反方向刪除:listener 先於負載平衡器、VM 先於 router interface,最後才刪 network。刪除負載平衡器時,Octavia 會把它的 amphora VM 一起刪掉。
 
@@ -202,14 +213,6 @@ kolla-ansible post-deploy -i ~/all-in-one
 3. **中間那一層只有筆記。** 這些資料和設定散在 Day 4 到 Day 7 的步驟裡,沒有一個指令能一次重建。
 
 所以「能不能一次拆掉、一次重建」,取決於中間那一層有沒有也寫成程式。這一層可以用 Ansible 劇本或 Terraform 補上,這門課沒有做。
-
-## 疑難排解
-
-### VM 建立失敗,Nova 回 400 {#mine-1}
-
-**症狀**:`terraform apply` 建 VM 時失敗,錯誤訊息是 `Network ... requires a subnet in order to boot instances on`(HTTP 400)。
-
-**原因**:VM 只引用了 network,沒有引用 subnet,Terraform 把 VM 和 subnet 同時建,VM 送到 Nova 時 subnet 還沒建好。詳細的說明和修法見[步驟 2「為什麼 VM 要加 depends_on」](#why-depends-on):在 VM 加上 `depends_on`,指向 router interface 或 subnet。
 
 ## 想一想
 

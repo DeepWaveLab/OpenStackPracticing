@@ -1,6 +1,6 @@
 # Day 26：Sprint 5 預告——用量、費率與操作責任
 
-兩個部門開始共用這朵雲之後，問題會變成：資源算在哪個專案名下、每個部門能用多少、費用怎麼計算，以及發生異常時該從哪份紀錄追查。Sprint 4 提供了部署與維護的基礎；Sprint 5 接著處理使用者、資源歸屬與操作責任。
+兩個部門開始共用這朵雲之後，問題會變成：資源算在哪個專案名下、每個部門能用多少、費用怎麼計算，以及發生異常時該從哪份紀錄追查。Sprint 4 提供了部署與維護的基礎；Sprint 5 接著處理使用者、資源歸屬與操作責任。本章不操作環境，讀完後你能依需求選擇後續章節，並判斷練習需要單機或多節點環境。
 
 ## 從租戶開始，再解讀用量
 
@@ -8,9 +8,11 @@
 
 另外一條路徑是服務維護：用告警觸發動作、在特定故障下復原 VM，再處理 API 加密與登入身分。**SLA** 是對可用性等服務條件的約定，不能只因部署了自動復原工具就宣稱已達成。
 
-下圖呈現章節的依賴順序：
+下圖呈現章節的學習順序：
 
 ![租戶與權限先行，再學計量計價、復原加密與企業身分稽核](../assets/diagrams/os-s4d26-roadmap.svg)
+
+圖中的箭頭表示課程安排，不代表每組章節都以完成前一組為技術前提。先學租戶與權限，是為了讓用量能歸屬到 project；計量、告警與計價沿用 Day 21 的 Prometheus。復原章的 compute 故障演練則需要 Day 23–24 的多節點環境，另有可接收 VM 的 compute。
 
 Day 35 會回顧這些能力的適用範圍，也練習查核官方專案與版本資訊。
 
@@ -24,13 +26,13 @@ Day 35 會回顧這些能力的適用範圍，也練習查核官方專案與版�
 | [Day 30：CloudKitty 計價](sprint5-day30-cloudkitty-rating.md) | 用量、單位與費率如何形成可解釋的計價結果？ |
 | [Day 31：Masakari 復原](sprint5-day31-masakari-ha.md) | VM 程序故障與 compute 故障，各需要哪些偵測及復原前提？ |
 | [Day 32：TLS](sprint5-day32-full-tls.md) | 哪段連線受到加密，用戶端要信任哪個 CA？ |
-| [Day 33：企業身分](sprint5-day33-keycloak-federation.md) | Keycloak 身分如何透過 Keystone federation 對應到角色？ |
+| [Day 33：企業身分](sprint5-day33-keycloak-federation.md) | 如何使用公司帳號登入這朵雲，並對應到 OpenStack 角色？Keycloak 管理公司帳號，Keystone federation 讓 OpenStack 接受外部身分。 |
 | [Day 34：CADF 稽核](sprint5-day34-cadf-audit.md) | 事件如何描述誰對哪個資源做了什麼，哪些操作尚未涵蓋？ |
 | [Day 35：總結](sprint5-day35-sprint5-recap.md) | 如何依使用情境選擇這些能力，並查核專案狀態？ |
 
 ## 為什麼繼續使用 Prometheus
 
-Day 21 已部署 Prometheus，接下來會沿用它，讓計量、告警與計價的資料路徑能相互對照。這是本課選用的路線，不能據此推論 Gnocchi 在所有部署中都已被取代。遇到其他教材時，要核對它使用的 Ceilometer publisher、Aodh 告警型別與 CloudKitty collector，不能只按專案名稱替換元件。
+Day 21 已部署 Prometheus，接下來會沿用它儲存計量資料，由 Ceilometer 收集用量、Aodh 依資料判斷是否告警，CloudKitty 則讀取用量來計價。其他教材也可能使用 Gnocchi 儲存計量資料；本課選用 Prometheus，不能據此推論 Gnocchi 在所有部署中都已被取代。比對教材時，要確認資料送到哪裡、告警依據什麼資料，以及計價服務從哪裡讀取用量，不能只按專案名稱替換元件。各服務的整合設定會在實作章說明。
 
 本課也不把直接開放 Prometheus API 當作租戶隔離。資料收集與存取控制是兩個不同問題，查詢入口要依實際權限設計。
 
@@ -49,7 +51,7 @@ OpenStack 專案可能更名、移出治理範圍，或在不同系列中採用�
 ## 想一想
 
 1. 計量資料沒有 project 歸屬時，即使能畫出 CPU 圖表，還缺什麼才能分配部門費用？
-2. 自動復原演練通過，是否足以直接承諾某個 SLA？還需要量測哪些範圍？
+2. 為什麼自動復原演練通過，仍不足以直接承諾某個 SLA？請依本章對 SLA 的說明回答。
 
 ## 小結
 

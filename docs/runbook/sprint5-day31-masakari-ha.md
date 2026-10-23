@@ -4,15 +4,15 @@
 
 ## 行程失敗與主機失敗，恢復方式不同
 
-**Masakari** 接收故障通知，再呼叫 Nova 執行恢復。它的 API 收通知，engine 編排後續工作；負責觀察故障的 monitor 則是另一個元件。
+沒有自動恢復服務時，VM 行程異常結束需要操作者手動重啟；整台 compute 故障時，則要先確認來源主機已停止，再安排 VM 在其他主機重建。**Masakari** 接收故障通知後，會呼叫 Nova 執行這些恢復動作，省去逐台手動處理的操作。它的 API 收通知，engine 編排後續工作；負責觀察故障的 monitor 則是另一個元件。
 
 **Instancemonitor** 觀察 compute 上的 libvirt 事件。本章第一個實驗是某台 VM 的 qemu 行程異常結束，但主機仍可用；通知送達後，Masakari 在原主機上安排 stop／start。
 
-**Hostmonitor** 用來偵測主機故障，本課沒有部署它，也沒有整合其 Pacemaker／Corosync 前提。第二個實驗在確認主機停止後，由操作者人工送通知，才讓 Masakari 呼叫 Nova **evacuate**：在其他主機重建實例。這不是 Day 24 在正常運作中搬移 VM 的 live migration。
+第二個實驗在確認主機停止後，由操作者人工送通知，才讓 Masakari 呼叫 Nova **evacuate**：在其他主機重建實例。本章採人工主機通知，沒有部署自動偵測主機故障的 hostmonitor。這不是 Day 24 在正常運作中搬移 VM 的 live migration。
 
 ![上排由 instancemonitor 通知 VM 行程失敗，原機重啟；下排先隔離故障主機，再人工通知，於其他主機疏散重建](../assets/diagrams/os-s5d31-recovery.svg)
 
-所以本章驗到行程事件的自動通知，以及人工主機通知之後的恢復處理，沒有驗證完整的自動主機故障偵測。
+你要分別確認圖中的兩條恢復路徑：行程異常結束後，instancemonitor 自動通知並觸發原機重啟；來源主機停止並完成隔離後，人工通知觸發疏散，在其他主機重新啟動 VM。第二個實驗不包含自動主機故障偵測。
 
 ## 疏散之前，要先排除兩台同時執行
 
@@ -30,18 +30,18 @@
 
 需要 Day 23–24 的兩台 controller、三台 compute，以及可用的網路、image、flavor 和目的主機容量。以下 `oslab-ctrl1`、`oslab-comp1` 等是 inventory 名稱，應對應自己的環境；這套多節點環境與 Day 27–30 的單機環境分開。
 
-本課未附完整 loop device 開機掛載 unit、canary VM 建立指令與人工主機通知 payload，以下包含操作與結果摘要。重做前必須補齊這些素材，不能把含省略號的片段當成完整命令，也不能在未確認來源主機隔離時送出恢復通知。
+開始演練前，需備妥 Cinder 儲存、可用的 Masakari CLI、可破壞的測試 VM 與人工主機通知方式。目前步驟仍缺 loop device 設定與開機掛載 unit、`bfv-canary` 建立、兩台 VM 的來源主機安排，以及通知命令與 payload；這些部分需先實跑補齊。以下片段不能直接當成完整流程，也不能在未確認來源主機隔離時送出恢復通知。
 
 ## 步驟 1：先確認控制面可用
 
-先檢查 Galera 與各節點服務。若叢集已是 Primary 且成員正常，不需每次開機都執行資料庫恢復。本課曾在整組關機後無法形成正常叢集，依 Kolla 的資料庫恢復程序執行：
+先檢查 Galera 與各節點服務。若叢集已是 Primary 且成員正常，不需每次開機都執行資料庫恢復。只有確認需要恢復資料庫時，才依 Kolla 的資料庫恢復程序執行以下命令；Kolla 2025.1 的子命令是帶連字號的 `mariadb-recovery`：
 
 ```bash
 source ~/kolla-venv/bin/activate
 kolla-ansible mariadb-recovery -i ~/multinode
 ```
 
-以下為當時的 Ansible 摘要及後續 Galera 查詢節錄：
+以下為恢復操作的 Ansible 摘要及後續 Galera 查詢節錄；取得 Galera 狀態的查詢命令與登入方式尚待補齊：
 
 ```text
 PLAY RECAP:
@@ -54,29 +54,11 @@ wsrep_cluster_size    2
 wsrep_cluster_status  Primary
 ```
 
-`Primary` 與預期的兩個成員表示這次叢集形成成功。若仍有不同步或分割情況，要先處理資料庫，不要繼續故障演練。
+對照 `wsrep_cluster_status` 是否為 `Primary`，以及 `wsrep_cluster_size` 是否符合預期的兩個成員。若仍有不同步或分割情況，要先處理資料庫，不要繼續故障演練。
 
-本課曾出現只有 ctrl1 的多個服務不健康、ctrl2 正常的情況：
+接著在各節點看容器狀態（有沒有退出或不健康的容器），並在 controller 確認誰在監聽資料庫的 3306 埠。若有容器退出或不健康，使用 `docker logs` 指定該容器查看日誌。若只有單一 controller 的多個服務出現 `SQL connection failed`，而另一台正常，接著檢查失敗節點共用的資料庫入口 ProxySQL。比對監聽位址、連接埠與日誌後再判斷原因，不能只憑連線失敗就移除資料庫檔案，見[疑難排解：單一 controller 的多個服務連不上資料庫](#mine-2)。
 
-```text
-ctrl1: neutron_server nova_conductor nova_api nova_scheduler placement_api keystone
-ctrl2: (全健康)
-```
-
-相關 API log 都出現資料庫連線失敗：
-
-```text
-WARNING oslo_db.sqlalchemy.engines SQL connection failed.
-```
-
-多個服務共用的資料庫入口是 ProxySQL，所以接著檢查 ctrl1 的代理。本課定位到統計資料庫檔案問題後，移走該檔並重啟，結果如下；只有符合[疑難排解：單一 controller 的多個服務連不上資料庫](#mine-2)時才採用該修法：
-
-```text
-proxysql: Up 30 seconds (healthy)
-ctrl1 → VIP:3306 ✅ 通了
-```
-
-受影響服務重新連線或重啟後，Nova 服務摘要恢復正常：
+接著確認 Nova 的服務都有註冊、心跳為 `up`，且 hypervisor 清單包含預期的 compute。以下是本課當時的 Nova 服務摘要：
 
 ```text
 nova-scheduler oslab-ctrl1 up
@@ -137,7 +119,7 @@ comp1: masakari_instancemonitor
 kolla-ansible deploy -i ~/multinode --tags loadbalancer
 ```
 
-這個步驟不能因 Cinder 容器已經啟動就省略。本課在尚未補前端時曾看到：
+部署後檢查 HAProxy 是否已有 Cinder 前端；不能因 Cinder 容器已經啟動就省略。尚未補前端時可能看到以下連線錯誤：
 
 ```text
 Failed to establish a new connection: [Errno 111] Connection refused
@@ -151,13 +133,23 @@ cinder-volume oslab-ctrl1@lvm-1 up
 volume 狀態: available
 ```
 
-`available` 只代表該 volume 建立完成；還要以 boot-from-volume 的測試實例確認 compute 能存取儲存。若新服務的 db sync 被拒，再查 ProxySQL 是否載入新帳號，不要把所有資料庫拒絕都視為密碼錯誤。
+`available` 只代表該 volume 建立完成；還要以 boot-from-volume 的測試實例確認 compute 能存取儲存。
 
 ## 步驟 4：登記恢復群組與測試 VM
 
 Masakari 的 **failover segment** 管理一組主機及其恢復策略。本章選 `auto`；實際目的主機還由 Nova 排程與資源、儲存、網路條件決定，不能只靠 segment 名單就假設容量或相容性足夠。
 
-以下是本課登記三台 compute 的命令；執行環境需已有提供 `openstack segment` 的 Masakari CLI 外掛，本課未留存安裝步驟：
+先在既有 OpenStack CLI 的 venv 安裝 Masakari 外掛，依 [2025.1 官方安裝文件](https://docs.openstack.org/python-masakariclient/2025.1/install/index.html)與 [2025.1 Epoxy 發行表](https://releases.openstack.org/epoxy/index.html#python-masakariclient)固定為 `8.6.0`，再查詢套件版本與命令說明（依官方文件補上，本課沒有實跑）：
+
+```bash
+source ~/kolla-venv/bin/activate
+python -m pip install 'python-masakariclient==8.6.0'
+python -m pip show python-masakariclient
+openstack help segment create
+openstack help segment host list
+```
+
+以下是本課登記三台 compute 的命令：
 
 ```bash
 openstack segment create day31-seg auto COMPUTE
@@ -177,7 +169,15 @@ oslab-comp3  False
 
 它不是電源隔離證明，也不能單獨代表 Nova 一定會接受新排程。
 
-本課另準備了可破壞的 `ha-canary` 與 `bfv-canary`，後者從 Cinder volume 開機。建立過程未完整收錄；測試前應先確認所在 compute、磁碟來源與可用容量，並寫入自己能辨認的測試資料，供恢復後比對。以下是替行程實驗的 VM 加 metadata：
+沿用 [Day 23](sprint4-day23-multinode-ha.md) 建立的 `ha-canary`，既有 VM 不必重建。先查目前所在的 compute：
+
+```bash
+openstack server show ha-canary -f value -c OS-EXT-SRV-ATTR:host
+```
+
+Day 23 建立時指定的是 comp2，不能假設它已在本章要停止的 comp1；以查詢結果為準。
+
+本課另準備了可破壞的 `bfv-canary`，從 Cinder volume 開機。建立過程未完整收錄；測試前應先確認兩台 VM 所在 compute、磁碟來源與可用容量，並寫入自己能辨認的測試資料，供恢復後比對。兩台 VM 的來源主機安排步驟仍待實跑補齊。以下是替行程實驗的 VM 加 metadata：
 
 ```bash
 openstack server set --property HA_Enabled=True ha-canary
@@ -185,6 +185,8 @@ openstack server set --property HA_Enabled=True ha-canary
 ```
 
 **`HA_Enabled=True`** 是本課恢復策略使用的實例標記。Masakari engine 的 `[instance_failure] process_all_instances` 預設 False，因此只恢復有對應標記的實例；主機故障的範圍由另外的 `[host_failure] evacuate_all_instances` 控制。不要把兩種事件的設定當成同一個開關。
+
+若 VM 異常停止後沒有恢復，先查 libvirt 事件與 monitor 是否送出通知，再核對上述 metadata 與 engine 設定。
 
 ## 步驟 5：分開讀兩次恢復結果 {#step-5}
 
@@ -216,20 +218,16 @@ az vm deallocate -g <多機RG> -n oslab-comp1     # 停止並解除配置實驗 
 
 ```text
 07:09:28  comp1: down                    ← nova 終於判定失聯
-07:17:55  lock → evacuate                ← Masakari 的搬家流程
+07:17:55  lock → evacuate
 07:18:06  bfv=comp1/REBUILD  ha=comp1/REBUILD
-07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE   ← 在 comp2 復活
+07:18:31  notif=finished  bfv=comp2/ACTIVE  ha=comp2/ACTIVE
 ```
 
-兩台實例最後都在 comp2 顯示 ACTIVE。Boot-from-volume 的 `volume_id` 保持相同、attachment 改變，表示目的主機重新掛上同一顆 volume；這不等於驗證所有資料原封不動，也沒有證明應用沒有中斷。本地根碟的實例由 image 重建，原機上的新增資料不會隨這個動作恢復。
+摘要中的 `lock → evacuate` 是疏散流程，最後兩台實例都在 comp2 重新啟動並顯示 ACTIVE。Boot-from-volume 的 `volume_id` 保持相同、attachment 改變，表示目的主機重新掛上同一顆 volume；這不等於驗證所有資料原封不動，也沒有證明應用沒有中斷。本地根碟的實例由 image 重建，原機上的新增資料不會隨這個動作恢復。
 
 後續應比較事前寫入的測試資料、檢查應用啟動與實際連線，並確認來源主機重新加入時不會重複啟動舊實例。本課沒有留下完整資料比對與主機重新加入的驗證結果，不能把演練直接視為正式復原程序。
 
 ## 疑難排解
-
-### mariadb_recovery 不是有效子命令 {#mine-1}
-
-本課 Kolla 2025.1 使用 `mariadb-recovery`，拼字帶連字號。依目前版本的 help 與官方文件操作；不要只因服務不健康就直接執行 recovery。
 
 ### 單一 controller 的多個服務連不上資料庫 {#mine-2}
 
@@ -249,24 +247,6 @@ sudo docker restart proxysql
 
 不要移走包含實際設定的資料庫；若沒有同樣的 crash 證據，先查網路、使用者設定與代理 log。
 
-### 新服務 db sync 被 ProxySQL 拒絕 {#mine-3}
-
-本課手動修復代理後，曾出現檔案已更新、執行中的 ProxySQL 卻尚未接受新服務帳號的情況。先比對設定與執行狀態，再依部署方式載入或重啟代理；不能推論 Kolla 每次部署新服務都必然漏掉重啟。處理後重新驗證資料庫連線與服務同步。
-
-### Cinder 已啟動，VIP 的 8776 埠仍拒絕連線 {#mine-4}
-
-檢查 HAProxy 是否已有 Cinder 前端。本課使用服務 tags 後還需套用步驟 3 的 loadbalancer 設定；同類問題也可能發生在有 HAProxy 的單機環境，不是多節點專屬。
-
-### 停 Docker 後，Nova 仍顯示主機 up {#mine-5}
-
-本課曾因 systemd 重啟 `nova_compute`，或 Docker live-restore 讓容器繼續執行，而無法用停止管理元件模擬主機故障。應確認測試真正停掉的是哪一層，不代表軟體永遠不能停止主機。
-
-以下是當時 deallocate 的縮寫；省略號不是合法參數，請以步驟 5 的完整參數形式核對自己的資源：
-
-```bash
-az vm deallocate ... oslab-comp1
-```
-
 ### 重送主機通知回 already under maintenance {#mine-6}
 
 恢復流程失敗後可能留下 `on_maintenance=True`，再次送通知因而被拒。先查原通知、工作狀態、來源主機隔離及目的實例是否已建立，排除仍在執行或重複恢復，再決定是否清除標記重試。本課使用過：
@@ -276,10 +256,6 @@ openstack segment host update day31-seg oslab-comp1 --on_maintenance False
 ```
 
 這只改 Masakari 的維護狀態，不會完成 fencing，也不應當成強迫任何失敗流程繼續的方法。
-
-### VM 異常停止後沒有執行恢復 {#mine-7}
-
-先查 libvirt 事件、monitor 是否送出通知，再看 Masakari 的實例恢復設定與 metadata。預設 `process_all_instances=False` 時，缺少 `HA_Enabled=True` 會排除該實例；限制來自恢復策略，不是看到 monitor 容器就代表所有 VM 都會重啟。
 
 ## 想一想
 
@@ -293,7 +269,7 @@ Masakari 將故障通知接到 Nova 的恢復動作；行程仍有可用主機�
 
 ## 延伸閱讀
 
-想再深入，可以從這幾份開始：
+若要把人工主機通知改成自動偵測，可再研究 **hostmonitor**：它透過 Pacemaker／Corosync 叢集偵測主機故障，這套叢集軟體的安裝與整合不在本章範圍內。導入時仍須另外驗證 fencing，不能只補故障通知。
 
 - [Kolla-Ansible 2025.1 Masakari 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/compute/masakari-guide.html)：API、engine 與 monitor 開關。
 - [Masakari 2025.1 設定參考](https://docs.openstack.org/masakari/2025.1/configuration/config.html)：實例與主機故障的恢復範圍。

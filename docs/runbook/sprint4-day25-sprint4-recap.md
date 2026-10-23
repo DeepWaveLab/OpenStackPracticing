@@ -4,9 +4,9 @@
 
 ## 回到一開始的問題
 
-最初我們問的是：OpenStack 還能提供哪些服務，底層容量又由誰準備？前半段在單機環境加入物件儲存、共享檔案、DNS 與資料庫；後半段改用獨立多節點 lab，觀察 API 入口、資料庫 quorum 與 compute 容量。
+最初我們問的是：OpenStack 還能提供哪些服務，底層容量又由誰準備？練習物件儲存、共享檔案、DNS 與資料庫服務時，使用單機環境；練習多節點維護時，則需另備 lab，觀察 API 入口、資料庫 quorum 與 compute 容量。這套多節點環境不能假設已部署前面全部服務，所需服務要依各章前提準備。
 
-下圖依問題串起章節。這些結果來自兩個環境，不能理解成最後一套多節點雲已經裝好前面全部服務：
+下圖依問題串起章節：
 
 ![服務擴充、請求與封包追蹤、觀測與還原、入口與容量四段的章節對應](../assets/diagrams/os-s4d25-review.svg)
 
@@ -16,7 +16,7 @@
 
 程式要透過 HTTP 上傳備份，可以回到 [Day 15 的 RGW](sprint4-day15-object-storage-rgw.md)；多個用戶端需要共同讀寫檔案，則回到 [Day 16 的 Manila 與 CephFS](sprint4-day16-manila-cephfs.md)。兩者都能使用 Ceph，卻有不同的存取介面與授權方式。
 
-選擇時也要看示範範圍：本課 RGW 保留了 Swift 路徑的實測結果，S3 設定是未驗證選讀；Manila 的主機掛載有操作流程，Kubernetes CSI 則只保留部分歷史結果，缺少完整 manifests。不能把兩段都當成已提供可從零重建的安裝腳本。單機單 OSD 的 Ceph 也沒有提供跨主機副本保護。
+練習這兩種儲存方式前，先完成 Day 14 的 Ceph 部署，再依需求設定 RGW 或 Manila 與 CephFS。可照做的範圍是 RGW 的 Swift 存取與 Manila 的主機掛載；S3 設定仍是未驗證選讀，Kubernetes CSI 的部署流程不完整，不能直接照本課從零建置。單機單 OSD 的 Ceph 也沒有提供跨主機副本保護。
 
 ## 遇到建立失敗或連線問題時
 
@@ -50,11 +50,9 @@ Sprint 4 增加了服務介面，也增加了理解與維護它們的方法。�
 
 ## 延伸閱讀
 
-想再深入，可以從這幾份開始：
-
 - [Kolla-Ansible 2025.1 操作指南](https://docs.openstack.org/kolla-ansible/2025.1/user/operating-kolla.html)：準備工具更新與跨系列升級。
 - [Kolla-Ansible 新增與移除主機](https://docs.openstack.org/kolla-ansible/2025.1/user/adding-and-removing-hosts.html)：對照本課維護演練之外的移除流程。
-- [Ceph 架構](https://docs.ceph.com/en/tentacle/architecture/)：進一步理解副本、CRUSH 與故障域。
+- [Ceph 架構](https://docs.ceph.com/en/tentacle/architecture/)：進一步理解副本、CRUSH（Ceph 用來計算資料儲存位置的演算法）與故障域。
 
 ## 下一步
 

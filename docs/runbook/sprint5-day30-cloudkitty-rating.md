@@ -8,7 +8,7 @@ Prometheus 查得到 team-a 的用量，費用摘要卻一直是 0。你可能�
 
 CloudKitty 做的是 **rating**：依規則把用量轉成費用資料。它不會因此替你完成付款、發票、稅務、退款或對帳爭議處理。本章的 `$0.05` 等數值是示範費率，不代表實際貨幣或市場報價。
 
-需要 Day 21 的 Prometheus／OpenSearch、Day 28 的計量，以及 Day 27 的兩個專案。以管理員身分操作設定；先清除 application credential 與 `OS_SYSTEM_SCOPE` 殘留，再載入管理員 openrc。CLI 命令在已安裝 OpenStack 工具的虛擬環境執行，`10.0.0.4`、inventory 與 UUID 需換成自己的值。
+Day 29 用用量觸發擴縮，本章用同一來源計算費用。需要 Day 21 的 Prometheus／OpenSearch、Day 28 的計量，以及 Day 27 的兩個專案。以管理員身分操作設定；先清除 application credential 與 `OS_SYSTEM_SCOPE` 殘留，再載入管理員 openrc。CLI 命令在已安裝 OpenStack 工具的虛擬環境執行，`10.0.0.4`、inventory 與 UUID 需換成自己的值。
 
 下圖把處理過程分成四段。**Fetcher** 決定要處理哪些專案，**collector** 取回用量，**rating module** 套費率，**storage** 保存結果。
 
@@ -18,7 +18,7 @@ CloudKitty 做的是 **rating**：依規則把用量轉成費用資料。它不�
 
 ## 步驟 1：部署 collector 與 storage {#step-1}
 
-本章使用 Prometheus collector、OpenSearch storage。明確指定後端，避免沿用套件的 Gnocchi 預設：
+本章使用 Prometheus collector、OpenSearch storage。明確指定後端，避免沿用套件預設的用量儲存服務 Gnocchi：
 
 ```bash
 sudo tee -a /etc/kolla/globals.yml << 'EOF'
@@ -110,7 +110,7 @@ max(max_over_time(power_state{project_id="<租戶>"}[3600s])) by (resource_id, p
 
 而 Day 28 的 Pushgateway 仍可能曝露已刪 VM 的舊值，每次 scrape 都形成新樣本。`max_over_time` 不會自動排除這些資源，所以這份練習尚未驗證資源刪除後一定停止計費。
 
-### 使用實際 collector 的 schema 驗證
+### 使用實際 collector 的 schema（設定結構規則）驗證
 
 在已載入 `cloudkitty.conf` 的容器內驗證，才能使用 Prometheus 的 schema：
 
@@ -164,9 +164,9 @@ IID=$(openstack rating hashmap service create instance -f value -c "Service ID")
 VID=$(openstack rating hashmap service create volume -f value -c "Service ID")
 ```
 
-接著建立 flat 費率。這裡的示範是每個一小時週期的 instance 單位 0.05、GiB 單位 0.01；若改 `period`，必須重新確認費率及週期單位，不能直接沿用「每小時」的解讀。
+接著建立 flat（固定單價）費率。這裡的示範是每個一小時週期的 instance 單位 0.05、GiB 單位 0.01；若改 `period`，必須重新確認費率及週期單位，不能直接沿用「每小時」的解讀。
 
-本課 CLI 與 API 有參數不相容，使用 API 建立：
+每筆 mapping（費率對應規則）會把服務與單價連在一起。本課 CLI 與 API 有參數不相容，使用 API 建立：
 
 ```bash
 TOKEN=$(openstack token issue -f value -c id)
@@ -185,9 +185,30 @@ done
 
 回傳值顯示兩筆 mapping 已建立。若 token 過期，重新取得；`CK` 也要使用自己的 CloudKitty endpoint。
 
+費率建立後，再確認 hashmap 已啟用，並核對 `alt_name` 是否對到有費率的服務：
+
+```bash
+openstack rating module list
+```
+
 ![Horizon Hashmap頁面列出instance服務的flat費率0.05](../assets/screenshots/day30-horizon-hashmap-mapping.png)
 
 Horizon 的 Service Mappings 頁也可檢查同一筆設定。API 與畫面要對到同一個服務名稱，不要重複建立 mapping 來處理查不到的情況。
+
+### CLI 版本備註 {#mine-5}
+
+以下是在 python-cloudkittyclient 6.1.0 與 CloudKitty 22.0.1 組合的失敗命令：
+
+```bash
+openstack rating hashmap mapping create --service-id $IID --type flat 0.05
+```
+
+```json
+{"faultcode": "Client", "faultstring": "Unknown attribute for argument mapping_data: name",
+ "debuginfo": null}  (HTTP 400)
+```
+
+客戶端送出 API 不接受的 `name`，因此本步驟使用已驗證的 API 內容或 Horizon 建立；這是此版本組合的問題，不能推成所有 2025.1 安裝都會失敗。查結果時可用 `/v2/scope`、`/v2/dataframes`、`/v2/summary`，並依伺服器支援的 API 參數操作。
 
 ## 步驟 4：選出要計算費用的專案
 
@@ -201,18 +222,39 @@ curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary"
 {"results": [["2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00", 0.0, 0.0]]}
 ```
 
+依 [Kolla-Ansible 2025.1 CloudKitty 模板](https://raw.githubusercontent.com/openstack/kolla-ansible/stable/2025.1/ansible/roles/cloudkitty/templates/cloudkitty.conf.j2)，在 `/etc/kolla/globals.yml` 新增或更新以下設定以啟用 DEBUG，避免重複鍵值（依官方文件補上，本課沒有實跑）：
+
+```yaml
+cloudkitty_logging_debug: "yes"
+```
+
+沿用本章虛擬環境與 inventory 重新部署，再依上述模板的日誌路徑（`log_dir = /var/log/kolla/cloudkitty`；`cloudkitty_processor` 容器有掛載這個目錄），查找 fetcher 訊息並持續追蹤日誌（依官方文件補上，本課沒有實跑）：
+
+```bash
+source ~/kolla-venv/bin/activate
+kolla-ansible deploy -i ~/all-in-one --tags cloudkitty
+
+sudo docker exec cloudkitty_processor sh -c \
+  'grep -n "Number of tenants to rate" /var/log/kolla/cloudkitty/*.log'
+
+sudo docker exec cloudkitty_processor sh -c \
+  'tail -n 100 -F /var/log/kolla/cloudkitty/*.log'
+```
+
+最後一條指令會持續追蹤日誌，以 `Ctrl+C` 結束；依時間戳判讀重新部署後的 fetcher 訊息。
+
 先看 processor 的 fetcher 日誌：
 
 ```text
 DEBUG cloudkitty.fetcher.keystone  Number of tenants to rate : 0
 ```
 
-`Number of tenants to rate : 0` 表示它沒有選中任何專案。這個 fetcher 預設要求 cloudkitty 服務使用者在該專案有 `rating` 角色。以管理員確認服務使用者 ID，再替本章 domain 下兩個專案指派：
+`Number of tenants to rate : 0` 表示它沒有選中任何專案。這個 fetcher 預設要求 cloudkitty 服務使用者在該專案有 `rating` 角色。以管理員確認服務使用者 ID，再替兩個專案指派。如果其他 domain 也有同名專案，`role add` 要加 `--project-domain day27-corp`（修正後的寫法本課沒有實跑）：
 
 ```bash
 CKUSER=$(openstack user show cloudkitty -f value -c id)
 for P in team-a team-b; do
-  openstack role add --user $CKUSER --project "$P" --project-domain day27-corp rating
+  openstack role add --user $CKUSER --project $P rating
 done
 sudo docker restart cloudkitty_processor
 ```
@@ -228,6 +270,41 @@ Number of tenants to rate : 2
 ## 步驟 5：按週期、專案與項目核對
 
 **Period** 是收集／計價的週期，本課是 3600 秒。**Wait periods** 預設為 2，讓近期資料先等待兩個週期再處理；實際看見結果的延遲還受週期邊界、處理進度與補算影響，不是精確固定兩小時。
+
+### 計價等待與處理進度 {#mine-4}
+
+本課版本在處理迴圈末尾等待 collect period：
+
+```python
+        LOG.debug("Finished processing all storage scopes with worker ...")
+        # FIXME(sheeprine): We may cause a drift here
+        time.sleep(CONF.collect.period)
+```
+
+因此設定更新後可能要等下一輪。步驟 4 已用下列重啟操作重新讀取專案清單，對應的日誌紀錄如下：
+
+```bash
+sudo docker restart cloudkitty_processor
+```
+
+```text
+14:10:22  Number of tenants to rate : 2
+```
+
+這只證明重新選到專案，還要檢查計量 scope（本章按 `project_id` 切分的處理範圍）的進度和待結算週期。不要為了讓畫面立即出數字就隨意縮短 period，因為它也改變計價週期。
+
+全新的 scope 另有補算行為，沒有時間狀態時從當月開始：
+
+```python
+# cloudkitty/utils/__init__.py
+def check_time_state(timestamp=None, period=0, wait_periods=0):
+    if not timestamp:
+        return tzutils.get_month_start()
+```
+
+因此短暫零費用也可能是尚未處理到有資料的週期。查看進度後再決定是否需要介入。
+
+### 查詢費用摘要
 
 先查按 project 分組的摘要：
 
@@ -249,7 +326,7 @@ curl -s -H "X-Auth-Token: $TOKEN" "$CK/v2/summary?groupby=project_id"
 | 下一個小時 | 4 | 0.05 | 0.20 |
 | 合計 | 5 個週期單位 | | 0.25 |
 
-這裡的 4 是該窗口查詢得到的資源數，不等於同時有四台 VM，也不能證明每台都執行滿一小時。請先看懂本章 max／NUMBOOL 規則，再解讀它和實際執行時間的差別。
+這裡的 4 是該窗口查詢得到的資源數，不等於同時有四台 VM，也不能證明每台都執行滿一小時。這份規則先取期間最大值，再由 NUMBOOL 將非零值轉成 1，因此計得的是週期單位，不是 VM 的實際執行時數。
 
 圖中刻意把每期數量與費率配在一起，最後才相加：
 
@@ -304,11 +381,11 @@ if not ignore_rating_role:
         tenant_list.remove(tenant)          # ← 沒有 rating 角色 → 直接移除
 ```
 
-**修法**：依步驟 4 指派 rating 角色；單一專案的原操作如下，已補明確 domain：
+**修法**：依步驟 4 指派 rating 角色；單一專案的操作如下（遇到同名專案時的寫法見步驟 4）：
 
 ```bash
 CKUSER=$(openstack user show cloudkitty -f value -c id)
-openstack role add --user $CKUSER --project team-a --project-domain day27-corp rating
+openstack role add --user $CKUSER --project team-a rating
 ```
 
 也有 `ignore_rating_role` 設定，但它會改變要處理的範圍，不能只為消除空清單就直接對所有專案啟用。
@@ -316,64 +393,6 @@ openstack role add --user $CKUSER --project team-a --project-domain day27-corp r
 ### 改 Prometheus collector 後仍要求 Gnocchi 欄位 {#mine-2}
 
 **原因**：collector 與 metrics 設定沒有同步，或驗證工具沒載入相同的服務設定。**修法**：依步驟 2 檢查生效的 collector、`metrics.yml` 與 schema，再重新部署。
-
-### 有專案與資料，費用仍為零 {#mine-3}
-
-**原因**：本課預設啟用 noop、未啟用 hashmap，或 alt_name 沒對到有費率的服務。**修法**：先列模組，再核對 service 與 mapping：
-
-```bash
-openstack rating module list
-```
-
-不要把「沒有可計費專案」與「沒有計價規則」混為同一個問題。
-
-### 改了角色，processor 尚未重新處理 {#mine-4}
-
-本課版本在處理迴圈末尾等待 collect period：
-
-```python
-        LOG.debug("Finished processing all storage scopes with worker ...")
-        # FIXME(sheeprine): We may cause a drift here
-        time.sleep(CONF.collect.period)
-```
-
-因此設定更新後可能要等下一輪。實驗中使用重啟讓它重新讀取：
-
-```bash
-sudo docker restart cloudkitty_processor
-```
-
-```text
-14:10:22  Number of tenants to rate : 2
-```
-
-這只證明重新選到專案，還要檢查計量 scope（本章按 `project_id` 切分的處理範圍）的進度和待結算週期。不要為了讓畫面立即出數字就隨意縮短 period，因為它也改變計價週期。
-
-全新的 scope 另有補算行為，沒有時間狀態時從當月開始：
-
-```python
-# cloudkitty/utils/__init__.py
-def check_time_state(timestamp=None, period=0, wait_periods=0):
-    if not timestamp:
-        return tzutils.get_month_start()
-```
-
-因此短暫零費用也可能是尚未處理到有資料的週期。查看進度後再決定是否需要介入。
-
-### mapping create 回 Unknown attribute: name {#mine-5}
-
-以下是在 python-cloudkittyclient 6.1.0 與 CloudKitty 22.0.1 組合的失敗命令：
-
-```bash
-openstack rating hashmap mapping create --service-id $IID --type flat 0.05
-```
-
-```json
-{"faultcode": "Client", "faultstring": "Unknown attribute for argument mapping_data: name",
- "debuginfo": null}  (HTTP 400)
-```
-
-**原因**：客戶端送出 API 不接受的 `name`。**修法**：用步驟 3 已驗證的 API 內容或 Horizon 建立；這是此版本組合的問題，不能推成所有 2025.1 安裝都會失敗。查結果時可用 `/v2/scope`、`/v2/dataframes`、`/v2/summary`，並依伺服器支援的 API 參數操作。
 
 ## 想一想
 

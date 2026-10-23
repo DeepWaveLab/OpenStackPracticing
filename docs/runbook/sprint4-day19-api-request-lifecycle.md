@@ -10,25 +10,24 @@
 
 ## 這一章要看的五個地方
 
-把 Day 2 那張流程圖換個畫法:每個方塊是一個服務,橘色編號是這一章要去查證的地方。
+libvirt 是主機上管理 VM 的服務,Kolla 把它放在 `nova_libvirt` 容器裡。libvirt 管理的每一台 VM 叫一個 **domain**。
+
+把 Day 2 那張流程圖換個畫法:每個方塊是一個服務,橘色編號是這一章要去查證的地方,下方依編號列出各處的觀察內容。
 
 ![請求從 openstack server create 出發:先和 Keystone 換 token(編號 1),再送到 nova-api(編號 2);nova-api 把工作交給 RabbitMQ(編號 3),RabbitMQ 連到 nova-conductor 與 nova-scheduler,也連到 nova-compute(編號 2);nova-compute 往下是 libvirt domain 和主機上的 qemu 程序(編號 4);conductor 以虛線寫入 Nova 資料庫的 nova.instances 表(編號 5)](../assets/diagrams/os-s4d19-path.svg)
-
-照著編號看:
 
 1. **Keystone**:CLI 送出任何請求之前,先拿到的那張 token。
 2. **nova-api 與 nova-compute 的 log**:一個收到請求,一個真正開機,兩者各留下紀錄。
 3. **RabbitMQ**:nova-api 和 nova-compute 之間沒有直接連線,中間隔著它。
 4. **qemu 程序**:VM 最後在主機上跑起來的樣子。
-5. **Nova 資料庫**:Nova 用來記住這台 VM 的地方。
-
-接下來照這個順序,一站一站看。
+5. **Nova 資料庫**:儲存 VM 資料與狀態的地方。
 
 ## 第一站:Keystone 發的 token
 
 每次 CLI 操作會先取得或沿用有效 token,同一次操作的後續 API 請求可以重用它,不會每個 HTTP 請求都重新發一張。Keystone 是負責身分認證與發 token 的服務。先手動換一張,印出開頭和長度:
 
 ```bash
+source ~/kolla-venv/bin/activate
 source /etc/kolla/admin-openrc.sh
 TOKEN=$(openstack token issue -f value -c id)
 echo "${TOKEN:0:20}…  (長度 ${#TOKEN})"
@@ -36,7 +35,9 @@ echo "${TOKEN:0:20}…  (長度 ${#TOKEN})"
 
 印出來的字串以 `gAAAAA` 開頭。這種 token 叫 **fernet token**,是 Keystone 預設的 token 格式,名稱來自它採用的 Fernet 加密規格。
 
-Keystone 收到一張 token 時,要怎麼確認它是自己發的、還沒過期?最直覺的做法是把發出去的每張 token 存進資料庫,收到時去查。fernet token 走的是另一條路,把它拆開就看得出來。下面這段 Python 先做 base64 解碼,再把前面幾段印出來。執行前用 `echo $TOKEN` 印出完整的 token,貼進 `tok = ` 那一行:
+Keystone 收到一張 token 時,要怎麼確認它是自己發的、還沒過期?最直覺的做法是把發出去的每張 token 存進資料庫,收到時去查。fernet token 走的是另一條路,把它拆開就看得出來。
+
+IV 是加密時使用的隨機起始值;HMAC 是訊息鑑別碼,用來驗證完整性,確認 token 沒被竄改。它使用對稱金鑰驗證,不是非對稱的數位簽章。下面這段 Python 先做 base64 解碼,再把前面幾段印出來。執行前用 `echo $TOKEN` 印出完整的 token,貼進 `tok = ` 那一行:
 
 ```bash
 python3 - << 'PY'
@@ -46,7 +47,7 @@ raw = base64.urlsafe_b64decode(tok + "=" * (-len(tok) % 4))
 print(f"版本位元組: 0x{raw[0]:02x}   (0x80 = fernet)")
 print(f"時間戳     : {struct.unpack('>Q', raw[1:9])[0]}")
 print(f"IV (16B)   : {raw[9:25].hex()}")
-print(f"密文+HMAC  : {len(raw)-25} bytes  ← 密文須用金鑰解密，HMAC 須用金鑰驗證")
+print(f"密文+HMAC  : {len(raw)-25} bytes  ← 要 keystone 的金鑰才解得開")
 PY
 ```
 
@@ -54,7 +55,7 @@ PY
 
 ![fernet token 解碼後由左到右是版本(1 byte,固定 0x80)、時間戳(8 bytes)、IV(16 bytes)、密文(長度不定)、HMAC(32 bytes);前三段 base64 解碼後就讀得到,密文要金鑰解密,HMAC 要金鑰驗證;密文解開後是使用者、專案、認證方式和到期時間,HMAC 用來確認 token 沒被改過](../assets/diagrams/os-s4d19-fernet.svg)
 
-我們可以看到,token 分成兩半。左半段的版本、時間戳(token 產生的時間)和 IV(加密時使用的隨機起始值)不需要任何金鑰,腳本印出的就是這幾段。右半段的密文才是 token 的內容:使用者、專案、認證方式、到期時間,由 Keystone 用金鑰加密;最後 32 bytes 的 HMAC 是訊息鑑別碼,用來驗證完整性,確認 token 沒被竄改。它使用對稱金鑰驗證,不是非對稱的數位簽章。解開密文與驗證 HMAC 都要用到 Keystone 的金鑰。
+我們可以看到,token 分成兩半。左半段的版本、時間戳(token 產生的時間)和 IV 不需要任何金鑰,腳本印出的就是這幾段。右半段的密文才是 token 的內容:使用者、專案、認證方式、到期時間,由 Keystone 用金鑰加密;最後 32 bytes 是 HMAC。解開密文與驗證 HMAC 都要用到 Keystone 的金鑰。
 
 金鑰放在 `keystone` 容器裡:
 
@@ -65,7 +66,7 @@ sudo docker exec keystone ls /etc/keystone/fernet-keys/
 
 目錄裡每個檔案是一把金鑰,檔名是編號。Keystone 用編號最大的那把(primary key)加密新發的 token;編號 0 是預備的金鑰(staged key),下次輪替時升為 primary;解 token 時,目錄裡的每一把都會拿來試。所以輪替之後,用舊金鑰發出、還沒過期的 token 仍然能用。
 
-有了金鑰,Keystone 不必把 token 存進資料庫:收到 token 時,用金鑰驗證 HMAC、解開密文、看有沒有過期,就知道它是不是自己發的。有好幾台 Keystone 時,只要每一台都持有同一組金鑰,任何一台都能驗證另一台發出的 token。但驗證並沒有完全不碰資料庫:Keystone 仍會檢查這張 token 有沒有被撤銷(例如使用者改了密碼或被停用),回傳驗證結果時也要從資料庫讀出使用者在專案上的角色。金鑰目錄本身也必須在每台 Keystone 之間保持一致,某一台的金鑰沒同步,其他台發的 token 到它那裡就驗不過。
+有了金鑰,Keystone 不必把 token 存進資料庫:收到 token 時,用金鑰驗證 HMAC、解開密文、看有沒有過期,就知道它是不是自己發的。有好幾台 Keystone 時,只要每一台都持有同一組金鑰,任何一台都能驗證另一台發出的 token。但驗證並沒有完全不碰資料庫:Keystone 仍會檢查這張 token 有沒有被撤銷(例如使用者改了密碼或被停用),回傳驗證結果時也要從資料庫讀出使用者在專案上的角色。輪替金鑰後需要同步各台 Keystone 的金鑰目錄,但尚未同步不一定造成驗證失敗:若其他節點仍持有那把金鑰作為 staged key,仍可驗證已輪替節點簽發的 token。只有驗證節點缺少簽發該 token 所用的金鑰時,才會因金鑰缺失而驗證失敗,詳見 [Keystone 官方 FAQ](https://docs.openstack.org/keystone/2025.1/admin/fernet-token-faq.html#so-how-does-a-staged-key-help-me-and-why-do-i-care-about-it)。
 
 建 VM 時若 CLI 回 401(認證失敗),先看是哪個 HTTP 請求被拒絕。取得 token 失敗就查 Keystone;若 Nova 收到請求後拒絕 token,也要檢查它的認證設定。401 不能單獨證明請求尚未到達 Nova。
 
@@ -115,13 +116,15 @@ nova.virt.libvirt.driver [instance: 206aa8b3-…] Instance spawned successfully
 
 nova-compute 的這兩行對應開機的兩個階段。`Claim successful` 表示 nova-compute 已經在這台主機上預留 VM 要用的 CPU、記憶體和磁碟,這個動作叫 claim;`Instance spawned successfully` 表示 VM 已經開起來了。
 
+Nova 元件之間用 **RPC**(remote procedure call,遠端程序呼叫:像呼叫函式一樣,請另一個程式做一件事)溝通。
+
 VM 停在 `BUILD` 時,就用 UUID 查這兩個檔:nova-api 有紀錄、nova-compute 完全沒有,先檢查排程、RPC 與 compute 是否可用,不能只因沒有某行 log 就斷定停在哪裡;nova-compute 有 claim 卻沒有 spawned,優先查 compute 的後續錯誤與 VM 啟動階段,對應第四站。
 
 ## 第三站:nova-api 和 nova-compute 之間的 RabbitMQ
 
 ![RabbitMQ 官方標誌](../assets/logos/rabbitmq.png){ align=right width="72" }
 
-第二站的 log 只出現在 nova-api 和 nova-compute,而 Day 1 確認過的 Nova 元件還有 conductor 和 scheduler。nova-api 是怎麼把工作交到 nova-compute 手上的?Nova 的元件之間不直接呼叫對方,而是用 **RPC**(remote procedure call,遠端程序呼叫:像呼叫函式一樣,請另一個程式做一件事)溝通。這些呼叫由 oslo.messaging 這個函式庫包成訊息,送進 Day 1 提過的 RabbitMQ。
+第二站的 log 只出現在 nova-api 和 nova-compute,而 Day 1 確認過的 Nova 元件還有 conductor 和 scheduler。nova-api 是怎麼把工作交到 nova-compute 手上的?Nova 的元件之間不直接呼叫對方,而是用 RPC 溝通。這些呼叫由 oslo.messaging 這個函式庫包成訊息,送進 Day 1 提過的 RabbitMQ。
 
 列出 RabbitMQ 上跟這三個元件有關的佇列:
 
@@ -145,7 +148,7 @@ sudo docker exec rabbitmq rabbitmqctl list_queues name messages \
 
 ## 第四站:主機上的 qemu 程序
 
-nova-compute 取到工作後,透過 libvirt(主機上管理 VM 的服務,Kolla 把它放在 `nova_libvirt` 容器裡)開機。libvirt 管理的每一台 VM 叫一個 **domain**。domain 的名稱由 Nova 產生,是 `instance-` 加一串十六進位編號,跟你在 OpenStack 裡取的名字 `trace-vm` 無關,但它的設定(一份 XML)裡記著 server UUID。
+nova-compute 取到工作後,透過 libvirt 開機。domain 的名稱由 Nova 產生,是 `instance-` 加一串十六進位編號,跟你在 OpenStack 裡取的名字 `trace-vm` 無關,但它的設定(一份 XML)裡記著 server UUID。
 
 下面這個迴圈列出執行中的 domain,逐一比對 UUID,找出 `trace-vm` 對應哪一個。`virsh list` 的順序不等於建立順序,主機上有好幾台 VM 時,不能只挑最後一個。這一步用來對照已啟動的 `trace-vm`;停止的 domain 不會列在這個清單裡,查不到不等於不存在:
 
@@ -181,7 +184,7 @@ sudo docker exec nova_libvirt virsh dumpxml <domain> | grep 'source file'
 
 ## 第五站:Nova 資料庫裡的一列
 
-VM 跑起來了,OpenStack 又是怎麼記得它存在、目前是什麼狀態?答案在 Nova 的資料庫裡,也就是 Kolla 部署的 MariaDB。每台 VM 是 `nova` 資料庫 `instances` 表裡的一列。查詢要用 MariaDB 的 root 密碼,它存在 `passwords.yml` 的 `database_password` 欄位:
+VM 跑起來後,它的資料與狀態儲存在 Nova 的資料庫裡,也就是 Kolla 部署的 MariaDB。每台 VM 是 `nova` 資料庫 `instances` 表裡的一列。查詢要用 MariaDB 的 root 密碼,它存在 `passwords.yml` 的 `database_password` 欄位:
 
 ```bash
 PW=$(sudo grep '^database_password' /etc/kolla/passwords.yml | awk '{print $2}')
@@ -203,7 +206,7 @@ nova-compute 本身不直接連資料庫,狀態有變化時,也是經過 RabbitM
 
 - 一位同學說:「既然 fernet token 不存在資料庫裡,把某個使用者停用之後,他手上還沒過期的 token 應該照樣能用。」你同意嗎?本章哪一段可以回答?
 - 一台 VM 停在 `BUILD` 好幾分鐘。你用 UUID 搜 log,`nova-api.log` 有紀錄,`nova-compute.log` 沒有。下一步你會看哪裡、看什麼?如果 `nova-compute.log` 有 `Claim successful`,卻一直沒有 `Instance spawned successfully` 呢?
-- 你把 Keystone 擴充成三台,其中一台的 `fernet-keys` 目錄跟另外兩台不一樣。使用者會遇到什麼現象?為什麼不是每次都發生?
+- 你把 Keystone 擴充成三台,其中一台剛輪替金鑰,另外兩台仍持有那把金鑰作為 staged key。它們能驗證輪替後簽發的 token 嗎?如果某台缺少簽發該 token 所用的金鑰,驗證請求送到它時會怎樣?
 
 ## 小結
 

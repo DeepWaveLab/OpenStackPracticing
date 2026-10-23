@@ -61,14 +61,14 @@ Sprint 4 把這三類問題排成四個階段。第一類拆成兩段:先把缺�
 | [13](sprint4-day13-skyline.md) | **Skyline 新一代儀表板** | 在 `globals.yml` 打開一個開關就部署完成,和 Horizon 並存,兩代介面對照 |
 | [14](sprint4-day14-ceph-bootstrap.md) | **Ceph 基礎** | 用 cephadm(Ceph 官方的部署工具)在同一台主機立一套最小的 Ceph:mon 維護叢集狀態、mgr 負責管理與監控、osd 管一顆硬碟並實際存資料,當 Day 15、16 的共同底層 |
 | [15](sprint4-day15-object-storage-rgw.md) | **物件儲存(RGW)** | 在 Ceph 上開物件儲存,用 Keystone 身分走 Swift API 上傳下載,並說明怎麼用 EC2 credentials(Keystone 發給使用者、格式與 AWS 相容的一組 access/secret 金鑰)拿 S3 金鑰 |
-| [16](sprint4-day16-manila-cephfs.md) | **Manila 共享檔案系統** | 以 CephFS 為後端,讓多台 VM 同時讀寫同一份資料;選讀既有 K8s `ReadWriteMany` PVC 結果,並說明缺少的建置資料 |
-| [17](sprint4-day17-designate-dns.md) | **Designate DNS** | zone 與 recordset;接上 Neutron 之後,建立帶 DNS 名稱的 floating IP 時發布記錄,刪除時移除 |
-| [18](sprint4-day18-trove-dbaas.md) | **Trove 資料庫服務** | 部署 Trove、準備 guest 映像檔(資料庫 VM 開機用的映像,裡面跑著接收 Trove 指令的 guest agent)、註冊 datastore(向 Trove 登記可以開哪種資料庫、哪個版本),開出一台代管 MySQL 並實際讀寫 |
-| [19](sprint4-day19-api-request-lifecycle.md) | **server create 背後發生什麼** | 認識 token 與 request-id,用 server UUID 對照 Nova log、qemu 行程與資料庫 |
-| [20](sprint4-day20-ovn-packet-trace.md) | **封包怎麼流(OVN)** | 用 OVN 的工具讀出 Day 2 建的網路變成了什麼,再用 `ovn-trace` 模擬封包並判讀 SNAT 規則 |
-| [21](sprint4-day21-observability.md) | **可觀測性** | Prometheus 與 Grafana 看指標,OpenSearch 集中各容器的 log,用 VM 的 UUID 一次查出跨服務的紀錄 |
+| [16](sprint4-day16-manila-cephfs.md) | **Manila 共享檔案系統** | 讓多台 VM 同時讀寫同一份資料 |
+| [17](sprint4-day17-designate-dns.md) | **Designate DNS** | 管理 DNS 記錄,讓帶 DNS 名稱的 floating IP 在建立與刪除時自動更新對應記錄 |
+| [18](sprint4-day18-trove-dbaas.md) | **Trove 資料庫服務** | 部署資料庫服務,開出一台代管 MySQL 並實際讀寫 |
+| [19](sprint4-day19-api-request-lifecycle.md) | **server create 背後發生什麼** | 對照服務紀錄、主機上的行程與資料庫,看懂建立 VM 時背後發生的事 |
+| [20](sprint4-day20-ovn-packet-trace.md) | **封包怎麼流(OVN)** | 查看 Day 2 建立的網路在底層如何運作,模擬封包並判讀來源位址轉換的規則 |
+| [21](sprint4-day21-observability.md) | **可觀測性** | 查看監控指標、集中各容器的紀錄,查出同一台 VM 在不同服務中的紀錄 |
 | [22](sprint4-day22-upgrade-backup.md) | **更新與備份還原** | 套用 2025.1 系列內的修補;備份 MariaDB 後實際還原,用備份前後各建一個 project 判斷有沒有回到備份時間點 |
-| [23](sprint4-day23-multinode-ha.md) | **多節點部署與 HA** | 四台機器部署 2 control + 2 compute,打開 haproxy 與 VIP,正常關閉一台 controller 觀察 API 是否繼續回應,並說明 quorum 限制 |
+| [23](sprint4-day23-multinode-ha.md) | **多節點部署與 HA** | 用四台機器部署多節點環境,正常關閉一台控制節點,觀察 API 是否繼續回應,並了解維持服務的條件 |
 | [24](sprint4-day24-scale-out.md) | **橫向擴展** | 加入第五台機器當 compute、熱遷移(VM 不關機搬到另一台)、將 VM 移離一台 compute 節點,再用 placement(記錄每台主機有多少資源、用掉多少的服務)的數字做容量規劃 |
 
 實作之後,[Day 25](sprint4-day25-sprint4-recap.md) 回顧服務、維運與容量的關係,[Day 26](sprint4-day26-sprint5-preview.md) 則預告租戶治理、計價與安全稽核。
@@ -86,9 +86,9 @@ Kolla-Ansible 留下的物件儲存路線是 Ceph。**Ceph** 是一套分散式�
 我們可以從圖上看到兩件事:
 
 1. **三種介面共用同一套 Ceph。** **RGW**(RADOS Gateway)是 Ceph 對外提供物件儲存的那一個介面,CephFS 是檔案介面,Day 16 的 Manila 就接在它上面。所以 Sprint 4 先花一天(Day 14)把 Ceph 立起來,後面兩天都建在它上面。區塊介面 RBD 可以當 Cinder 的後端,但本課的 Cinder 沒有改接,仍然用 Day 3 的 LVM。
-2. **RGW 同時接受兩種 API。** 一種是 Swift API,另一種是 **S3 API**,也就是 AWS 物件儲存的介面,很多備份工具和程式庫都直接支援。Day 15 用 Keystone 身分走 Swift API,建立 container、上傳再下載檔案;也會說明怎麼透過 Keystone 的 EC2 credentials 拿一組 S3 金鑰,不過 S3 這條路本課只示範做法,沒有附實測輸出。
+2. **RGW 同時接受兩種 API。** 一種是 Swift API,另一種是 **S3 API**,也就是 AWS 物件儲存的介面,很多備份工具和程式庫都直接支援。Day 15 用 Keystone 身分走 Swift API,建立 container、上傳再下載檔案;S3 的部分則介紹怎麼透過 Keystone 的 EC2 credentials 取得金鑰。
 
-所以 Swift 的 API 在 Day 15 還是會用到,只是背後換成 RGW。要注意的是,RGW 實作的是 Swift API 裡常用的那一部分,不是全部;Day 15 驗過的只有 container 與物件的基本操作。原本寫給 Swift 的程式要搬過來,先確認它用到的操作在 RGW 的相容清單裡。
+所以 Swift 的 API 在 Day 15 還是會用到,只是背後換成 RGW。要注意的是,RGW 實作的是 Swift API 裡常用的那一部分,不是全部;Day 15 的教學範圍是 container 與物件的基本操作。原本寫給 Swift 的程式要搬過來,先確認它用到的操作在 RGW 的相容清單裡。
 
 ## server create 的原理為什麼放到 Day 19 才講
 
@@ -107,7 +107,7 @@ Day 1 寫 `globals.yml` 時,把 `enable_haproxy` 設成 `"no"`,VIP 直接填主�
 照著圖從左往右看:
 
 1. **單機時,所有角色擠在同一台。** Kolla-Ansible 的 inventory 把主機分成幾個群組,**control 節點**跑 API、資料庫和訊息佇列,**compute 節點**實際執行 VM。單機時每個群組都指向同一台主機。
-2. **多節點時,群組拆到不同機器上,VIP 和 haproxy 才有作用。** 兩台 control 節點各跑一份 API,haproxy 把打到 VIP 的請求分給它們。Day 23 會把其中一台 control 節點正常關機,觀察 API 是否繼續回應。只有兩台 control 節點是為了 lab 成本的妥協:兩台之間的資料庫叢集(Galera)要拿到多數票才肯服務,一台無預警失聯時,剩下那台只有一半的票,會自己停止讀寫,所以正式環境至少要三台。另外,一般機房會用 keepalived(讓幾台主機互相選出一台掛上 VIP,掛掉時由另一台接手)來搬移 VIP,但它靠的 VRRP 與 GARP 廣播在 Azure 的虛擬網路裡不會被轉送,所以 Day 23 改由 Azure 的內部負載平衡器接手。
+2. **多節點時,群組拆到不同機器上,VIP 和 haproxy 才有作用。** 兩台 control 節點各跑一份 API,haproxy 把打到 VIP 的請求分給它們。Day 23 會把其中一台 control 節點正常關機,觀察 API 是否繼續回應。只有兩台 control 節點是為了 lab 成本的妥協:兩台之間的資料庫叢集(Galera)須維持多數節點可通訊,才能繼續提供服務;一台無預警失聯時,剩下那台只有一半的票,未達多數決條件,會停止讀寫,所以正式環境至少要三台。另外,一般機房會用 keepalived(讓幾台主機互相選出一台掛上 VIP,掛掉時由另一台接手)來搬移 VIP,但它靠的 VRRP 與 GARP 廣播在 Azure 的虛擬網路裡不會被轉送,所以 Day 23 改由 Azure 的內部負載平衡器接手。
 3. **加 compute 節點就是在加容量。** Sprint 3 的 Magnum 可以替 K8s cluster 自動多開 worker VM,但那些 VM 用的是雲已經有的容量;那麼 Nova 和 Magnum 背後的機器,是誰準備好的?答案是維運者。Day 24 加入第五台機器當 compute 節點,看它的資源出現在 placement 裡,再練習把 VM 熱遷移到別台、把一台節點清空。
 
 這個實驗需要好幾台真的機器,所以 Day 23 另外開四台 VM(2 台 control、2 台 compute),Day 24 再加第五台。這是全新的環境,和 Day 0–22 的單機環境分開。

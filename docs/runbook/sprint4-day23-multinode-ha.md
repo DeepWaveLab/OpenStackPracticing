@@ -18,6 +18,10 @@ API 入口有兩個後端，不代表資料庫可以在任何故障下繼續寫�
 
 本章使用 Azure Internal Load Balancer（ILB，內部負載平衡器）提供固定入口。下面列的是已完成的環境前提，本章未提供建立 VM、ILB、NSG、NAT Gateway 的完整指令，因此本章不是從空白 Azure 訂閱開始的建置腳本。
 
+**HA ports** 是 ILB 的負載平衡規則，可用一條規則處理所有 TCP／UDP 連接埠的流量，不必為每個 API 連接埠各建一條規則。它仍需要搭配健康探測與允許流量通過的防火牆規則。詳見 [Azure HA ports 說明](https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-ha-ports-overview)。
+
+**Floating IP** 啟用後，轉送到後端的封包仍以 LB frontend IP 為目的位址，因此 controller 必須能接收送往 VIP 的封包。**loopback** 是作業系統內的虛擬網路介面；把 VIP 設在這個介面上，可讓 guest 將它視為本機位址。guest 還必須允許從實體網卡接收目的位址設在 loopback 的封包，並由本機防火牆放行服務連接埠；只開啟 LB 規則的 Floating IP 不足以完成設定。詳見 [Azure Floating IP 的 guest 設定](https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-floating-ip)。
+
 | 元件 | 本章設定與用途 |
 |---|---|
 | ILB | frontend `10.100.0.250`，HA ports、Floating IP，TCP 1984 健康探測 |
@@ -39,7 +43,7 @@ API 入口有兩個後端，不代表資料庫可以在任何故障下繼續寫�
 | oslab-comp1 | 10.100.0.21 | compute |
 | oslab-comp2 | 10.100.0.22 | compute |
 
-以下區塊前四行是 `/etc/hosts` 的內容，不能直接貼進 shell。`dummy0` 沿用 Day 1 的外部介面準備方式；最後一行是 DNS 排錯時的調整，適用條件見[疑難排解](#mine-2)：
+以下區塊中的四筆主機對照是 `/etc/hosts` 的內容，不能直接貼進 shell。`dummy0` 沿用 Day 1 的外部介面準備方式。最後一行 symlink 指令保留原始操作紀錄，但不列為前置操作，也不建議照做；DNS 逾時應先依[疑難排解](#mine-2)區分原因：
 
 ```bash
 # 1. /etc/hosts——kolla 要求主機名稱互相解析
@@ -48,11 +52,24 @@ API 入口有兩個後端，不代表資料庫可以在任何故障下繼續寫�
 10.100.0.21 oslab-comp1
 10.100.0.22 oslab-comp2
 # 2. dummy0 網卡(Azure 單網卡的標準解,同 Day 1)
-# 3. 若 DNS stub 逾時，確認上游可達後再調整解析路徑
 sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 ```
 
-以官方 multinode inventory 為底，保留其餘服務群組與 children 關係，再修改主機分配：
+以[官方 multinode inventory](https://raw.githubusercontent.com/openstack/kolla-ansible/stable/2025.1/ansible/inventory/multinode)為底時，必須替換範本的主機清單，不能只追加本章的主機。完整分配如下；修正後的寫法本課沒有實跑。
+
+| 群組 | 主機分配 |
+|---|---|
+| `control` | `oslab-ctrl1`、`oslab-ctrl2` |
+| `network` | `oslab-ctrl1`、`oslab-ctrl2` |
+| `compute` | `oslab-comp1`、`oslab-comp2` |
+| `monitoring` | `oslab-ctrl1` |
+| `storage` | 空群組，不配置主機 |
+| `deployment` | 保留 `localhost` 與 `ansible_connection=local` |
+| `glance` | 僅 `oslab-ctrl1` |
+
+範本的 `[storage]` 下有 `storage01`，本章沒有這台主機，必須刪除該主機行，保留空的 `[storage]` 群組，以及其他群組對 `storage` 的 children 引用。設定 Glance 時，也要移除 `[glance:children]` 下的 `control`，再以 `[glance]` 指定 ctrl1，否則仍會繼承兩台 controller。其餘服務群組與 children 關係維持範本設定。
+
+以下保留原始主機分配節錄；它省略了 storage、deployment 與 Glance 繼承關係的處理，使用時須按上表與前段說明完成：
 
 ```ini
 [control]
@@ -70,8 +87,6 @@ oslab-comp2
 [monitoring]
 oslab-ctrl1
 
-# glance 釘在單一節點:file 後端的映像檔不會自己同步,
-# 兩台各存一半的 glance 是壞掉的 glance
 [glance]
 oslab-ctrl1
 ```
@@ -190,7 +205,7 @@ wsrep_cluster_status  Primary   ← 一台也能是 Primary?
 
 ### 多台節點在拉取映像時出現 DNS 逾時 {#mine-2}
 
-先查最早失敗的節點與解析結果，區分上游 DNS、網路或本機 `systemd-resolved` stub 的問題。本課案例以 `/run/systemd/resolve/resolv.conf` 取代指向 stub 的設定；只有確認該檔案存在、上游可達且符合你的 DNS／split DNS 設計時才採用。這不是所有 Ubuntu 環境都必須做的前置動作。
+先找最早失敗的節點，核對當時無法解析的網域，再比較其他節點解析同一網域的結果。確認失敗節點能否連到設定的上游 DNS；若上游無法連線，先檢查路由與防火牆。若上游可達，再檢查 `/etc/resolv.conf` 的指向與 `systemd-resolved` 的上游設定，區分上游回應異常與本機 stub 解析路徑的問題。stub 是本機代收並轉送 DNS 查詢的服務。應先確認故障位置，再決定是否調整解析設定。
 
 ### Galera 失聯後進入 NON-PRIMARY {#mine-3}
 

@@ -4,19 +4,19 @@
 
 Day 7 結束時,Magnum 已經接上 Day 6 的 kind,也有了一份 ClusterTemplate。這一章真的下單:打一行 `openstack coe cluster create`,等它開出一座 Kubernetes。下完指令之後,你能直接看到的只有一個狀態欄位。它可能幾秒就變成 `CREATE_FAILED`,也可能停在 `CREATE_IN_PROGRESS`,VM 明明都開好了,狀態卻一直不往下走。
 
-這一行指令會依序經過 Magnum、kind 裡的 CAPI、OpenStack 的 Nova、Neutron 和 Octavia,最後還要等新 cluster 裡的元件回頭向 OpenStack 確認自己的身分。cluster 建好之後,我們再在裡面開一個 `type=LoadBalancer` 的 Service 和一個 PVC,確認它們分別變成 Octavia 的 LB 和 Cinder 的 volume。讀完之後,cluster 建不起來或 LoadBalancer、PVC 卡住時,你能判斷問題停在 Magnum 本身、新節點的初始化,還是 OpenStack 這邊的資源。
+這一行指令會依序經過 Magnum、kind 裡的 CAPI、OpenStack 的 Nova、Neutron 和 Octavia,最後還要等新 cluster 裡的元件回頭向 OpenStack 確認自己的身分。cluster 建好之後,我們再在裡面開一個 `type=LoadBalancer` 的 Service 和一個 PVC(PersistentVolumeClaim,pod 對儲存空間的請求),確認它們分別變成 Octavia 的 LB 和 Cinder 的 volume。讀完之後,cluster 建不起來或 LoadBalancer、PVC 卡住時,你能判斷問題停在 Magnum 本身、新節點的初始化,還是 OpenStack 這邊的資源。
 
 ## 一行 `cluster create` 會經過哪些服務
 
 先分清楚兩座 cluster。Day 6 的 kind 是 **management cluster**,只負責管理別的 cluster,不跑你的應用程式。這一章開出來的叫 **workload cluster**:節點是 OpenStack 裡真正的 VM,你的應用程式跑在這裡。
 
-把 `cluster create` 之後發生的事由上往下畫出來,左側標出每一段由誰負責:
+圖中的 providerID 是 K8s 節點用來記錄對應雲端 VM 的欄位;taint 是節點上的排程限制標記,這裡用來阻止一般 pod 排入尚未完成雲端初始化的節點。把 `cluster create` 之後發生的事由上往下畫出來,左側標出每一段由誰負責:
 
 ![由上往下:openstack coe cluster create 交給 Magnum,magnum-conductor 裡的 CAPI driver 在 kind 寫入 Cluster、KubeadmControlPlane、MachineDeployment 等物件;kind 裡的 CAPI/CAPO controllers 照這些物件呼叫 OpenStack,由 Nova 開出 control plane 與 worker VM、Neutron 建 cluster 專用網路與 router、Octavia 建 K8s API 的負載平衡器;節點 VM 裡,kubeadm 建出節點並帶著 uninitialized taint 註冊,CCM 向 Nova 查出 VM、寫入 providerID 並移除 taint(橘色強調),CAPI 看到 providerID 之後 cluster 變成 CREATE_COMPLETE](../assets/diagrams/os-s3d8-create-flow.svg)
 
 照著圖由上往下看:
 
-1. **Magnum 只負責接單。** 它驗過身分、查過配額,就把請求翻譯成 CAPI 的物件寫進 kind(Day 7 接上的那條線)。如果狀態幾秒就變成 `CREATE_FAILED`,而且 kind 裡一個 CAPI 物件都沒有,問題就出在 Magnum 這一層,還沒輪到 CAPI。
+1. **Magnum 接收請求並建立 CAPI 物件。** 它驗過身分、查過配額,就把物件寫進 kind(Day 7 接上的那條線)。如果狀態幾秒就變成 `CREATE_FAILED`,而且 kind 裡一個 CAPI 物件都沒有,問題就出在 Magnum 這一層,還沒輪到 CAPI。
 2. **真正建資源的是 kind 裡的 CAPI 和 CAPO。** 它們呼叫的 Nova、Neutron、Octavia 都是你前幾天部署過的服務,所以這一層出錯時,錯誤訊息通常會出現在那些服務的 log 裡。
 3. **節點 VM 開好不等於 cluster 建好。** 最下面一排是在節點 VM 裡發生的事,要等其中橘色那一步完成,CAPI 才會把節點標成就緒。這一步是什麼、為什麼會卡住,下面會單獨講。
 
@@ -28,15 +28,13 @@ kind 裡應該要有 Day 6 裝的四個 provider。kind 在主機重開後不會
 
 cluster 的節點要用一組 keypair(SSH 金鑰對)建立,這裡先建好。
 
-o-hm0 是 Day 4 在主機上建的網卡,Octavia 透過它跟 amphora VM 溝通。這座 cluster 的 K8s API 前面會有一台 Octavia LB,o-hm0 不通,這台 LB 就建不起來。主機重開機後,負責建立 o-hm0 的 `octavia-interface.service` 可能比 OVN 先啟動而失敗,o-hm0 就會停在 DOWN。下面程式碼註解提到的「自動重試」設定,本課的章節沒有收錄,所以不要假設它已經生效:最後兩條指令手動重新啟動這個服務(服務已經正常時重跑也無妨),再確認網卡是 UP、有一個 `10.1.0.x` 的位址(Day 4 的 dhclient 問題也會造成同樣的症狀,見 Day 4 的[「octavia-interface.service 起不來,`status=203/EXEC`」](sprint3-day4-octavia.md#mine-2)):
+o-hm0 是 Day 4 在主機上建的網卡,Octavia 透過它跟 amphora VM 溝通。這座 cluster 的 K8s API 前面會有一台 Octavia LB,o-hm0 不通,這台 LB 就建不起來。主機重開機後,負責建立 o-hm0 的 `octavia-interface.service` 可能比 OVN 先啟動而失敗,o-hm0 就會停在 DOWN。最後兩條指令手動重新啟動這個服務(服務已經正常時重跑也無妨),再確認網卡是 UP、有一個 `10.1.0.x` 的位址(Day 4 的 dhclient 問題也會造成同樣的症狀,見 Day 4 的[「octavia-interface.service 起不來,`status=203/EXEC`」](sprint3-day4-octavia.md#mine-2)):
 
 ```bash
 # management cluster 4 controllers Ready、magnum 連得到 kind、template 在
 kubectl get providers -A
 # keypair(cluster create 需要)
 openstack keypair create k8s-admin > ~/k8s-admin.pem && chmod 600 ~/k8s-admin.pem
-# ⚠️ Octavia o-hm0:host reboot 後 octavia-interface 常因比 OVN 早跑而 failed → o-hm0 DOWN
-#   K8s API LB 靠它,先修(見 Day6 solutions 的 drop-in 已讓它自動重試)
 sudo systemctl reset-failed octavia-interface && sudo systemctl start octavia-interface
 ip -br addr show o-hm0     # 應 UP + 10.1.0.x
 ```
@@ -59,9 +57,11 @@ source /etc/kolla/admin-openrc.sh
 
 ## 步驟 1:讓 Magnum 用夠新的 Nova API
 
+<span id="mine-1"></span>
+
 Magnum 的 CAPI driver 會替 cluster 的節點建一個 **server group**:Nova 的一個分組,讓同一組 VM 照指定的規則擺放。driver 用的規則是 `soft-anti-affinity`,意思是「盡量把這組 VM 放在不同的主機上,放不開也沒關係」。這對單機 lab 很重要:只有一台主機時,要求「一定分開」的 `anti-affinity` 會讓第二台 VM 開不出來,「盡量分開」則照樣開在同一台上。
 
-問題在於 Nova 的 API 有版本之分。Nova 每次改 API 的行為,就把版本號往上加一點,這叫 **microversion**,呼叫的人要在請求裡說明自己要用哪一個版本,Nova 就照那個版本的規則回應。`soft-anti-affinity` 是 2.15 才加進來的規則,而 Magnum 預設用 `2`,也就是最早的 2.1。用 2.1 送出這個規則,Nova 會回 400,cluster 幾秒內就 `CREATE_FAILED`(症狀見[疑難排解:cluster 幾秒就 CREATE_FAILED](#mine-1))。
+問題在於 Nova 的 API 有版本之分。Nova 每次改 API 的行為,就把版本號往上加一點,這叫 **microversion**,呼叫的人要在請求裡說明自己要用哪一個版本,Nova 就照那個版本的規則回應。`soft-anti-affinity` 是 2.15 才加進來的規則,而 Magnum 預設用 `2`,也就是最早的 2.1。用 2.1 送出這個規則,Nova 會回 400:`'soft-anti-affinity' is not one of ['anti-affinity','affinity']`,cluster 幾秒內就 `CREATE_FAILED`。
 
 修法是在 Magnum 的設定裡指定 2.15。Kolla 的自訂設定放在 `/etc/kolla/config/` 底下(Day 7 的 kubeconfig 也放在這裡),部署時 Kolla 會把這份 `magnum.conf` 合併進 Magnum 容器的設定檔:
 
@@ -96,6 +96,8 @@ kolla-ansible deploy -i ~/all-in-one --tags magnum   # regen conf + 重啟容器
 
 ### CCM 要連得到 Keystone
 
+<span id="mine-2"></span>
+
 CCM 要向 Nova 查資料,得先在 Keystone 取得身分,用的是 Magnum 的 driver 為這座 cluster 建的 application credential(一組只給這座 cluster 用的 OpenStack 登入資訊)。所以 CCM 必須連得到 OpenStack 的 API 位址,在本課的環境是 `10.0.0.4`,也就是 Day 1 填進 `kolla_internal_vip_address` 的主機私有 IP。
 
 CCM 跑在節點 VM 上,節點的位址來自 cluster 專用網路。driver 預設把這個網路設成 `10.0.0.0/24`,剛好跟主機所在的 Azure 網段相同。下面對照兩種網段設定,看 CCM 送往 `10.0.0.4` 的封包怎麼走:
@@ -111,11 +113,19 @@ CCM 跑在節點 VM 上,節點的位址來自 cluster 專用網路。driver 預�
 
 ## 步驟 2:建 template 與 cluster
 
+<span id="mine-3"></span>
+
 Day 7 那份 template 沒有指定網段,所以這裡另建一份,帶上三個 label:
 
 - `kube_tag=v1.34.8`:K8s 的版本,要跟 Day 7 上傳的 node image(`ubuntu-24.04-v1.34.8`)一致。
 - `fixed_subnet_cidr=10.6.0.0/24`:上一節講的 cluster 專用網路網段。
-- `octavia_provider=amphora`:之後 CCM 替 `type=LoadBalancer` 的 Service 向 Octavia 開 LB 時,指定要哪一種 provider。Day 4 用過 Octavia 的 amphora 和 OVN 兩種 provider,這朵雲 Octavia 的 `enabled_provider_drivers` 也只有 `amphora` 和 `ovn` 兩個名字。driver 預設要的是 `amphorav2`,不在清單上,Octavia 會拒絕(見[疑難排解:LoadBalancer 一直 pending](#mine-3)),所以明確指定 `amphora`。
+- `octavia_provider=amphora`:之後 CCM 替 `type=LoadBalancer` 的 Service 向 Octavia 開 LB 時,指定要哪一種 provider。Day 4 用過 Octavia 的 amphora 和 OVN 兩種 provider,這朵雲 Octavia 的 `enabled_provider_drivers` 也只有 `amphora` 和 `ovn` 兩個名字。driver 預設要的是 `amphorav2`,不在清單上,Octavia 會回 400:`Provider 'amphorav2' is not enabled`,所以明確指定 `amphora`。
+
+若已有同名且建立失敗的 cluster,先刪除它,等刪除完成再建立:
+
+```bash
+openstack coe cluster delete k8s-lab
+```
 
 `--master-lb-enabled` 讓 K8s API 前面也放一台 Octavia LB,就是「開始之前」提到需要 o-hm0 的那一台。建 cluster 時指定一台 control plane、一台 worker:
 
@@ -132,8 +142,10 @@ openstack coe cluster create k8s-lab --cluster-template k8s-v1.34.8-azure \
   --keypair k8s-admin --master-count 1 --node-count 1
 ```
 
-!!! note "到了 Day 22,amphora 這條路會改變"
-    本章照 amphora 做。到了 Day 22,全量 prechecks 會要求 `octavia_provider_drivers` 只保留 `ovn`,之後 Octavia 不再接受 amphora,本章的 `octavia_provider=amphora` 也就不能再用。如果你讀完 Day 22 還要在 workload cluster 開 LoadBalancer,先看 Day 22 的[prechecks 擋下 Octavia 設定](sprint4-day22-upgrade-backup.md#mine-1),那裡說明了兩條路的取捨。
+!!! note "Octavia precheck 的限制條件"
+    本章使用 amphora。[Kolla-Ansible stable/2025.1 的 precheck](https://raw.githubusercontent.com/openstack/kolla-ansible/stable/2025.1/ansible/roles/octavia/tasks/precheck.yml) 會在三個條件同時成立時失敗:啟用 `octavia_auto_configure`、`octavia_network_type` 為 `tenant`、`neutron_plugin_agent` 不是 `openvswitch`。這項檢查沒有要求 `octavia_provider_drivers` 只能保留 `ovn`。
+
+    要保留 amphora,可依[官方 Octavia 設定文件](https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html)配置控制節點可連線的管理網路(通常使用 VLAN provider network),或停用 `octavia_auto_configure` 後手動註冊所需資源並填入設定;後者仍須確保 worker 與 health manager 能連到管理網路。這些替代配置本課沒有實跑。若在 [Day 22](sprint4-day22-upgrade-backup.md#mine-1) 選擇只啟用 `ovn`,之後建立 LoadBalancer 就不能再指定本章的 `octavia_provider=amphora`。
 
 ## 步驟 3:看著 cluster 建到 CREATE_COMPLETE
 
@@ -149,7 +161,7 @@ kubectl -n magnum-system get $SEC -o jsonpath='{.data.value}' | base64 -d > /tmp
 KUBECONFIG=/tmp/wl.kubeconfig kubectl get nodes -o jsonpath='{..providerID}'
 ```
 
-節點註冊之後,最後一行應該印出 `openstack:///` 開頭的字串,每個節點一個。如果印出來是空的,而節點 VM 都已經 ACTIVE,就回頭看「K8s 節點怎麼對上 OpenStack 的 VM」那一節:CCM 很可能連不到 Keystone(見[疑難排解:VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS](#mine-2))。
+節點註冊之後,最後一行應該印出 `openstack:///` 開頭的字串,每個節點一個。如果印出來是空的,而節點 VM 都已經 ACTIVE,就回頭看「K8s 節點怎麼對上 OpenStack 的 VM」那一節:CCM 很可能連不到 Keystone,網段重疊的診斷見排錯手冊:[CAPI 子網撞 API IP](../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md)。
 
 狀態變成 `CREATE_COMPLETE` 就可以進下一步。
 
@@ -175,6 +187,8 @@ cluster 建好之後,剩下要確認的是 workload cluster 裡的資源能不�
 driver 裝 Cinder CSI 時,會替 Cinder 裡每個 `__DEFAULT__` 以外的 volume type 建一個名叫 `block-<type>` 的 StorageClass。這朵雲的 Cinder 只有 `__DEFAULT__`,所以 workload cluster 裡一個 StorageClass 都沒有,下面的指令先建一個名叫 `cinder` 的 StorageClass,並設成預設值(annotation `is-default-class`,之後沒寫 StorageClass 的 PVC 也會交給它)。接著建一個 1 GiB 的 PVC 和一個掛載它的 busybox pod,pod 啟動時把一行字寫進 volume。最後部署兩份 nginx,開一個 `type=LoadBalancer` 的 Service。
 
 開頭的 `export` 讓這個終端機接下來的 `kubectl` 都改連 workload cluster。之後要回頭操作 kind,開一個新的終端機就好:
+
+下面先執行到建立 PVC／Pod 的第二個 `EOF`,接著用區塊後的等待指令取代緊接的 `kubectl get pvc` 與 `kubectl exec` 兩行;等待或讀取失敗就停在這一步,全部成功後再從 `kubectl create deploy web` 繼續。
 
 ```bash
 export KUBECONFIG=/tmp/wl.kubeconfig
@@ -225,67 +239,21 @@ curl http://<EXTERNAL-IP>/        # host 內可打(Azure FIP 僅 host 內有效)
 - **PVC**:`kubectl get pvc` 的 STATUS 是 `Bound`。這時在 OpenStack 這邊跑 `openstack volume list`,會多一顆名字以 `pvc-` 開頭、狀態 `in-use` 的 volume,它就是這個 PVC。`kubectl exec` 讀回 `deepwave-day8`,代表 pod 寫進去的資料確實落在這顆 volume 上。
 - **LoadBalancer**:`kubectl get svc web-lb` 的 `EXTERNAL-IP` 從 `<pending>` 變成一個 `172.24.4.x` 的位址,也就是 ext-net 的 floating IP。LB 要先開一台 amphora VM,會等上幾分鐘。拿到位址時,`openstack loadbalancer list` 裡這台 LB 的狀態是 `ACTIVE`、`ONLINE`。把位址填進最後一行的 `<EXTERNAL-IP>`。跟 Day 4 一樣,ext-net 只在主機內有效,所以 `curl` 要在主機上打。
 
-`EXTERNAL-IP` 一直停在 `<pending>`,通常是兩個原因之一:provider 名稱不對([疑難排解:LoadBalancer 一直 pending](#mine-3)),或 Nova 磁碟額度不夠開 amphora([疑難排解:amphora 開不出來](#mine-4))。
-
-## 從儀表板看同一座 cluster
-
-下面兩張截圖是同一座 `k8s-lab`,在課程更後面的階段拍的,所以跟你現在看到的會有一點不同。
-
-![skyline-coe-clusters](../assets/screenshots/skyline-coe-clusters.png)
-
-*Magnum 的 cluster 列表,畫面來自 Day 13 才會裝的網頁介面 Skyline。k8s-lab 的健康狀態是 HEALTHY;狀態欄是 UPDATE COMPLETE,因為 Day 9 對這座 cluster 做了更新。你現在看到的會是 CREATE_COMPLETE,用步驟 3 的 `openstack coe cluster show` 就能確認。*
-
-![kubectl-nodes](../assets/screenshots/kubectl-nodes.png)
-
-*從 kubectl 看同一座 cluster。畫面上有三個節點全部 Ready,版本是 Day 9 升級後的 v1.35.5,第三個是 Day 9 新增的 `app` node group;你現在只會有 control plane 和 worker 兩個,版本是 v1.34.8。指令前面的 `KUBECONFIG=/tmp/wl.kubeconfig` 跟步驟 3 一樣,只影響這一條指令。*
+`EXTERNAL-IP` 一直停在 `<pending>`,通常是兩個原因之一:provider 名稱不對(先核對[步驟 2 的 label](#mine-3)),或 Nova 磁碟額度不夠開 amphora([疑難排解:amphora 開不出來](#mine-4))。
 
 ## 疑難排解
 
-照官方預設值建 cluster,或漏掉本章某一步時,會遇到下面四個問題,依出現順序排列。
+### 清理後 LB 的 amphora 仍開不出來,Nova 報 `No valid host was found` {#mine-4}
 
-### cluster 幾秒就 CREATE_FAILED,kind 裡沒有任何 CAPI 物件 {#mine-1}
-
-**症狀**:`cluster create` 之後幾秒就變成 `CREATE_FAILED`,`magnum-system` 裡沒有任何 CAPI 物件。magnum-conductor 的 log 有一行 Nova 回的 400:`'soft-anti-affinity' is not one of ['anti-affinity','affinity']`。
-
-**原因**:Magnum 用預設的 Nova API 版本 2.1 建 server group,這個版本還不認得 `soft-anti-affinity`。
-
-**修法**:照步驟 1 把 `[nova_client] api_version` 設成 `2.15`,重跑 `kolla-ansible deploy --tags magnum`,再刪掉失敗的 cluster 重建:
-
-```bash
-openstack coe cluster delete k8s-lab
-```
-
-刪除完成後,照步驟 2 的 `cluster create` 再建一次。
-
-### VM 都 ACTIVE,cluster 卻一直 CREATE_IN_PROGRESS {#mine-2}
-
-**症狀**:節點 VM 都是 ACTIVE,CAPI 的 Machine 卻停在 `Provisioned`(VM 已經開好,但還沒對上任何 K8s 節點),cluster 一直是 `CREATE_IN_PROGRESS`。步驟 3 的 providerID 查詢是空的;workload cluster 裡的 CCM 是 `CrashLoopBackOff`,coredns 和 CSI controller 都 Pending。
-
-**原因**:cluster 專用網路的網段跟 OpenStack API 位址重疊,CCM 連不到 Keystone。原理見「K8s 節點怎麼對上 OpenStack 的 VM」的對照圖。
-
-**修法**:照步驟 2 在 template 加上 `fixed_subnet_cidr=10.6.0.0/24`(或任何跟 API 位址、既有網段都不重疊的網段),刪掉卡住的 cluster(`openstack coe cluster delete k8s-lab`),等它刪除完成再照步驟 2 重建。完整的追查過程見排錯手冊:[CAPI 子網撞 API IP](../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api.md)。
-
-### LoadBalancer 一直 pending,CCM 報 `Provider 'amphorav2' is not enabled` {#mine-3}
-
-**症狀**:`type=LoadBalancer` 的 Service 一直沒有 `EXTERNAL-IP`,CCM 的 log 是 Octavia 回的 400 `Provider 'amphorav2' is not enabled`。
-
-**原因**:CCM 設定裡的 `lb-provider` 來自 template 的 `octavia_provider` label,沒寫時預設是 `amphorav2`,而這朵雲的 Octavia 只啟用了 `amphora` 和 `ovn`。
-
-**修法**:新的 cluster 照步驟 2 帶上 `octavia_provider=amphora`。已經建好的 cluster 不用重建:workload cluster 裡有一個叫 `cloud-config` 的 Secret,是 CCM 讀取的設定檔,裡面寫著 Keystone 位址和 `lb-provider` 等設定。把其中的 `lb-provider` 改成 `amphora`,再重啟 CCM。本課沒有記錄這個 Secret 所在的 namespace 與確切的修改指令,動手前先在 workload cluster 裡找到它。Day 22 之後 amphora 不能再用,見步驟 2 後面的說明。
-
-### LB 的 amphora 開不出來,Nova 報 `No valid host was found` {#mine-4}
-
-**症狀**:provider 名稱改對了,LB 還是建不起來;Octavia 建 amphora 時,Nova 回 `No valid host was found`。查主機的 hypervisor 磁碟帳(`<host>` 換成 `openstack hypervisor list` 列出的名稱):
+**症狀**:已照「開始之前」清理示範 VM 和舊 LB,也指定了 `octavia_provider=amphora`,LB 仍建不起來;Octavia 建 amphora 時,Nova 回 `No valid host was found`。查主機的 hypervisor 磁碟帳(`<host>` 換成 `openstack hypervisor list` 列出的名稱):
 
 ```bash
 openstack hypervisor show <host> -c local_gb -c local_gb_used -c free_disk_gb
 ```
 
-本課遇到這個問題時,`local_gb_used` 是 121(總共 122),`free_disk_gb` 只剩 1。
+先看 `local_gb` 的總容量、`local_gb_used` 的已分配量,以及 `free_disk_gb` 的剩餘量。Nova 用 flavor 宣告的磁碟大小計帳,SHUTOFF 的 VM 和既有 LB 的 amphora 也照算。清掉示範資源後,cluster 節點和仍保留的 VM、LB 仍會佔用額度。
 
-**原因**:Nova 用 flavor 宣告的磁碟大小計帳,SHUTOFF 的 VM 和舊 LB 的 amphora 也照算。前幾天留下的示範 VM 和 LB 把單機的磁碟額度用完了,見「開始之前」的[清理那一段](#nova-disk)。
-
-**修法**:照那一段刪掉留下的 VM 和 LB。本課刪完釋放了約 36 GB,額度夠開 amphora 之後,LB 會繼續建立。
+把 `free_disk_gb` 與這朵雲實際使用的 amphora flavor 磁碟需求比較。剩餘量不足時,先用前文已有的 `openstack server list` 和 `openstack loadbalancer list` 確認還有哪些資源,只清理已不需要的項目,再查一次磁碟額度。不要重複刪除已清掉的示範資源。若剩餘量足夠,就不能只憑 `No valid host was found` 判定磁碟不足,需再查看 Nova 排程失敗的原因。
 
 ## 想一想
 
@@ -301,7 +269,7 @@ openstack hypervisor show <host> -c local_gb -c local_gb_used -c free_disk_gb
 
 想再深入,可以從這幾份開始:
 
-- **[K8s 官方:Cloud Controller Manager 概念](https://kubernetes.io/docs/concepts/architecture/cloud-controller/)** —— 為什麼 K8s 需要一個「懂雲」的元件?CCM 的職責邊界在這份講得最清楚。
+- **[K8s 官方:Cloud Controller Manager 概念](https://kubernetes.io/docs/concepts/architecture/cloud-controller/)** —— 說明 CCM 如何呼叫雲端 API,以及節點初始化、路由與 Service 控制器的職責。
 - **[cloud-provider-openstack 專案](https://github.com/kubernetes/cloud-provider-openstack)** —— 本章用到的 OpenStack CCM 與 Cinder CSI 都在這個 repo;文件目錄裡有各元件的設定參考。
 - **[K8s 官方:Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)** —— PV、PVC、StorageClass 的正式定義;本章「PVC 變成 Cinder volume」在 K8s 這一側的原理。
 - **[K8s 官方:Service](https://kubernetes.io/docs/concepts/services-networking/service/)** —— `type=LoadBalancer` 承諾了什麼,以及它怎麼交給雲(這裡是 Octavia)實現。

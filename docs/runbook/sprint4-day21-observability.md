@@ -1,6 +1,6 @@
 # Day 21：集中查詢服務紀錄與監控指標
 
-一台 VM 建立失敗，你拿著 Day 19 找到的 UUID，分別到 Nova、Placement、Neutron 的紀錄搜尋。當服務分散到多台主機，逐台登入就很費時。另一個問題是：還沒有人回報錯誤，如何發現磁碟快滿了，或某個服務已經停止回報？本章建立兩條資料收集路徑，讓你判斷何時看指標、何時查事件紀錄。
+一台 VM 建立失敗，你拿著 Day 19 找到的 UUID，分別到 Nova、Placement、Neutron 的紀錄搜尋。當服務分散到多台主機，逐台登入就很費時。Day 20 沿著 OVN 網路規則追查封包，本章接著集中搜尋服務紀錄與監控指標。另一個問題是：還沒有人回報錯誤，如何發現磁碟快滿了，或某個服務已經停止回報？本章建立兩條資料收集路徑，讓你判斷何時看指標、何時查事件紀錄。
 
 ## 指標與 log 各自回答什麼
 
@@ -46,7 +46,7 @@ Counter({'up': 36, 'down': 1})
 
 `up` 表示最近一次抓取成功；`down` 表示抓取失敗，還不能直接斷定被監控的服務停止。這份紀錄裡 RabbitMQ 的 target 尚未上線，處理範圍見[疑難排解：RabbitMQ target 持續 down](#mine-3)。不要把「大部分 up」當作全部監控已完成。
 
-若 `prometheus_cadvisor` 持續重啟並回報 `inotify_init: too many open files`，再依[疑難排解](#mine-1)調整主機限制。
+cAdvisor 是容器資源指標收集器。若它的容器 `prometheus_cadvisor` 持續重啟並回報 `inotify_init: too many open files`，再依[疑難排解](#mine-1)調整主機限制。
 
 ## 步驟 3：確認 log 已匯入 OpenSearch
 
@@ -62,7 +62,21 @@ curl -s http://10.0.0.4:9200/_cat/indices | grep flog
 yellow open flog-2026.07.12  ... 3857
 ```
 
-`yellow` 表示 primary shard 可用，但有 replica shard 尚未配置；在只有一個節點、仍要求副本時可以出現。它不是所有異常都能忽略的訊號。這份節錄同時顯示索引已有文件；之後應持續留意文件是否增加與資料是否夠新。
+`yellow` 表示 primary shard（主要分片）可用，但有 replica shard（副本分片）尚未配置；在只有一個節點、仍要求副本時可以出現。它不是所有異常都能忽略的訊號。這份節錄同時顯示索引已有文件；之後應持續留意文件是否增加與資料是否夠新。
+
+若從本機瀏覽器連線，先另開一個本機終端機，沿用 [Day 13](sprint4-day13-skyline.md#open-skyline) 的 SSH 金鑰與 VM 公網 IP，替換下方的角括號內容；兩處 `10.0.0.4` 都要換成你的 VM 管理私有 IP。[Kolla-Ansible 2025.1 官方設定](https://raw.githubusercontent.com/openstack/kolla-ansible/stable/2025.1/ansible/group_vars/all.yml)中，Grafana 與 OpenSearch Dashboards 的預設埠分別是 `3000`、`5601`。
+
+以下依 [OpenSSH 官方手冊](https://man.openbsd.org/ssh.1)建立 Grafana 與 OpenSearch Dashboards 的本機 SSH 轉送（依官方文件補上，本課沒有實跑）：
+
+```bash
+ssh -N -T -o ExitOnForwardFailure=yes \
+  -i "<SSH金鑰絕對路徑>" \
+  -L localhost:3000:10.0.0.4:3000 \
+  -L localhost:5601:10.0.0.4:5601 \
+  "azureuser@<VM公網IP>"
+```
+
+保持這個終端機開啟，瀏覽器開啟 `http://localhost:3000` 使用 Grafana；步驟 5 的 OpenSearch Dashboards 則開啟 `http://localhost:5601`，登入方式見下文與 [2025.1 集中式 log 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/logging-and-monitoring/central-logging-guide.html#opensearch-dashboards)。若本機埠已被舊的 SSH 轉送占用，先在舊終端機按 `Ctrl+C` 結束該轉送，再執行上面的指令；本章練習結束後，也以 `Ctrl+C` 關閉這條連線。
 
 Grafana 使用 `3000` 埠。從你已建立的 SSH tunnel 或可達管理網路開啟它，使用 `admin` 與 `passwords.yml` 裡的 `grafana_admin_password` 登入。資料源頁可以確認 Prometheus 與 OpenSearch 的連線設定：
 
@@ -78,7 +92,7 @@ Day 13 部署 Skyline 時，Prometheus 還沒有啟用。現在要重新產生 S
 kolla-ansible deploy -i ~/all-in-one --tags skyline
 ```
 
-部署成功後，檢查 Skyline 的監控頁是否能載入資料。如果模板回報缺少 RGW 變數，見[疑難排解](#mine-2)；這與 Prometheus 本身是否可用是不同問題。
+部署成功後，檢查 Skyline 的監控頁是否能載入資料。
 
 ## 步驟 5：用 UUID 跨服務搜尋
 
@@ -128,10 +142,6 @@ sudo docker restart prometheus_cadvisor
 ```
 
 這是針對 inotify 限制的修法；不要只因容器數增加就認定所有重啟都由它造成。
-
-### Skyline 模板找不到 ceph_rgw_swift_compatibility {#mine-2}
-
-只部署 Skyline role 時，不能依賴另一個 role 的預設值剛好已載入。將 `ceph_rgw_swift_compatibility: "false"` 明確寫進 `globals.yml`，再重跑步驟 4。此值要與 Day 15 的 `/swift/v1` 一致；改成 `true` 會改用 `/v1`，不能當成單純消除 undefined 的修法。
 
 ### RabbitMQ target 持續 down {#mine-3}
 

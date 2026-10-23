@@ -2,23 +2,27 @@
 
 ![Keystone 官方吉祥物](../assets/mascots/keystone.png){ align=right width="100" }
 
-兩個團隊開始共用同一朵雲。工程團隊希望 CI 自動開 VM，資料團隊也需要自己的資源；你不想把管理員密碼交給兩邊，更不能讓其中一邊耗盡所有容量。先前已經會建立 VM，這一章要在建立之前加上身分與額度的判斷。讀完之後，請求被拒絕時，你能分辨是認證範圍不對、額度不足，還是 Nova 查詢額度的設定有問題。
+兩個團隊開始共用同一朵雲。工程團隊希望 CI 自動開 VM，資料團隊也需要自己的資源；你不想把管理員密碼交給兩邊，更不能讓其中一邊耗盡所有容量。[Day 26](sprint4-day26-sprint5-preview.md) 提到，用量與費用必須先有專案歸屬。本章從 **project（專案）** 開始，把使用者的權限與可申請的資源數量連到各自的專案。
+
+**Role（角色）** 決定使用者能做哪些操作；認證的 **scope（作用範圍）** 則指定這次請求作用於哪個專案，或是否用於全雲管理。例如，alice 在 team-a 的 member 角色不會讓她自動取得 team-b 的權限；管理全雲額度則需要 system scope 與相應的管理角色，只有 admin 專案的認證並不足夠。
+
+**Quota（額度）** 限制一個專案可申請多少資源。有權建立 VM，仍可能因台數已達上限而被拒絕。讀完之後，請求被拒絕時，你能分辨是認證範圍不對、額度不足，還是 Nova 查詢額度的設定有問題。
 
 ## 開始之前
 
-沿用 Kolla-Ansible 2025.1 的部署主機，在啟用 OpenStack CLI 的 shell 操作。需要管理員 openrc、可用的 `cirros` 映像及 `m1.tiny` flavor。下列歷史命令中的 `10.0.0.4`、`RegionOne`、inventory 路徑請對照自己的 Keystone endpoint、region 與部署檔替換；輸出中的 UUID 只用來辨認當時的資源，不要複製為自己的 ID。
+沿用 Kolla-Ansible 2025.1 的部署主機，在啟用 OpenStack CLI 的 shell 操作。需要管理員 openrc、可用的 `cirros` 映像及 `m1.tiny` flavor。執行前，請將指令中的 `10.0.0.4` 對照自己的 Keystone endpoint（API 位址）、`RegionOne` 對照服務所在的 region，inventory 路徑也換成自己的部署檔。輸出中的 UUID 用來辨識資源，操作時須使用自己環境查得的 ID。
 
-本章會切換三種身分。openrc 只是設定環境變數，不保證清掉前一種認證留下的值。每次由 application credential 切回帳號密碼前，先執行 `unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE`，再載入目標 openrc；由 system scope 切回專案前，至少清除 `OS_SYSTEM_SCOPE`。這個前提也適用後續章節。
+操作會在管理員、alice 的專案認證與 CI 應用憑證之間切換。openrc 只是設定環境變數，不保證清掉前一種認證留下的值，因此切換時要先清除不再使用的認證設定。
 
 ## 步驟 1：建立各自的專案
 
-Keystone 的 **domain** 管理一組使用者與專案；**project** 是資源歸屬與額度的對象。使用者取得哪種權限，取決於被指派的 **role** 及作用範圍。本章建立 `day27-corp` domain、`team-a`／`team-b` 兩個 project，讓 `alice` 在 team-a 有 member 角色。domain 本身不替 VM 建立隔離網路，還要由各服務依專案管理資源。
+Keystone 的 **domain** 管理一組使用者與專案。本章建立 `day27-corp` domain、`team-a`／`team-b` 兩個 project，讓 `alice` 在 team-a 有 member 角色。domain 本身不替 VM 建立隔離網路，還要由各服務依專案管理資源。
 
 圖中把身分歸屬與資源歸屬分開，避免把「使用者屬於 domain」誤認成「能管理這個 domain 下所有專案」。
 
 ![alice屬於day27-corp，在team-a獲member角色；team-a與team-b各自持有資源，應用憑證限於建立時的專案](../assets/diagrams/os-s5d27-identity.svg)
 
-alice 在 team-a 的指派不會自動給她 team-b 的權限。先以管理員建立這組關係：
+alice 在 team-a 的指派不會自動給她 team-b 的權限。先執行 `unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE`，清除可能留在 shell 的其他認證設定，再載入管理員 openrc 建立這組關係：
 
 ```bash
 source /etc/kolla/admin-openrc.sh
@@ -30,7 +34,7 @@ openstack role add --project team-a --project-domain day27-corp \
   --user alice --user-domain day27-corp member
 ```
 
-接著準備 alice 的 openrc。填入自己的 Keystone 位址與剛設定的密碼，檔案只讓自己讀取；查到 token 的 project ID，才繼續建立資源：
+接著準備 alice 的 openrc。填入自己的 Keystone 位址與剛設定的密碼，檔案只讓自己讀取。切換前先執行 `unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE`，再執行下面的步驟；查到 token 的 project ID，才繼續建立資源：
 
 ```bash
 cat > ~/team-a-openrc.sh << 'EOF'
@@ -83,15 +87,15 @@ export OS_APPLICATION_CREDENTIAL_SECRET=<剛才的 Secret>
 openstack server list
 ```
 
-請求成功代表這組憑證可以在 team-a 執行該查詢，不代表獲得全雲管理權限。用完驗證後，依開頭說明清除 application credential 相關變數，再載入 `/etc/kolla/admin-openrc.sh`；下一步是管理員的額度設定工作。
+請求成功代表這組憑證可以在 team-a 執行該查詢，不代表獲得全雲管理權限。下一步切換回管理員，設定專案的資源額度。
 
 ## 步驟 3：把 Nova 額度登記到 Keystone
 
-**Quota（額度）**限制專案可申請多少資源。Unified limits 把額度數值集中存入 Keystone；本章遷移的是 Nova，沒有遷移 Cinder 或 Neutron。Nova 自 2023.2 起已推薦使用這條路線，並非到 2025.1 才出現。
+**Unified limits** 把額度數值集中存入 Keystone；本章遷移的是 Nova，沒有遷移 Cinder 或 Neutron。Nova 自 2023.2 起已推薦使用這條路線，並非到 2025.1 才出現。
 
 兩種記錄分工如下：**registered limit** 是某個服務／region 的預設額度；**project limit** 覆寫特定專案的值。Nova 透過 **oslo.limit** 函式庫讀取額度並執行檢查，Keystone 不直接攔截建立 VM 的請求。
 
-查詢前要確認認證的 **scope（作用範圍）**。專案範圍的 token 可能只看得到自己的 limit。管理全雲 limit 時，使用有 system admin 權限的管理員：載入 admin openrc 後，依下方清除專案變數並設定 `OS_SYSTEM_SCOPE=all`。此處先完成該身分切換，後面的 limit 寫入都使用它。
+專案範圍的 token 可能只看得到自己的 limit。管理全雲 limit 時，使用有 system admin 權限的管理員。先執行 `unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE`，清除剛才的應用憑證設定，再依下方載入 admin openrc、清除專案變數並設定 `OS_SYSTEM_SCOPE=all`。後面的 limit 寫入都使用這個認證範圍。
 
 ```bash
 source /etc/kolla/admin-openrc.sh
@@ -160,11 +164,11 @@ openstack limit create --service "$SVC" --region RegionOne \
   --project "$TEAM_A" --resource-limit 2 servers
 ```
 
-這裡的 region 必須與 Nova 在 `[oslo_limit]` 使用的 endpoint 相同。既有同一組記錄時應更新它，不要重複建立。設定完成後，再補 team-a 的 VCPU 上限；下列區塊同時列出原紀錄取得 service/project ID 的方法與專案 limit 命令，已建立的 `servers` 那一筆不用再執行：
+這裡的 region 必須與 Nova 在 `[oslo_limit]` 使用的 endpoint 相同。既有同一組記錄時應更新它，不要重複建立。取得 team-a 的 ID 時，若不同 domain 有同名專案，請在下方的 `project show team-a` 加上 `--domain day27-corp`，明確選定步驟 1 建立的 domain；修正後的寫法本課沒有實跑。確認 ID 後，再補 team-a 的 VCPU 上限；已建立的 `servers` 那一筆不用再執行：
 
 ```bash
 NOVA_SVC=$(openstack service list -f value -c ID -c Type | awk '$2=="compute"{print $1}')
-TEAM_A=$(openstack project show team-a --domain day27-corp -f value -c id)
+TEAM_A=$(openstack project show team-a -f value -c id)
 openstack limit create --service "$NOVA_SVC" --region RegionOne \
   --project "$TEAM_A" --resource-limit 2 servers
 openstack limit create --service "$NOVA_SVC" --region RegionOne \
@@ -218,7 +222,7 @@ PLAY RECAP: ok=74  changed=13  failed=0
 
 ## 步驟 5：確認額度真的限制建立請求
 
-清除 `OS_SYSTEM_SCOPE` 及 application credential 變數後，載入 alice 的 team-a openrc。確認 team-a 沒有其他 VM 佔用這個兩台的額度，再依序申請三台：
+先執行 `unset OS_AUTH_TYPE OS_APPLICATION_CREDENTIAL_ID OS_APPLICATION_CREDENTIAL_SECRET OS_SYSTEM_SCOPE`，清除 system scope 與應用憑證設定，再載入 alice 的 team-a openrc。確認 team-a 沒有其他 VM 佔用這個兩台的額度，再依序申請三台：
 
 ```bash
 source ~/team-a-openrc.sh
@@ -246,144 +250,19 @@ ForbiddenException: 403: Project d2b258226e6b4d4493d93b5411726c97 is over a limi
 
 ### 切換 driver 後 compute API 回 500 {#mine-1}
 
-**症狀**：建立請求出現以下錯誤：
-
-```text
-HttpException: 500: Server Error for url: http://10.0.0.4:8774/v2.1/servers,
-Unexpected API Error... <class 'oslo_limit.exception.SessionInitError'>
-```
-
-**原因**：這份紀錄缺少 `[oslo_limit]` 的認證設定，Nova 無法建立查額度的連線。**修法**：回步驟 4 補完整設定與服務角色。這個 `SessionInitError` 與超額的 403 不同；不能把所有 500 都判作額度問題。
+若錯誤包含 `oslo_limit.exception.SessionInitError`，回步驟 4 檢查 `[oslo_limit]` 的認證設定與 nova 的 system reader 角色。這個錯誤表示查詢額度的連線未能建立，不能當成超額的 403，也不能據此判定所有 500 都是同一原因。
 
 ### 尚未建立 VM，卻每項都顯示額度 0 {#mine-2}
 
-**症狀**：Keystone 查得到預設值，Nova 卻拒絕第一台：
-
-```text
-403: Project d2b258226e6b4d4493d93b5411726c97 is over a limit for
-[Resource class:DISK_GB is over limit of 0 due to current usage 0 and delta 1,
- Resource class:MEMORY_MB is over limit of 0 due to current usage 0 and delta 512,
- Resource class:VCPU is over limit of 0 due to current usage 0 and delta 1,
- Resource servers is over limit of 0 due to current usage 0 and delta 1]
-```
-
-比對兩邊的 region：
-
-```text
-=== registered limits 的 region ===
-servers 10 None
-class:VCPU 20 None
-=== nova endpoint 的 region ===
-RegionOne
-```
-
-**原因**：本課遷移結果是 None，endpoint 是 RegionOne。**修法**：依步驟 3 在相符 region 補齊預設與專案記錄，再查一次。舊 None 記錄若仍被 project limit 參照，要先處理相依記錄，不能只看到新資料就假設舊資料已刪除。
+回步驟 3 比對 registered／project limit 的 region 與 Nova endpoint 的 region，確認需要的資源都有額度。若仍有 `region=None` 的舊記錄被 project limit 參照，須先處理相依記錄，不能只看到新資料就假設舊資料已刪除。
 
 ### 管理員查詢回空，Nova 卻仍執行限制 {#mine-3}
 
-**症狀**：使用 admin 專案範圍的 token 查 team-a：
+回步驟 3 檢查是否已清除專案變數、切換 system scope，且管理員具備相應角色。專案範圍的空清單不能用來判定其他專案沒有額度；只換 CLI 成 curl，不會改變 token 能看見的範圍。
 
-```bash
-openstack limit list --project $TEAM_A -f value
-```
+## 本章權限測試的範圍
 
-CLI 沒列出結果。直接呼叫 API 也得到零筆；這裡的 `TOKEN` 指同一個 project-scoped token，UUID 與位址需換成自己的值：
-
-```bash
-curl -s -H "X-Auth-Token: $TOKEN" "http://10.0.0.4:5000/v3/limits" \
-  | python3 -c "import sys,json; print('總數:', len(json.load(sys.stdin)['limits']))"
-```
-
-```text
-總數: 0
-```
-
-但建立 VM 仍被拒絕：
-
-```text
-403: Project ... is over a limit for
-[Resource servers is over limit of 2 due to current usage 2 and delta 1]
-```
-
-**原因**：本課的 limit list 依 token scope 過濾，空清單不代表其他專案沒有額度。**修法**：依步驟 3 改用有 system 權限的 token 查詢，原紀錄才列出：
-
-```text
-d2b258226e6b4d4493d93b5411726c97 servers 2
-d2b258226e6b4d4493d93b5411726c97 class:VCPU 4
-```
-
-檢查額度時，把請求的身分與 scope 一起記下；只換 CLI 成 curl，不會改變 token 能看見的範圍。
-
-### 解析 application credential JSON 得到 KeyError {#mine-4}
-
-下面是失敗寫法，不要重新建立同名憑證來重試：
-
-```bash
-openstack application credential create day27-ci -f json | python3 -c "
-import sys,json; print(json.load(sys.stdin)['id'])"
-```
-
-```text
-KeyError: 'id'
-```
-
-原輸出的欄位是大寫：
-
-```json
-{
-  "ID": "fe27332a44874f6aab76bac71ac4d3d8",
-  "Name": "day27-ci",
-  ...
-```
-
-**原因**：這個 CLI 輸出用 `ID`，程式卻讀 `id`。**修法**：依實際欄位名稱解析，或用 `-f value -c ID` 取值。建立時的 Secret 仍須妥善保存。
-
-### service list 不接受 --service {#mine-5}
-
-以下是參數錯誤的反例：
-
-```bash
-openstack service list --service compute -f value -c ID
-```
-
-```text
-openstack service list: error: unrecognized arguments: --service compute
-```
-
-空的 service ID 若又傳給下一個指令，會出現另一種錯誤：
-
-```text
-BadRequestException: 400: Invalid input for field/attribute service_id.
-Value: . '' is not a 'uuid'
-```
-
-**修法**：先列 service 的 ID 與 Type，再選 compute：
-
-```bash
-NOVA_SVC=$(openstack service list -f value -c ID -c Type | awk '$2=="compute"{print $1}')
-```
-
-確認取得一個非空 ID，再用它建立 limit。
-
-## 本章沒有驗證完整的 Secure RBAC
-
-Secure RBAC 涵蓋角色與 system／domain／project scope 的政策。單看設定檔沒有寫某個選項，不能判定它已關閉：
-
-```text
-nova-api         enforce_scope=(未設,用預設)
-neutron-server   enforce_scope=(未設,用預設)
-cinder-api       enforce_scope=(未設,用預設)
-```
-
-直接讀函式庫的預設值，也不等於服務載入設定後的實際行為：
-
-```text
-nova_api         enforce_scope/new_defaults = True True
-neutron_server   enforce_scope/new_defaults = True True
-cinder_api       enforce_scope/new_defaults = True True
-```
-
-本章驗到的是 application credential 的查詢、專案額度及 system scope 的可見性，沒有逐一測各服務的 `enforce_scope`。政策產生工具可協助檢視政策規則，但不能單憑產出的規則保證執行中的服務採用哪個設定。要驗證權限邊界，仍需選定 API、身分、scope 與應拒絕的操作做行為測試；limit list 的過濾行為不能直接代替所有 API 的拒絕測試。
+本章涵蓋 application credential 查詢、專案額度及 scope 對額度查詢可見性的影響。這些結果不能用來判定 Nova、Neutron、Cinder 各服務是否完整強制執行 Secure RBAC（依角色與作用範圍檢查請求的權限政策）。
 
 ## 想一想
 

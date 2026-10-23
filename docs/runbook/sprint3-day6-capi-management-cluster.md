@@ -2,7 +2,7 @@
 
 到 Day 5 為止,這朵雲能開 VM、建網路、掛硬碟、配負載平衡器,也能用 Heat 一次建好一組資源。Day 8 要再往上走一步:使用者下一行指令,雲就交出一座可以用的 Kubernetes。這背後有一連串的工作要有人代勞:開幾台 VM、在每台裝好 Kubernetes、把節點加進同一座叢集,壞了要修、要升版時一台台換新。這一章先把負責這些工作的程式裝起來,Day 7 再把它接到 OpenStack 的 Magnum 服務上。
 
-這組程式叫 Cluster API,它本身只能跑在一座 Kubernetes 裡,所以今天要在同一台主機上先開一座小 Kubernetes 給它用。在 Kolla 部署過的主機上,這座小叢集一開起來就會遇到一個問題:裡面所有 pod 都拉不到 image。讀完這一章,看到這個症狀時,你會知道原因是 kind 的網段少了一條 NAT 規則,也知道為什麼該只替 kind 補這一條規則,而不是去改 Docker 的全域設定。
+這組程式叫 Cluster API,它本身只能跑在一座 Kubernetes 裡,所以今天要在同一台主機上先開一座小 Kubernetes 給它用。這座小叢集用 **kind**(Kubernetes in Docker)建立,它把 Kubernetes 的節點放進 Docker 容器。在 Kolla 部署過的主機上,這座小叢集一開起來就會遇到一個問題:裡面所有 pod 都拉不到 image。讀完這一章,看到這個症狀時,你會知道原因是 kind 的網段少了一條 NAT 規則,也知道為什麼該只替 kind 補這一條規則,而不是去改 Docker 的全域設定。
 
 ## 開始之前
 
@@ -14,13 +14,13 @@
 
 手動裝一座 Kubernetes,要開 VM、在每台裝 kubeadm(Kubernetes 官方的叢集安裝工具)、在第一台初始化 control plane(負責管理整座叢集的節點,上面跑著 API server,也就是接收所有 `kubectl` 請求的元件)、再讓其他 worker 節點 join 進來。換一座叢集就得從頭再做一次,之後的升版和修復也全靠人。
 
-**Cluster API**(簡稱 CAPI)換一種做法:你寫一份宣告,例如「一座叢集,1 台 control plane、2 台 worker,Kubernetes v1.34」,交給 Kubernetes 保存,剩下的由程式完成。Kubernetes 原本不認得「一座叢集」這種東西,CAPI 用 CRD(自訂資源定義,讓 Kubernetes 多認得一種資源型別)把 Cluster、Machine 這些型別加進去,於是宣告一座叢集就跟宣告一個 deployment 一樣,是一份 YAML。
+**Cluster API**(簡稱 CAPI)換一種做法:你寫一份宣告,例如「一座叢集,1 台 control plane、2 台 worker,Kubernetes v1.34」,交給 Kubernetes 保存,剩下的由程式完成。Kubernetes 的內建資源型別包含 Pod、Deployment,但不包含 CAPI 的 Cluster、Machine。CAPI 用 CRD(自訂資源定義,用來擴充 Kubernetes 的資源型別)加入這些型別,於是宣告一座叢集就跟宣告一個 deployment 一樣,是一份 YAML。
 
 真正動手的是 **controller**:一支常駐在 Kubernetes 裡的程式,不斷比對「宣告要幾台」和「現在有幾台」,少了就開、多了就刪、壞了就換。這個比對再補齊的動作叫 **reconcile**。你在 Learn Kubernetes Basics 裡看過 deployment 讓 pod 維持指定數量,做的就是同一件事;CAPI 的 controller 管的對象換成了 VM 和整座叢集。
 
 controller 是在 Kubernetes 裡跑的程式,所以要先有一座 Kubernetes 給它們跑。這座叢集叫 **management cluster**(管理叢集),只跑 CAPI 的 controller,不跑你的應用程式。CAPI 依照宣告開出來、真正跑應用程式的叢集,叫 **workload cluster**。CAPI 的標誌是一隻烏龜馱著更小的烏龜,官方的說法是 "It's Kubernetes all the way down":用一座 Kubernetes 去管理其他 Kubernetes。
 
-到 Day 8 為止,同一台 Azure VM 上會有三套系統。下面這張圖把它們並排,由左到右是指令傳遞的方向:
+在 OpenStack 上,負責呼叫 API 建立 VM 和負載平衡器的 controller 叫 **CAPO**(Cluster API Provider OpenStack)。到 Day 8 為止,同一台 Azure VM 上會有三套系統。下面這張圖把它們並排,由左到右是指令傳遞的方向:
 
 ![同一台 Azure VM 裡有三塊:左邊是今天建立的 management cluster,由 kind 建立、本身是一個 Docker 容器,裡面跑 CAPI controllers 和 CAPO;中間是 Day 1–5 部署的 OpenStack,是 Kolla 的 Docker 容器群,不是 Kubernetes,包含 Nova、Neutron、Octavia、Cinder;右邊是 Day 8 才建立的 workload cluster,由 Nova 開出的 VM 組成,跑你的應用程式。箭頭一從 management cluster 指向 OpenStack,代表 CAPO 呼叫 OpenStack API 開 VM、負載平衡器與 volume;箭頭二從 OpenStack 指向 workload cluster,代表 Nova 開出的 VM 組成 workload cluster](../assets/diagrams/os-s3d6-three-systems.svg)
 
@@ -33,13 +33,17 @@ controller 是在 Kubernetes 裡跑的程式,所以要先有一座 Kubernetes �
 
 ![kind 官方標誌](../assets/logos/kind.png){ align=right width="160" }
 
-management cluster 只跑幾個 controller,不需要多台機器。單機 lab 用 **kind**(Kubernetes in Docker)最省事:它把一整座 Kubernetes 的節點裝進一個 Docker 容器,一行指令就能建好或刪掉。
+management cluster 只跑幾個 controller,不需要多台機器。單機 lab 用 kind 最省事:本章只需要一個 Docker 容器作為 Kubernetes 節點,一行指令就能建好或刪掉。
 
 正式環境不會這樣做。management cluster 停擺時,已經建好的 workload cluster 照常運作,但擴充、升版、替換壞掉的節點都要等它恢復,所以正式環境會用一座專用、高可用的叢集來當 management cluster。
 
 ## CAPI 的四個 provider
 
-CAPI 的功能拆成幾個 **provider**,每個 provider 是一組 controller,負責一部分工作。這一章要裝四個,步驟 4 的 `clusterctl init` 用四個旗標各指定一個。下面這張圖畫的是宣告一座叢集之後,各個 provider 依序做的事:
+CAPI 的功能拆成幾個 **provider**,每個 provider 是一組 controller,負責一部分工作。這一章要裝四個,步驟 4 的 `clusterctl init` 用四個旗標各指定一個。
+
+CAPO 還依賴 **ORC**(openstack-resource-controller)。CAPO 從 v0.12 起,把部分 OpenStack 資源(目前主要是 image)的建立、查詢、刪除交給這個獨立的 controller:CAPO 產生描述這類資源的宣告(例如 `Image`),ORC 再去呼叫 OpenStack API。VM、網路、負載平衡器仍由 CAPO 自己呼叫 API。
+
+下面這張圖畫的是宣告一座叢集之後,各個 provider 依序做的事,也標出 ORC 負責的資源:
 
 ![最上面是你寫的宣告:一座叢集,幾台節點。進入 management cluster 後,core(cluster-api)產生 worker 的 Machine,control-plane(kubeadm)產生 control plane 的 Machine,兩者都指向「Machine:一台節點的宣告」。Machine 再交給 bootstrap(kubeadm)產生節點的開機腳本,以及以橘色強調的 infrastructure(CAPO),它把 Machine 變成 VM,開機腳本也交給它。CAPO 直接呼叫 OpenStack API,在最下面的 OpenStack 層開出 Nova VM、Neutron 網路、Octavia LB;CAPO 旁邊的 ORC 只負責 image 這類資源,也連到 OpenStack](../assets/diagrams/os-s3d6-providers.svg)
 
@@ -47,7 +51,7 @@ CAPI 的功能拆成幾個 **provider**,每個 provider 是一組 controller,負
 
 1. **core**(`cluster-api`)和 **control-plane**(`kubeadm`)把一座叢集的宣告拆成一台台 **Machine**(一台節點的宣告)。control-plane provider 專管 control plane 那幾台的數量與升版。
 2. **bootstrap**(`kubeadm`)替每台 Machine 產生開機時執行的腳本,內容是用 kubeadm 初始化 control plane,或 join 進叢集。
-3. **infrastructure** 是唯一跟雲打交道的 provider。對 OpenStack 來說是 **CAPO**(Cluster API Provider OpenStack),它把 Machine 變成一台 Nova VM,把開機腳本交給這台 VM,也替叢集的 API server 建 Octavia 負載平衡器。這些都是 CAPO 直接呼叫 OpenStack API 完成的。
+3. **infrastructure** 是唯一跟雲打交道的 provider。對 OpenStack 來說是 CAPO,它把 Machine 變成一台 Nova VM,把開機腳本交給這台 VM,也替叢集的 API server 建 Octavia 負載平衡器。這些都是 CAPO 直接呼叫 OpenStack API 完成的。
 4. 圖上 CAPO 旁邊的 ORC 是 CAPO 依賴的另一個元件,負責 image 這類資源,步驟 4 會說明。
 
 ## 步驟 1:安裝命令列工具
@@ -87,7 +91,7 @@ kubectl get nodes                                    # control-plane Ready
 
 叢集建好了,但在 Kolla 主機上,它還連不到外面。原因在 Day 1 的部署:Kolla 為了 OpenStack 改過這台主機的 Docker 全域設定(`/etc/docker/daemon.json`),其中兩項跟今天有關:
 
-- **`iptables: false`**:Docker 不再自動寫任何防火牆或 NAT 規則。OpenStack 的容器全部直接使用主機的網路,網路由 Neutron 和 OVN 自己管理,Kolla 不希望 Docker 動到這些規則。
+- **`iptables: false`**:Docker 不再自動寫任何防火牆或 NAT 規則。OpenStack 的容器全部直接使用主機的網路,網路由 Neutron 和 OVN 管理,Kolla 透過這項設定停用 Docker 的 iptables 管理功能。
 - **`bridge: none`**:Docker 不建立預設的 `docker0` 網橋。
 
 kind 的節點卻是一般的 Docker 容器,接在 kind 自己建立的網路上,拿到的是主機內部的位址(在這台主機上是 `172.17.x.x`)。這種位址出不了主機,所以 Docker 平常會自動加一條 **NAT** 規則(網路位址轉換):容器的封包離開主機前,把來源位址改成主機自己的 IP。iptables 裡做這件事的規則叫 **MASQUERADE**。
@@ -156,9 +160,9 @@ sudo iptables -t nat -S POSTROUTING
 
 ## 步驟 4:先裝 ORC,再 `clusterctl init`
 
-provider 圖上 CAPO 旁邊還有一個 **ORC**(openstack-resource-controller)。CAPO 從 v0.12 起,把部分 OpenStack 資源(目前主要是 image)的建立、查詢、刪除交給這個獨立的 controller:CAPO 產生描述這類資源的宣告(例如 `Image`),ORC 再去呼叫 OpenStack API。VM、網路、負載平衡器仍由 CAPO 自己呼叫 API。這些宣告的型別由 ORC 提供,所以 ORC 要在 CAPO 之前裝好,漏了這一步,CAPO 會因為缺少型別而起不來。
+CAPO 使用的 `Image` 等宣告型別由 ORC 提供,所以 ORC 要在 CAPO 之前裝好,漏了這一步,CAPO 會因為缺少型別而起不來。
 
-`clusterctl init` 會一次裝好四個 provider。三個 `export` 是 CAPI 的功能開關,照 driver 的 CI 腳本打開。依 CAPI 文件,`EXP_CLUSTER_RESOURCE_SET` 讓新叢集建好後自動套用指定的資源;`EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION` 讓開機腳本除了 cloud-init 也能用 Ignition 格式(Flatcar 這類作業系統使用的開機設定格式);`CLUSTER_TOPOLOGY` 開啟 ClusterClass(用一份範本定義叢集的樣子)。本課沒有逐一驗證每個開關的作用,只確認照這組設定能裝好:
+`clusterctl init` 會一次裝好四個 provider。三個 `export` 是 CAPI 的功能開關,照 driver 的 CI 腳本打開。依 CAPI 文件,`EXP_CLUSTER_RESOURCE_SET` 讓新叢集建好後自動套用指定的資源;`EXP_KUBEADM_BOOTSTRAP_FORMAT_IGNITION` 讓開機腳本除了 cloud-init 也能用 Ignition 格式(Flatcar 這類作業系統使用的開機設定格式);`CLUSTER_TOPOLOGY` 開啟 ClusterClass(用一份範本定義叢集的樣子)。下面先安裝 ORC,再設定這三個開關並安裝 provider:
 
 ```bash
 # 先裝 ORC(CAPO v0.14 依賴)
@@ -176,7 +180,7 @@ clusterctl init \
 # clusterctl 會自動先裝 cert-manager(v1.20.2),不需手動處理
 ```
 
-`clusterctl init` 第一件事是裝 cert-manager(在叢集裡自動簽發和更新 TLS 憑證的元件,CAPI 的 controller 靠它取得憑證),等它就緒才裝四個 provider。如果輸出停在 `Waiting for cert-manager to be available...`,最後以 `context deadline exceeded` 結束,幾乎都是步驟 3 沒做好,處理方式見[疑難排解:clusterctl init 卡在等 cert-manager](#mine-2)。
+`clusterctl init` 第一件事是裝 cert-manager(在叢集裡自動簽發和更新 TLS 憑證的元件,CAPI 的 controller 靠它取得憑證),等它就緒才裝四個 provider。如果輸出停在 `Waiting for cert-manager to be available...`,最後以 `context deadline exceeded` 結束,先看[疑難排解的連線檢查](#mine-1),確認是否因為拉不到 image 而卡住。
 
 ## 步驟 5:確認四個 controller 都在跑
 
@@ -193,32 +197,26 @@ done
 kubectl get providers -A
 ```
 
-看結果時注意兩處。第一,迴圈的四次 `rollout status` 都要回報成功;任何一個逾時,先看[疑難排解:kind 裡所有 image 拉取都 i/o timeout](#mine-1)。第二,`kubectl get providers -A` 的版本欄:core、bootstrap、control-plane 三筆是 v1.13.2,infrastructure 那筆是 openstack v0.14.4,跟步驟 1 選的組合一致。這個迴圈沒有檢查 ORC 和 cert-manager:ORC 的 `orc-controller-manager` 和 cert-manager 的三個 deployment 各在自己的 namespace 裡,也應該都在跑。
+看結果時注意兩處。第一,迴圈的四次 `rollout status` 都要回報成功;任何一個逾時,先看[疑難排解的連線檢查](#mine-1)。第二,`kubectl get providers -A` 的版本欄:core、bootstrap、control-plane 三筆是 v1.13.2,infrastructure 那筆是 openstack v0.14.4,跟步驟 1 選的組合一致。這個迴圈沒有檢查 ORC 和 cert-manager:ORC 的 `orc-controller-manager` 和 cert-manager 的三個 deployment 各在自己的 namespace 裡,也應該都在跑。
 
 做到這裡,management cluster 裡還沒有任何叢集的宣告,controller 只是在待命。Day 7 把 Magnum 接上來之後,宣告才會從 Magnum 寫進這裡。
 
 ## 疑難排解
 
-### kind 裡所有 image 拉取都 `i/o timeout` {#mine-1}
+### 步驟 3 的連線測試失敗,或 image 拉取逾時 {#mine-1}
 
-**症狀**:kind 叢集裡的 pod 全部卡在 `ImagePullBackOff`,事件裡是 `dial tcp ...:443: i/o timeout`,包括 cert-manager、ORC、CAPI、CAPO。
+如果步驟 3 的 `docker exec` 連線測試沒有印出 `OK`,先停在這一步檢查。繼續安裝可能會讓 kind 裡的 pod 卡在 `ImagePullBackOff`,事件裡出現 `dial tcp ...:443: i/o timeout`;`clusterctl init` 也可能停在 `Waiting for cert-manager to be available...`,最後以 `context deadline exceeded` 結束。
 
-**原因**:Kolla 把 Docker 設成 `iptables: false`,kind 網段沒有 MASQUERADE 規則,見[Kolla 改過 Docker 的網路設定](#kolla-docker)。
+依序區分主機連線、kind 連線和 NAT 設定:
 
-**修法**:照步驟 3 補規則。要確認是不是這個原因,依序檢查:
+1. 在主機執行 `curl -sI https://quay.io/v2/`。收到 HTTP 401 表示主機能連到 quay.io;如果主機也連不上,先處理主機的對外連線。
+2. 主機連線正常時,重跑步驟 3 的 `docker exec` 測試。若連 `1.1.1.1:443` 也失敗,問題就不只出在 quay.io,接著檢查 kind 的對外 NAT。
+3. 查看步驟 3 的 `sudo iptables -t nat -S POSTROUTING` 結果,確認 MASQUERADE 的來源網段與 kind 實際的網段一致。只有 OpenStack 的 `172.24.4.0/24` 那條規則並不足夠;kind 的網段可用步驟 3 的 `docker network inspect` 查詢。
+4. 執行 `cat /etc/docker/daemon.json`,確認是否有 `iptables: false` 和 `bridge: none`。這是 [Kolla 改過的 Docker 設定](#kolla-docker),不要為了 kind 改回全域設定。若缺少 kind 網段的 MASQUERADE,依步驟 3 補上對應規則,再測試連線。
 
-1. 主機自己連 quay.io 正常,問題就在 kind 這一層。
-2. 在 kind 節點裡連任意外部 IP(步驟 3 的 `1.1.1.1:443`)也失敗,就跟 quay.io 無關,是整條對外連線斷了。
-3. 連線在 TCP 握手階段就失敗,可以排除 MTU(單一封包的大小上限)設錯的可能,MTU 不對通常只會讓大封包出問題。
-4. `sudo iptables -t nat -S POSTROUTING` 裡沒有 kind 網段的 MASQUERADE,就是這個原因。
+<span id="mine-2"></span>
 
-### clusterctl init 卡在 `Waiting for cert-manager to be available` {#mine-2}
-
-**症狀**:`clusterctl init` 停在 `Waiting for cert-manager to be available...`,最後以 `context deadline exceeded` 結束。
-
-**原因**:cert-manager 本身沒有問題,是它的 pod 拉不到 image,原因同[上一項](#mine-1)。
-
-**修法**:先照步驟 3 補好規則。卡在 `ImagePullBackOff` 的 pod 會自己隔一段時間重試,間隔會越拉越長,所以不刪也會恢復,只是要多等一陣子。想立刻重拉,可以刪掉 cert-manager 的 pod,讓它們馬上重建(非必要):
+如果已經執行過 `clusterctl init`,且 cert-manager 因為拉不到 image 而逾時,先確認上述連線測試通過。卡在 `ImagePullBackOff` 的 pod 會自己隔一段時間重試,間隔會越拉越長,所以不刪也會恢復,只是要多等一陣子。想立刻重拉,可以刪掉 cert-manager 的 pod,讓它們馬上重建(非必要):
 
 ```bash
 kubectl -n cert-manager delete pod --all
@@ -226,21 +224,17 @@ kubectl -n cert-manager delete pod --all
 
 等 cert-manager 的 pod 都跑起來之後,重跑步驟 4 同一條 `clusterctl init`。它會發現 cert-manager 已經在了,直接接著裝四個 provider。
 
-### kind 節點優先用 IPv6 解析,拉 image 更慢 {#mine-3}
-
-**症狀**:在 kind 節點裡 `getent hosts quay.io` 回傳 IPv6 位址。
-
-**原因**:kind 的 Docker 網路帶有 IPv6 位址(`fc00::/64` 這類只在內部有效的位址)和 IPv6 預設路由,但 Azure VM 沒有 IPv6 對外連線,先試 IPv6 會多耗一段時間。
-
-**修法**:補好步驟 3 的 IPv4 規則之後,連線會改走 IPv4,不影響這一章的操作,不需要額外處理。想完全關掉,可以在 kind 的叢集設定檔裡停用 IPv6,本課沒有驗證這個做法。
-
 ### VM 重開機後 management cluster 沒有恢復 {#mine-4}
 
 **症狀**:隔天開機後 `kubectl get nodes` 連不上,或 controller 沒有回到 Running。
 
 **原因**:步驟 3 的 `kind-masquerade.service` 會在開機時補回 NAT 規則,但 kind 節點的容器預設不會在 VM 重開機後自動恢復到正常狀態。
 
-**修法**:用 management cluster 之前,先 `docker start capi-mgmt-control-plane`,等它穩定後確認 `kubectl get providers -A` 四筆都在。如果起不來,就刪掉叢集重建:
+**修法**:用 management cluster 之前,先 `docker start capi-mgmt-control-plane`,等它穩定後確認 `kubectl get providers -A` 四筆都在。
+
+如果仍起不來,只有在尚未建立 Cluster、Machine 等管理資源的練習階段,才可以刪掉叢集重建。已有這些資源,或無法確認是否存在時,不要執行下面的刪除指令,應先診斷並恢復既有 management cluster。重裝 provider 和更新 kubeconfig 都不會還原原有的資源宣告。
+
+確認仍是尚無管理資源的練習叢集後,才執行:
 
 ```bash
 kind delete cluster --name capi-mgmt

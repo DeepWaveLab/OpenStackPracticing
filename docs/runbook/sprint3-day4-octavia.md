@@ -4,7 +4,7 @@
 
 Day 2 開出來的 VM,靠一個 floating IP 讓外面連得到。假設現在有兩台 VM 跑同一個網站,你希望使用者只記一個位址,請求平均分給兩台;其中一台當機時,請求就不要再送過去。floating IP 一次只能綁在一台 VM 上,做不到這件事,需要的是一台**負載平衡器**(load balancer,以下簡稱 LB):使用者一律連到它,由它決定把每個請求轉給後面哪一台。
 
-OpenStack 提供 LB 的服務叫 **Octavia**。這一章用 Kolla 把 Octavia 加進 Day 1 部好的雲,再以租戶身分建一台 LB,放在兩台 web VM 前面,最後對它連續 `curl` 幾次,看回應是不是在兩台之間輪流出現。讀完之後,LB 卡在 `PENDING_CREATE`、或後端被標成 `ERROR` 時,你能判斷問題出在 Octavia 的控制服務、amphora 的管理網路,還是後端的 VM 本身。
+OpenStack 提供 LB 的服務叫 **Octavia**。這一章用 Kolla 把 Octavia 加進 Day 1 部好的雲,再以租戶身分建一台 LB,放在兩台 web VM 前面,最後對它連續 `curl` 幾次,看回應是不是在兩台之間輪流出現。讀完之後,LB 卡在 `PENDING_CREATE`、或後端被標成 `ERROR` 時,你能判斷問題出在 Octavia 的控制服務、amphora(執行 HAProxy 的負載平衡 VM)的管理網路,還是後端的 VM 本身。
 
 ## Octavia 的 LB 是一台 VM
 
@@ -62,18 +62,18 @@ Octavia 開 amphora 時,需要一個裝好 haproxy 和 amphora-agent(amphora 上
 2. **amphora 有兩張網卡。** 一張在 lb-mgmt-net,讓控制服務管理它;另一張在 LB 所服務的網路上(這一章是 `net1`),持有 LB 的 **VIP**:LB 對外的固定位址(跟 Day 1 的 VIP 一樣,是一個不屬於某台機器固定網卡的位址)。
 
 !!! warning "tenant 模式配 OVN 不在官方支援範圍內"
-    Kolla 2025.1 的文件把 tenant 模式列為開發與測試用途,只標明支援 Open vSwitch 的 Neutron 設定,不建議用在正式環境。這門課的 Neutron 用的是 OVN,Kolla 的 Octavia prechecks 會擋下這個組合,錯誤訊息是 `Neutron plugin agent ovn is not supported when octavia_network_type is tenant, only openvswitch is supported currently`。同一組 prechecks 也會檢查 Redis(或 Valkey)有沒有打開,見下面的「還要補兩樣」。
+    [Kolla 2025.1 的文件](https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html#development-or-testing)把 tenant 模式列為開發與測試用途,只標明支援 Open vSwitch 的 Neutron 設定,不建議用在正式環境。這門課的 Neutron 用的是 OVN,Kolla 的 Octavia prechecks 會擋下這個組合。
 
-    Day 1 說過 prechecks 沒過就不要繼續。這一章是例外:prechecks 一定會因為上面這條失敗,而本課選擇用 tenant 模式換一個能在單機 Azure VM 上跑的 amphora,所以直接 deploy、不跑 prechecks。這樣實際能運作:上面第 1 點的 iface-id 接法,ovn-controller 一樣認得。跳過 prechecks 的代價是其他檢查也一併沒跑,這一章需要的另外兩個條件(Redis、dhclient)要照步驟 1 自己補,deploy 完也要照步驟 2 自己確認容器和 o-hm0。代價會在 Day 22 出現:那天全量 prechecks 擋下這行設定,最後把 Octavia 改成只用 OVN provider,amphora 從此不能再用,細節見 Day 22 的[prechecks 擋下 Octavia 設定](sprint4-day22-upgrade-backup.md#mine-1)。跟著本課做實驗可以沿用;正式環境請用 provider 模式。
+    本章的單機實驗沿用 tenant 模式,直接 deploy、略過 prechecks。上面的接法由 ovn-controller 依 `iface-id` 綁定對應的 Neutron port,但不代表 tenant＋OVN 在官方支援範圍內。略過 prechecks 也會略過其他檢查,所以必須照步驟 1 啟用 Redis、安裝 dhclient,部署後再照步驟 2 確認容器和 o-hm0。正式環境請用 provider 模式;後續更新遇到的限制見章末[延伸說明](#tenant-ovn-prechecks)。
 
 ### 控制服務與 amphora 互相驗證
 
-worker 對 amphora-agent 下的指令,等於能改掉一台 LB 的全部設定,所以兩邊連線時要互相驗證身分,用的是雙向 TLS(mTLS):不只 amphora 出示憑證,控制服務也要出示。Kolla 用兩個獨立的 CA 簽這兩邊的憑證:
+worker 對 amphora-agent 下的指令,等於能改掉一台 LB 的全部設定,所以兩邊連線時要互相驗證身分,用的是雙向 TLS(mTLS):不只 amphora 出示憑證,控制服務也要出示。憑證授權單位(Certificate Authority,CA)負責簽發憑證,Kolla 用兩個獨立的 CA 簽這兩邊的憑證:
 
 - `server_ca`:簽 amphora 的憑證,控制服務靠它確認對方真的是自己開的 amphora。
 - `client_ca`:簽控制服務的憑證,amphora 靠它確認下指令的是 Octavia。
 
-`kolla-ansible octavia-certificates` 先在 `/etc/kolla/octavia-certificates/` 產生兩個 CA 和控制服務的憑證,再把部署要用的四個檔複製到 `/etc/kolla/config/octavia/`:`client.cert-and-key.pem`、`client_ca.cert.pem`、`server_ca.cert.pem`、`server_ca.key.pem`。`server_ca` 的私鑰會複製過去,因為控制服務每開一台 amphora,都要用它簽那台 amphora 的憑證;`client_ca` 的私鑰不複製,所以控制服務和 amphora 上都沒有能簽出新的控制服務憑證的金鑰,拿到一台 amphora 的內容也沒辦法冒充控制服務。
+`kolla-ansible octavia-certificates` 會產生部署所需的 CA 與控制服務憑證,供兩邊驗證身分。檔案位置與私鑰分工見章末[延伸說明](#certificate-files)。
 
 ### 下載 image、改設定、產生憑證
 
@@ -93,19 +93,19 @@ octavia_auto_configure: yes     # kolla 自建 lb-mgmt-net/router/flavor/SG/keyp
 kolla-ansible octavia-certificates -i ~/all-in-one
 ```
 
-`octavia-certificates` 跟 deploy 一樣要帶 `-i ~/all-in-one`,漏了會報 `Path does not exist`,見[疑難排解:`octavia-certificates` 找不到 inventory](#mine-1)。
+`octavia-certificates` 跟 deploy 一樣要帶 `-i ~/all-in-one`,指定 Day 1 使用的 inventory。
 
 ### 還要補兩樣:Redis 和 dhclient
 
-照上面的設定直接 deploy,會連續遇到兩個問題,先在這裡補好。
+部署前還需要啟用 Redis,並在主機安裝 dhclient。
 
-第一個是 Redis。worker 收到建 LB 的請求後,不是當場做完,而是先把這件工作放進一個任務佇列,再由 worker 取出來執行;做到一半 worker 重啟,工作還在佇列裡,可以接著做。這個佇列叫 **jobboard**,存在 Redis(一套放在記憶體裡的鍵值資料庫,常用來做佇列和快取)裡;Kolla 2025.1 也接受用 Valkey 取代 Redis,本課用的是 Redis。Kolla 2025.1 只要啟用了 amphora provider,就會打開 jobboard,但 Redis 的開關 `enable_redis` 預設是 `no`,打開 Octavia 不會連帶打開它。有跑 prechecks 的話,會在這裡被擋下,訊息是 `Redis or Valkey must be enabled when using octavia jobboard`;這一章跳過了 prechecks,少了 Redis 時 Octavia 的容器全都正常,直到建第一台 LB 才失敗,而且失敗的方式是卡住不動(見[疑難排解:LB 卡在 PENDING_CREATE](#mine-3))。所以先打開 Redis:
+第一個是 Redis。**provider** 是 Octavia 背後實作負載平衡的程式,本章使用的 **amphora provider** 透過 VM 提供服務。worker 收到建 LB 的請求後,會先把工作放進任務佇列,再取出執行;這個佇列叫 **jobboard**,存在 Redis(一套放在記憶體裡的鍵值資料庫,常用來做佇列和快取)裡。Kolla 2025.1 啟用 amphora provider 時會打開 jobboard,但 `enable_redis` 預設是 `no`,因此必須另行啟用 Redis:
 
 ```bash
 echo 'enable_redis: "yes"' >> /etc/kolla/globals.yml
 ```
 
-第二個是 o-hm0 要 IP 的方式。Kolla 替 o-hm0 產生的 systemd 服務 `octavia-interface.service`,寫死用 `/sbin/dhclient` 要 DHCP,但 Ubuntu 24.04 的 cloud image 已經不內建這個程式(套件 isc-dhcp-client)。先在主機上裝好:
+第二個是 o-hm0 要 IP 的方式。Kolla 替 o-hm0 產生的 systemd 服務 `octavia-interface.service`,寫死用 `/sbin/dhclient` 要 DHCP,但 Ubuntu 24.04 的 cloud image 已經不內建這個程式(套件 isc-dhcp-client)。先在主機上裝好;若既有部署缺少它,修復方式見[dhclient 排錯手冊](../solutions/integration-issues/kolla-octavia-dhclient-noble.md):
 
 ```bash
 sudo apt install -y isc-dhcp-client
@@ -125,7 +125,7 @@ kolla-ansible deploy -i ~/all-in-one
 ip -br addr show o-hm0
 ```
 
-狀態要是 `UP`,而且有一個 `10.1.0.x` 的位址。`10.1.0.0/24` 是 Kolla 給 lb-mgmt-subnet 的預設網段,這個位址由 OVN 內建的 DHCP 發出;拿得到它,代表上一步圖上的 o-hm0 → br-int → lb-mgmt-net 這條路通了。如果 deploy 停在 `Restart octavia-interface.service`,見[疑難排解:octavia-interface.service 起不來](#mine-2)。
+狀態要是 `UP`,而且有一個 `10.1.0.x` 的位址。`10.1.0.0/24` 是 Kolla 給 lb-mgmt-subnet 的預設網段,這個位址由 OVN 內建的 DHCP 發出;拿得到它,代表上一步圖上的 o-hm0 → br-int → lb-mgmt-net 這條路通了。如果 deploy 停在 `Restart octavia-interface.service`,見[dhclient 排錯手冊](../solutions/integration-issues/kolla-octavia-dhclient-noble.md)。
 
 ## 步驟 3:建一台 LB,放在兩台 web VM 前面
 
@@ -166,11 +166,13 @@ cd /root && python3 -m http.server 80
 - **建 LB 的物件**,順序跟上面的圖一樣。每一行都帶 `--wait`,等這個物件建好再往下。第一行 `loadbalancer create` 會開 amphora,約 2 到 4 分鐘。LB 的名字 `lb2` 可以自己取,後面的指令跟著改即可。
 - **把 floating IP 接到 VIP,然後從主機 `curl` 六次。**
 
-`member create` 那兩行的 `10.10.10.124`、`10.10.10.188` 是本課兩台 web VM 的 IP,你的幾乎一定不同。兩台 VM 建好後,先查它們在 `net1` 上的 IP,再代入:
+`member create` 那兩行的 `10.10.10.124`、`10.10.10.188` 是原始實跑指令使用的 IP,執行時要換成自己的。兩台 VM 建好後,先用下面的指令查 `vm-web1`,再把名稱換成 `vm-web2` 查另一台。只取各自 `net1` 上的 fixed IP,不要把含網路名稱的完整輸出當成 IP:
 
 ```bash
 openstack server show vm-web1 -c addresses -f value   # 取 net1 上的 fixed IP
 ```
+
+將查得的位址分別記入 shell 變數:執行 `WEB1_IP="<vm-web1-net1-fixed-ip>"` 與 `WEB2_IP="<vm-web2-net1-fixed-ip>"`,先把尖括號內的內容換成實際 IP。下面保留原始實跑指令;執行兩行 `member create` 時,將 `--address 10.10.10.124` 改為 `--address "$WEB1_IP"`,將 `--address 10.10.10.188` 改為 `--address "$WEB2_IP"`。步驟 4 也沿用 `WEB1_IP`。修正後的寫法本課沒有實跑。
 
 填錯的話,health monitor 會把兩個不存在的 member 標成 `ERROR`,錯誤訊息不會告訴你是 IP 抄錯了。
 
@@ -214,16 +216,16 @@ openstack loadbalancer member list pool1
 
 如果結果不對,照第一節的兩層往回查:
 
-- `loadbalancer create` 一直沒回來,`openstack loadbalancer show lb2` 的 `provisioning_status` 停在 `PENDING_CREATE`:問題在控制面,amphora 可能根本沒開。先看 worker 的 log,見[疑難排解:LB 卡在 PENDING_CREATE](#mine-3)。
+- `loadbalancer create` 一直沒回來,`openstack loadbalancer show lb2` 的 `provisioning_status` 停在 `PENDING_CREATE`:問題在控制面,amphora 可能根本沒開。先看 worker 的 log;若有 Redis 連線錯誤,見[Redis jobboard 排錯手冊](../solutions/integration-issues/kolla-octavia-redis-jobboard.md)。
 - amphora 開起來了,LB 最後卻變成 `ERROR`:worker 會反覆嘗試連 amphora-agent 的 9443 port 推設定,一直連不上就放棄,把 LB 標成 `ERROR`。這時查管理網路:o-hm0 有沒有 `10.1.0.x` 的位址(步驟 2)、amphora 在 lb-mgmt-net 上有沒有位址。
 - LB 是 `ACTIVE`,但 `curl` 沒有回應或只回一台:問題在資料面或後端。檢查 member 的 IP 有沒有填對、`default` security group 有沒有放行 80、VM 的 user-data 有沒有把 HTTP 服務跑起來。
 - 想確認 amphora 本身:以 admin 身分執行 `openstack loadbalancer amphora list`,正常的 amphora 狀態是 `ALLOCATED`,角色是 `STANDALONE`(單台,沒有備援),並且有一個 lb-mgmt-net 上的 `10.1.0.x` 位址。
 
 ## 步驟 4:OVN provider,不開 amphora 的 LB
 
-Octavia 用同一套 API 管理 LB,背後真正實作 LB 的程式可以換,這個可以替換的實作叫 **provider**。前面用的是預設的 `amphora`。Neutron 用 OVN 時,Kolla 會再註冊第二個 provider:`ovn`。它把負載平衡規則直接寫進 OVN 的流量規則,由 OVN 在轉送封包時完成分配,不開任何 VM。
+前面用的 `amphora` 是 Octavia 的預設 provider。Neutron 用 OVN 時,Kolla 會再註冊第二個 provider:`ovn`。它把負載平衡規則直接寫進 OVN 的流量規則,由 OVN 在轉送封包時完成分配,不開任何 VM。
 
-建法幾乎一樣,只多一個 `--provider ovn`,但協定和演算法要換:
+建法幾乎一樣,只多一個 `--provider ovn`,但協定和演算法要換。下面保留原始實跑指令;執行 `member create` 時,把 `--address 10.10.10.124` 改為 `--address "$WEB1_IP"`,沿用步驟 3 記下的 `vm-web1` 位址。修正後的寫法本課沒有實跑:
 
 ```bash
 openstack loadbalancer create --name lb-ovn --provider ovn --vip-subnet-id subnet1 --wait
@@ -235,7 +237,7 @@ openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 
 
 跟 amphora provider 比,差別在這幾個參數上:
 
-- listener 是 `TCP`,不是 `HTTP`。OVN provider 只支援 TCP、UDP、SCTP(一種跟 TCP 同層、常用在電信系統的傳輸協定),看不懂 HTTP 內容,所以不能依網址路徑分流這類 L7 功能。
+- listener 是 `TCP`,不是 `HTTP`。OVN provider 只支援 TCP、UDP、SCTP(一種跟 TCP 同層、常用在電信系統的傳輸協定),不解析 HTTP 內容,不提供依網址路徑分流的 L7 功能,見[官方限制說明](https://docs.openstack.org/ovn-octavia-provider/2025.1/admin/driver.html#limitations-of-the-ovn-provider-driver)。
 - 演算法是 `SOURCE_IP_PORT`:依來源 IP 和 port 決定送往哪一台,這也是 OVN provider 唯一支援的演算法,沒有 `ROUND_ROBIN`。
 - health monitor 只支援 TCP 和 UDP-CONNECT 兩種。
 - 建好之後 `openstack loadbalancer amphora list` 不會多出 amphora,沒有額外的 VM 佔資源,也不用等 VM 開機。
@@ -250,58 +252,7 @@ openstack loadbalancer member create --subnet-id subnet1 --address 10.10.10.124 
 
 *Load Balancer 列表(Skyline 檢視):圖中兩台 LB 都是 Day 8 建 Kubernetes cluster 時自動建立的,`kubeapi` 是 cluster API 的入口,`web-lb` 由 `Service type=LoadBalancer` 產生(Kubernetes 裡要求雲端提供 LB 的宣告方式,Day 8 會介紹)。Operating Status 的 Online 來自 health monitor 的持續探測,就是這一章設定的機制。*
 
-這一章建的 `lb2`、`lb-ovn` 和兩台 web VM 會一直佔著 Nova 的磁碟額度,關機也一樣。Day 8 會因為磁碟不夠開不出新的 amphora,先把它們刪掉,見 Day 8 的[「LB 的 amphora 開不出來,Nova 報 `No valid host was found`」](sprint3-day8-e2e-workload-cluster.md#mine-4)。
-
-## 疑難排解
-
-### `octavia-certificates` 找不到 inventory {#mine-1}
-
-**症狀**:`kolla-ansible octavia-certificates` 報 `Path does not exist`,找的是 `/etc/kolla/ansible/inventory/all-in-one`。
-
-**原因**:這個子指令跟 deploy 一樣,沒帶 `-i` 時會去找預設的 inventory 路徑。照步驟 1 帶上 `-i ~/all-in-one` 即可。
-
-### octavia-interface.service 起不來,`status=203/EXEC` {#mine-2}
-
-**症狀**:deploy 停在 `Restart octavia-interface.service`;`systemctl status octavia-interface` 顯示 `dhclient ... status=203/EXEC`,意思是要執行的檔案不存在。
-
-**原因**:Ubuntu 24.04 的 cloud image 沒有 dhclient,Kolla 產生的服務卻寫死 `/sbin/dhclient`。步驟 1 已經先裝了 isc-dhcp-client;如果是在裝之前就跑了 deploy,裝好後重啟服務,再只補跑 Octavia 的部分:
-
-```bash
-sudo apt install -y isc-dhcp-client
-sudo systemctl reset-failed octavia-interface.service
-sudo systemctl start octavia-interface.service
-ip -br a show o-hm0        # 應拿到 lb-mgmt-subnet 的 IP(OVN 原生 DHCP 發的)
-kolla-ansible deploy -i ~/all-in-one --tags octavia   # 補跑剩餘任務
-```
-
-更完整的記錄見排錯手冊:[octavia-interface 的 dhclient 問題](../solutions/integration-issues/kolla-octavia-dhclient-noble.md)。
-
-### LB 卡在 PENDING_CREATE,amphora 沒有開機 {#mine-3}
-
-**症狀**:`loadbalancer create` 之後 LB 一直停在 `PENDING_CREATE`,Nova 裡看不到 amphora,Octavia 的容器卻都正常。worker 的 log 有 `MasterNotFoundError: No master found for 'kolla'` 和 `Error 111 connecting to 127.0.0.1:6379`。
-
-**原因**:amphora provider 的 jobboard 需要 Redis,而 `enable_redis` 預設是 `no`,見步驟 1 的「還要補兩樣」。如果 deploy 時還沒打開 Redis,補上後只部署 Redis 和 Octavia:
-
-```bash
-echo 'enable_redis: "yes"' >> /etc/kolla/globals.yml
-kolla-ansible deploy -i ~/all-in-one --tags redis,octavia
-```
-
-更完整的記錄見排錯手冊:[amphora 的 Redis jobboard 問題](../solutions/integration-issues/kolla-octavia-redis-jobboard.md)。Redis 修好之前建的 LB 不會自己恢復,刪除方式見下一項。
-
-### 卡在 PENDING 的 LB 刪不掉 {#mine-5}
-
-**症狀**:Redis 沒開時建的 LB 永遠停在 `PENDING_CREATE`,`openstack loadbalancer delete` 回 409。
-
-**原因**:Octavia 不允許修改或刪除狀態是 `PENDING_*` 的 LB,要等處理中的工作結束。可是這件工作從來沒有進到 jobboard,不會有任何程式把它的狀態改掉。Octavia 沒有提供重置這種狀態的官方工具。
-
-**修法**:社群常用的做法是進 MariaDB,把那台 LB 在 `load_balancer` 表裡的 `provisioning_status` 改成 `ERROR`,再用 `openstack loadbalancer delete --cascade` 連同底下的物件一起刪掉。SQL 寫法見排錯手冊的[後遺症一節](../solutions/integration-issues/kolla-octavia-redis-jobboard.md)。直接改資料庫只適合實驗環境;正式環境遇到,先找維運團隊或廠商處理。
-
-### 找不到 `/etc/kolla/octavia-openrc.sh` {#mine-4}
-
-**症狀**:Kolla 的 Octavia 文件用 `/etc/kolla/octavia-openrc.sh` 上傳 amphora image,但主機上沒有這個檔。
-
-**原因**:這個檔由 `kolla-ansible post-deploy` 產生,而且只在 `enable_octavia` 為 `yes` 時才產生。這一章打開 Octavia 之後只跑了 deploy,沒有重跑 post-deploy。需要這個檔的話,打開 Octavia 之後重跑 `kolla-ansible post-deploy -i ~/all-in-one`,就會產生 Octavia 的 openrc。不需要這個檔也能完成本章:步驟 3 用 admin 身分加上 `--project $AMP_PROJECT`,把 image 放進同一個 project。
+這一章 `lb2` 的 amphora 與兩台 web VM 會佔用 Nova 的磁碟資源,關機也不會釋放;`lb-ovn` 不建立 VM,沒有這項磁碟用量。若磁碟空間不足,Day 8 可能無法建立新的 amphora。完成練習、不再需要這些資源時,刪除 `lb2` 與兩台 web VM 以釋放空間;相關症狀見 Day 8 的[「LB 的 amphora 開不出來,Nova 報 `No valid host was found`」](sprint3-day8-e2e-workload-cluster.md#mine-4)。
 
 ## 想一想
 
@@ -312,6 +263,55 @@ kolla-ansible deploy -i ~/all-in-one --tags redis,octavia
 ## 小結
 
 Octavia 的預設做法是替每台 LB 開一台 amphora VM,裡面的 haproxy 處理使用者的流量;Octavia 的容器負責開 amphora、推設定、收心跳、壞了就換一台,控制服務停掉不影響已經在轉送的流量。控制服務要連到 amphora,需要管理網路 lb-mgmt-net,單機環境用 tenant 模式,讓主機透過 o-hm0 這張網卡接進去,兩邊用各自的 CA 互相驗證。一台能用的 LB 由 loadbalancer、listener、pool、member 疊成,health monitor 決定哪些 member 能分到流量。之後遇到 LB 的問題,先分清楚是建不出來(看 worker 和 jobboard)、amphora 失聯(看 o-hm0 和 lb-mgmt-net),還是建好了卻連不到後端(看 member、security group 和後端服務本身)。
+
+## 延伸說明
+
+### tenant＋OVN 與後續 prechecks {#tenant-ovn-prechecks}
+
+Kolla 的 prechecks 對 tenant＋OVN 會回報 `Neutron plugin agent ovn is not supported when octavia_network_type is tenant, only openvswitch is supported currently`。Day 22 執行全量 prechecks 時也遇到這個限制,該章將 Octavia 改成只用 OVN provider,不再提供 amphora provider。設定調整與影響見 Day 22 的[prechecks 擋下 Octavia 設定](sprint4-day22-upgrade-backup.md#mine-1)。
+
+### 憑證檔案與私鑰分工 {#certificate-files}
+
+`kolla-ansible octavia-certificates` 先在 `/etc/kolla/octavia-certificates/` 產生兩個 CA 和控制服務的憑證,再把部署要用的四個檔複製到 `/etc/kolla/config/octavia/`:`client.cert-and-key.pem`、`client_ca.cert.pem`、`server_ca.cert.pem`、`server_ca.key.pem`。`server_ca` 的私鑰會複製過去,因為控制服務每開一台 amphora,都要用它簽那台 amphora 的憑證;`client_ca` 的私鑰不複製,所以控制服務和 amphora 上都沒有能簽出新的控制服務憑證的金鑰,拿到一台 amphora 的內容也沒辦法冒充控制服務。 檔案對應也可查閱 [Kolla 官方憑證章節](https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html#certificates)。
+
+## 維運參考
+
+步驟 1 已包含 Redis 與 dhclient 的前置要求。以下供既有部署漏做前置設定時查閱,不需要在完成本章後再執行。
+
+### 缺少 dhclient 的既有部署 {#mine-2}
+
+若先部署、後安裝 dhclient,`octavia-interface.service` 可能因 `status=203/EXEC` 啟動失敗。安裝套件、重啟服務、檢查 o-hm0 與補部署的說明見 [dhclient 排錯手冊](../solutions/integration-issues/kolla-octavia-dhclient-noble.md)。
+
+<details markdown="1">
+<summary>既有部署的 dhclient 修復指令</summary>
+
+```bash
+sudo apt install -y isc-dhcp-client
+sudo systemctl reset-failed octavia-interface.service
+sudo systemctl start octavia-interface.service
+ip -br a show o-hm0        # 應拿到 lb-mgmt-subnet 的 IP(OVN 原生 DHCP 發的)
+kolla-ansible deploy -i ~/all-in-one --tags octavia   # 補跑剩餘任務
+```
+
+</details>
+
+### 未啟用 Redis 的既有部署 {#mine-3}
+
+Kolla 2025.1 的 jobboard 可用 Redis 或 Valkey,本章用 Redis。prechecks 未通過時會顯示 `Redis or Valkey must be enabled when using octavia jobboard`。若略過檢查且未啟用 Redis,可能出現容器正常、LB 卻停在 `PENDING_CREATE`、Nova 沒有 amphora 的情況。worker log 的 `MasterNotFoundError: No master found for 'kolla'` 和 `Error 111 connecting to 127.0.0.1:6379` 是這份[Redis jobboard 排錯手冊](../solutions/integration-issues/kolla-octavia-redis-jobboard.md)記錄的症狀。
+
+<details markdown="1">
+<summary>既有部署的 Redis 修復指令</summary>
+
+```bash
+echo 'enable_redis: "yes"' >> /etc/kolla/globals.yml
+kolla-ansible deploy -i ~/all-in-one --tags redis,octavia
+```
+
+</details>
+
+### Redis 故障期間建立的 LB 刪不掉 {#mine-5}
+
+Redis 故障期間建立的 LB 可能持續停在 `PENDING_CREATE`,刪除時回傳 409。這是未啟用 Redis 時留下的資源,修好 Redis 後不會自行恢復。實驗環境的處理方式與 SQL 見 [Redis jobboard 排錯手冊的後遺症一節](../solutions/integration-issues/kolla-octavia-redis-jobboard.md#redis-lb)。直接修改資料庫只適合實驗環境;正式環境請交由維運團隊或廠商處理。
 
 ## 延伸閱讀
 

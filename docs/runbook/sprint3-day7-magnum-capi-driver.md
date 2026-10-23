@@ -4,19 +4,17 @@
 
 Day 6 結束時,主機上多了一座 kind 管理叢集,裡面的 CAPI 和 CAPO 已經會呼叫 OpenStack 開 VM、建負載平衡器,組出一座 Kubernetes cluster。不過要用它,得手寫一疊 CAPI 資源的 YAML,手上還要有 kind 的 kubeconfig(`kubectl` 用來連線和認證的那份設定檔)。
 
-現在假設這朵雲上有兩個租戶,各自想要一座 Kubernetes cluster。最直接的做法是把 kind 的 kubeconfig 交給他們,但拿到這份檔案的人能看到管理叢集裡的所有 cluster,也能刪掉別人的。這一章要部署 OpenStack 的 Kubernetes 服務 **Magnum**,讓租戶用自己的 OpenStack 帳號、一行 `openstack coe cluster create` 申請 cluster,由 Magnum 轉給 Day 6 的管理叢集去建。讀完之後,Magnum 建不出 cluster 時,你能分辨問題出在 CAPI driver 沒啟用、Magnum 連不到管理叢集,還是 ClusterTemplate(管理員預先寫好的 cluster 規格)用的 image 沒標對。
+現在假設這朵雲上有兩個租戶,各自想要一座 Kubernetes cluster。最直接的做法是把本課 kind 的管理員 kubeconfig 交給他們,但拿到這份檔案的人能看到管理叢集裡的所有 cluster,也能刪掉別人的。這一章要部署 OpenStack 的 Kubernetes 服務 **Magnum**,讓租戶用自己的 OpenStack 帳號、一行 `openstack coe cluster create` 申請 cluster,由 Magnum 轉給 Day 6 的管理叢集去建。負責轉換請求的是 **CAPI driver**,也就是把 Magnum 請求轉成 CAPI 資源、寫進管理叢集的模組。讀完之後,Magnum 建不出 cluster 時,你能分辨問題出在 CAPI driver 沒啟用、Magnum 連不到管理叢集,還是 ClusterTemplate(管理員預先寫好的 cluster 規格)用的 image 沒標對。
 
 ## 為什麼有了 CAPI 還要 Magnum
 
-CAPI 管的是「怎麼把 cluster 建出來」:開節點、裝 Kubernetes、壞了換新、升版。它沒有租戶的概念,誰能操作管理叢集,誰就能動裡面所有的 cluster。如果只有你自己的團隊要用 Kubernetes,直接用 CAPI 就夠了,不需要 Magnum。
+CAPI 管的是「怎麼把 cluster 建出來」:開節點、裝 Kubernetes、壞了換新、升版。本課 kind 的管理員 kubeconfig 具有整座管理叢集的操作權限,交給租戶就會連同其他租戶的 cluster 一起開放。Kubernetes 可以透過 [RBAC(依角色授權)](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole),依 namespace、資源種類與操作限制權限;能操作管理叢集,不代表一定有管理員權限。如果只有你自己的團隊要用 Kubernetes,直接用 CAPI 就夠了,不需要 Magnum。
 
-要把 Kubernetes 當成雲上的服務開放給多個租戶,還需要另一半:Magnum 用 Keystone 認人,每個請求都帶著租戶自己的 OpenStack 身分;每個 project 有自己的配額,A 看不到 B 的 cluster;租戶只要下 `openstack coe` 指令,不必懂 CAPI。Magnum 自己不建 cluster,它把請求交給管理叢集。
+要把 Kubernetes 當成雲上的服務開放給多個租戶,還需要另一半:Magnum 用 Keystone 驗證身分,每個請求都帶著租戶自己的 OpenStack 身分;每個 project 有自己的配額,A 看不到 B 的 cluster;租戶只要下 `openstack coe` 指令,不必懂 CAPI。Magnum 自己不建 cluster,它把請求交給管理叢集。
 
-下面這張圖由上往下,是一個建 cluster 的請求會經過的地方:
+Magnum 由兩個服務組成:**magnum-api** 接收請求、做認證和配額檢查;**magnum-conductor** 執行建立 cluster 等工作,CAPI driver 就在它裡面執行。下面這張圖由上往下,是一個建 cluster 的請求會經過的地方:
 
 ![上層是 OpenStack:使用者下 openstack coe 指令給 magnum-api,magnum-api 認 Keystone 身分、查配額後交給 magnum-conductor,conductor 裡有 CAPI driver,它憑 kubeconfig 把 CAPI 資源寫進中層的 kind 管理叢集;管理叢集裡的 CAPI/CAPO controllers 呼叫 OpenStack 的 Nova、Octavia、Cinder,開出下層 workload cluster 的節點 VM](../assets/diagrams/os-s3d7-layers.svg)
-
-照著圖由上往下看:
 
 1. **上層全是 OpenStack 的事。** 認身分、查配額都在 magnum-api 完成,沒通過的請求不會碰到管理叢集。
 2. **兩層之間只有一條橘色的線。** Magnum 和管理叢集之間的連結就是一份 kubeconfig。這一章主要的工作就是把這份檔案交給 Magnum,並確認它真的連得上。
@@ -25,22 +23,6 @@ CAPI 管的是「怎麼把 cluster 建出來」:開節點、裝 Kubernetes、壞
 ## Magnum 怎麼把工作交給管理叢集
 
 Magnum 收到建 cluster 的請求後,實際去建的是 **cluster driver**:Magnum 裡可替換的建置模組,每個 driver 用一種方式把 cluster 建出來。Magnum 早期的 driver 透過 Heat 建 VM,裡面寫死了 node image 的下載網址,這些網址後來都失效了(Sprint 1 就是卡在這裡)。這一章用的是 vexxhost 的 `magnum-cluster-api` driver,它把 Magnum 的請求轉成 CAPI 資源,寫進管理叢集,之後的事交給 CAPI 和 CAPO。
-
-Kolla Epoxy 的官方 magnum image 已經內建這個 driver,不用自己打包 image,也不用進容器 `pip install`。driver 在 image 裡,但預設是關著的。Magnum 用設定檔 `magnum.conf` 裡的 **`disabled_drivers`** 列出要停用的 driver,而 Kolla 產生這份設定檔的模板裡有這麼一段:
-
-```jinja
-{% if magnum_kubeconfig_file_path is not defined %}
-disabled_drivers = k8s_cluster_api_flatcar,k8s_cluster_api_rockylinux,k8s_cluster_api_ubuntu,k8s_cluster_api_ubuntu_focal
-{% endif %}
-```
-
-`magnum_kubeconfig_file_path` 只有在 `/etc/kolla/config/magnum/kubeconfig` 這個檔案存在時,Kolla 的 magnum role 才會定義它。也就是說,有沒有放管理叢集的 kubeconfig,決定了 CAPI driver 開不開:
-
-![左右兩欄比較 magnum.conf 的 drivers 區段。左欄沒放 kubeconfig:disabled_drivers 列出 flatcar、rockylinux、ubuntu、ubuntu_focal 四個 k8s_cluster_api driver,全部停用;這是 Kolla 停用的四個,image 裡另外還有 k8s_cluster_api_debian。右欄放了 kubeconfig:沒有 disabled_drivers 這一行,這四個 driver 都可用,其中 k8s_cluster_api_ubuntu 被 ClusterTemplate 的 image 上的 os_distro=ubuntu 選中](../assets/diagrams/os-s3d7-driver-switch.svg)
-
-左欄是還沒做這一章時的狀態,右欄是做完之後。image 裡的 driver 其實有五個,還有一個 `k8s_cluster_api_debian` 不在 Kolla 的停用清單上,圖裡只畫 Kolla 會開關的四個。名稱裡的 `ubuntu_focal` 是給 Ubuntu 20.04(代號 Focal)image 用的,`ubuntu` 則是一般的 Ubuntu image。右下那個 `os_distro` 決定用哪一個 driver,步驟 3 再談;現在只要記得,driver 有沒有啟用,看的是生成出來的 `magnum.conf` 裡有沒有 `disabled_drivers` 這一行。
-
-這個設計的好處是不用額外的開關:沒有管理叢集時,啟用 CAPI driver 也沒有用處;一放進 kubeconfig,driver 就有了可以連的地方,也跟著啟用。
 
 ## 步驟 1:開啟 Magnum、放入 kubeconfig {#step-1}
 
@@ -68,12 +50,28 @@ kolla-ansible deploy -i ~/all-in-one --tags magnum,loadbalancer,horizon
 
 有兩個地方要留意:
 
-- **`chown` 那一行不能省。** `sudo cp` 產生的檔案屬於 root,權限 `0600`;kolla-ansible 卻是用你自己的帳號讀這個檔案,讀不到就會在 deploy 中途失敗。`azureuser` 是 Day 0 建 VM 時的使用者,如果你用別的帳號執行 kolla-ansible,換成那個帳號。漏了的症狀見[疑難排解:Permission denied](#mine-1)。
+- **`chown` 那一行不能省。** `sudo cp` 產生的檔案屬於 root,權限 `0600`;kolla-ansible 卻是用你自己的帳號讀這個檔案,讀不到就會停在 "Copying over kubeconfig file",出現 `Permission denied: /etc/kolla/config/magnum/kubeconfig`,deploy 顯示 `failed=1`。`azureuser` 是 Day 0 建 VM 時的使用者,如果你用別的帳號執行 kolla-ansible,換成那個帳號。用 `chown` 修正擁有者、維持權限 `600` 後,就能重跑 deploy。放進 `/etc/kolla/config/` 的其他自訂檔也要讓執行 kolla-ansible 的帳號讀得到。
 - **deploy 帶了三個 tag。** `magnum` 建資料庫、Keystone 帳號、trustee 網域(Magnum 在 Keystone 裡另建的網域,trust 用的帳號放在這裡;區塊註解裡的 trustee 指的就是它),並把 kubeconfig 放進容器;`horizon` 讓網頁儀表板多出 Container Infra 選單;`loadbalancer` 管的是 haproxy 的設定,Day 1 已經關掉 haproxy,單機上它沒有東西要改。跟 Day 1 一樣,deploy 是冪等的,失敗修好後直接重跑。
 
 ## 步驟 2:確認 driver 啟用、Magnum 連得到管理叢集
 
-Magnum 由兩個服務組成:**magnum-api** 接收請求、做認證和配額檢查;**magnum-conductor** 做實際的工作,CAPI driver 就在它裡面執行。所以要連管理叢集的是 conductor。你放的那份 kubeconfig 走了下面這條路,才到 conductor 手上:
+Kolla Epoxy 的官方 magnum image 已經內建這個 driver,不用自己打包 image,也不用進容器 `pip install`。driver 在 image 裡,但預設是關著的。Magnum 用設定檔 `magnum.conf` 裡的 **`disabled_drivers`** 列出要停用的 driver,而 Kolla 產生這份設定檔的模板裡有這麼一段:
+
+```jinja
+{% if magnum_kubeconfig_file_path is not defined %}
+disabled_drivers = k8s_cluster_api_flatcar,k8s_cluster_api_rockylinux,k8s_cluster_api_ubuntu,k8s_cluster_api_ubuntu_focal
+{% endif %}
+```
+
+`magnum_kubeconfig_file_path` 只有在 `/etc/kolla/config/magnum/kubeconfig` 這個檔案存在時,Kolla 的 magnum role 才會定義它。也就是說,有沒有放管理叢集的 kubeconfig,決定了 CAPI driver 開不開:
+
+![左右兩欄比較 magnum.conf 的 drivers 區段。左欄沒放 kubeconfig:disabled_drivers 列出 flatcar、rockylinux、ubuntu、ubuntu_focal 四個 k8s_cluster_api driver,全部停用;這是 Kolla 停用的四個,image 裡另外還有 k8s_cluster_api_debian。右欄放了 kubeconfig:沒有 disabled_drivers 這一行,這四個 driver 都可用,其中 k8s_cluster_api_ubuntu 被 ClusterTemplate 的 image 上的 os_distro=ubuntu 選中](../assets/diagrams/os-s3d7-driver-switch.svg)
+
+左欄是還沒放 kubeconfig 時的狀態,右欄是放入後重新 deploy 的結果。image 裡共有五個 CAPI driver,其中 `k8s_cluster_api_debian` 不在 Kolla 的停用清單上,圖裡只畫 Kolla 會開關的四個。依上面的模板,生成的 `magnum.conf` 若有這行 `disabled_drivers`,列出的四個 driver 就會停用;沒有這一行,這四個 driver 才可用。圖右下的 `os_distro` 是下一步選擇 driver 時會用到的 image 屬性。
+
+這個設計的好處是不用額外的開關:沒有管理叢集時,啟用 CAPI driver 也沒有用處;一放進 kubeconfig,driver 就有了可以連的地方,也跟著啟用。
+
+接著確認執行 CAPI driver 的 magnum-conductor 能連到管理叢集。步驟 1 放入的 kubeconfig 會經過下圖的複製流程,成為 conductor 讀取的設定檔:
 
 ![由上往下四格:主機上的 /etc/kolla/config/magnum/kubeconfig 是你在步驟 1 放的檔案,deploy 的 Copying over kubeconfig file 把它複製到主機上 Kolla 替 conductor 產生的設定目錄 /etc/kolla/magnum-conductor/kubeconfig;容器啟動時依 config.json 複製進 magnum_conductor 容器內的 /var/lib/magnum/.kube/config,也就是容器裡 magnum 使用者的 ~/.kube/config;driver 讀這份檔案,連到 server 欄寫的位址,也就是主機上 kind 的 API server https://127.0.0.1:<port>](../assets/diagrams/os-s3d7-kubeconfig-path.svg)
 
@@ -112,9 +110,13 @@ openstack coe service list        # magnum-conductor state=up
 
 template 裡最重要的一項是 node image,因為它同時決定 Magnum 用哪個 driver。Magnum 看的是 image 上的 **`os_distro`** 屬性(property):image 標了 `os_distro=ubuntu`,就選 `k8s_cluster_api_ubuntu`,也就是前面那張比較圖右欄被選中的那一個。每個 driver 都宣告了自己對應的作業系統名稱,`os_distro` 的值要完全對上:`ubuntu`、`ubuntu-focal`、`debian`、`flatcar`、`rockylinux`(注意 `ubuntu-focal` 用的是連字號,跟 driver 名稱裡的底線不同)。沒有標 `os_distro`,Magnum 找不到對應的 driver。
 
+driver 名稱裡的 `ubuntu_focal` 是給 Ubuntu 20.04(代號 Focal)image 用的,`ubuntu` 則是一般的 Ubuntu image。
+
 node image 來自 vexxhost 的 `capo-image-elements` 專案。每個 image 是一份預先裝好 kubelet、kubeadm、containerd 的 Ubuntu 24.04,CAPO 開出 VM 之後,節點用 kubeadm 加入 cluster。<span id="mine-3"></span>這個專案每一版會同時提供幾個 Kubernetes 版本的 image,本課用 `2026.05-7` 版裡的 v1.34.8。driver(Kolla Epoxy image 內建的版本)、Day 6 裝的 CAPI v1.13.2 和 CAPO v0.14.4、node image 這三者要彼此相容;本課用的是 vexxhost 測過的組合。之後要換其中任何一項的版本,先查 driver 測過哪個組合,不要只升級一邊。
 
-flavor 的部分,Day 2 只建了 `m1.tiny` 和 `m1.small`,放不下 Kubernetes 節點,所以這裡另外建一個 `m1.medium`。名稱沿用 vexxhost 入門文件範例裡的 flavor 名稱,2 vCPU、4 GB 記憶體、40 GB 磁碟是本課自己的設定。
+flavor 決定每台節點 VM 的運算與儲存資源。下面建立的 `m1.medium` 配置 2 vCPU、4096 MB(4 GB)記憶體與 40 GB 根磁碟:CPU 和記憶體供節點上的 Kubernetes 元件與工作負載使用,根磁碟用來容納作業系統、容器 image 與本機資料。template 的 `--master-flavor` 與 `--flavor` 都指定它,所以 control-plane 和 worker 節點會使用同一組規格。這些數值是範例配置,不是 Kubernetes 的最低需求。
+
+建立 flavor 前,要確認 `--disk` 不小於 node image 的虛擬大小,也就是 image 展開後的磁碟大小,不是 qcow2 檔案本身的大小。Magnum 建 template 時只檢查 flavor 存不存在,不比對磁碟容量;template create 成功,仍可能在 Day 8 Nova 開節點時因容量不足而失敗。
 
 下面的區塊依序下載並上傳 image、建 flavor、建 template:
 
@@ -138,30 +140,14 @@ openstack coe cluster template create k8s-v1.34.8 \
 template 的參數裡,有三個跟這朵雲的其他部分接在一起:
 
 - `--external-network ext-net`:Day 2 建的對外網路,節點和 API 的浮動 IP 從這裡來。
-- `--master-lb-enabled`:在 control-plane 前面放一個 Octavia 負載平衡器(Day 4 的服務),cluster 的 Kubernetes API 透過它對外提供。vexxhost 入門文件的範例有開這一項,本課照做。
+- `--master-lb-enabled`:在 control-plane 前面放一個 Octavia 負載平衡器(Day 4 的服務),提供 Kubernetes API 的連線入口,將請求轉送到 control-plane 節點。v0.37.0 driver 會將這個選項寫入 CAPI 的 `apiServerLoadBalancer.enabled` 設定,見 [driver 原始碼](https://github.com/vexxhost/magnum-cluster-api/blob/v0.37.0/magnum_cluster_api/resources.py#L937-L939)。
 - `--label kube_tag=v1.34.8`:Kubernetes 版本,要跟 image 名稱裡的版本一致。
 
-其他幾個參數:`--network-driver calico` 指定 cluster 裡 pod 之間的網路用 Calico;`--docker-storage-driver overlay2` 是節點上容器檔案系統的格式選項,入門文件的範例有帶,本課照做;上傳 image 時的 `os_version` 只是標記作業系統版本,選 driver 時看的是 `os_distro`。
+`--network-driver calico` 指定用 Calico 提供 cluster 裡 pod 之間的網路;[v0.37.0 driver](https://github.com/vexxhost/magnum-cluster-api/blob/v0.37.0/magnum_cluster_api/resources.py#L413-L424) 會依這個選項加入 Calico 的部署 manifest。依 [Magnum 文件](https://docs.openstack.org/magnum/2025.1/user/),`--docker-storage-driver overlay2` 是 Docker 儲存驅動選項,用來指定 Docker 管理容器 image 與容器可寫層的方式。本章 node image 預裝的是 containerd,不能據此認定這個參數控制了 containerd 的儲存設定。上傳 image 時的 `os_version` 只是標記作業系統版本,選 driver 時看的是 `os_distro`。
 
 這份 template 是用 admin 身分建的,沒有加 `--public`,所以只有 admin 這個 project 看得到。要讓其他租戶也能挑這份 template,建立時加上 `--public`,這個選項需要 admin 權限。
 
 建好之後,`openstack image show ubuntu-24.04-v1.34.8` 的狀態應該是 `active`,`properties` 裡有 `os_distro='ubuntu'`;`openstack coe cluster template show k8s-v1.34.8` 的 `cluster_distro` 欄應該是 `ubuntu`,這表示 Magnum 已經從 image 認出要用 ubuntu 那個 driver。
-
-template create 成功不代表 Day 8 一定開得出 VM:Magnum 建 template 時只檢查 flavor 存不存在,不比對 flavor 的磁碟和 image 的大小,這要到 Nova 實際開節點時才檢查,見[疑難排解:flavor 磁碟比 image 小](#mine-2)。
-
-## 疑難排解
-
-### deploy 停在 "Copying over kubeconfig file",`Permission denied` {#mine-1}
-
-**症狀**:deploy `failed=1`,錯誤是 `Permission denied: /etc/kolla/config/magnum/kubeconfig`。
-
-**原因**:`sudo cp` 產生的檔案是 `root:root 0600`,而 kolla-ansible 用執行它的帳號從本機讀這個檔案。修法見[步驟 1](#step-1) 的 `chown`(權限維持 `600` 即可),改完重跑 deploy。放進 `/etc/kolla/config/` 的其他自訂檔也一樣,要讓執行 kolla-ansible 的帳號讀得到。
-
-### 找不到 `m1.medium`,或 flavor 磁碟比 image 小 {#mine-2}
-
-**原因**:Day 2 只建了 `m1.tiny` 和 `m1.small`,`m1.medium` 要照步驟 3 自己建。另外,建 template 時,Magnum 只檢查 flavor 存不存在(不存在時 template create 會失敗),不比對 flavor 磁碟和 image 的大小,所以 flavor 偏小 template 照樣建得成功,要到 Day 8 Nova 開節點時才失敗。
-
-**修法**:建 flavor 時,`--disk` 要不小於 node image 的虛擬大小(image 展開後的磁碟大小,不是 qcow2 檔案本身的大小)。
 
 ## 想一想
 

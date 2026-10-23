@@ -1,6 +1,6 @@
 # Day 5: Barbican 與 Heat——把秘密交給雲保管,用一份範本建立和刪除一組資源
 
-Day 2 為了開一台能從外面 SSH 進去的 VM,你照順序打了十幾條指令:建網路、建 router、開 security group、開機、掛 floating IP,順序錯了就會報錯;要清掉時,還得反過來一條條刪。再往後看,Day 7 的 Magnum 開 Kubernetes cluster 時,會替每座 cluster 產生幾把 CA 私鑰,這些私鑰得放在雲上某個有加密、有權限控管的地方。
+Day 2 為了開一台能從外面 SSH 進去的 VM,你照順序打了十幾條指令:建網路、建 router、開 security group、開機、掛 floating IP,順序錯了就會出現錯誤;要清掉時,還得反過來一條條刪。再往後看,Day 7 的 Magnum 開 Kubernetes cluster 時,會替每座 cluster 產生幾把 CA 私鑰,這些私鑰得放在雲上某個有加密、有權限控管的地方。
 
 這一章各解決一件事。前半部開啟 **Barbican**,把一筆秘密存進去再原樣取回,並看它在資料庫裡怎麼保存;後半部用已經部署好的 **Heat**,把 Day 2 那組資源寫成一份範本,一個指令建好、一個指令拆光。讀完之後,看到一份 Heat 範本,你能說出它會用什麼順序建立和刪除資源、哪些資源會同時建;遇到要存密碼或私鑰的需求,也能判斷 Barbican 預設的加密方式擋得住哪種外洩、擋不住哪種。
 
@@ -10,7 +10,7 @@ Day 2 為了開一台能從外面 SSH 進去的 VM,你照順序打了十幾條�
 
 寫過應用程式的人都遇過這個問題:資料庫密碼、API 金鑰要放哪?寫在程式碼裡會跟著進 git,寫在設定檔裡,任何能登入那台主機的人都讀得到。
 
-**Barbican** 是 OpenStack 的金鑰管理服務,服務類型(service type)叫 `key-manager`。它專門保管這類資料:你交給它一筆秘密,它加密後存進資料庫,之後預設只有同一個 project 裡、有權限的使用者能取回(Barbican 也可以用 ACL 把某筆 secret 開放給其他使用者)。權限由 Keystone 判斷,跟其他 OpenStack 資源一樣。在 Barbican 裡,一筆被保管的資料叫 **secret**,內容可以是一段密碼、一把對稱金鑰,或憑證和私鑰。AWS 上對應的服務是 Secrets Manager。
+**Barbican** 是 OpenStack 的金鑰管理服務,服務類型(service type)叫 `key-manager`。它專門保管這類資料:你交給它一筆秘密,它加密後存進資料庫,之後預設只有同一個 project 裡、有權限的使用者能取回(Barbican 也可以用 ACL 把某筆 secret 開放給其他使用者)。Keystone 提供身分與角色資訊,Barbican 再依 policy 規則和 ACL 判斷存取權限。在 Barbican 裡,一筆被保管的資料叫 **secret**,內容可以是一段密碼、一把對稱金鑰,或憑證和私鑰。AWS 上對應的服務是 Secrets Manager。
 
 Kolla 預設不部署 Barbican,所以第一步是把它開起來。
 
@@ -22,7 +22,7 @@ Kolla 預設不部署 Barbican,所以第一步是把它開起來。
 2. **只部署 Barbican**:Day 3 加 Cinder 時重跑的是完整的 `kolla-ansible deploy`。這次加上 `--tags`,Ansible 只執行標了這些 tag 的任務,其他已經在運作的服務不會被碰到,跑起來也比較快。`barbican` 這個 tag 已經包含建 Barbican 的資料庫、向 Keystone 登記 API 位址(endpoint),以及 haproxy 裡 barbican 那一段設定。`loadbalancer` 這個 tag 是給有 haproxy 的環境用的;本課 Day 1 關了 haproxy 和 proxysql,這部分會被跳過,加不加都沒有影響。barbican-api 直接聽在主機 IP 的 9311 port。
 3. **驗證並存取一筆 secret**:確認服務清單裡出現 `key-manager`,然後存一筆名為 `day5-demo` 的 secret,記下它的位址(Barbican 稱為 secret href,是一個指向這筆 secret 的網址),再用這個位址把原文取回來。
 
-第 3 段的 `pip install python-barbicanclient` 不能省。`openstack` 指令本身只內建核心服務的子命令,`openstack secret ...` 屬於 Barbican 自己的 client 套件,要另外安裝才會出現;這類掛進 `openstack` 指令的擴充套件叫 **osc plugin**。Day 4 另外裝 `python-octaviaclient` 也是同樣的原因。
+安裝 client 時,要在第 2 段啟用的 `~/kolla-venv` 裡執行。第 3 段的 `pip install python-barbicanclient` 不能省。`openstack` 指令本身只內建核心服務的子命令,`openstack secret ...` 屬於 Barbican 自己的 client 套件,要另外安裝才會出現;這類掛進 `openstack` 指令的擴充套件叫 **osc plugin**。Day 4 另外裝 `python-octaviaclient` 也是同樣的原因。
 
 ```bash
 # 1. globals.yml 開 barbican(預設 #enable_barbican: "no")
@@ -49,29 +49,27 @@ openstack secret get "$SREF" --payload -f value     # 應原值取回 Sup3rS3cre
 
 - **deploy 成功,而且沒動到別的服務**:跟 Day 1 一樣,`PLAY RECAP` 要是 `failed=0`。log 裡如果出現 Octavia 相關的任務,都應該是 `changed=0`,代表 `--tags` 沒有去改 Day 4 部好的 Octavia。
 - **三個容器都在跑**:`docker ps` 裡 `barbican_api`、`barbican_worker`、`barbican_keystone_listener` 三個容器都是 `Up (healthy)`。
-- **API 位址登記好了**:Keystone 裡 key-manager 的 internal 和 public endpoint 都是 `http://<主機 IP>:9311`,本課的主機 IP 是 `10.0.0.4`。
+- **API 位址登記好了**:Keystone 裡 key-manager 的 internal 和 public endpoint 都是 `http://<主機 IP>:9311`。
 - **原值取回**:最後一行印出的正是存進去的 `Sup3rS3cretDemo!`,一個字都不差。
 
 這筆 `day5-demo` 只是示範用,確認完可以用 `openstack secret delete "$SREF"` 刪掉;換了終端機、`$SREF` 已經不在的話,從 `openstack secret list` 的 `Secret href` 欄複製它的位址代入。
-
-如果 `openstack secret` 回 `is not an openstack command`,是 plugin 沒裝進目前的 venv,見[疑難排解:找不到 `secret` 或 `stack` 子命令](#mine-1)。
 
 ## Barbican 怎麼保管這筆 secret
 
 你剛剛交出去的是明文,取回來的也是明文。中間這段時間,它在資料庫裡是什麼樣子?
 
-Barbican 把資料寫進資料庫之前,會先用一把專門用來加密其他金鑰的金鑰加密一次,這把金鑰叫 **KEK**(Key Encryption Key)。KEK 本身放在哪,由 **crypto plugin** 決定。Kolla 預設用的 plugin 叫 `simple_crypto`:KEK 直接寫在 `barbican.conf` 的 `kek=` 這一行,值來自 `passwords.yml` 裡的 `barbican_crypto_key`,跟其他服務的密碼一樣由 Day 1 的 `kolla-genpwd` 產生。本課沒有改這個設定。
+Barbican 用 **crypto plugin** 處理加密與金鑰保護。Kolla 預設用的 plugin 叫 `simple_crypto`:它用每個 project 專屬的金鑰(project KEK)加密 secret,再用設定檔裡的 **KEK**(Key Encryption Key,用來加密其他金鑰的金鑰)保護 project KEK。設定檔 KEK 寫在 `barbican.conf` 的 `kek=` 這一行,值來自 `passwords.yml` 裡的 `barbican_crypto_key`,跟其他服務的密碼一樣由 Day 1 的 `kolla-genpwd` 產生。本課沒有改這個設定。
 
 下面這張圖把剛才那筆 secret 的路徑和 Barbican 的三個容器畫在一起,由上往下是使用者、Barbican、儲存三層:
 
-![使用者用 openstack secret store 把明文交給 barbican-api(port 9311),api 從 barbican.conf 讀出 KEK 加密後,把密文寫進 MariaDB;取回時反過來解密,把原值交回使用者。旁邊另外兩個容器是 barbican-worker(處理代產金鑰的非同步工作)和 barbican-keystone-listener(project 被刪時清掉它的 secret)](../assets/diagrams/os-s3d5-barbican-store.svg)
+![使用者用 openstack secret store 把明文交給 barbican-api(port 9311),api 用 project KEK 加密 secret,設定檔 KEK 則保護 project KEK,加密後存進 MariaDB;取回時先解開 project KEK,再解密 secret,把原值交回使用者。旁邊另外兩個容器是 barbican-worker(處理代產金鑰的非同步工作)和 barbican-keystone-listener(project 被刪時清掉它的 secret)](../assets/diagrams/os-s3d5-barbican-store.svg)
 
 照著圖看:
 
-1. **加密、解密都在 barbican-api 裡完成。** MariaDB 裡只有密文。剛才的存取往返只經過 api 這一個容器。
+1. **加密、解密都在 barbican-api 裡完成。** secret 和 project KEK 都以密文存進 MariaDB。取回時先用設定檔 KEK 解開 project KEK,再由 project KEK 解密 secret。剛才的存取往返只經過 api 這一個容器。
 2. **另外兩個容器做的是背景工作。** barbican-worker 處理要 Barbican 代為產生金鑰這類非同步的請求;barbican-keystone-listener 接收 Keystone 的事件,某個 project 被刪除時,把那個 project 在 Barbican 裡的資料一起清掉,不留下已經不屬於任何 project 的 secret。
 
-KEK 和資料庫放在同一台主機上,決定了 `simple_crypto` 擋得住什麼:如果外流的只有資料庫備份,拿到的人只看得到密文;但如果有人拿到這台主機的 root,他可以同時讀到 `barbican.conf` 裡的 KEK 和資料庫,secret 就全部能解開。需要更高保護時,可以改用 `p11_crypto` plugin,把 KEK 放在硬體安全模組(HSM)裡,KEK 從頭到尾不離開 HSM;或改用 Vault 等其他 secret store 當後端。單機的練習環境用 `simple_crypto` 就夠了。
+設定檔 KEK 和資料庫放在同一台主機上,決定了 `simple_crypto` 擋得住什麼:如果外流的只有資料庫備份,拿到的人只看得到密文;但如果有人拿到這台主機的 root,他可以同時讀到 `barbican.conf` 裡的 KEK 和資料庫,secret 就全部能解開。需要更高保護時,可以改用 `p11_crypto` plugin,把 KEK 放在硬體安全模組(HSM)裡,KEK 從頭到尾不離開 HSM;或改用 Vault 等其他 secret store 當後端。單機的練習環境用 `simple_crypto` 就夠了。
 
 ## Magnum 為什麼需要 Barbican
 
@@ -79,12 +77,9 @@ KEK 和資料庫放在同一台主機上,決定了 `simple_crypto` 擋得住什�
 
 Day 7 用 Magnum 建 cluster 時,這些 CA 由 Magnum 產生,存在哪裡由 Magnum 設定檔裡的 `cert_manager_type` 決定,而 Kolla 會依 `globals.yml` 自動填這個值:
 
-![Magnum 建立 K8s cluster 時產生 kubernetes、etcd 等幾組 CA。enable_barbican 為 yes 時,cert_manager_type 是 barbican,CA 存成 Barbican secret,本課走這條;沒開 Barbican 時是 x509keypair,存在 Magnum 自己的資料庫。兩條路之後都由 Day 7 的 CAPI driver 把 CA 讀出來,寫成 Day 6 management cluster 裡 magnum-system namespace 的 Secret](../assets/diagrams/os-s3d5-magnum-certs.svg)
+![Magnum 建立 K8s cluster 時產生 kubernetes、etcd 等幾組 CA。enable_barbican 為 yes 時,cert_manager_type 是 barbican,CA 存成 Barbican secret,本課走這條;沒開 Barbican 時是 x509keypair,存在 Magnum 自己的資料庫。建立 cluster 時會取用這些 CA](../assets/diagrams/os-s3d5-magnum-certs.svg)
 
-圖上分成兩段:
-
-1. **剛才開 Barbican 這一步,決定了 Magnum 的 CA 存在哪。** 開了 Barbican,Kolla 就把 Magnum 設成 `cert_manager_type = barbican`,CA 存成 Barbican 的 secret,享有上一節講的加密和權限控管。沒開的話,Kolla 會改用 `x509keypair`,CA 存在 Magnum 自己的資料庫裡。本課只走過開了 Barbican 這條路,沒有驗證另一條。
-2. **建 cluster 的時候,CA 會被讀出來。** Day 7 會用到 Magnum 的 CAPI driver,它把建 cluster 的工作交給 Cluster API;Day 6 會先建一座 management cluster,也就是專門跑 Cluster API、負責建立和管理其他 Kubernetes cluster 的那一座。CAPI driver 從上面任一處讀出 CA,寫進 management cluster 裡 `magnum-system` 這個 namespace(driver 放自己物件的地方),新建的節點再用這幾組 CA 簽發自己的憑證。所以 Barbican 要在 Day 7 之前就準備好。
+開了 Barbican,Kolla 就把 Magnum 設成 `cert_manager_type = barbican`,CA 存成 Barbican 的 secret,享有上一節講的加密和權限控管。沒開的話,Kolla 會改用 `x509keypair`,CA 存在 Magnum 自己的資料庫裡。建立 cluster 時會取用這些 CA,所以 Barbican 要在 Day 7 之前就準備好;後續的 Cluster API 架構與憑證使用方式留到 Day 6–7。
 
 ## 步驟 2:準備 Heat 的 CLI 和範本
 
@@ -92,7 +87,7 @@ Day 7 用 Magnum 建 cluster 時,這些 CA 由 Magnum 產生,存在哪裡由 Mag
 
 **Heat** 是 OpenStack 的編排服務:你把一組資源寫進一份 YAML 範本,Heat 照著範本把它們全部建好,之後也能一次全部刪掉。Day 1 跑 `openstack service list` 時已經看到 `heat` 和 `heat-cfn`(Heat 另外提供的一套相容 AWS CloudFormation 格式的 API,本課不會用到),Kolla 預設就會部署它,今天不用改 `globals.yml`。
 
-跟 Barbican 一樣,`openstack stack ...` 子命令要另外裝 Heat 的 osc plugin。範本裡的資源要建在 Day 2 的 demo project 裡,所以改用 demo 使用者的憑證:
+跟 Barbican 一樣,`openstack stack ...` 子命令要另外裝 Heat 的 osc plugin。繼續在步驟 1 的 `~/kolla-venv` 裡安裝;如果換了終端機,先執行 `source ~/kolla-venv/bin/activate`。範本裡的資源要建在 Day 2 的 demo project 裡,所以改用 demo 使用者的憑證:
 
 ```bash
 pip install python-heatclient                        # 同樣要裝 osc plugin
@@ -173,35 +168,31 @@ security_groups: [ { get_resource: sg } ]
 
 ## 步驟 3:建立、查看、刪除 stack
 
-Heat 把一份範本建出來的整組資源叫一個 **stack**,以 stack 為單位建立和刪除。下面五個指令依序是:檢查範本語法、建立名為 `day5-stack` 的 stack、看 outputs、列出 stack 裡的資源、刪除整個 stack。
+Heat 把一份範本建出來的整組資源叫一個 **stack**,以 stack 為單位建立和刪除。先用下面四個指令檢查範本語法、建立名為 `day5-stack` 的 stack、看 outputs,再列出 stack 裡的資源。連線驗證完成後再刪除整個 stack。
 
 ```bash
 openstack orchestration template validate -t ~/day5-heat-demo.yaml   # 語法檢查
 openstack stack create -t ~/day5-heat-demo.yaml --wait day5-stack     # DAG:sg→port→server+fip
 openstack stack output show day5-stack --all                          # 看 outputs
 openstack stack resource list day5-stack                              # 4 個資源
-openstack stack delete --yes --wait day5-stack                        # 一條全拆
 ```
 
 逐行看要注意什麼:
 
 - **`template validate`** 在真正建資源之前檢查語法和參數,範本有錯在這一步就會指出來,不會建了一半才失敗。
-- **`stack create --wait`** 會等到 stack 狀態變成 `CREATE_COMPLETE` 才回到提示符。註解裡的 DAG(有向無環圖)指的就是上一節那張依賴圖。
-- **`stack output show --all`** 會列出 `server_id`、`internal_ip`、`floating_ip` 三個值。內網 IP 在 net1 的 `10.10.10.x` 範圍,floating IP 在 ext-net 的 `172.24.4.x` 範圍,本課拿到的是 `10.10.10.194` 和 `172.24.4.149`,你的會不同。這時可以像 Day 2 一樣 ping 或 SSH 這個 floating IP。
+- **`stack create --wait`** 會等到 stack 狀態變成 `CREATE_COMPLETE` 才回到命令提示字元。註解裡的 DAG(有向無環圖)指的就是上一節那張依賴圖。
+- **`stack output show --all`** 會列出 `server_id`、`internal_ip`、`floating_ip` 三個值。內網 IP 在 net1 的 `10.10.10.x` 範圍,floating IP 在 ext-net 的 `172.24.4.x` 範圍。使用輸出的 `floating_ip`,像 Day 2 一樣用 ping 或 SSH 驗證連線。
 - **`stack resource list`** 會列出 `sg`、`port`、`server`、`fip` 四個資源,跟範本一一對應。
-- **`stack delete --wait`** 一個指令拆掉這四個資源。拆完後用 Day 2 學過的 `openstack server list` 和 `openstack security group list` 看,`day5-heat-vm` 和 `day5-heat-sg` 都不會再出現。
+
+完成連線驗證後,再刪除 stack:
+
+```bash
+openstack stack delete --yes --wait day5-stack                        # 一條全拆
+```
+
+**`stack delete --wait`** 一個指令拆掉這四個資源。拆完後用 Day 2 學過的 `openstack server list` 和 `openstack security group list` 看,`day5-heat-vm` 和 `day5-heat-sg` 都不會再出現。
 
 比起 Day 2,差別在於「這幾個資源是一組」這件事被記下來了:Heat 把每個 stack 有哪些資源存在自己的資料庫裡,所以刪除時不用你一條條回想建過什麼。Day 10 會用 Terraform 做同樣的事,可以回來對照。
-
-## 疑難排解
-
-### 找不到 `secret` 或 `stack` 子命令 {#mine-1}
-
-**症狀**:`openstack secret ...` 或 `openstack stack ...` 回 `is not an openstack command`。
-
-**原因**:這兩組子命令不在 `python-openstackclient` 裡,是 Barbican 和 Heat 各自 client 套件提供的 osc plugin。步驟 1 和步驟 2 的 `pip install python-barbicanclient`、`pip install python-heatclient` 漏了,或裝在別的 venv。
-
-**修法**:先 `source ~/kolla-venv/bin/activate` 進到裝 `openstack` 指令的那個 venv,再補裝這兩個套件。之後每加一個非核心服務,都要記得裝它的 client 套件。
 
 ## 想一想
 
@@ -211,13 +202,13 @@ openstack stack delete --yes --wait day5-stack                        # 一條�
 
 ## 小結
 
-Barbican 替雲上的使用者保管密碼、金鑰和憑證:secret 用 KEK 加密後存進資料庫,取回時由 barbican-api 解密,權限跟其他資源一樣由 Keystone 判斷。Kolla 預設的 `simple_crypto` 把 KEK 寫在設定檔裡,資料庫外流時有保護,主機被入侵時沒有;本課開 Barbican 的直接原因,是讓 Day 7 的 Magnum 把 cluster 的 CA 存在這裡。Heat 則把一組資源寫成 HOT 範本,從 `get_resource`、`get_attr` 的引用推出建立順序,彼此無關的資源同時建,刪除時倒過來拆。之後讀到任何宣告式的範本,不管是 Day 6 的 Cluster API 還是 Day 10 的 Terraform,都可以先找出資源之間的引用,畫出誰要等誰。
+Barbican 替雲上的使用者保管密碼、金鑰和憑證:Kolla 預設的 `simple_crypto` 用 project KEK 加密 secret,再用設定檔 KEK 保護 project KEK,取回時由 barbican-api 解密。Keystone 提供身分與角色資訊,Barbican 依 policy 和 ACL 判斷存取權限。設定檔 KEK 與資料庫放在同一台主機上,資料庫外流時有保護,主機被入侵時沒有;本課開 Barbican 的直接原因,是讓 Day 7 的 Magnum 把 cluster 的 CA 存在這裡。Heat 則把一組資源寫成 HOT 範本,從 `get_resource`、`get_attr` 的引用推出建立順序,彼此無關的資源同時建,刪除時倒過來拆。之後讀到任何宣告式的範本,不管是 Day 6 的 Cluster API 還是 Day 10 的 Terraform,都可以先找出資源之間的引用,畫出誰要等誰。
 
 ## 延伸閱讀
 
 想再深入,可以從這幾份開始:
 
-- **[Barbican 官方文件](https://docs.openstack.org/barbican/2025.1/)** —— 金鑰管理服務的架構與 API;secret 型別的完整定義在這。
+- **[Barbican 官方文件](https://docs.openstack.org/barbican/2025.1/)** —— 金鑰管理服務的架構與 API;secret 型別的完整定義在這。授權規則見[存取控制說明](https://docs.openstack.org/barbican/2025.1/admin/access_control.html),兩層 KEK 的關係見[`simple_crypto_plugin` 設定](https://docs.openstack.org/barbican/2025.1/configuration/config.html#simple_crypto_plugin)。
 - **[Heat 範本指南](https://docs.openstack.org/heat/2025.1/template_guide/index.html)** —— 寫 HOT 範本的官方教學,從入門範例到進階功能。
 - **[HOT 規格書](https://docs.openstack.org/heat/2025.1/template_guide/hot_spec.html)** —— 範本每個欄位的權威定義;寫範本卡住時查這份最快。
 

@@ -2,35 +2,33 @@
 
 Day 1 結束時,`openstack service list` 列出了七個服務,但這朵雲裡還沒有任何使用者的東西:沒有租戶、沒有 image、沒有網路。假設現在有一個團隊來要一台 Ubuntu VM,要能從外面 SSH 進去,VM 裡也要能上網。在公有雲上這是按幾下的事;在自己的雲上,這台 VM 需要的每一樣東西都得先有人建好。
 
-這一章全程用 CLI,不開 Horizon,分別扮演兩個角色把整條流程走一遍:先當**雲管理員**,建立租戶、上傳 image、開出對外網路;再換成**租戶**,建自己的網路、開 VM、貼上對外 IP,最後 SSH 進去。Day 3 之後的 volume、負載平衡器、Kubernetes 叢集,都建在今天建立的租戶和網路上。
+這一章全程用 CLI,不開 Horizon,分別扮演兩個角色把整條流程走一遍:先當**雲管理員**,建立租戶、上傳 image、開出對外網路;再換成**租戶**,建自己的網路、開 VM、貼上對外 IP,最後 SSH 進去。Day 3 之後的 volume(可掛到 VM 上、獨立保存資料的虛擬硬碟)、負載平衡器、Kubernetes 叢集,都建在今天建立的租戶和網路上。
 
 讀完之後,VM 開出來卻連不上時,你能分辨是租戶這邊少了哪一樣資源,還是主機上的閘道與 NAT 沒掛上,或是 VM 根本沒拿到你的公鑰。
 
 ## 開一台 VM 要先備齊什麼
 
-`openstack server create` 只是一行指令,但它的參數都要指向已經存在的東西:用哪個 image 開機、用哪種規格、接哪個網路、帶哪把 SSH 公鑰。這些東西還分成兩批,一批由管理員建立、所有租戶共用,另一批由每個租戶自己建立。把今天要建的資源依建立者分開畫出來:
+`openstack server create` 只是一行指令,但它的參數都要指向已經存在的東西:用哪個 image 開機、用哪種規格、接哪個網路、帶哪把 SSH 公鑰。本章分成兩批準備:一批由管理員提供、所有租戶共用,另一批由租戶的使用者建立,其中網路資源屬於 project,keypair 則屬於使用者。把今天要建的資源依建立者分開畫出來:
 
-![左邊是管理員建立、所有租戶共用的三樣:image(開機碟)、flavor(規格)、ext-net(對外網路);右邊是租戶自己建立、別的租戶看不到的四樣:network 加 subnet、router、security group、keypair;兩邊都備齊後才能 server create,VM 開機時只有內網 IP,最後貼上 floating IP 外面才連得到](../assets/diagrams/os-s3d2-parts.svg)
+![左邊是本章由管理員提供、所有租戶共用的公開 image(開機碟)、flavor(規格)、ext-net(對外網路);右邊由租戶的使用者建立:network 加 subnet、router、security group 屬於 project,keypair 屬於使用者;兩邊都備齊後才能 server create,VM 開機時只有內網 IP,最後貼上 floating IP 外面才連得到](../assets/diagrams/os-s3d2-parts.svg)
 
-我們可以從圖上看到兩件事:
-
-1. **兩批東西的建立者不同。** 左邊三樣只有管理員能建,建一次就給所有租戶用;右邊四樣是租戶在自己的範圍裡建的,其他租戶看不到。所以這一章先用管理員身分做步驟 1、2,再換成租戶身分做步驟 3、4。
+1. **兩批東西的建立者不同。** 本章由管理員提供左邊的公開 image、flavor 和對外網路,供所有租戶選用;右邊的網路、router 和 security group 建在各自的 project 裡,keypair 則登記在使用者名下,同一使用者跨 project 可沿用。所以這一章先用管理員身分做步驟 1、2,再換成租戶身分做步驟 3、4。
 2. **VM 開好時,外面還連不到它。** `server create` 之後,VM 只有租戶內網的 IP,要再貼上一個 floating IP,外面的機器才找得到它。
 
 這些資源由 Day 1 部署的四個服務分別管理。旁邊附上 AWS 上對應的服務,用過公有雲的話可以對照著看(服務旁的小圖是各專案的官方吉祥物):
 
 | | OpenStack 服務 | 它管什麼 | AWS 對應 |
 |---|---|---|---|
-| ![Keystone](../assets/mascots/keystone.png){ width="56" } | **Keystone** | 帳號、租戶、權限、發 token | IAM |
+| ![Keystone](../assets/mascots/keystone.png){ width="56" } | **Keystone** | 帳號、租戶、權限、發 token(呼叫服務 API 時用來證明身分與授權範圍的憑證) | IAM |
 | ![Glance](../assets/mascots/glance.png){ width="56" } | **Glance** | VM 開機用的 image | AMI |
 | ![Nova](../assets/mascots/nova.png){ width="56" } | **Nova** | flavor、開 VM、決定 VM 開在哪台主機 | EC2 |
 | ![Neutron](../assets/mascots/neutron.png){ width="56" } | **Neutron** | 網路、router、security group、floating IP | VPC |
 
 ## 步驟 1:建立租戶、flavor 和 image
 
-Day 1 產生的 `admin-openrc.sh` 是管理員的身分,先用它建立今天的租戶。OpenStack 裡的租戶叫 **project**:一個彼此隔離的資源範圍,裡面有自己的網路、VM 和配額,通常對應一個團隊或一個客戶。使用者本身不擁有資源,而是被加進某個 project 並給一個**角色**(role),角色決定他在這個 project 裡能做什麼。下面建立 `demo` project 和同名的使用者,給他 `member` 角色:能在 demo 裡建立和管理自己的資源,但不能做管理員的操作,例如建 flavor 或建對外網路。
+Day 1 產生的 `admin-openrc.sh` 是管理員的身分,先用它建立今天的租戶。OpenStack 裡的租戶叫 **project**:一個彼此隔離的資源範圍,裡面有自己的網路、VM 和配額,通常對應一個團隊或一個客戶。使用者被加進某個 project 並給一個**角色**(role),角色決定他在這個 project 裡能做什麼;網路和 VM 等資源屬於 project,keypair 則屬於使用者。下面建立 `demo` project 和同名的使用者,給他 `member` 角色:能在 demo 裡建立和管理自己的資源,但不能做管理員的操作,例如建 flavor 或建對外網路。
 
-接著是開機要用的兩樣東西。**image** 是 VM 的開機碟,裡面裝好了作業系統,相當於 AWS 的 AMI。**flavor** 是規格,決定一台 VM 有幾顆 vCPU、多少記憶體、多大磁碟,相當於 AWS 的 instance type。兩者都由管理員建立,所有租戶都能選用。
+接著是開機要用的兩樣東西。**image** 是 VM 的開機碟,裡面裝好了作業系統,相當於 AWS 的 AMI。**flavor** 是規格,決定一台 VM 有幾顆 vCPU、多少記憶體、多大磁碟,相當於 AWS 的 instance type。本章由管理員提供公開 image 和 flavor,讓所有租戶都能選用。依 [Glance 2025.1 的預設權限](https://docs.openstack.org/glance/2025.1/configuration/glance_policy.html),project 的 member 也能建立 image,但將 image 設為公開需要管理員權限。
 
 這一步建兩組:
 
@@ -74,7 +72,8 @@ subnet 宣告了閘道是 172.24.4.1,但現在沒有任何東西拿著這個位�
 
 - **OVN**:Day 1 在 `globals.yml` 選定的虛擬網路軟體。Neutron 收到建網路、建 router 的請求後,由 OVN 實際建出來。它用 LS(Logical Switch,邏輯交換器)表示一張網路,用 LR(Logical Router,邏輯路由器)表示一個 router。
 - **Geneve**:租戶網路的封包在主機之間傳送時用的隧道封裝。
-- **localnet**:OVN 把一張邏輯網路接到主機實體網路的接口,這裡接的就是 br-ex。
+- **localnet**:OVN 把一張邏輯網路接到主機實體網路的介面,這裡接的就是 br-ex。
+- **SNAT**:來源位址轉換。VM 往外送的封包經過 r1 時,來源位址會換成 r1 在 ext-net 上的位址。
 - **FIP**:floating IP 的縮寫,步驟 4 會介紹。
 
 ```
@@ -167,7 +166,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/oslab_ed25519 -N ""
 openstack keypair create --public-key ~/.ssh/oslab_ed25519.pub oslab
 ```
 
-這裡建的東西都屬於 demo project。換另一個 project 開 VM,網路、router、security group 規則和 keypair 都要在那個 project 裡再建一次。整段沒有出現錯誤訊息就可以往下走;router 和 security group 規則設得對不對,步驟 4 的 ping 和 SSH 會一起驗證。
+這裡建的網路、router 和 security group 規則屬於 demo project,換另一個 project 開 VM 時要在那裡另外準備。[keypair 屬於使用者](https://docs.openstack.org/api-ref/compute/#keypairs-keypairs),這裡登記在 demo 使用者名下,同一使用者切換到另一個 project 時可以沿用,不必重建。整段沒有出現錯誤訊息就可以往下走;router 和 security group 規則設得對不對,步驟 4 的 ping 和 SSH 會一起驗證。
 
 ## `server create` 送出之後,誰接手
 
@@ -225,7 +224,7 @@ cirros 能 ping 也能 SSH、Ubuntu 能 SSH、Ubuntu 裡 ping 得到 8.8.8.8 也
 
 ## 回頭看:剛才的指令在 OVN 裡建了什麼
 
-回頭對照步驟 2 那張圖。net1 和 ext-net 在 OVN 裡各是一台 Logical Switch:net1 的封包用 Geneve 封裝,封裝要佔一點空間,所以 net1 的 MTU 自動扣成 1442;ext-net 多一個 localnet port,接到 physnet1,也就是 br-ex。r1 是一台 Logical Router,它的 SNAT 和每個 floating IP 都是 router 上的一條 NAT 規則,floating IP 那種叫 dnat_and_snat,用 `ovn-nbctl lr-nat-list` 看得到。security group 在 OVN 裡變成 ACL(存取控制規則),套在 port group 上;port group 是屬於同一個 security group 的 port 集合。metadata 走的就是前面那張圖左半邊的 haproxy。Day 20 會用 OVN 的工具把這些物件一一讀出來。
+回頭對照步驟 2 那張圖。net1 和 ext-net 在 OVN 裡各是一台 Logical Switch:net1 的封包用 Geneve 封裝,封裝要佔一點空間,所以 net1 的 MTU(單次能傳送的 IP 封包大小上限,以位元組計)自動扣成 1442;ext-net 多一個 localnet port,接到 physnet1,也就是 br-ex。r1 是一台 Logical Router,它的 SNAT 和每個 floating IP 都是 router 上的一條 NAT 規則,floating IP 那種叫 dnat_and_snat,用 `ovn-nbctl lr-nat-list` 看得到。security group 在 OVN 裡變成 ACL(存取控制規則),套在 port group 上;port group 是屬於同一個 security group 的 port 集合。metadata 走的就是前面那張圖左半邊的 haproxy。Day 20 會用 OVN 的工具把這些物件一一讀出來。
 
 同一條「對外網路 → router → 租戶網路 → VM」的鏈,在儀表板的網路拓樸圖上看得更清楚:
 
@@ -235,13 +234,13 @@ cirros 能 ping 也能 SSH、Ubuntu 能 SSH、Ubuntu 裡 ping 得到 8.8.8.8 也
 
 ## 疑難排解 {#troubleshooting}
 
-VM 是 `ACTIVE` 卻連不上時,下面三種情況最常見。前兩項都是漏了正文的某一步,第三項是沒照步驟 4 加 config drive。
+主機重開機後,VM 是 `ACTIVE` 卻連不上時,可先檢查步驟 2 設定的服務是否執行成功。
 
 ### 從主機 ping 不到 floating IP {#mine-1}
 
-**症狀**:VM 是 `ACTIVE`,從主機 ping floating IP 沒有回應,SSH 也連不上,所有 VM 都一樣。常出現在隔天重新開機之後。
+**症狀**:主機重開機後,VM 是 `ACTIVE`,從主機 ping floating IP 沒有回應,SSH 也連不上,所有 VM 都一樣。
 
-**原因**:主機上的閘道位址 172.24.4.1、IP forwarding 或 MASQUERADE 規則不在。只執行了 `systemctl enable`、沒有手動跑過腳本,或開機時服務沒有執行,都會這樣。
+**原因**:開機時 `ext-net-fixup` 服務執行失敗,主機上的閘道位址 172.24.4.1、IP forwarding 或 MASQUERADE 規則沒有成功套用。
 
 **修法**:照步驟 2 手動執行一次 `ext-net-fixup.sh`。再看服務這次開機有沒有執行成功,只看 enabled 看不出開機時是否執行失敗:
 
@@ -249,21 +248,7 @@ VM 是 `ACTIVE` 卻連不上時,下面三種情況最常見。前兩項都是漏
 systemctl status ext-net-fixup
 ```
 
-狀態應該是 `active (exited)`;如果是 `failed`,代表開機時腳本執行失敗,下方的 log 會顯示錯誤訊息。
-
-### VM 開機超過一分鐘,ping 不通或 SSH 仍然逾時 {#mine-2}
-
-**症狀**:VM 是 `ACTIVE`,而且已經開機超過一分鐘,ping 不通或 SSH 逾時;其他 VM 的 floating IP 從主機連得上,所以不是主機那端的問題。
-
-**原因**:這個 project 的 default security group 沒有放行 ICMP 或 TCP 22。security group 屬於各自的 project,在新的 project 開 VM 要重新加規則。ping 得通、SSH 逾時,就是只少了 TCP 22 那一條。
-
-**修法**:用該 project 的身分執行步驟 3 的兩條 `security group rule create`。
-
-### Ubuntu VM 的 SSH 回 `Permission denied (publickey)` {#mine-3}
-
-**原因**:開 VM 時沒加 `--config-drive True`,cloud-init 查 metadata 時網路路徑還沒通,公鑰沒有放進 VM(見[VM 怎麼拿到你的公鑰](#vm-metadata))。
-
-**修法**:刪掉這台 VM,加上 `--config-drive True` 重開。沒加 config drive 時會遇到這個症狀,依據是另一套環境的紀錄,完整分析見排錯手冊:[cirros sshd race / Ubuntu metadata race](../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive.md)。
+這種只跑一次的服務,成功時通常顯示 `active (exited)`;如果是 `failed`,代表開機時腳本執行失敗,下方的 log 會顯示錯誤訊息。
 
 ## 想一想
 
@@ -273,7 +258,7 @@ systemctl status ext-net-fixup
 
 ## 小結
 
-在 OpenStack 上開一台連得到的 VM,要先備齊兩批資源:管理員建立、全租戶共用的 image、flavor 和對外網路,以及租戶自己建立的網路、router、security group 和 keypair,開機之後再貼上 floating IP。在這個 lab 裡,對外網路只存在於主機內部,要靠主機在 br-ex 上掛閘道位址、開 IP forwarding、加 MASQUERADE 才通得出去,而這些設定每次開機都要重新套用。之後 VM 連不上時,先想想封包經過的每一段:主機上的閘道與 NAT、租戶的 security group 規則、router 和 floating IP,以及 VM 有沒有透過 metadata 或 config drive 拿到公鑰。
+在 OpenStack 上開一台連得到的 VM,要先備齊資源:本章由管理員提供公開 image、flavor 和對外網路,租戶在自己的 project 裡建立網路、router 和 security group,使用者登記自己的 keypair,開機之後再貼上 floating IP。同一使用者跨 project 可以沿用 keypair。在這個 lab 裡,對外網路只存在於主機內部,要靠主機在 br-ex 上掛閘道位址、開 IP forwarding、加 MASQUERADE 才通得出去,而這些設定每次開機都要重新套用。之後 VM 連不上時,先想想封包經過的每一段:主機上的閘道與 NAT、租戶的 security group 規則、router 和 floating IP,以及 VM 有沒有透過 metadata 或 config drive 拿到公鑰。
 
 ## 延伸閱讀
 

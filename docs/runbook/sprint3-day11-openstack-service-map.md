@@ -2,7 +2,7 @@
 
 ![Kolla-Ansible 的官方吉祥物:無尾熊](../assets/mascots/kolla-ansible.png){ align=right width="96" }
 
-Day 10 結束時,你手上有一朵能開 VM、掛硬碟、開負載平衡器、開 Kubernetes 叢集的雲。雲一能用,同事就會來提需求:想要一個像 S3 的地方放備份檔;希望新開的 VM 自動有個域名,不用每次記 IP;月底想知道每個部門各用了多少,好拆帳。你打開 Kolla-Ansible 的 `globals.yml` 範本,看到一長串 `enable_*` 開關,卻不確定哪一個對應哪一個需求。
+Day 10 結束時,你手上有一朵能開 VM、掛硬碟、開負載平衡器、開 Kubernetes 叢集的雲。雲一能用,同事就會來提需求:想要一個像 S3 的地方放備份檔;希望新開的 VM 自動有個網域名稱,不用每次記 IP;月底想知道每個部門各用了多少,好拆帳。你打開 Kolla-Ansible 的 `globals.yml` 範本,看到一長串 `enable_*` 開關,卻不確定哪一個對應哪一個需求。
 
 這一章不動手部署。我們先把這朵雲裡已經有的服務整理一次,再用 OpenStack 官方的服務地圖,把同事的三個需求逐一對到負責的服務。讀完之後,拿到一個雲端需求,你能說出它歸 OpenStack 哪個服務管、這門課有沒有教、在哪一天,以及要加上去時先查什麼。
 
@@ -12,14 +12,14 @@ Day 10 結束時,你手上有一朵能開 VM、掛硬碟、開負載平衡器、
 
 這是因為 OpenStack 本身就是由許多獨立的**專案**組成的。每個專案負責一種資源,有自己的 API、自己的資料庫、自己的容器,通常也有自己的名字:管 VM 的叫 Nova,管網路的叫 Neutron,管區塊儲存的叫 Cinder。社群把它們放在同一個名字底下發布,但部署時每個都可以單獨開或關。`globals.yml` 裡那一長串 `enable_*`,就是逐一列出 Kolla-Ansible 會部署的專案。
 
-下面把 Day 10 這朵雲裡跑著的東西畫成一張圖。由上往下分五層:最上面是你操作的介面,往下是建在其他服務之上的平台、管各種資源的服務、每個服務都要用的共用服務,最底下一層灰色的元件不屬於 OpenStack,卻是整朵雲運作的前提。
+下面把 Day 10 這朵雲裡跑著的東西畫成一張圖。由上往下分五層:最上面是你操作的介面,往下是建在其他服務之上的平台、管各種資源的服務、供多個服務使用的共用服務,最底下一層灰色的元件不屬於 OpenStack,卻是整朵雲運作的前提。
 
 ![Day 10 這朵雲由上往下五層:介面是 Horizon;平台是 Heat 和 Magnum;資源是 Nova、Neutron、Cinder、Octavia;共用服務是 Keystone(以橘框強調)、Placement、Glance、Barbican;最底層灰色的是不屬於 OpenStack 專案的 MariaDB、RabbitMQ、Memcached、Redis、OVN](../assets/diagrams/os-s3d11-course-cloud.svg)
 
 從圖上可以看出兩件事:
 
-1. **越往上的服務,依賴的服務越多。** Magnum 開一個 Kubernetes 叢集,要靠 Nova 開節點、Neutron 接網路、Octavia 替叢集的 API 開負載平衡器、Barbican 存憑證。所以 Magnum 這一層出的問題,原因常常在下面一層:Day 8 的 `Service type=LoadBalancer` 一直 pending,最後查到的是 Octavia 沒有啟用叢集要求的 provider,也就是 Octavia 實際建立負載平衡器用的 driver,例如 amphora(Day 8 的[「LoadBalancer 一直 pending,CCM 報 `Provider 'amphorav2' is not enabled`」](sprint3-day8-e2e-workload-cluster.md#mine-3))。
-2. **共用服務那一層每個請求都會經過。** 橘框的 Keystone 負責驗證身分與權限,你下的每一個 `openstack` 指令都要先向它拿 token,其他服務收到請求時也會回頭找它確認。
+1. **越往上的服務,依賴的服務越多。** Magnum 開一個 Kubernetes 叢集,要靠 Nova 開節點、Neutron 接網路、Octavia 替叢集的 API 開負載平衡器、Barbican 存憑證。這些相依服務的設定也必須配合:Day 8 的 `Service type=LoadBalancer` 所指定的 provider,必須是 Octavia 已啟用的名稱。provider 就是 Octavia 實際建立負載平衡器用的 driver,例如 amphora,設定方式見 [Day 8](sprint3-day8-e2e-workload-cluster.md)。
+2. **共用服務依操作需要使用。** 例如開 VM 會用到 Glance 的映像檔,儲存憑證會用到 Barbican。橘框的 Keystone 負責身分驗證與核發 token;用戶端帶著 token 呼叫服務,服務收到請求後驗證 token,再依權限規則決定是否允許操作。token 的驗證結果可以使用快取,不必每次都向 Keystone 查詢,詳見 [Keystonemiddleware 的快取說明](https://docs.openstack.org/keystonemiddleware/2025.1/middlewarearchitecture.html#improving-response-time)。
 
 ## 這門課用過的 11 個服務
 
@@ -27,7 +27,7 @@ Day 10 結束時,你手上有一朵能開 VM、掛硬碟、開負載平衡器、
 
 | | 服務 | 管什麼 | AWS 對應 | 在本課程 |
 |---|---|---|---|---|
-| ![Keystone](../assets/mascots/keystone.png){ width="64" } | **Keystone** | 帳號、租戶、權限、token | IAM | Day 1 部署;之後每一天的每個指令都經過它 |
+| ![Keystone](../assets/mascots/keystone.png){ width="64" } | **Keystone** | 帳號、租戶、權限、token | IAM | Day 1 部署;提供後續操作所需的身分驗證與 token |
 | ![Glance](../assets/mascots/glance.png){ width="64" } | **Glance** | VM 開機映像檔 | AMI | Day 1 部署;Day 2 上傳 cirros/Ubuntu、Day 7 上傳 K8s node image |
 | — | **Placement** | 資源帳本(哪台主機還有多少 CPU/RAM/disk) | (EC2 內部機制) | Day 1 部署;Day 9 調 `disk_allocation_ratio` 就是在調它的可分配量 |
 | ![Nova](../assets/mascots/nova.png){ width="64" } | **Nova** | 開 VM、排程 | EC2 | Day 1 部署;Day 2 起開遍了 VM(含 K8s 節點、amphora) |
@@ -45,12 +45,12 @@ Placement 那一列沒有吉祥物圖。它原本是 Nova 裡面的一部分,後
 
 圖上最底下那一層灰色元件,都是 Kolla-Ansible 一起替你部署的開源軟體,但它們不是 OpenStack 專案,有各自的社群和版本。出問題時,它們的症狀常常出現在 OpenStack 服務上,所以要知道它們各自負責什麼:
 
-| 元件 | 負責什麼 | 在課程中出現的地方 |
+| 元件 | 負責什麼 | 課程中的用途與相依條件 |
 |---|---|---|
-| MariaDB | 所有服務的資料庫 | Day 1 部署時被 ProxySQL 佔走 port,整個部署卡住(Day 1 的[「MariaDB 起不來,port 3306 被 proxysql 佔走」](sprint3-day1-kolla-aio-core.md#mine-4)) |
-| RabbitMQ | 服務內部的訊息佇列(API 收到請求,交給背後的 worker 執行) | 課程中沒有出過問題 |
-| Memcached | Keystone token 快取 | 課程中沒有出過問題 |
-| Redis | Octavia 用來記錄進行中任務的資料庫 | Day 4 沒開它,LB 一直停在 PENDING(Day 4 的[「LB 卡在 PENDING_CREATE,amphora 沒有開機」](sprint3-day4-octavia.md#mine-3)) |
+| MariaDB | 所有服務的資料庫 | MariaDB 與 ProxySQL 不可監聽相同 IP 的 3306 連接埠;Day 1 的單機設定需關閉 ProxySQL,見 [Day 1](sprint3-day1-kolla-aio-core.md) |
+| RabbitMQ | 服務內部的訊息佇列(API 收到請求,交給背後的 worker 執行) | — |
+| Memcached | Keystone token 快取 | — |
+| Redis | Octavia 用來記錄進行中任務的資料庫 | Octavia 的 jobboard(任務佇列)需要後端;Day 4 使用 Redis,需另外啟用,見 [Day 4](sprint3-day4-octavia.md) |
 | OVN | Neutron 底下實際轉送封包的軟體網路 | Day 2 的邏輯 router/switch、Day 4 的 o-hm0 都由它實作 |
 
 另外還有兩組工具也不屬於 OpenStack:Day 6 的 kind、Cluster API、CAPO 是 Kubernetes 社群的專案,Day 10 的 Terraform 是 HashiCorp 的工具。它們從外面呼叫 OpenStack 的 API,不在雲的裡面。
@@ -65,17 +65,17 @@ Placement 那一列沒有吉祥物圖。它原本是 Nova 裡面的一部分,後
 
 照著圖上的位置看:
 
-- **中間大框的格子名稱就是資源類型。** Compute 分 VM 和容器,Storage 分 Object、Block、File 三種,Networking 分 SDN、負載平衡、DNS。這門課用過的 Nova、Cinder、Neutron、Octavia 都在這幾格裡。Networking 右邊的 Hardware Lifecycle 管實體硬體:Bare Metal 是 Ironic,Accelerators 是 Cyborg。
+- **中間大框的格子名稱就是資源類型。** Compute 分 VM 和容器,Storage 分 Object、Block、File 三種,Networking 分 SDN(以軟體控制網路設定與轉送規則)、負載平衡、DNS。這門課用過的 Nova、Cinder、Neutron、Octavia 都在這幾格裡。Networking 右邊的 Hardware Lifecycle 管實體硬體:Bare Metal 是 Ironic,Accelerators 是 Cyborg。
 - **最下排的 Shared Services** 就是上一節圖裡的共用服務那一層:Keystone、Placement、Glance、Barbican。
 - **右側的 Operations Tooling** 是維運用的服務:監控、資源最佳化建議、計費、測試。這門課到 Day 10 都還沒碰到。
 - **左側的 Integration Enablers** 是讓 OpenStack 和其他系統接起來的專案:Container Services 的 Kuryr 把容器網路接到 Neutron,NFV 的 Tacker 給電信業部署虛擬化網路功能。
-- **最下方的 Lifecycle Management** 列的是部署工具。Kolla-Ansible 旁邊的 OpenStack-Charms 和 OpenStack-Helm,正是這門課之前[兩次嘗試](../previous-attempts.md)用過的工具。
+- **最下方的 Lifecycle Management** 列的是部署工具,包括 Kolla-Ansible、OpenStack-Charms 和 OpenStack-Helm。
 
 有了分類,開場的三個需求就可以照「需求 → 分類 → 服務」的順序對下去:
 
-![三列需求對到服務:像 S3 的地方放備份檔,對到 Storage 的 Object,負責的是 Swift API,本課由 Ceph RGW 提供(以橘框強調),在 Day 14–15;新開的 VM 自動有域名,對到 Networking 的 DNS,是 Designate,在 Day 17;每個部門用了多少、分帳,對到 Operations Tooling 的 Billing,是 CloudKitty 加上 Ceilometer 計量,在 Day 28 和 Day 30](../assets/diagrams/os-s3d11-need-to-service.svg)
+![三列需求對到服務:像 S3 的地方放備份檔,對到 Storage 的 Object,負責的是 Swift API,本課由 Ceph RGW 提供(以橘框強調),在 Day 14–15;新開的 VM 自動有網域名稱,對到 Networking 的 DNS,是 Designate,在 Day 17;每個部門用了多少、分帳,對到 Operations Tooling 的 Billing,是 CloudKitty 加上 Ceilometer 計量,在 Day 28 和 Day 30](../assets/diagrams/os-s3d11-need-to-service.svg)
 
-第二列和第三列都很直接:域名是 DNS,在 Networking 格裡找到 Designate;分帳在 Billing 格裡找到 CloudKitty。CloudKitty 只負責把用量換算成費用,用量本身要靠 Monitoring 格裡的 Ceilometer 收集,所以這個需求要兩個服務一起上。
+第二列和第三列都很直接:網域名稱是 DNS,在 Networking 格裡找到 Designate;分帳在 Billing 格裡找到 CloudKitty。CloudKitty 只負責把用量換算成費用,用量本身要靠 Monitoring 格裡的 Ceilometer 收集,所以這個需求要兩個服務一起上。
 
 第一列多了一個轉折。Storage 的 Object 格裡是 **Swift**,OpenStack 的物件儲存服務,用法就是上傳一個檔案、拿到一個網址。但 Kolla-Ansible 2025.1 的 release notes 寫明,它已經不再支援部署 Swift。這門課的做法是在 Day 14 先建一套 Ceph 儲存叢集,Day 15 用 Ceph 的 **RGW**(物件儲存閘道)提供物件儲存。RGW 和 Swift **API 相容**:它接受的請求和回應的格式跟 Swift 一樣,原本寫給 Swift 的程式,常用的物件操作大多可以直接沿用,同時也接受 S3 的 API。
 
@@ -98,7 +98,7 @@ Map 上還有很多服務是 Day 10 為止沒碰過的。其中一部分會在 S
 | ![Trove](../assets/mascots/trove.png){ width="64" } | **Trove** | 資料庫服務(開一個代管的 MySQL) | RDS | [Day 18](sprint4-day18-trove-dbaas.md) |
 | ![Prometheus](../assets/logos/prometheus.png){ width="40" } ![Grafana](../assets/logos/grafana.svg){ width="36" } | **Prometheus + Grafana** | 監控與儀表板 | CloudWatch | [Day 21](sprint4-day21-observability.md);兩者來自 OpenStack 以外的社群,由 Kolla-Ansible 整合部署 |
 | ![Telemetry](../assets/mascots/telemetry.png){ width="64" } | **Ceilometer / Aodh** | 計量(誰用了多少)與告警 | CloudWatch | [Day 28](sprint5-day28-ceilometer-metering.md) 計量、[Day 29](sprint5-day29-aodh-autoscaling.md) 告警與自動擴縮 |
-| ![CloudKitty](../assets/mascots/cloudkitty.png){ width="64" } | **CloudKitty** | 費率與計費(把用量變成帳單) | — | [Day 30](sprint5-day30-cloudkitty-rating.md) |
+| ![CloudKitty](../assets/mascots/cloudkitty.png){ width="64" } | **CloudKitty** | [依費率換算用量費用](https://docs.openstack.org/cloudkitty/2025.1/#what-can-be-done-with-cloudkitty-what-can-t) | — | [Day 30](sprint5-day30-cloudkitty-rating.md) |
 | ![Masakari](../assets/mascots/masakari.png){ width="64" } | **Masakari** | VM 高可用(主機故障時把 VM 移到別台重開) | — | [Day 31](sprint5-day31-masakari-ha.md),在多節點環境上 |
 
 ![Skyline 的總覽頁面截圖](../assets/screenshots/skyline-overview.png)
@@ -110,7 +110,7 @@ Map 上還有很多服務是 Day 10 為止沒碰過的。其中一部分會在 S
 下面這些服務 Map 上都有,但只在特定場景才需要,這門課不會部署:
 
 - **Ironic**(裸機服務):把實體伺服器當成 VM 一樣用 API 開關、裝系統,用在資料中心自動化。
-- **Cyborg**(加速器管理):管理 GPU、FPGA 這類加速卡,讓 VM 可以申請使用。
+- **Cyborg**(加速器管理):管理 GPU、FPGA 這類加速卡,讓 VM 可以申請使用。FPGA 是可重新設定邏輯電路的晶片,用於特定運算加速。
 - **Zun**(容器服務):不經過 Kubernetes,直接用 OpenStack API 跑容器。Kolla-Ansible 自 2026.1 起不再支援部署 Zun;這門課跑容器工作負載走的是 Magnum。
 - **Blazar**(資源預約):預先保留某段時間要用的主機或資源。
 - **Watcher**(資源最佳化):分析整朵雲的用量,提出搬移 VM 之類的最佳化建議。
@@ -129,7 +129,7 @@ Map 上還有很多服務是 Day 10 為止沒碰過的。其中一部分會在 S
 
 - **第 2 步**擋掉的是 Swift 這種情況:Map 上有,Kolla-Ansible 這一版卻不能部署。
 - **第 3 步**是 Kolla-Ansible 管不到的部分。Day 3 的 LVM volume group 要先自己用 `pvcreate`、`vgcreate` 建好,Day 15 的 RGW 要先有 Day 14 的 Ceph。
-- **第 4 步**的開關可能會連帶打開子服務。Day 3 開了 `enable_cinder` 之後,cinder-backup 也跟著部署,但這個 lab 沒有它需要的備份後端,服務一直是 down,最後要另外設 `enable_cinder_backup: "no"`,再刪掉已經建出來的 `cinder_backup` 容器。打開一個開關之前,先查它會帶起哪些子服務。
+- **第 4 步**的開關可能會連帶打開子服務。`enable_cinder` 會連帶部署 cinder-backup,而 cinder-backup 需要可用的備份目的地。Day 3 尚未準備備份目的地,因此在部署前設定 `enable_cinder_backup: "no"`。打開一個開關之前,先查它會帶起哪些子服務,以及這些子服務需要什麼。
 
 第 5 步的 `kolla-ansible deploy` 每次都會走過所有服務。沒有打開的服務,在部署輸出裡會看到它的 `PLAY [Apply role ...]` 後面接著 `skipping: no hosts matched`。Day 5 部署 Barbican 時捲過去的那一長串 skipping,大致對應 Kolla-Ansible 支援、但這朵雲還沒打開的服務,也就是第 2 步要查的那份清單。只是大致對應:裡面也有 prometheus、opensearch 這類不屬於 OpenStack 的角色。
 

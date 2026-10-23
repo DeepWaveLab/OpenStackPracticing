@@ -8,7 +8,9 @@ Day 3 建的 Cinder volume,全都放在主機上同一顆 data disk 裡。這顆
 
 ## 為什麼一顆碟不夠
 
-Ceph 把很多台機器上的很多顆碟,組成一個對外看起來只有一份的儲存空間。本章討論的是 replicated pool:資料會複製成多份,份數稱為**副本數**,設定名稱是 `size`,預設是 3。使用以 host 為故障域的放置規則時,副本分散到不同主機;Ceph 也有 erasure-coded pool 等其他配置,不能把所有 pool 都視為相同的複寫方式。
+Ceph 把很多台機器上的很多顆碟,組成一個對外看起來只有一份的儲存空間。**pool**(儲存池)是建在這些碟之上的邏輯分區,各個服務可以用自己的 pool 存資料。本章使用 replicated pool,也就是把資料複製成多份的儲存池。份數稱為**副本數**,設定名稱是 `size`,預設是 3。
+
+副本要分開放,還需要決定**故障域**:副本配置時要避開的共同故障範圍。下面以主機(host)為例,同一台主機停機時,上面的碟都無法提供服務,所以使用以 host 為故障域的放置規則時,副本會分散到不同主機。
 
 下面這張圖左右對照兩種情況:左邊是 Ceph 預設設計的多台主機,右邊是我們這一章的單機 lab。
 
@@ -25,24 +27,26 @@ Ceph 把很多台機器上的很多顆碟,組成一個對外看起來只有一�
 
 Ceph 不是一個程式,而是幾種背景程式(daemon)合作。這一章會裝三種,後面每一條調整指令,都是在調其中一種:
 
-![同一台 VM 裡有三個背景程式:MON 保存叢集地圖,記錄哪些 OSD 活著、資料放哪;MGR 是管理介面,cephadm 的指令經它執行;OSD 接著一顆 Ceph 專用碟,一顆碟一個 OSD。VM 外面的客戶端(Day 15 的 RGW、Day 16 的 Manila)先問 MON 地圖,再直接找 OSD 讀寫](../assets/diagrams/os-s4d14-roles.svg)
+![同一台 VM 裡有三個 Ceph 背景程式:MON 保存叢集地圖,MGR 提供管理介面,OSD 接著一顆 Ceph 專用碟。資料存取端是 Day 15 的 RGW 與 Day 16 的 CephFS 客戶端,先問 MON 地圖,再直接找 OSD 讀寫資料本體。Manila 另經管理路徑管理共享與權限;CephFS 的 MDS 留到 Day 16 說明,圖中省略](../assets/diagrams/os-s4d14-roles.svg)
 
-照著圖上的編號看,客戶端讀寫一份資料要經過兩步:
+照著圖上的編號看,客戶端定位並讀寫資料本體要經過兩步:
 
 - **① 先問 MON。** **MON**(monitor)保存整個叢集的地圖:有哪些 OSD、哪些還活著、每份資料該放在哪裡。客戶端拿到地圖,自己算出資料在哪個 OSD。
 - **② 直接找 OSD。** **OSD**(Object Storage Daemon)是真正把資料寫進碟的程式,**一顆碟對應一個 OSD**,同時負責把資料複製到其他 OSD、在某顆碟壞掉時把資料補回來。要擴充容量,就是加碟、加 OSD。
 
 圖中間的 **MGR**(manager)不在讀寫路徑上,它提供管理介面和統計數字,cephadm 下的部署指令也是經由它執行。MGR 通常會有一個在工作(active)、一個待命(standby),工作中的那個停了,待命的接手。
 
+圖中的虛線是 Day 16 的 Manila 管理共享與存取權限的路徑。掛載共享後,實際讀寫檔案的是 CephFS 客戶端,資料本體不經過 Manila。[Manila 的 CephFS driver 文件](https://docs.openstack.org/manila/2025.1/configuration/shared-file-systems/drivers/cephfs_driver.html)說明了這兩種角色的分工。
+
 生產環境的 MON 會放 3 個或 5 個。MON 之間要對叢集地圖取得共識,規則是**過半數**的 MON 在線才算數,這個過半數的集合叫 **quorum**。3 個 MON 至少要 2 個在線,所以能容許壞 1 個;5 個至少要 3 個,能容許壞 2 個;4 個至少要 3 個,也只能容許壞 1 個,跟 3 個一樣。所以 MON 的數量用奇數,多一個偶數並不會多容許一次故障。這一章只有 1 個 MON,過半數就是它自己。
 
-還有第四種背景程式 MDS,只有用到 Ceph 的檔案儲存時才需要,Day 16 才會出現。這一章只會在步驟 3 先替它設一個快取目標。
+還有第四種背景程式 MDS,負責 CephFS 的目錄與檔名,圖中省略了這條路徑。只有用到 Ceph 的檔案儲存時才需要 MDS,Day 16 才會出現。這一章只會在步驟 3 先替它設一個快取目標。
 
-最後一個名詞是 **pool**(儲存池)。OSD 是一顆顆的碟,pool 是建在所有 OSD 之上的邏輯分區,Day 15、16 的服務各自會在 Ceph 裡建自己的 pool。副本數 `size` 就是 pool 的設定:每個 pool 建立時,從叢集的預設值拿到自己的副本數。這一點決定了步驟 3 和步驟 4 的順序。
+Day 15、16 的服務各自會在 Ceph 裡建自己的 pool。副本數 `size` 就是 pool 的設定:每個 pool 建立時,從叢集的預設值拿到自己的副本數。這一點決定了步驟 3 和步驟 4 的順序。
 
 ## 開始之前
 
-Ceph 需要一顆**全新的空碟**,只給 Ceph 用。Day 3 那顆 data disk 已經是 Cinder 的 LVM,不能拿來用。在 Azure 上替 VM 加掛一顆新碟,本課用 256 GB;下面指令的 `<資源群組>`、`<VM名>` 換成你 Day 0 建立時用的名稱:
+Ceph 需要一顆**全新的空碟**,只給 Ceph 用。Day 3 那顆 data disk 已經是 Cinder 的 LVM,不能拿來用。在 Azure 上替 VM 加掛一顆新碟,本練習建議容量為 256 GB;下面指令的 `<資源群組>`、`<VM名>` 換成你 Day 0 建立時用的名稱:
 
 ```bash
 # 在你的電腦上執行
@@ -51,7 +55,7 @@ az vm disk attach -g <資源群組> --vm-name <VM名> --name ceph-data --new --s
 
 這一章會動到磁碟,建議先用 `az snapshot create` 替 VM 現有的磁碟拍快照,出錯時才有退路。
 
-掛好之後回到 VM,用 `lsblk` 找到新碟:大小是你剛剛指定的 256G,底下沒有任何分割,也沒有掛載點。本課的新碟出現為 `/dev/sdc`(OS 碟是 `sda`,Day 3 的 data disk 是 `sdb`),你的裝置名稱如果不同,後面步驟 4 的 `/dev/sdc` 要換成你的。Ceph 只會在完全空白的碟上建 OSD:有分割、有檔案系統或有 LVM 的碟,都不會被當成可用的碟。
+掛好之後回到 VM,用 `lsblk` 找到新碟:大小要與剛剛指定的容量相符,底下沒有任何分割,也沒有掛載點。後面步驟 4 的 `/dev/sdc` 是範例裝置名稱,要換成你辨認出的新碟。Ceph 只會在完全空白的碟上建 OSD:有分割、有檔案系統或有 LVM 的碟,都不會被當成可用的碟。
 
 除非特別註明「在你的電腦上」,以下指令都在 VM 上執行。
 
@@ -123,6 +127,8 @@ ceph config set mds mds_cache_memory_limit 1G
 這四行要在步驟 4 加 OSD **之前**設好。前面說過,pool 建立時才從預設值拿到自己的副本數。bootstrap 剛完成時叢集裡一個 pool 都沒有,Ceph 自己用的第一個 pool `.mgr`,要等第一個 OSD 上線才會建立。先改預設值、再加 OSD,`.mgr` 建立時就直接是 1 份。
 
 **後三行調整記憶體目標。** OSD 會依 `osd_memory_target` 這個目標值決定用多少記憶體當快取,而 cephadm 預設開啟自動調整(autotune):把主機總記憶體乘上 0.7、扣掉其他 Ceph 程式的用量,再平分給每個 OSD。這個算法假設主機只跑 Ceph。在 Day 0 那台 128 GB、只有一個 OSD 的 VM 上,目標值會被調到幾十 GB,跟同一台主機上的 OpenStack 搶記憶體。所以關掉自動調整,把 OSD 的目標固定在 2 GB。最後一行替 Day 16 才會出現的 MDS 先設 1 GB 的快取目標。這些設定不是程序的硬性記憶體上限,仍需保留額外空間;2 GB 的 OSD 目標適合這個小型練習,繁忙時可能犧牲效能。
+
+設定後,執行 `sudo ./cephadm shell -- ceph config get osd osd_memory_target` 檢查記憶體目標,應該回 `2147483648`(2G)。
 
 ## 步驟 4:加入 OSD
 
@@ -207,25 +213,15 @@ sudo ./cephadm rm-cluster --force --zap-osds --fsid $FSID
 
 **原因**:cephadm 會定期盤點主機上所有的碟(`ceph-volume inventory`)。Day 3 的 Cinder 用 LVM thin pool,thin pool 內部有一個存放中繼資料的邏輯磁碟區(名稱以 `_tmeta` 結尾),它沒有可以讀取的裝置檔,盤點讀到它就失敗。只有 Ceph 和 Day 3 的 Cinder LVM 裝在同一台主機上才會出現。
 
-**修法**:不影響功能。步驟 4 是直接指定 `/dev/sdc` 加 OSD,不依賴這份盤點。靜音:`ceph health mute CEPHADM_REFRESH_FAILED --sticky`。
-
-### OSD 的記憶體目標被調到幾十 GB {#mine-2}
-
-**原因**:漏了步驟 3 的後三行,cephadm 的自動調整依主機總記憶體算出 OSD 的記憶體目標。
-
-**修法**:補跑步驟 3 的設定。檢查:`ceph config get osd osd_memory_target` 應該回 `2147483648`(2G)。
+**修法**:不影響功能。步驟 4 是直接指定 `/dev/sdc` 加 OSD,不依賴這份盤點。靜音:`sudo ./cephadm shell -- ceph health mute CEPHADM_REFRESH_FAILED --sticky`。
 
 ### 告警讀到舊值:`OSD count 1 < osd_pool_default_size 2` {#mine-3}
 
-**症狀**:`ceph config get mon osd_pool_default_size` 已經回 1,`ceph -s` 卻還一直顯示 `OSD count 1 < osd_pool_default_size 2`。
+**症狀**:在 `cephadm shell` 裡執行 `ceph config get mon osd_pool_default_size` 已經回 1,`ceph -s` 卻還一直顯示 `OSD count 1 < osd_pool_default_size 2`。
 
 **原因**:健康檢查用的值有快取,改了設定不會馬上重新計算。告警裡的 2 是 `--single-host-defaults` 設的值。
 
-**修法**:`ceph mgr fail`,讓待命的 MGR 接手。接手後告警依新值重新計算,就會消失。這個處理只對應上述舊值告警,而且要先確認設定確實已生效、叢集有可接手的 MGR。其他告警應先查它自己的原因,不要一律切換 MGR。
-
-### 對 `.mgr` pool 下指令回 `unrecognized pool` {#mine-4}
-
-**原因**:第一個 OSD 上線之前,`.mgr` pool 還不存在。照步驟 3、步驟 4 的順序做,不需要對 `.mgr` 另外設定,見步驟 3「這四行要在步驟 4 加 OSD 之前設好」那一段。
+**修法**:`sudo ./cephadm shell -- ceph mgr fail`,讓待命的 MGR 接手。接手後告警依新值重新計算,就會消失。這個處理只對應上述舊值告警,而且要先確認設定確實已生效、叢集有可接手的 MGR。其他告警應先查它自己的原因,不要一律切換 MGR。
 
 ## 想一想
 

@@ -73,7 +73,7 @@ watch 'KUBECONFIG=~/.kube/config kubectl -n magnum-system get machine -o custom-
 # UPDATE_COMPLETE 後 kubectl get nodes 全 v1.35.5
 ```
 
-`watch` 那一行在 kind 上列出每個 Machine 的狀態(P 欄)和版本(V 欄)。對照前面的圖看:先多出一個 v1.35.5 的 Machine,原本 v1.34.8 的那個接著消失,control plane 換完再換 worker。整個替換在本課的環境大約花 5 分半鐘。如果新的 Machine 一直沒出現,先看 Nova 有沒有報 `No valid host`,見[疑難排解:升版時新節點開不出來](#mine-1)。
+`watch` 那一行在 kind 上列出每個 Machine 的狀態(P 欄)和版本(V 欄)。對照前面的圖看:先多出一個 v1.35.5 的 Machine,原本 v1.34.8 的那個接著消失,control plane 換完再換 worker。如果新的 Machine 一直沒出現,先看 Nova 有沒有報 `No valid host`,見[疑難排解:升版時新節點開不出來](#mine-1)。
 
 `openstack coe cluster show k8s-lab` 的狀態變成 `UPDATE_COMPLETE` 後,切到 workload cluster 看節點,VERSION 欄應該全部是 v1.35.5:
 
@@ -96,7 +96,7 @@ CAPI 有一個 **topology controller**,讀這個陣列,替每一格建立並持�
 
 所以 `openstack coe nodegroup create` 做的事,就是在這個陣列裡加一格。
 
-陣列的每一格都有一個 `failureDomain` 欄位,填的是節點要放在哪個 **availability zone**(AZ,Nova 把主機分組的單位;單機部署只有預設的 `nova`)。driver 從 node group 的 `availability_zone` label 讀這個值。沒給這個 label,driver 會填入 `null`,而 CAPI 只接受字串,整個 node group 會直接 `CREATE_FAILED`。建立 cluster 時自帶的 default-worker 走另一條路徑,值是空字串 `""`,所以沒有問題(見[疑難排解:nodegroup 立刻 CREATE_FAILED](#mine-2))。所以建立時一定要帶上這個 label。最後一行要對 workload cluster 下,先切換 kubeconfig:
+陣列的每一格都有一個 `failureDomain` 欄位,填的是節點要放在哪個 **availability zone**(AZ,Nova 把主機分組的單位;單機部署只有預設的 `nova`)。driver 從 node group 的 `availability_zone` label 讀這個值。沒給這個 label,driver 會填入 `null`,而 CAPI 只接受字串,整個 node group 會直接 `CREATE_FAILED`。建立 cluster 時自帶的 default-worker 走另一條路徑,值是空字串 `""`,所以沒有問題。所以建立時一定要帶上這個 label。最後一行要對 workload cluster 下,先切換 kubeconfig:
 
 ```bash
 export KUBECONFIG=<Day 8 的 workload kubeconfig>
@@ -115,7 +115,7 @@ AZ 的名稱可以用 `openstack availability zone list --compute` 確認。`kub
 
 **cluster-autoscaler** 是 Kubernetes 的元件,發現有 pod 因為資源不夠而卡在 Pending 時加節點,節點閒置時再把它移除。它支援很多種雲,在 CAPI 上用的是 `clusterapi` provider:autoscaler 自己不開 VM,只改 MachineDeployment 的 `replicas`(要幾台),接下來由 CAPO(Day 6 裝的 CAPI OpenStack provider)呼叫 Nova API 開 VM 或刪 VM。
 
-哪些 MachineDeployment 歸 autoscaler 管,由兩個 annotation 決定:`cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size` 和 `...-max-size`,分別是最少和最多幾台。同時有這兩個 annotation 的 MachineDeployment,autoscaler 才會去調整。
+**annotation** 是 Kubernetes 物件的附加中繼資料,可以用來提供工具需要的設定。哪些 MachineDeployment 歸 autoscaler 管,由兩個 annotation 決定:`cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size` 和 `...-max-size`,分別是最少和最多幾台。同時有這兩個 annotation 的 MachineDeployment,autoscaler 才會去調整。
 
 ### autoscaler 放在哪一座 cluster
 
@@ -165,9 +165,9 @@ kubectl -n magnum-system patch cluster <capi-cluster-name> --type=json -p \
              "cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size":"3"}}]'
 ```
 
-magnum-cluster-api 有一個 `auto_scaling_enabled=true` 的 label,建立 cluster 時帶上,driver 就會在 topology 裡做好同樣的設定。`k8s-lab` 建立時沒帶,所以這裡手動 patch;用 label 的做法本課沒有驗證。
-
 ### 部署 autoscaler
+
+**ServiceAccount** 是 Pod 中程式使用的身分,**RBAC** 是授予該身分操作權限的機制。這裡要讓 autoscaler 使用的身分有權限讀寫 kind 裡的 MachineDeployment 等 CAPI 資源。
 
 autoscaler 的 Deployment、ServiceAccount 和 RBAC 用 [cluster-autoscaler 官方 `clusterapi` provider 範例](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md)的組態,部署到 kind。本課改了 image、args,並加上 `--kubeconfig`:
 
@@ -205,9 +205,7 @@ autoscaler 起來之後,它的 log 會列出發現的 node group,應該看到 `d
 export KUBECONFIG=<Day 8 的 workload kubeconfig>
 ```
 
-```bash
-# 4. 觸發:workload 部署超量(nodeSelector=ng-app、每 pod 1 CPU × 3)→ pending → autoscaler 拉 ng-app 1→3
-```
+接著部署一個超量的 workload 觸發擴充:`nodeSelector` 指定 `ng-app`,3 個 pod 各要 1 CPU,現有節點放不下,pod 會變成 Pending。
 
 autoscaler 看到 Pending 的 pod,把 ng-app 的 replicas 從 1 改成 3;CAPO 呼叫 Nova 開兩台新 VM,加入 cluster 之後,3 個 pod 全部變成 Running。在 kind 上看 MachineDeployment,replicas 應該停在 3,不會再跳回 1。
 
@@ -227,25 +225,11 @@ kubectl delete deployment scale-test
 
 ## 疑難排解
 
-下面三個問題,跳過或做錯對應步驟時會遇到,依出現順序排列。
-
 ### 升版時新節點開不出來,Nova 報 `No valid host` {#mine-1}
 
 **症狀**:`openstack coe cluster upgrade` 之後,新版本的 Machine 一直沒有起來,Nova 端報 `No valid host`。
 
 **原因**:Nova 的 disk 帳用 flavor 總和計算,surge 多開的那一台 40 GB 超出可分配量。修法見[步驟 1](#step-disk);如果 Day 2–4 留下的 VM 或 Octavia amphora 還在,也會佔掉 disk 帳,見 Day 8 的[「LB 的 amphora 開不出來,Nova 報 `No valid host was found`」](sprint3-day8-e2e-workload-cluster.md#mine-4)。
-
-### nodegroup 立刻 CREATE_FAILED,`failureDomain` 是 null {#mine-2}
-
-**症狀**:`openstack coe nodegroup create` 直接 `CREATE_FAILED`,錯誤訊息是 `spec.topology.workers.machineDeployments[1].failureDomain: Invalid value: "null" ... must be of type string`。建立 cluster 時自帶的 default-worker 沒有問題,只有後加的 node group 會遇到。
-
-**原因**:driver 用 node group 的 `availability_zone` label 填 `failureDomain`,沒有這個 label 就填 `null`,CAPI v1.13 的 topology 檢查只接受字串;default-worker 的值是 `""`,所以合法。修法是建立時帶 `--labels availability_zone=nova`,見[步驟 3](#step-nodegroup)。完整記錄見排錯手冊:[nodegroup failureDomain null](../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null.md)。
-
-### autoscaler 調了 replicas,節點數卻在 1 和 3 之間來回 {#mine-3}
-
-**症狀**:autoscaler 正確看到 Pending 的 pod,把 MachineDeployment 的 replicas 設成 3,但很快又變回 1,接著又變成 3。
-
-**原因**:Cluster topology 裡還寫著 `replicas: 1`,topology controller 一直把它改回去。修法是把 topology 裡那一格的 `replicas` 移除,見[步驟 4 的「replicas 只能由一個控制器決定」](#replicas-owner)。
 
 ## 想一想
 
