@@ -1,0 +1,4810 @@
+
+<!doctype html>
+<html lang="zh-TW" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="OpenStack 實作課程：資源管理、多節點維運、租戶治理與安全">
+      
+      
+      
+        <link rel="canonical" href="https://deepwavelab.github.io/OpenStackPracticing/runbook/sprint3-day4-octavia/">
+      
+      
+        <link rel="prev" href="../sprint3-day3-cinder-lvm/">
+      
+      
+        <link rel="next" href="../sprint3-day5-barbican-heat/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/logos/openstack-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Day 4 · Octavia LB - OpenStack Lab Course</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/branding.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#day-4-octavia-amphora-listenerpoolmember" class="md-skip">
+          跳轉到
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="頁首">
+    <a href="../.." title="OpenStack Lab Course" class="md-header__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  <img src="../../assets/logos/openstack.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OpenStack Lab Course
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Day 4 · Octavia LB
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切換深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切換淺色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切換淺色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="標籤" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首頁
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../sprint3-day0-azure-vm/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  課程主線(Day 0–35)
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../solutions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  排錯手冊
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../previous-attempts/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  歷史 · 前兩次嘗試
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sprint3-reflection/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  回顧與教訓
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="OpenStack Lab Course" class="md-nav__button md-logo" aria-label="OpenStack Lab Course" data-md-component="logo">
+      
+  <img src="../../assets/logos/openstack.svg" alt="logo">
+
+    </a>
+    OpenStack Lab Course
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首頁
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    課程主線(Day 0–35)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    課程主線(Day 0–35)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 · 親手蓋一朵雲(Day 0–12)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 3 · 親手蓋一朵雲(Day 0–12)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure Lab 環境
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day1-kolla-aio-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Kolla AIO core
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day2-openstack-resource-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · OpenStack 資源全流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day3-cinder-lvm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Cinder LVM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Octavia LB
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Octavia LB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#octavia-lb-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Octavia 的 LB 是一台 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:準備 image、管理網路與憑證
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 1:準備 image、管理網路與憑證">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#amphora-lb-mgmt-net-o-hm0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        amphora 的管理網路:lb-mgmt-net 與 o-hm0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amphora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        控制服務與 amphora 互相驗證
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下載 image、改設定、產生憑證
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-dhclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        還要補兩樣:Redis 和 dhclient
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lb-web-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:建一台 LB,放在兩台 web VM 前面
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 3:建一台 LB,放在兩台 web VM 前面">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LB 由哪些物件組成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        準備 web VM 的開機腳本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lb_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        建 LB 的整段指令
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4ovn-provider-amphora-lb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:OVN provider,不開 amphora 的 LB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸說明
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="延伸說明">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tenant-ovn-prechecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tenant＋OVN 與後續 prechecks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#certificate-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        憑證檔案與私鑰分工
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        維運參考
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="維運參考">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缺少 dhclient 的既有部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        未啟用 Redis 的既有部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redis 故障期間建立的 LB 刪不掉
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day5-barbican-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Barbican + Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day6-capi-management-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · CAPI 管理叢集
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day7-magnum-capi-driver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum CAPI driver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day8-e2e-workload-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · E2E workload cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day9-day2-operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 9 · Day-2 operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day10-terraform-teardown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 10 · Terraform + teardown
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day11-openstack-service-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 11 · 後日談:服務全景圖
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint3-day12-sprint4-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 12 · 下一步的地圖:Sprint 4 預告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 4 · 邁向生產環境(Day 13–26)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 4 · 邁向生產環境(Day 13–26)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day13-skyline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 13 · Skyline 儀表板
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day14-ceph-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 14 · Ceph 基礎
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day15-object-storage-rgw/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 15 · 物件儲存 RGW
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day16-manila-cephfs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 16 · Manila 共享檔案
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day17-designate-dns/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 17 · Designate DNS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day18-trove-dbaas/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 18 · Trove 資料庫服務
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day19-api-request-lifecycle/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 19 · server create 的請求路徑
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day20-ovn-packet-trace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 20 · 封包怎麼流(OVN)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day21-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 21 · 可觀測性
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day22-upgrade-backup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 22 · 更新與備份還原
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day23-multinode-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 23 · 多節點部署與 HA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day24-scale-out/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 24 · 橫向擴展
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day25-sprint4-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 25 · Sprint 4 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint4-day26-sprint5-preview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 26 · 下一步的地圖:Sprint 5 預告
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 5 · 把雲當生意經營(Day 27–35)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 5 · 把雲當生意經營(Day 27–35)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day27-multi-tenant-governance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 27 · 多租戶治理與額度
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day28-ceilometer-metering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 28 · 計量管線(Ceilometer)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day29-aodh-autoscaling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 29 · 告警與自動擴縮(Aodh)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day30-cloudkitty-rating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 30 · 計價與費用明細(CloudKitty)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day31-masakari-ha/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 31 · 主機故障與 VM 恢復(Masakari)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day32-full-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 32 · API 入口 TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day33-keycloak-federation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 33 · 企業身分接軌(Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day34-cadf-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 34 · 稽核軌跡(CADF)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint5-day35-sprint5-recap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 35 · Sprint 5 總結
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../epilogue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    結語 · 從 API 操作找到下一個問題
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../solutions/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    排錯手冊
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    排錯手冊
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    本課程(Kolla / Magnum CAPI)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-proxysql-mariadb-port-conflict/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kolla ProxySQL vs MariaDB port
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia dhclient (Noble)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Octavia amphora Redis jobboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/kind-kolla-docker-iptables-masquerade/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    kind × Kolla docker iptables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-fixed-subnet-overlaps-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CAPI 子網撞 API IP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-capi-nodegroup-failuredomain-null/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nodegroup failureDomain null
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史路線(Juju / Charms)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史路線(Juju / Charms)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/mysql-charm-not-compatible-with-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL charm 不相容
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-charms-caracal-release-mismatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN charm Caracal 版差
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/ovn-version-mismatch-chassis-not-registering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OVN chassis 未註冊
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-caracal-cloud-credentials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute Caracal 憑證
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/nova-compute-missing-neutron-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    nova-compute 缺 neutron auth
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/neutron-security-groups-disabled-default/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    neutron SG 預設關閉
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/magnum-api-bind-mismatch-with-haproxy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    magnum-api bind vs haproxy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/integration-issues/heat-missing-domain-setup-action/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    heat 缺 domain setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime errors
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runtime errors
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/runtime-errors/cirros-sshd-race-vs-ubuntu-config-drive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cirros sshd race vs config-drive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    維護網站本身
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    維護網站本身
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/security-issues/git-history-scrub-sensitive-data-filter-repo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    git 歷史清洗敏感資料
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../solutions/site-maintenance/official-logo-sourcing-verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    官方 logo 安全取得流程
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    歷史 · 前兩次嘗試
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    歷史 · 前兩次嘗試
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../previous-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    前兩次嘗試:走過才知道的路
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment-tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    部署工具圖鑑(矩陣與晶片支援)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 1 · Juju + Charms(9 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-lxd-juju-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · LXD + Juju install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-juju-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Juju bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-1-first-relation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · First relation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-2-openstack-charm-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 2 · Charm map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-keystone/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Keystone
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-mysql-innodb-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · MySQL InnoDB cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-rabbitmq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · RabbitMQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-vault-tls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Vault TLS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-glance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Glance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-placement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Placement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-cloud-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova cloud controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-nova-compute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Nova compute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-network-stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Network stack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-3-horizon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 3 · Horizon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-4-configure-openstack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 4 · Configure OpenStack
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-5-heat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 5 · Heat
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-6-magnum/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 6 · Magnum
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-7-magnum-k8s-cluster/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 7 · Magnum k8s cluster
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../day-8-storage-attempts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 8 · Storage attempts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sprint 2 · OpenStack-Helm(2 天)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-azure-vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · Azure VM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-0-k8s-bootstrap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 0 · k8s bootstrap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-day-1-ansible-kolla-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Day 1 · Ansible + Kolla install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sprint2-course-1-osh-infra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OSH infra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-course-plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 課程計畫(後來被推翻)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    回顧與教訓
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    回顧與教訓
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint3-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 3 回顧(本課程)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sprint2-reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 2 回顧(OSH,2 天喊停)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reflection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint 1 回顧(Juju,9 天)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#octavia-lb-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Octavia 的 LB 是一台 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 1:準備 image、管理網路與憑證
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 1:準備 image、管理網路與憑證">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#amphora-lb-mgmt-net-o-hm0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        amphora 的管理網路:lb-mgmt-net 與 o-hm0
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#amphora" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        控制服務與 amphora 互相驗證
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下載 image、改設定、產生憑證
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-dhclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        還要補兩樣:Redis 和 dhclient
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 2:deploy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-lb-web-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 3:建一台 LB,放在兩台 web VM 前面
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="步驟 3:建一台 LB,放在兩台 web VM 前面">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LB 由哪些物件組成
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#web-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        準備 web VM 的開機腳本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lb_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        建 LB 的整段指令
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4ovn-provider-amphora-lb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟 4:OVN provider,不開 amphora 的 LB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        從儀表板看成果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        想一想
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        小結
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸說明
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="延伸說明">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tenant-ovn-prechecks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tenant＋OVN 與後續 prechecks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#certificate-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        憑證檔案與私鑰分工
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        維運參考
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="維運參考">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缺少 dhclient 的既有部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        未啟用 Redis 的既有部署
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mine-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redis 故障期間建立的 LB 刪不掉
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        延伸閱讀
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        下一步
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="day-4-octavia-amphora-listenerpoolmember">Day 4: 用 Octavia 建負載平衡器——amphora、管理網路與 listener/pool/member<a class="headerlink" href="#day-4-octavia-amphora-listenerpoolmember" title="Permanent link">&para;</a></h1>
+<p><img align="right" alt="Octavia 的官方吉祥物" src="../../assets/mascots/octavia.png" width="110" /></p>
+<p>Day 2 開出來的 VM,靠一個 floating IP 讓外面連得到。假設現在有兩台 VM 跑同一個網站,你希望使用者只記一個位址,請求平均分給兩台;其中一台當機時,請求就不要再送過去。floating IP 一次只能綁在一台 VM 上,做不到這件事,需要的是一台<strong>負載平衡器</strong>(load balancer,以下簡稱 LB):使用者一律連到它,由它決定把每個請求轉給後面哪一台。</p>
+<p>OpenStack 提供 LB 的服務叫 <strong>Octavia</strong>。這一章用 Kolla 把 Octavia 加進 Day 1 部好的雲,再以租戶身分建一台 LB,放在兩台 web VM 前面,最後對它連續 <code>curl</code> 幾次,看回應是不是在兩台之間輪流出現。讀完之後,LB 卡在 <code>PENDING_CREATE</code>、或後端被標成 <code>ERROR</code> 時,你能判斷問題出在 Octavia 的控制服務、amphora(執行 HAProxy 的負載平衡 VM)的管理網路,還是後端的 VM 本身。</p>
+<h2 id="octavia-lb-vm">Octavia 的 LB 是一台 VM<a class="headerlink" href="#octavia-lb-vm" title="Permanent link">&para;</a></h2>
+<p>在 Octavia 的預設做法裡,你每建一台 LB,Octavia 就替你開一台小 VM,裡面跑著開源的負載平衡軟體 haproxy。這台 VM 叫 <strong>amphora</strong>,它就是 LB 本體:使用者的流量進到 amphora,由裡面的 haproxy 轉給後端。</p>
+<p>Octavia 自己的程式不轉送任何流量,它們負責管理 amphora。下面這張圖把 Octavia 的容器和 amphora 分成上下兩層,上層是<strong>控制面</strong>(負責建立、設定、監控),下層是<strong>資料面</strong>(使用者的流量實際走過的地方):</p>
+<p><img alt="上層是控制面:openstack CLI 呼叫 octavia-api,再交給 octavia-worker;另有 housekeeping 清理殘留資源、輪替憑證,health-manager 收心跳、失聯就換一台。worker 往下請 Nova 開 VM、請 Neutron 插 VIP port、推 haproxy 設定,產生下層的 amphora VM;amphora 以 UDP 5555 回報心跳給 health-manager。下層是資料面:使用者流量進到 amphora 裡的 haproxy,再轉給後端 member vm-web1、vm-web2" src="../../assets/diagrams/os-s3d4-amphora.svg" /></p>
+<p>照著圖由上往下看:</p>
+<ol>
+<li><strong>octavia-worker 做實際的建立工作。</strong> 你下 <code>openstack loadbalancer create</code>,API 收下請求後交給 worker,worker 請 Nova 開 amphora、請 Neutron 給它一個對外的位址,再把 haproxy 的設定推進去。</li>
+<li><strong>health-manager 負責顧 amphora。</strong> 每台 amphora 定期用 UDP 5555 回報心跳,太久沒收到,health-manager 就判定那台 amphora 壞了,開一台新的取代它(這個動作叫 failover)。</li>
+<li><strong>使用者的流量只經過下層。</strong> 控制面的容器停掉,已經建好的 LB 還是照常轉送;受影響的是建新 LB、改設定和 failover。</li>
+</ol>
+<p>所以 LB 出問題時,先分清楚是哪一層:建不出來、狀態卡住,看控制面;建好了但連不到後端,看資料面。</p>
+<h2 id="_1">開始之前<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>這一章接在 Day 2、Day 3 之後,需要:</p>
+<ul>
+<li>Day 1 部好的雲,以及 kolla 的 venv(<code>source ~/kolla-venv/bin/activate</code>)。</li>
+<li>Day 2 以租戶身分建好的資源:<code>~/demo-openrc.sh</code>、網路 <code>net1</code> 與子網 <code>subnet1</code>、對外網路 <code>ext-net</code>、keypair <code>oslab</code>、flavor <code>m1.small</code>、image <code>ubuntu-24.04</code>。主機要能直接連到 <code>ext-net</code> 上的 floating IP(Day 2 在 <code>br-ex</code> 掛的 <code>172.24.4.1</code>)。</li>
+</ul>
+<p>每台 amphora 都會佔用一份 Nova 的資源:Kolla 預設替 amphora 建的 flavor 是 1 vCPU、1 GB 記憶體、5 GB 磁碟。</p>
+<h2 id="1-image">步驟 1:準備 image、管理網路與憑證<a class="headerlink" href="#1-image" title="Permanent link">&para;</a></h2>
+<p>Octavia 開 amphora 時,需要一個裝好 haproxy 和 amphora-agent(amphora 上接收控制服務指令的程式)的 image。官方做法是用 diskimage-builder 自己建,約 15 分鐘,而且需要 debootstrap。<a href="https://github.com/osism/openstack-octavia-amphora-image">OSISM 每月發布預建的 amphora image</a>,有對應 2025.1 的版本,這一章直接下載它。正式環境建議自己建:image 裡裝了什麼、多久更新一次,由你決定。</p>
+<p>接下來的設定裡,最需要先弄懂的是 amphora 的管理網路。</p>
+<h3 id="amphora-lb-mgmt-net-o-hm0">amphora 的管理網路:lb-mgmt-net 與 o-hm0<a class="headerlink" href="#amphora-lb-mgmt-net-o-hm0" title="Permanent link">&para;</a></h3>
+<p>上一節的圖裡,worker 要連到 amphora-agent 推設定(TCP 9443),amphora 要把心跳送回 health-manager(UDP 5555)。這兩條連線都需要一個網路,讓主機上的 Octavia 容器和 amphora 互相連得到。這個網路叫 <strong>lb-mgmt-net</strong>,只給 Octavia 管理用,不走租戶的流量。</p>
+<p>麻煩在於 amphora 是 VM,它的網卡接在 Neutron 的虛擬網路上;Octavia 的容器跑在主機上,用的是主機的網路。兩邊要接上,Kolla 提供兩種模式,用 <code>octavia_network_type</code> 選:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>provider 模式(Kolla 預設)</th>
+<th>tenant 模式(本課採用)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lb-mgmt-net 是什麼</td>
+<td>一個實體的 VLAN 或 flat 網路(flat:不分 VLAN、直接用整個實體網段)</td>
+<td>一個普通的 Geneve 租戶網路,跟 Day 2 的 <code>net1</code> 同一種</td>
+</tr>
+<tr>
+<td>主機怎麼接進去</td>
+<td>主機的實體網卡本來就在那個網段上</td>
+<td>Kolla 在 lb-mgmt-net 上建一個 Neutron port,再在主機上造一張叫 <strong>o-hm0</strong> 的網卡,掛到 br-int 並標上那個 port 的 ID</td>
+</tr>
+<tr>
+<td>適合</td>
+<td>有真實網路設備的正式環境</td>
+<td>沒有 VLAN 可用的單機實驗環境,例如 Azure VM</td>
+</tr>
+</tbody>
+</table>
+<p>這台 Azure VM 沒有第二個實體網段可以給 Octavia,所以用 tenant 模式。它的接法畫成圖是這樣:</p>
+<p><img alt="左邊是主機,health-manager 和 octavia-worker 都透過 o-hm0 收發;o-hm0 是一張主機網卡,綁定一個 Neutron port,接在 br-int 上(VM 的網卡都接在 br-int)。br-int 接上 lb-mgmt-net(Geneve 租戶網路)。右邊的 amphora VM 有兩張網卡:管理網卡在 lb-mgmt-net,VIP 網卡在 web VM 所在的 net1" src="../../assets/diagrams/os-s3d4-mgmt-net.svg" /></p>
+<p>照著圖看兩個重點:</p>
+<ol>
+<li><strong>o-hm0 讓主機在虛擬網路裡看起來像一台 VM。</strong> 這件事分三步完成:<ul>
+<li>br-int 是 Open vSwitch 的整合橋,所有 VM 的網卡都接在上面。Kolla 把 o-hm0 加到 br-int,並在這個介面上標記 lb-mgmt-net 上那個 Neutron port 的 ID(<code>iface-id</code>)。這個動作的核心是 <code>ovs-vsctl add-port br-int o-hm0 -- set Interface o-hm0 external-ids:iface-id=&lt;port_id&gt;</code>,實際在 <code>openvswitch_vswitchd</code> 容器裡執行,參數比這裡多。</li>
+<li>主機上負責虛擬網路的 ovn-controller 依 <code>iface-id</code> 把 o-hm0 對應到那個 port,o-hm0 從此接在 lb-mgmt-net 上。</li>
+<li>o-hm0 再用 DHCP 從 lb-mgmt-net 要一個 IP。</li>
+</ul>
+</li>
+<li><strong>amphora 有兩張網卡。</strong> 一張在 lb-mgmt-net,讓控制服務管理它;另一張在 LB 所服務的網路上(這一章是 <code>net1</code>),持有 LB 的 <strong>VIP</strong>:LB 對外的固定位址(跟 Day 1 的 VIP 一樣,是一個不屬於某台機器固定網卡的位址)。</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">tenant 模式配 OVN 不在官方支援範圍內</p>
+<p><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html#development-or-testing">Kolla 2025.1 的文件</a>把 tenant 模式列為開發與測試用途,只標明支援 Open vSwitch 的 Neutron 設定,不建議用在正式環境。這門課的 Neutron 用的是 OVN,Kolla 的 Octavia prechecks 會擋下這個組合。</p>
+<p>本章的單機實驗沿用 tenant 模式,直接 deploy、略過 prechecks。上面的接法由 ovn-controller 依 <code>iface-id</code> 綁定對應的 Neutron port,但不代表 tenant＋OVN 在官方支援範圍內。略過 prechecks 也會略過其他檢查,所以必須照步驟 1 啟用 Redis、安裝 dhclient,部署後再照步驟 2 確認容器和 o-hm0。正式環境請用 provider 模式;後續更新遇到的限制見章末<a href="#tenant-ovn-prechecks">延伸說明</a>。</p>
+</div>
+<h3 id="amphora">控制服務與 amphora 互相驗證<a class="headerlink" href="#amphora" title="Permanent link">&para;</a></h3>
+<p>worker 對 amphora-agent 下的指令,等於能改掉一台 LB 的全部設定,所以兩邊連線時要互相驗證身分,用的是雙向 TLS(mTLS):不只 amphora 出示憑證,控制服務也要出示。憑證授權單位(Certificate Authority,CA)負責簽發憑證,Kolla 用兩個獨立的 CA 簽這兩邊的憑證:</p>
+<ul>
+<li><code>server_ca</code>:簽 amphora 的憑證,控制服務靠它確認對方真的是自己開的 amphora。</li>
+<li><code>client_ca</code>:簽控制服務的憑證,amphora 靠它確認下指令的是 Octavia。</li>
+</ul>
+<p><code>kolla-ansible octavia-certificates</code> 會產生部署所需的 CA 與控制服務憑證,供兩邊驗證身分。檔案位置與私鑰分工見章末<a href="#certificate-files">延伸說明</a>。</p>
+<h3 id="image">下載 image、改設定、產生憑證<a class="headerlink" href="#image" title="Permanent link">&para;</a></h3>
+<p>下面這段做三件事。第一段下載 amphora image;檔案不小,可以另開一個終端機跑,同時做後面的設定。中間三行是要加進 <code>/etc/kolla/globals.yml</code> 的設定,不是指令,用編輯器加到檔尾即可:<code>enable_octavia</code> 打開 Octavia、<code>octavia_network_type</code> 選 tenant 模式、<code>octavia_auto_configure</code> 讓 Kolla 自動建好 lb-mgmt-net、router、amphora 用的 flavor、security group 和 keypair。最後一行產生憑證:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># amphora image(背景下載)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-sL<span class="w"> </span>-o<span class="w"> </span>/tmp/amphora.qcow2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>https://nbg1.your-objectstorage.com/osism/openstack-octavia-amphora-image/octavia-amphora-haproxy-2025.1.qcow2
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># globals.yml</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>enable_octavia:<span class="w"> </span><span class="s2">&quot;yes&quot;</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>octavia_network_type:<span class="w"> </span><span class="s2">&quot;tenant&quot;</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>octavia_auto_configure:<span class="w"> </span>yes<span class="w">     </span><span class="c1"># kolla 自建 lb-mgmt-net/router/flavor/SG/keypair</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># 憑證(注意:這個子指令也要 -i,否則找預設 inventory 路徑會出錯)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>kolla-ansible<span class="w"> </span>octavia-certificates<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p><code>octavia-certificates</code> 跟 deploy 一樣要帶 <code>-i ~/all-in-one</code>,指定 Day 1 使用的 inventory。</p>
+<h3 id="redis-dhclient">還要補兩樣:Redis 和 dhclient<a class="headerlink" href="#redis-dhclient" title="Permanent link">&para;</a></h3>
+<p>部署前還需要啟用 Redis,並在主機安裝 dhclient。</p>
+<p>第一個是 Redis。<strong>provider</strong> 是 Octavia 背後實作負載平衡的程式,本章使用的 <strong>amphora provider</strong> 透過 VM 提供服務。worker 收到建 LB 的請求後,會先把工作放進任務佇列,再取出執行;這個佇列叫 <strong>jobboard</strong>,存在 Redis(一套放在記憶體裡的鍵值資料庫,常用來做佇列和快取)裡。Kolla 2025.1 啟用 amphora provider 時會打開 jobboard,但 <code>enable_redis</code> 預設是 <code>no</code>,因此必須另行啟用 Redis:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_redis: &quot;yes&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
+</span></code></pre></div>
+<p>第二個是 o-hm0 要 IP 的方式。Kolla 替 o-hm0 產生的 systemd 服務 <code>octavia-interface.service</code>,寫死用 <code>/sbin/dhclient</code> 要 DHCP,但 Ubuntu 24.04 的 cloud image 已經不內建這個程式(套件 isc-dhcp-client)。先在主機上裝好;若既有部署缺少它,修復方式見<a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/">dhclient 排錯手冊</a>:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>isc-dhcp-client
+</span></code></pre></div>
+<h2 id="2deploy">步驟 2:deploy<a class="headerlink" href="#2deploy" title="Permanent link">&para;</a></h2>
+<p>設定和憑證都齊了。跟 Day 1 學到的一樣,改完 <code>globals.yml</code> 就重跑部署:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one
+</span></code></pre></div>
+<p>結尾一樣看 <code>PLAY RECAP</code> 的 <code>failed=0</code>。跑完後確認兩件事。第一,<code>sudo docker ps</code> 裡 Octavia 的五個容器都是 <code>Up</code>:<code>octavia_api</code>、<code>octavia_worker</code>、<code>octavia_health_manager</code>、<code>octavia_housekeeping</code>,以及 OVN provider 需要的 <code>octavia_driver_agent</code>。第二,o-hm0 拿到了 lb-mgmt-net 的位址:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>ip<span class="w"> </span>-br<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>o-hm0
+</span></code></pre></div>
+<p>狀態要是 <code>UP</code>,而且有一個 <code>10.1.0.x</code> 的位址。<code>10.1.0.0/24</code> 是 Kolla 給 lb-mgmt-subnet 的預設網段,這個位址由 OVN 內建的 DHCP 發出;拿得到它,代表上一步圖上的 o-hm0 → br-int → lb-mgmt-net 這條路通了。如果 deploy 停在 <code>Restart octavia-interface.service</code>,見<a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/">dhclient 排錯手冊</a>。</p>
+<h2 id="3-lb-web-vm">步驟 3:建一台 LB,放在兩台 web VM 前面<a class="headerlink" href="#3-lb-web-vm" title="Permanent link">&para;</a></h2>
+<p>這一步的指令放在同一段裡,但請一段一段貼,不要整段一次貼上:中間要先查到兩台 web VM 的 IP,再填進建 member 的指令。先看會建出哪些東西。</p>
+<h3 id="lb">LB 由哪些物件組成<a class="headerlink" href="#lb" title="Permanent link">&para;</a></h3>
+<p>在 Octavia 裡,「一台能用的 LB」是好幾個物件疊起來的,每個物件掛在上一個底下。下面這張圖由上往下就是建立的順序:</p>
+<p><img alt="client 經 floating IP 連到 loadbalancer(持有 VIP),往下是 listener(聽 HTTP :80),再往下是 pool(後端名單加輪流分配),pool 底下有兩個 member:vm-web1、vm-web2;health monitor 用虛線接在 pool 旁邊,每 5 秒探測 member" src="../../assets/diagrams/os-s3d4-lb-objects.svg" /></p>
+<p>照著圖由上往下:</p>
+<ol>
+<li><strong>loadbalancer</strong>:LB 本身,持有 VIP。建它的時候 Octavia 才會開 amphora。</li>
+<li><strong>listener</strong>:LB 在哪個 port、用什麼協定收請求,這裡是 HTTP 的 80。一台 LB 可以有好幾個 listener,例如同時聽 80 和 443。</li>
+<li><strong>pool</strong>:後端的名單,加上分配的方式。<code>ROUND_ROBIN</code> 是依序輪流,第一個請求給第一台、第二個給第二台,以此類推。</li>
+<li><strong>member</strong>:名單上的每一台後端,用「IP + port」指定。</li>
+<li><strong>health monitor</strong>:掛在 pool 上,定期探測每個 member。這一章的設定是每 5 秒(<code>--delay 5</code>)送一次 HTTP 請求到 <code>/</code>,3 秒(<code>--timeout 3</code>)沒回應算一次失敗;失敗太多次的 member 會被標成 <code>ERROR</code>,不再分到流量,恢復後連續成功 3 次(<code>--max-retries 3</code>)才重新標回 <code>ONLINE</code>。</li>
+</ol>
+<p>最外層的 floating IP 是 Day 2 學過的:把 <code>ext-net</code> 上的一個位址對應到某個 port。這次對應的是 VIP 的 port,所以主機打 floating IP,就會進到 LB。</p>
+<h3 id="web-vm">準備 web VM 的開機腳本<a class="headerlink" href="#web-vm" title="Permanent link">&para;</a></h3>
+<p>兩台 web VM 開機時,要在 80 port 起一個 HTTP 服務,回應自己的 hostname,這樣從回應就看得出請求被送到哪一台。開機時自動執行的腳本叫 <strong>user-data</strong>,由 cloud-init 在 VM 第一次開機時執行。最小可用的版本如下(Ubuntu 24.04 內建 python3),存成主機上的 <code>/tmp/web-userdata.sh</code>,下面的指令會用 <code>--user-data</code> 把它交給 VM:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="ch">#!/bin/bash</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>hostname<span class="w"> </span>&gt;<span class="w"> </span>/root/index.html
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">cd</span><span class="w"> </span>/root<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>http.server<span class="w"> </span><span class="m">80</span>
+</span></code></pre></div>
+<h3 id="lb_1">建 LB 的整段指令<a class="headerlink" href="#lb_1" title="Permanent link">&para;</a></h3>
+<p>整段指令分成四部分,先說明再貼:</p>
+<ul>
+<li><strong>上傳 amphora image</strong>(admin 身分)。image 要上傳到 Octavia 自己的 project,並加上 <code>amphora</code> 這個 tag,Octavia 開 amphora 時是用 tag 找 image。那個 project 的 ID 寫在 <code>octavia.conf</code> 的 <code>amp_image_owner_id</code>,<code>octavia_auto_configure</code> 已經填好,第一行從 worker 容器裡讀出來。最後一行 <code>pip install python-octaviaclient</code> 裝的是 <code>openstack loadbalancer</code> 系列指令,它不在 Day 1 裝的 <code>python-openstackclient</code> 裡,要另外裝進 venv。</li>
+<li><strong>開兩台 web VM</strong>(租戶身分)。先在 <code>default</code> security group 放行 TCP 80,否則 LB 和 health monitor 都連不到 VM 的 80 port。<code>server create</code> 這行建 <code>vm-web1</code>,同一行把最後的名字換成 <code>vm-web2</code> 再跑一次。<code>--config-drive True</code> 讓 VM 從一個掛載的唯讀磁碟讀 user-data,跟 Day 2 開 Ubuntu VM 時一樣。</li>
+<li><strong>建 LB 的物件</strong>,順序跟上面的圖一樣。每一行都帶 <code>--wait</code>,等這個物件建好再往下。第一行 <code>loadbalancer create</code> 會開 amphora,約 2 到 4 分鐘。LB 的名字 <code>lb2</code> 可以自己取,後面的指令跟著改即可。</li>
+<li><strong>把 floating IP 接到 VIP,然後從主機 <code>curl</code> 六次。</strong></li>
+</ul>
+<p><code>member create</code> 那兩行的 <code>10.10.10.124</code>、<code>10.10.10.188</code> 是原始實跑指令使用的 IP,執行時要換成自己的。兩台 VM 建好後,先用下面的指令查 <code>vm-web1</code>,再把名稱換成 <code>vm-web2</code> 查另一台。只取各自 <code>net1</code> 上的 fixed IP,不要把含網路名稱的完整輸出當成 IP:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openstack<span class="w"> </span>server<span class="w"> </span>show<span class="w"> </span>vm-web1<span class="w"> </span>-c<span class="w"> </span>addresses<span class="w"> </span>-f<span class="w"> </span>value<span class="w">   </span><span class="c1"># 取 net1 上的 fixed IP</span>
+</span></code></pre></div>
+<p>將查得的位址分別記入 shell 變數:執行 <code>WEB1_IP="&lt;vm-web1-net1-fixed-ip&gt;"</code> 與 <code>WEB2_IP="&lt;vm-web2-net1-fixed-ip&gt;"</code>,先把尖括號內的內容換成實際 IP。下面保留原始實跑指令;執行兩行 <code>member create</code> 時,將 <code>--address 10.10.10.124</code> 改為 <code>--address "$WEB1_IP"</code>,將 <code>--address 10.10.10.188</code> 改為 <code>--address "$WEB2_IP"</code>。步驟 4 也沿用 <code>WEB1_IP</code>。修正後的寫法本課沒有實跑。</p>
+<p>填錯的話,health monitor 會把兩個不存在的 member 標成 <code>ERROR</code>,錯誤訊息不會告訴你是 IP 抄錯了。</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># image 上傳到 octavia.conf 的 amp_image_owner_id 那個 project,tag 必須是 amphora</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nv">AMP_PROJECT</span><span class="o">=</span><span class="k">$(</span>sudo<span class="w"> </span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>octavia_worker<span class="w"> </span>grep<span class="w"> </span>amp_image_owner_id<span class="w"> </span>/etc/octavia/octavia.conf<span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $3}&#39;</span><span class="k">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nb">source</span><span class="w"> </span>/etc/kolla/admin-openrc.sh
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>openstack<span class="w"> </span>image<span class="w"> </span>create<span class="w"> </span>amphora-x64-haproxy<span class="w"> </span>--file<span class="w"> </span>/tmp/amphora.qcow2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span>--disk-format<span class="w"> </span>qcow2<span class="w"> </span>--container-format<span class="w"> </span>bare<span class="w"> </span>--private<span class="w"> </span>--tag<span class="w"> </span>amphora<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span>--project<span class="w"> </span><span class="nv">$AMP_PROJECT</span><span class="w"> </span>--property<span class="w"> </span><span class="nv">hw_architecture</span><span class="o">=</span>x86_64<span class="w"> </span>--property<span class="w"> </span><span class="nv">hw_rng_model</span><span class="o">=</span>virtio
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>pip<span class="w"> </span>install<span class="w"> </span>python-octaviaclient
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># 兩台 web member(user-data 起 http server 回 hostname)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="nb">source</span><span class="w"> </span>~/demo-openrc.sh
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>openstack<span class="w"> </span>security<span class="w"> </span>group<span class="w"> </span>rule<span class="w"> </span>create<span class="w"> </span>--proto<span class="w"> </span>tcp<span class="w"> </span>--dst-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>default
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>openstack<span class="w"> </span>server<span class="w"> </span>create<span class="w"> </span>--flavor<span class="w"> </span>m1.small<span class="w"> </span>--image<span class="w"> </span>ubuntu-24.04<span class="w"> </span>--network<span class="w"> </span>net1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">  </span>--key-name<span class="w"> </span>oslab<span class="w"> </span>--config-drive<span class="w"> </span>True<span class="w"> </span>--user-data<span class="w"> </span>/tmp/web-userdata.sh<span class="w"> </span>--wait<span class="w"> </span>vm-web1<span class="w">   </span><span class="c1"># web2 同</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1"># LB 全流程(第一次 create 會觸發 amphora VM 開機,2-4 分)</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lb2<span class="w"> </span>--vip-subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--wait
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>listener<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>listener1<span class="w"> </span>--protocol<span class="w"> </span>HTTP<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>lb2
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>pool<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>pool1<span class="w"> </span>--lb-algorithm<span class="w"> </span>ROUND_ROBIN<span class="w"> </span>--listener<span class="w"> </span>listener1<span class="w"> </span>--protocol<span class="w"> </span>HTTP<span class="w"> </span>--wait
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>create<span class="w"> </span>--subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--address<span class="w"> </span><span class="m">10</span>.10.10.124<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>pool1
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>create<span class="w"> </span>--subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--address<span class="w"> </span><span class="m">10</span>.10.10.188<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>pool1
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>healthmonitor<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>hm1<span class="w"> </span>--delay<span class="w"> </span><span class="m">5</span><span class="w"> </span>--max-retries<span class="w"> </span><span class="m">3</span><span class="w"> </span>--timeout<span class="w"> </span><span class="m">3</span><span class="w"> </span>--type<span class="w"> </span>HTTP<span class="w"> </span>--url-path<span class="w"> </span>/<span class="w"> </span>--wait<span class="w"> </span>pool1
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="c1"># VIP 掛 FIP → host 直接打</span>
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="nv">VIPPORT</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>show<span class="w"> </span>lb2<span class="w"> </span>-c<span class="w"> </span>vip_port_id<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a><span class="nv">LBFIP</span><span class="o">=</span><span class="k">$(</span>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span>create<span class="w"> </span>ext-net<span class="w"> </span>-c<span class="w"> </span>floating_ip_address<span class="w"> </span>-f<span class="w"> </span>value<span class="k">)</span>
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>openstack<span class="w"> </span>floating<span class="w"> </span>ip<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--port<span class="w"> </span><span class="nv">$VIPPORT</span><span class="w"> </span><span class="nv">$LBFIP</span>
+</span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>seq<span class="w"> </span><span class="m">6</span><span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="k">do</span><span class="w"> </span>curl<span class="w"> </span>-s<span class="w"> </span>http://<span class="nv">$LBFIP</span>/<span class="p">;</span><span class="w"> </span><span class="k">done</span><span class="w">   </span><span class="c1"># web1/web2 交替 = round robin</span>
+</span></code></pre></div>
+<p>最後那個迴圈印出六行 hostname,<code>vm-web1</code> 和 <code>vm-web2</code> 一行一行交替出現,代表請求從 floating IP 進到 amphora,再由 haproxy 依序輪流送到兩台 VM。再看一下 health monitor 對兩個 member 的判斷:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>list<span class="w"> </span>pool1
+</span></code></pre></div>
+<p>兩個 member 的 <code>operating_status</code> 都要是 <code>ONLINE</code>,<code>provisioning_status</code> 是 <code>ACTIVE</code>。如果有一個是 <code>ERROR</code>,health monitor 對它的探測一直失敗,那台 VM 不會分到流量。</p>
+<p>如果結果不對,照第一節的兩層往回查:</p>
+<ul>
+<li><code>loadbalancer create</code> 一直沒回來,<code>openstack loadbalancer show lb2</code> 的 <code>provisioning_status</code> 停在 <code>PENDING_CREATE</code>:問題在控制面,amphora 可能根本沒開。先看 worker 的 log;若有 Redis 連線錯誤,見<a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/">Redis jobboard 排錯手冊</a>。</li>
+<li>amphora 開起來了,LB 最後卻變成 <code>ERROR</code>:worker 會反覆嘗試連 amphora-agent 的 9443 port 推設定,一直連不上就放棄,把 LB 標成 <code>ERROR</code>。這時查管理網路:o-hm0 有沒有 <code>10.1.0.x</code> 的位址(步驟 2)、amphora 在 lb-mgmt-net 上有沒有位址。</li>
+<li>LB 是 <code>ACTIVE</code>,但 <code>curl</code> 沒有回應或只回一台:問題在資料面或後端。檢查 member 的 IP 有沒有填對、<code>default</code> security group 有沒有放行 80、VM 的 user-data 有沒有把 HTTP 服務跑起來。</li>
+<li>想確認 amphora 本身:以 admin 身分執行 <code>openstack loadbalancer amphora list</code>,正常的 amphora 狀態是 <code>ALLOCATED</code>,角色是 <code>STANDALONE</code>(單台,沒有備援),並且有一個 lb-mgmt-net 上的 <code>10.1.0.x</code> 位址。</li>
+</ul>
+<h2 id="4ovn-provider-amphora-lb">步驟 4:OVN provider,不開 amphora 的 LB<a class="headerlink" href="#4ovn-provider-amphora-lb" title="Permanent link">&para;</a></h2>
+<p>前面用的 <code>amphora</code> 是 Octavia 的預設 provider。Neutron 用 OVN 時,Kolla 會再註冊第二個 provider:<code>ovn</code>。它把負載平衡規則直接寫進 OVN 的流量規則,由 OVN 在轉送封包時完成分配,不開任何 VM。</p>
+<p>建法幾乎一樣,只多一個 <code>--provider ovn</code>,但協定和演算法要換。下面保留原始實跑指令;執行 <code>member create</code> 時,把 <code>--address 10.10.10.124</code> 改為 <code>--address "$WEB1_IP"</code>,沿用步驟 3 記下的 <code>vm-web1</code> 位址。修正後的寫法本課沒有實跑:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lb-ovn<span class="w"> </span>--provider<span class="w"> </span>ovn<span class="w"> </span>--vip-subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--wait
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>listener<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>lb-ovn
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>pool<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>pool-ovn<span class="w"> </span>--lb-algorithm<span class="w"> </span>SOURCE_IP_PORT<span class="w"> </span>--listener<span class="w"> </span>lis-ovn<span class="w"> </span>--protocol<span class="w"> </span>TCP<span class="w"> </span>--wait
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>openstack<span class="w"> </span>loadbalancer<span class="w"> </span>member<span class="w"> </span>create<span class="w"> </span>--subnet-id<span class="w"> </span>subnet1<span class="w"> </span>--address<span class="w"> </span><span class="m">10</span>.10.10.124<span class="w"> </span>--protocol-port<span class="w"> </span><span class="m">80</span><span class="w"> </span>--wait<span class="w"> </span>pool-ovn
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="c1"># 特徵:L4 only、SOURCE_IP_PORT、無 amphora VM、規則直接進 OVN 流表</span>
+</span></code></pre></div>
+<p>跟 amphora provider 比,差別在這幾個參數上:</p>
+<ul>
+<li>listener 是 <code>TCP</code>,不是 <code>HTTP</code>。OVN provider 只支援 TCP、UDP、SCTP(一種跟 TCP 同層、常用在電信系統的傳輸協定),不解析 HTTP 內容,不提供依網址路徑分流的 L7 功能,見<a href="https://docs.openstack.org/ovn-octavia-provider/2025.1/admin/driver.html#limitations-of-the-ovn-provider-driver">官方限制說明</a>。</li>
+<li>演算法是 <code>SOURCE_IP_PORT</code>:依來源 IP 和 port 決定送往哪一台,這也是 OVN provider 唯一支援的演算法,沒有 <code>ROUND_ROBIN</code>。</li>
+<li>health monitor 只支援 TCP 和 UDP-CONNECT 兩種。</li>
+<li>建好之後 <code>openstack loadbalancer amphora list</code> 不會多出 amphora,沒有額外的 VM 佔資源,也不用等 VM 開機。</li>
+</ul>
+<p>建好之後,<code>openstack loadbalancer show lb-ovn</code> 的狀態應該是 <code>ACTIVE</code>/<code>ONLINE</code>。這個 LB 沒有掛 floating IP,要測試就從租戶網路內(例如 <code>net1</code> 上的另一台 VM)連它的 VIP。需要 HTTP 層的功能(依路徑分流、HTTP 健康檢查)時用 amphora;只需要把 TCP 連線分散到幾台後端、又不想多開 VM 時,可以考慮 OVN provider。</p>
+<h2 id="_2">從儀表板看成果<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>下面是 Skyline 儀表板的 Load Balancer 列表:</p>
+<p><img alt="skyline-lb" src="../../assets/screenshots/skyline-lb.png" /></p>
+<p><em>Load Balancer 列表(Skyline 檢視):圖中兩台 LB 都是 Day 8 建 Kubernetes cluster 時自動建立的,<code>kubeapi</code> 是 cluster API 的入口,<code>web-lb</code> 由 <code>Service type=LoadBalancer</code> 產生(Kubernetes 裡要求雲端提供 LB 的宣告方式,Day 8 會介紹)。Operating Status 的 Online 來自 health monitor 的持續探測,就是這一章設定的機制。</em></p>
+<p>這一章 <code>lb2</code> 的 amphora 與兩台 web VM 會佔用 Nova 的磁碟資源,關機也不會釋放;<code>lb-ovn</code> 不建立 VM,沒有這項磁碟用量。若磁碟空間不足,Day 8 可能無法建立新的 amphora。完成練習、不再需要這些資源時,刪除 <code>lb2</code> 與兩台 web VM 以釋放空間;相關症狀見 Day 8 的<a href="../sprint3-day8-e2e-workload-cluster/#mine-4">「LB 的 amphora 開不出來,Nova 報 <code>No valid host was found</code>」</a>。</p>
+<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<ul>
+<li>同學建 LB 之後等了十分鐘,狀態還是 <code>PENDING_CREATE</code>,<code>openstack server list --all-projects</code> 也看不到任何 amphora。你會先看 Octavia 的哪個容器、找什麼訊息?如果 amphora 有開起來、但 LB 最後變成 <code>ERROR</code>,你會改查哪一段網路?</li>
+<li>一台 LB 運作正常時,主機上的 <code>octavia_worker</code> 和 <code>octavia_health_manager</code> 容器都停了。正在 <code>curl</code> 這台 LB 的使用者會發現嗎?這段期間如果 amphora 當機,會發生什麼事?</li>
+<li>有個服務只需要把 TCP 連線分給三台後端,不需要看 HTTP 內容,而且這朵雲的運算資源很吃緊。你會選 amphora 還是 ovn provider?如果需求變成要依網址路徑把 <code>/api</code> 送到另一組後端呢?</li>
+</ul>
+<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>Octavia 的預設做法是替每台 LB 開一台 amphora VM,裡面的 haproxy 處理使用者的流量;Octavia 的容器負責開 amphora、推設定、收心跳、壞了就換一台,控制服務停掉不影響已經在轉送的流量。控制服務要連到 amphora,需要管理網路 lb-mgmt-net,單機環境用 tenant 模式,讓主機透過 o-hm0 這張網卡接進去,兩邊用各自的 CA 互相驗證。一台能用的 LB 由 loadbalancer、listener、pool、member 疊成,health monitor 決定哪些 member 能分到流量。之後遇到 LB 的問題,先分清楚是建不出來(看 worker 和 jobboard)、amphora 失聯(看 o-hm0 和 lb-mgmt-net),還是建好了卻連不到後端(看 member、security group 和後端服務本身)。</p>
+<h2 id="_5">延伸說明<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h3 id="tenant-ovn-prechecks">tenant＋OVN 與後續 prechecks<a class="headerlink" href="#tenant-ovn-prechecks" title="Permanent link">&para;</a></h3>
+<p>Kolla 的 prechecks 對 tenant＋OVN 會回報 <code>Neutron plugin agent ovn is not supported when octavia_network_type is tenant, only openvswitch is supported currently</code>。Day 22 執行全量 prechecks 時也遇到這個限制,該章將 Octavia 改成只用 OVN provider,不再提供 amphora provider。設定調整與影響見 Day 22 的<a href="../sprint4-day22-upgrade-backup/#mine-1">prechecks 擋下 Octavia 設定</a>。</p>
+<h3 id="certificate-files">憑證檔案與私鑰分工<a class="headerlink" href="#certificate-files" title="Permanent link">&para;</a></h3>
+<p><code>kolla-ansible octavia-certificates</code> 先在 <code>/etc/kolla/octavia-certificates/</code> 產生兩個 CA 和控制服務的憑證,再把部署要用的四個檔複製到 <code>/etc/kolla/config/octavia/</code>:<code>client.cert-and-key.pem</code>、<code>client_ca.cert.pem</code>、<code>server_ca.cert.pem</code>、<code>server_ca.key.pem</code>。<code>server_ca</code> 的私鑰會複製過去,因為控制服務每開一台 amphora,都要用它簽那台 amphora 的憑證;<code>client_ca</code> 的私鑰不複製,所以控制服務和 amphora 上都沒有能簽出新的控制服務憑證的金鑰,拿到一台 amphora 的內容也沒辦法冒充控制服務。 檔案對應也可查閱 <a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html#certificates">Kolla 官方憑證章節</a>。</p>
+<h2 id="_6">維運參考<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p>步驟 1 已包含 Redis 與 dhclient 的前置要求。以下供既有部署漏做前置設定時查閱,不需要在完成本章後再執行。</p>
+<h3 id="mine-2">缺少 dhclient 的既有部署<a class="headerlink" href="#mine-2" title="Permanent link">&para;</a></h3>
+<p>若先部署、後安裝 dhclient,<code>octavia-interface.service</code> 可能因 <code>status=203/EXEC</code> 啟動失敗。安裝套件、重啟服務、檢查 o-hm0 與補部署的說明見 <a href="../../solutions/integration-issues/kolla-octavia-dhclient-noble/">dhclient 排錯手冊</a>。</p>
+<details>
+<summary>既有部署的 dhclient 修復指令</summary>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>isc-dhcp-client
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>reset-failed<span class="w"> </span>octavia-interface.service
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>octavia-interface.service
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>ip<span class="w"> </span>-br<span class="w"> </span>a<span class="w"> </span>show<span class="w"> </span>o-hm0<span class="w">        </span><span class="c1"># 應拿到 lb-mgmt-subnet 的 IP(OVN 原生 DHCP 發的)</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>octavia<span class="w">   </span><span class="c1"># 補跑剩餘任務</span>
+</span></code></pre></div>
+</details>
+<h3 id="mine-3">未啟用 Redis 的既有部署<a class="headerlink" href="#mine-3" title="Permanent link">&para;</a></h3>
+<p>Kolla 2025.1 的 jobboard 可用 Redis 或 Valkey,本章用 Redis。prechecks 未通過時會顯示 <code>Redis or Valkey must be enabled when using octavia jobboard</code>。若略過檢查且未啟用 Redis,可能出現容器正常、LB 卻停在 <code>PENDING_CREATE</code>、Nova 沒有 amphora 的情況。worker log 的 <code>MasterNotFoundError: No master found for 'kolla'</code> 和 <code>Error 111 connecting to 127.0.0.1:6379</code> 是這份<a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/">Redis jobboard 排錯手冊</a>記錄的症狀。</p>
+<details>
+<summary>既有部署的 Redis 修復指令</summary>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;enable_redis: &quot;yes&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/etc/kolla/globals.yml
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>kolla-ansible<span class="w"> </span>deploy<span class="w"> </span>-i<span class="w"> </span>~/all-in-one<span class="w"> </span>--tags<span class="w"> </span>redis,octavia
+</span></code></pre></div>
+</details>
+<h3 id="mine-5">Redis 故障期間建立的 LB 刪不掉<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
+<p>Redis 故障期間建立的 LB 可能持續停在 <code>PENDING_CREATE</code>,刪除時回傳 409。這是未啟用 Redis 時留下的資源,修好 Redis 後不會自行恢復。實驗環境的處理方式與 SQL 見 <a href="../../solutions/integration-issues/kolla-octavia-redis-jobboard/#redis-lb">Redis jobboard 排錯手冊的後遺症一節</a>。直接修改資料庫只適合實驗環境;正式環境請交由維運團隊或廠商處理。</p>
+<h2 id="_7">延伸閱讀<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p>想再深入,可以從這幾份開始:</p>
+<ul>
+<li><strong><a href="https://docs.openstack.org/octavia/2025.1/reference/introduction.html">Octavia 官方介紹</a></strong> —— amphora 架構與各個控制服務的官方說明。</li>
+<li><strong><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/networking/octavia.html">Kolla-Ansible 的 Octavia 指南</a></strong> —— 憑證產生、管理網路的兩種模式、OVN provider 的設定,本章最容易卡住的幾步都在這裡。</li>
+<li><strong><a href="https://docs.openstack.org/octavia/2025.1/user/guides/basic-cookbook.html">Octavia Basic Cookbook</a></strong> —— 各種 LB 組法(TCP、HTTP、健康檢查、TLS)的官方範例,本章只做了最基本的一種。</li>
+<li><strong><a href="https://docs.openstack.org/ovn-octavia-provider/2025.1/admin/driver.html">OVN Octavia provider 說明</a></strong> —— OVN provider 支援的協定、演算法與 health monitor 類型。</li>
+</ul>
+<h2 id="_8">下一步<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<p>LB 之後,<a href="../sprint3-day5-barbican-heat/">Day 5</a> 加上存放憑證與密鑰的服務 Barbican,並回頭用 Day 1 就已經部好的 Heat,以範本一次建立多項資源。之後用 Magnum 建 Kubernetes cluster 時,會用 Barbican 存放 cluster 的憑證。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到頂端
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="頁腳" >
+        
+          
+          <a href="../sprint3-day3-cinder-lvm/" class="md-footer__link md-footer__link--prev" aria-label="上一頁: Day 3 · Cinder LVM">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 3 · Cinder LVM
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sprint3-day5-barbican-heat/" class="md-footer__link md-footer__link--next" aria-label="下一頁: Day 5 · Barbican + Heat">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一頁
+              </span>
+              <div class="md-ellipsis">
+                Day 5 · Barbican + Heat
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "content.code.copy", "content.code.annotate", "content.code.select", "content.tabs.link", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
