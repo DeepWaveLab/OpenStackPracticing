@@ -32,6 +32,7 @@ mines:
   - { id: d31-m6, day: 31, title: "evacuate 失敗會留下 on_maintenance,擋掉重試", anchor: "sprint5-day31-masakari-ha.md#mine-6" }
   - { id: d31-m2, day: 31, title: "ProxySQL 的統計資料庫斷電損壞,偽裝成一整排服務故障", anchor: "sprint5-day31-masakari-ha.md#mine-2" }
   - { id: d32-m6, day: 32, title: "openrc 的 CA 要另外指定", anchor: "sprint5-day32-full-tls.md#mine-6" }
+  - { id: d33-m1, day: 33, title: "IdP 用 http 位址,Keystone 的 Apache 直接起不來", anchor: "sprint5-day33-keycloak-federation.md#mine-1" }
   - { id: d33-m4, day: 33, title: "metadata 的檔名有一套死規則", anchor: "sprint5-day33-keycloak-federation.md#mine-4" }
   - { id: d33-m5, day: 33, title: "CLI 的錯誤不指段,兩段鏈路要拆開手打", anchor: "sprint5-day33-keycloak-federation.md#mine-5" }
   - { id: d34-m1, day: 34, title: "kolla 不複製 api-paste.ini,deploy 全綠卻什麼都沒發生", anchor: "sprint5-day34-cadf-audit.md#mine-1" }

@@ -1,40 +1,35 @@
 # Day 33：用外部帳號取得 OpenStack 的專案權限
 
-公司已經在 Keycloak 管理員工帳號，現在要讓同一個人操作 OpenStack。重新在 Keystone 建一組密碼，會多出一套要維護的認證資料；改接外部身分之後，又要決定登入者能使用哪個 project。本章用 Keycloak 與 Keystone 的 federation，讀完能分辨認證、身分映射與專案角色各自負責什麼。
+Day 27 的 alice 是 Keystone 資料庫裡的本地帳號，密碼也存在 Keystone。公司通常已經用 Keycloak 這類系統管理員工帳號；要讓同一批人操作 OpenStack，如果再替每個人在 Keystone 建一組密碼，入職要建兩次、離職要刪兩次，漏掉一邊，就會留下一個還能登入的帳號。
 
-## 這次驗證的是哪一條登入路徑
+**Keystone federation** 讓 Keystone 接受外部身分系統驗證過的結果，不再保存這些人的密碼。驗證交給外部系統之後，Keystone 這邊還要決定一件事：登入的人能使用哪個 project、拿到什麼角色。讀完這章，你能分辨認證、身分映射與專案角色各自負責什麼；CLI 登入失敗時，也知道該先查 Keycloak 還是 Keystone。
 
-**Federation** 讓 Keystone 接受外部身分系統驗證的結果。外部系統稱為 **IdP**（identity provider），本章使用 Keycloak；Keystone 是接受這些身分資料的服務提供者。兩者使用 **OIDC**（OpenID Connect），以 token 傳遞可驗證的身分資訊。
+## 登入時的兩段請求
 
-本課驗證的是 CLI 的 `v3oidcpassword` 流程：CLI 先把測試帳號密碼送給 Keycloak，再以取得的 token 向 Keystone 認證。下圖把兩次請求分開：
+Federation 由外部系統確認「這個人是誰」，Keystone 只接收確認後的結果。這個外部系統稱為 **IdP**（identity provider），本章用 Keycloak；Keystone 是接收身分資料、提供服務的一方。兩邊用 **OIDC**（OpenID Connect）溝通：IdP 驗證帳號後簽發 token，token 裡帶著可以驗證真偽的身分資訊。
+
+本章走 CLI 的 `v3oidcpassword` 流程：CLI 先把測試帳號 `carol` 的密碼送給 Keycloak 換 token，再拿這份 token 向 Keystone 認證。下圖把這兩次請求分開畫：
 
 ![CLI 先向 Keycloak 提交測試帳密取得 token，再向 Keystone 提交 token，由映射與角色取得專案權限](../assets/diagrams/os-s5d33-login.svg)
 
-Keystone 不替這個外部使用者保存一份本地密碼，但 CLI 仍會接觸密碼。這種 **password grant** 也叫 Direct Access Grants／ROPC，不適合需要瀏覽器互動或 MFA（多因素驗證）的流程。Keycloak 官方不建議採用；本章限於 CLI password grant，Horizon／Skyline 的瀏覽器 SSO（單一登入，讓使用者登入一次後存取多個服務）不在本章範圍內。UI 上出現登入選項，也不能當成登入成功的證據。
+第一段只跟 Keycloak 有關，第二段才進入 Keystone 的映射與角色。CLI 登入失敗時，先判斷卡在哪一段；疑難排解最後一項就是照這個切法查。
 
-開始前要有 Day 32 的 HTTPS Keystone 入口與 CA 信任、Day 27 的 domain／project／role 概念。本章缺完整憑證產生參數、Keycloak 管理登入、metadata 檔案內容及資源建立命令，以下包含操作摘要與結果解讀；含 `...` 的片段不能直接執行。
+這種由用戶端直接拿帳號密碼換 token 的方式叫 **password grant**，Keycloak 稱為 Direct Grant，OAuth 規格裡叫 ROPC。Keystone 不保存 carol 的密碼，但 CLI 仍然經手密碼，Keycloak 官方不建議採用，見 [Keycloak 的 OIDC 流程說明](https://www.keycloak.org/securing-apps/oidc-layers)。本章用它，是因為一條 CLI 指令就能走完兩段請求，方便把注意力放在 Keystone 這一側。讓使用者從 Horizon 或 Skyline 用瀏覽器登入一次、就能使用多個服務的 SSO（單一登入），要另外設定，本章不涵蓋。
 
-## 步驟 1：先讓 IdP 的 HTTPS 能被驗證
+## 開始之前
 
-Keycloak 的 `start-dev` 是開發模式。本課最初用以下摘要啟動，沒有配置持久化儲存；密碼欄位必須替換，不能把 `...` 當成實際密碼：
+你需要 Day 32 的 HTTPS Keystone 入口與 CA 信任，以及 Day 27 介紹過的 domain、project 與 role。指令裡的 `10.0.0.4` 是 Keycloak 所在的實驗主機，`10.0.0.250` 是 Day 32 的 Keystone API 位址，照自己的環境替換。
 
-```bash
-sudo docker run -d --name keycloak --network host \
-  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=... \
-  quay.io/keycloak/keycloak:26.0 start-dev
-```
+這章練的是看懂 Keystone federation 的設定與結果。Keycloak 的憑證與啟動參數、管理員登入、metadata 檔內容與 CLI 的 OIDC 端點缺完整寫法，所以標成「設定走讀」與「結果判讀」的各節只能看懂設定、判讀結果，可以照打的是替群組授予角色那一步，前提是 Kolla 的 federation 部署已經建好 `day33-sso` domain；要從頭部署，請搭配章末的 Kolla-Ansible Keystone 指南與 Keycloak 文件。
 
-這時 IdP 還使用 HTTP。接入本課的 Apache `mod_auth_openidc` 設定後，Keystone 出現以下啟動錯誤：
+## 設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS
 
-```text
-AH00526: Syntax error on line 43 of wsgi-keystone.conf:
-'http://10.0.0.4:8080/realms/day33/...' cannot be parsed as a "https" URL
-(scheme == http)!
-```
+Keystone 自己不處理 OIDC。它前面的 Apache 載入 **`mod_auth_openidc`** 模組，由這個模組跟 IdP 溝通。IdP 用 HTTP 位址接上時，Keystone 啟動會出現 Apache 設定錯誤，錯誤訊息指向 IdP 的 HTTP URL；Keycloak 改走 HTTPS 之後才通過。所以先讓 Keycloak 走 HTTPS，憑證也要讓 Keystone 驗證得過，之後才接 federation 設定。錯誤的完整內容見疑難排解的[第一項](#mine-1)。
 
-`mod_auth_openidc` 是在 Keystone 前面處理 OIDC 的 Apache 模組。錯誤指向 IdP 的 HTTP URL，因此應先把 IdP 配成 HTTPS，並讓 Keystone 信任其憑證，再部署 federation；不要先接上這段已知會失敗的設定。
+Keycloak 以容器執行，用 `quay.io/keycloak/keycloak:26.0` 映像檔的 `start-dev` 開發模式。用 Day 32 的測試 CA（`KollaTestCA`）簽一張 Keycloak 憑證，再讓 Keycloak 在 8443 port 提供 HTTPS：
 
-使用 Day 32 的測試 CA 簽發 Keycloak 憑證，再讓 Keycloak 以 HTTPS 提供服務。下面是簽發憑證與啟動的摘要，省略了 CSR、私鑰、SAN、有效期限與容器掛載等參數，不能直接執行：
+!!! note "只保留關鍵片段"
+    省略了 CSR 與私鑰的產生、SAN、有效期限，以及 `start-dev` 前面的容器啟動與掛載參數，不能直接執行；完整寫法見 [Keycloak 的 TLS 設定](https://www.keycloak.org/server/enabletls)。
 
 ```bash
 # 用 Day 32 的 KollaTestCA 簽一張 Keycloak 憑證
@@ -43,19 +38,23 @@ openssl x509 -req -in keycloak.csr -CA root.crt -CAkey root.key ...
 ... start-dev --https-certificate-file=... --https-port=8443
 ```
 
-繼續設定 federation 前，必須確認 Keycloak 的 HTTPS 與 CA 信任檢查通過。下列摘要只涵蓋這項檢查：
+往下設定 federation 之前，先確認 Keycloak 的 HTTPS 能用 CA 驗證通過：
+
+!!! note "只保留關鍵片段"
+    下面這行是 HTTPS 與 CA 檢查的結果摘要，不是上面 `start-dev` 的輸出；檢查用的指令沒有保留。
 
 ```text
 ✅ Keycloak https + CA 驗證通過
 ```
 
-這不表示 Keycloak 必須與 Keystone 使用同一個 CA。真正的條件是憑證名稱符合 IdP URL，且相關用戶端與 Keystone 信任簽發鏈；受管理的其他 CA 也能滿足這個條件。憑證私鑰、OIDC token 簽章用的公鑰與 CA 憑證用途不同，不要互相替代。
+Keycloak 不一定要跟 Keystone 用同一個 CA。條件是憑證上的名稱符合 IdP URL（這裡是 `10.0.0.4`），而且 Keystone 與其他要連 Keycloak 的用戶端都信任它的簽發鏈；這裡用 `KollaTestCA`，是因為 Day 32 已經讓 Keystone 信任它，公司管理的其他 CA 也能滿足這個條件。另外有三樣東西要分清楚：憑證私鑰給 Keycloak 自己提供 HTTPS，CA 憑證讓別人驗證這張伺服器憑證，token 簽章用的公鑰讓 Keystone 驗證 token，三者不能互相替代。
 
-## 步驟 2：在 Keycloak 定義登入來源
+## 設定走讀：在 Keycloak 建 realm、client 與使用者
 
-Keycloak 的 **realm** 是一個獨立管理使用者與登入設定的範圍；**client** 是向這個 realm 申請認證的應用。本章建立 `day33` realm，登記 `keystone` client，再建立測試使用者 `carol`。
+Keycloak 的 **realm** 是一個獨立管理使用者與登入設定的範圍；**client** 是向這個 realm 申請認證的應用程式，這裡就是 Keystone。這一節建 `day33` realm、登記 `keystone` client，再建測試使用者 `carol`。指令都透過 Keycloak 容器裡的管理工具 `kcadm.sh` 執行：
 
-以下是配置摘要。執行前必須先用 `kcadm.sh` 完成管理員認證；本課未留存該步驟。`<carol>` 要換成 Keycloak 使用者 ID，省略的 secret 與密碼需自行安全提供：
+!!! note "只保留關鍵片段"
+    省略了 `kcadm.sh` 的管理員登入，以及 client secret 與密碼（`...`），`<carol>` 要換成 carol 在 Keycloak 的使用者 ID，不能直接執行；登入與查詢使用者 ID 的寫法見 [Keycloak Admin CLI 文件](https://www.keycloak.org/docs/latest/server_admin/index.html#admin-cli)。
 
 ```bash
 K="docker exec keycloak /opt/keycloak/bin/kcadm.sh"
@@ -68,15 +67,17 @@ $K create users -r day33 -s username=carol -s enabled=true \
 $K set-password -r day33 --userid <carol> --new-password ...
 ```
 
-`redirectUris` 限定瀏覽器流程可回到的位址，本課雖有設定，仍未實測該流程。`directAccessGrantsEnabled=true` 是讓這次 CLI password grant 能執行的開關，不是所有 federation 都需要。正式整合應依 IdP、CLI 與 UI 支援情況選擇授權碼或其他合適流程，不能假設任一替代流程已在本課接通。
+client 上有兩個設定跟登入方式有關。`redirectUris` 是瀏覽器登入流程結束時，Keycloak 允許導回的位址，這裡填 Day 32 的 Keystone HTTPS 端點；本章的 CLI 流程不經過瀏覽器，用不到它。`directAccessGrantsEnabled=true` 打開 password grant，CLI 的 `v3oidcpassword` 靠它才能拿帳密換 token。改走瀏覽器 SSO 時，Keycloak 建議的是授權碼流程（authorization code），這個開關就用不到。
 
-`firstName`／`lastName` 是本課 realm user profile 要求的欄位；缺少它們曾造成帳號未完成設定。其他 realm 的必填條件可能不同，要查實際 profile 設定。
+建 carol 時，`firstName`、`lastName` 不能省。這個 realm 的 user profile 把它們列為必填，少了它們，carol 的帳號會被當成還沒設定完成，向 Keycloak 換 token 只會拿到 `invalid_grant`。換成自己的 realm 時，先查 user profile 有哪些必填欄位。
 
-此啟動方式把資料留在容器可寫層，刪除容器會失去 realm 與帳號。本課沒有提供可完整重建的腳本或正式資料庫設定；不要把開發模式當成可持續營運的 IdP。
+`start-dev` 把 realm、client 與使用者存在容器內的資料庫，刪掉容器（`docker rm`）就全部消失，必須重新建立。練習環境這樣就夠；要長期使用，改用正式模式並接外部資料庫，見 [Keycloak 的資料庫設定](https://www.keycloak.org/server/db)。
 
-## 步驟 3：把外部身分映射成 Keystone 群組
+## 設定走讀：把外部身分映射成 Keystone 群組
 
-**Mapping** 是把 IdP 傳來的身分屬性轉成 Keystone 使用者與群組的規則。這次使用以下內容：
+這一節練習讀懂 mapping 規則與 Kolla 的 federation 設定。Kolla 設定的完整欄位與三個 metadata 檔的內容，要照章末的 Kolla-Ansible Keystone 指南自己補上。
+
+IdP 簽發的 token 裡帶著身分屬性，稱為 **claim**，例如使用者名稱與 email。**Mapping** 是 Keystone 把這些屬性轉成本地使用者與群組的規則。本章的規則如下：
 
 ```json
 [{
@@ -88,15 +89,20 @@ $K set-password -r day33 --userid <carol> --new-password ...
 }]
 ```
 
-`remote` 依序取出 username 與 email；`{0}`、`{1}` 放回 `local.user`。`local.group` 則指定 Keystone 的 `day33-sso` domain 下的 `sso-users` 群組。
+`remote` 依序取出 username 與 email，`{0}`、`{1}` 分別放回 `local.user` 的 name 與 email。`local.group` 指定 Keystone 裡 `day33-sso` domain 下的 `sso-users` 群組，所有符合規則的登入者都會成為這個群組的成員。
 
-**Protocol** 是 Keystone 中連結 IdP 與 mapping 的物件，指定該 IdP 的登入要套用哪份映射規則。本章以 `openid` 連結 `keycloak` 與 `keycloak_mapping`。可參考 [Keystone 的 Create a Protocol 說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#create-a-protocol)。
+這份規則沒有比對任何群組或部門：只要通過 Keycloak 驗證、token 裡帶得出 username 與 email，就會進 `sso-users`。要只讓某個部門登入，得讓 Keycloak 把群組資訊放進 token，再在 `remote` 加上比對 claim 值的條件，規則寫法見 [Keystone 的 mapping 組合說明](https://docs.openstack.org/keystone/2025.1/admin/federation/mapping_combinations.html)。
 
-**這份規則沒有檢查 Keycloak 的來源群組。** 只要通過這個受信任 IdP／protocol 並符合所需屬性的使用者，都會被映射到同一個本地群組。不能解讀成「只有 Keycloak 的 sso-users 成員能進來」。正式部署若要限制部門或群組，需要另外設計並驗證 claim（IdP 傳來的身分屬性）條件。
+下圖把 carol 的身分屬性一路畫到專案權限：
 
 ![IdP username/email 經 mapping 進入本地 sso-users 群組，再由 group role assignment 取得 team-sso 的 member；此映射沒有來源群組條件](../assets/diagrams/os-s5d33-mapping.svg)
 
-圖上前半段是身分映射，後半段才是授權。接著在 Kolla 指定 IdP 與 mapping。這段是縮寫，尚缺 `attribute_mapping`、metadata 目錄等完整欄位；要以章末 Kolla 2025.1 文件補齊：
+前半段的 mapping 只決定 carol 屬於 `sso-users`；後半段的群組角色指派才決定她能在 `team-sso` 做事，這是下一個步驟要建的部分。
+
+**Protocol** 是 Keystone 中連結 IdP 與 mapping 的物件，指定從這個 IdP 來的登入要套用哪份映射規則。本章以 `openid` 連結 `keycloak` 與 `keycloak_mapping`，見 [Keystone 的 Create a Protocol 說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#create-a-protocol)。在 Kolla 裡，IdP、protocol 與 mapping 都寫進 `globals.yml`：
+
+!!! note "只保留關鍵片段"
+    省略了 `attribute_mapping`、metadata 目錄等欄位（`...`），mapping 檔路徑也只留檔名，不能直接使用；完整欄位見 [Kolla-Ansible 2025.1 Keystone 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html)。
 
 ```yaml
 keystone_identity_providers:
@@ -110,16 +116,16 @@ keystone_identity_mappings:
     file: ".../mapping.json"
 ```
 
-**Metadata** 描述 IdP 的 issuer、認證端點與金鑰位置；**issuer** 是簽發 token 的 IdP 識別值。Kolla 的 metadata 目錄使用 `.provider`、`.client` 與 `.conf` JSON 檔；檔名依 issuer 編碼，示例如下：
+`identifier` 要填 IdP 的 **issuer**，也就是簽發 token 的 IdP 識別值。`mod_auth_openidc` 還需要 IdP 的 **metadata**，內容是 issuer、認證端點與金鑰位置。Kolla 的 metadata 目錄放 `.provider`、`.client` 與 `.conf` 三個 JSON 檔，檔名依 issuer 編碼：
 
 ```text
 issuer: https://10.0.0.4:8443/realms/day33
 檔名  : 10.0.0.4%3A8443%2Frealms%2Fday33.provider (+ .client + .conf)
 ```
 
-`.provider` 描述 IdP，`.client` 放 client ID／secret，`.conf` 放額外選項。CLI 所用端點還可能需要 `keystone_federation_oidc_jwks_uri`；JWKS 是驗證 token 簽章用的公鑰集合，不能用 TLS CA 檔代替。本課未附完整 JSON，這裡不能直接完成部署。
+`.provider` 描述 IdP，`.client` 放 client ID 與 secret，`.conf` 放額外選項。CLI 用的端點可能還需要設定 `keystone_federation_oidc_jwks_uri`；JWKS 是 IdP 公開、用來驗證 token 簽章的公鑰集合，不能拿 TLS 的 CA 檔代替。
 
-配置與部署完成後，以下是本課物件查詢摘要。它們說明 IdP、mapping 與 protocol 已建立，不代表所有登入方式都通：
+依 Kolla 的 federation 部署任務，`openstack_domain` 指定的 `day33-sso` domain 也會在部署時建立（欄位說明見 [Kolla-Ansible 2025.1 Keystone 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html)）。用 `openstack identity provider list`、`openstack mapping list` 與 `openstack federation protocol list` 確認三個物件，下面每一行是一條查詢的摘要，箭頭右邊是列出的重點欄位：
 
 ```text
 openstack identity provider list  →  keycloak  True  Login with Keycloak
@@ -127,9 +133,11 @@ openstack mapping list            →  keycloak_mapping
 openstack federation protocol list →  openid  keycloak_mapping
 ```
 
-## 步驟 4：替群組授予 project role
+看兩個地方。IdP 那一行的 `True` 表示 `keycloak` 已啟用；protocol 那一行把 `openid` 接到 `keycloak_mapping`，從 Keycloak 來的登入就會套用上面的 mapping。三個物件都在，下一步才有東西可以授權；登入仍可能因 metadata 等設定失敗，見[疑難排解](#mine-4)。
 
-映射到群組後，使用者仍需專案角色才能操作資源。以管理員身分建立本地群組、project 並授予 `member`：
+## 步驟：替 sso-users 授予 team-sso 的角色
+
+映射到群組之後，使用者還需要專案角色才能操作資源。以管理員身分在 `day33-sso` domain 建立 `sso-users` 群組與 `team-sso` project，再把 `member` 角色授予這個群組：
 
 ```bash
 openstack group create sso-users --domain day33-sso
@@ -137,11 +145,16 @@ openstack project create team-sso --domain day33-sso
 openstack role add --group sso-users --project team-sso member
 ```
 
-若環境有同名群組或 project，應以 ID 或明確 domain 消除歧義。這裡授予的是 `team-sso` 的 member，沒有授予整朵雲的 admin。之後登入者能做什麼，還要由各服務的 policy 與額度決定。
+環境裡如果已有同名的群組或 project，改用 ID 或明確指定 domain，避免授權到別的對象。這裡只給了 `team-sso` 的 member，沒有任何系統層級的 admin 權限；登入者實際能做什麼，還受各服務的 policy 與 Day 27 的額度限制。
 
-## 步驟 5：解讀 scoped token 與 VM 結果
+## 結果判讀：carol 的 token 與她建出的 VM
 
-**Scoped token** 是帶有特定 project 等授權範圍的 token。以下是本課 CLI 認證摘要，`<CA>` 是執行 CLI 那台電腦上的 CA 檔；secret／密碼都已省略。實際重做還要依 keystoneauth 的 OIDC 設定提供 discovery 或 access-token endpoint，本課片段未列出它的來源：
+這一節的認證指令缺參數，用途是判讀登入結果：哪個結果代表外部認證成功，哪個代表拿到了專案權限。
+
+**Scoped token** 是帶有特定 project 授權範圍的 token。下面指令最後的 `--os-project-name` 與 `--os-project-domain-name` 就是在要求這個範圍：
+
+!!! note "只保留關鍵片段"
+    省略了 client secret 與密碼（`...`），也沒有列出 keystoneauth OIDC 外掛需要的 discovery endpoint 或 access-token endpoint，不能直接執行；完整參數見 [keystoneauth 的認證外掛](https://docs.openstack.org/keystoneauth/2025.1/authentication-plugins.html)。`<CA>` 是執行 CLI 那台電腦上的 CA 檔。
 
 ```bash
 openstack --os-auth-type v3oidcpassword \
@@ -153,46 +166,81 @@ openstack --os-auth-type v3oidcpassword \
   token issue
 ```
 
-取得 token 後，Keystone 可列出這個外部帳號對應的 **shadow user**（影子使用者），用來識別外部身分，而不保存它的 IdP 密碼：
+拿到 scoped token 之後，可以在 `day33-sso` domain 列出這個使用者：
 
 ```text
 openstack user list --domain day33-sso  →  carol
 ```
 
-所以「外部帳號不需要先手動建立本地密碼」不等於「Keystone 永遠沒有這個使用者的紀錄」。最後的操作摘要顯示，這個身分曾建出 VM：
+列出的這筆是 carol 的 **shadow user**（影子使用者），Keystone 用它識別這個外部身分，裡面沒有她的 IdP 密碼。carol 不必事先在 Keystone 建帳號，但登入過之後，可以在 Keystone 列出她的使用者紀錄。
+
+carol 接著用這個身分建網路 `sso-net`、開 `sso-vm`，VM 最後進入 ACTIVE：
+
+!!! note "只保留關鍵片段"
+    建網路與開 VM 的指令沒有保留，只剩結果；指令寫法見 [Day 2](sprint3-day2-openstack-resource-flow.md)。
 
 ```text
 carol 建網路 sso-net → 開 sso-vm → ACTIVE
 ```
 
-此摘要沒有完整建網路與 VM 的命令，也沒有證明瀏覽器 SSO、MFA、離職停權或既有 token 撤銷已完成。IdP 停用帳號之後，既有 Keystone token 與應用憑證的生命週期仍須另外管理，不能承諾立即切斷所有存取。
+VM 能開起來，表示整條路都接上了：Keycloak 驗證 carol，mapping 把她放進 `sso-users`，群組的 member 角色讓她能在 `team-sso` 建資源。
+
+IdP 停用帳號之後，既有 Keystone token 與應用憑證的生命週期仍須另外管理，不能承諾立即切斷所有存取。
 
 ## 疑難排解
 
+### Keystone 啟動失敗：cannot be parsed as a "https" URL {#mine-1}
+
+Keycloak 先用 HTTP 的開發模式啟動：
+
+!!! note "只保留關鍵片段"
+    省略了管理員密碼（`...`），不能直接執行；容器啟動參數見 [Keycloak 的容器部署說明](https://www.keycloak.org/server/containers)。
+
+```bash
+sudo docker run -d --name keycloak --network host \
+  -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=... \
+  quay.io/keycloak/keycloak:26.0 start-dev
+```
+
+再把這個 HTTP 位址接進 Keystone 的 federation 設定並部署，Keystone 的 Apache 設定會出現以下錯誤：
+
+```text
+AH00526: Syntax error on line 43 of wsgi-keystone.conf:
+'http://10.0.0.4:8080/realms/day33/...' cannot be parsed as a "https" URL
+(scheme == http)!
+```
+
+錯誤訊息指出 IdP 的 HTTP URL 不能當成 https URL 解析，而且是 Apache 設定語法錯誤：出現這個錯誤時，keystone 容器退出（`Exited(1)`），API 回 503，不只 federation 失效。照「設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS」一節讓 Keycloak 改走 HTTPS，再把 `globals.yml` 的 `identifier` 與 `jwks_uri` 都改成那一節的 https 位址（8443 port），例如 `identifier` 改成 `https://10.0.0.4:8443/realms/day33`。
+
 ### OIDC 模組找不到 metadata 檔案 {#mine-4}
 
-核對 issuer、metadata 目錄與檔名的 URL 編碼，以及三個 JSON 檔的用途。步驟 3 保留本課檔名範例，實際內容須依自己的 IdP 填寫。
+核對 issuer、metadata 目錄與檔名的 URL 編碼，以及三個 JSON 檔的用途。映射那一節有檔名的編碼範例，三個檔案的內容依自己的 IdP 填寫。
 
 ### CLI 回 HTTP 400，無法判斷哪段認證失敗 {#mine-5}
 
-先分清楚 CLI 向 Keycloak 取得 token，或帶著 token 向 Keystone 的 federation auth 端點認證，哪一段失敗。後者回傳的是 **unscoped token**，尚未帶有專案授權範圍；之後仍須取得指定 project 的 scoped token。以下摘要沒有包含可直接執行的 HTTP 請求：
+先分清楚失敗的是哪一段：CLI 向 Keycloak 換 token，或帶著 token 向 Keystone 的 federation auth 端點認證。後者成功時回傳 **unscoped token**，還沒有帶專案授權範圍，之後才換成指定 project 的 scoped token。兩段分開送請求，結果像這樣：
+
+!!! note "只保留關鍵片段"
+    兩段請求的指令沒有保留，只剩結果；Keycloak 換 token 的端點見 [Keycloak 的 OIDC 流程說明](https://www.keycloak.org/securing-apps/oidc-layers)，Keystone 的 federation auth 端點見 [Keystone 的端點說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#configure-protected-endpoints)。
 
 ```text
 段 1(Keycloak):換 token → 起初 invalid_grant,補完 profile 後拿到
 段 2(Keystone):帶 token 打 federation auth → HTTP 201
 ```
 
-第一段失敗要查 IdP 的 client、profile 與授權流程；第二段失敗再查信任、mapping 與 protocol。依 [Keystone 的端點說明](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#configure-protected-endpoints)，federation auth 用來取得 unscoped token，因此這裡的 HTTP 201 只能判定外部認證成功，不能當成取得 `team-sso` 專案授權的判準。若後續無法取得專案 token，再檢查群組的 project role 與要求的 project 範圍。檢查時不要把密碼、client secret 或有效 token 放進公開 log。
+段 1 的 `invalid_grant` 就是 carol 少了 `firstName`、`lastName` 的情況，補完 user profile 才拿到 token。第一段失敗，查 Keycloak 的 client、user profile 與授權流程；第二段失敗，再查憑證信任、mapping 與 protocol。
+
+段 2 的 HTTP 201 拿到的是 unscoped token，表示 Keystone 接受了這個外部身分。要確認 carol 能用 `team-sso`，看的是帶 `--os-project-name team-sso` 的那次認證有沒有拿到 scoped token；拿不到時，查群組的 project role 與要求的 project 範圍。檢查時不要把密碼、client secret 或有效 token 放進公開 log。
 
 ## 想一想
 
 - Carol 能取得外部 token，卻無法選 `team-sso`。哪一段設定決定 project 權限？
-- 這份 mapping 是否能限制只有 Keycloak 某個部門群組登入？從哪個欄位能看出答案？
-- CLI password grant 成功，為什麼還不能宣告瀏覽器 SSO 與 MFA 都已完成？
+- 這份 mapping 能不能限制只有 Keycloak 某個部門的人登入？從哪個欄位看得出來？
+- CLI 的 password grant 走通之後，同事說「那 Horizon 用瀏覽器登入應該也沒問題」。這兩條登入路徑差在哪？client 上哪個設定只有瀏覽器流程會用到？
 
 ## 小結
 
-IdP 驗證帳號，mapping 把身分屬性對應到本地群組，project role 才給出可操作的範圍。判讀 CLI 結果時，要分開確認外部認證與專案授權；federation auth 回 HTTP 201，仍不足以判定能操作 `team-sso`。瀏覽器 SSO、MFA、持久化與停權流程不在本章驗證範圍內。查錯時先找出失敗段落，再檢查該段的端點、信任與授權條件。
+IdP 驗證帳號，mapping 把身分屬性對應到本地群組，群組的 project role 才給出可操作的範圍。CLI 換 token 就失敗，查 Keycloak 的 client 與 user profile；federation auth 回 201、卻拿不到 `team-sso` 的 scoped token，查的是 `sso-users` 在 `team-sso` 的角色，不是 Keycloak。
 
 ## 延伸閱讀
 
@@ -200,9 +248,9 @@ IdP 驗證帳號，mapping 把身分屬性對應到本地群組，project role �
 
 - [Keystone 2025.1 Federation 設定](https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html)：IdP、protocol、mapping 與群組授權。
 - [Kolla-Ansible 2025.1 Keystone 指南](https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html)：完整 globals 與 metadata 欄位。
-- [Keycloak 的 OIDC 流程](https://www.keycloak.org/securing-apps/oidc-layers)：授權碼、Direct Access Grants 與各流程的限制。
+- [Keycloak 的 OIDC 流程](https://www.keycloak.org/securing-apps/oidc-layers)：授權碼、Direct Grant 與各流程的限制。
 - [keystoneauth 的認證外掛](https://docs.openstack.org/keystoneauth/2025.1/authentication-plugins.html)：OIDC 用戶端的設定與認證方式。
 
 ## 下一步
 
-[Day 34](sprint5-day34-cadf-audit.md) 只針對 Nova API 加入 CADF 稽核，練習從事件找出請求者、資源與操作；不假設本章所有登入活動都已被收錄。
+[Day 34](sprint5-day34-cadf-audit.md) 替 Nova API 加上 CADF 稽核，練習從稽核事件找出請求者、資源與操作。

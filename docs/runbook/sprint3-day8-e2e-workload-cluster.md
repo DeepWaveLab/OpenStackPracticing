@@ -188,7 +188,7 @@ driver 裝 Cinder CSI 時,會替 Cinder 裡每個 `__DEFAULT__` 以外的 volume
 
 開頭的 `export` 讓這個終端機接下來的 `kubectl` 都改連 workload cluster。之後要回頭操作 kind,開一個新的終端機就好:
 
-下面先執行到建立 PVC／Pod 的第二個 `EOF`,接著用區塊後的等待指令取代緊接的 `kubectl get pvc` 與 `kubectl exec` 兩行;等待或讀取失敗就停在這一步,全部成功後再從 `kubectl create deploy web` 繼續。
+下面的區塊照順序執行。`kubectl get pvc` 如果還不是 `Bound`,或 `kubectl exec` 回報 pod 還沒就緒,等一兩分鐘再重跑這兩行;兩行都成功後再從 `kubectl create deploy web` 繼續。
 
 ```bash
 export KUBECONFIG=/tmp/wl.kubeconfig
