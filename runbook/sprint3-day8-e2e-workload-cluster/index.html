@@ -4364,7 +4364,7 @@
 </ul>
 <p>driver 裝 Cinder CSI 時,會替 Cinder 裡每個 <code>__DEFAULT__</code> 以外的 volume type 建一個名叫 <code>block-&lt;type&gt;</code> 的 StorageClass。這朵雲的 Cinder 只有 <code>__DEFAULT__</code>,所以 workload cluster 裡一個 StorageClass 都沒有,下面的指令先建一個名叫 <code>cinder</code> 的 StorageClass,並設成預設值(annotation <code>is-default-class</code>,之後沒寫 StorageClass 的 PVC 也會交給它)。接著建一個 1 GiB 的 PVC 和一個掛載它的 busybox pod,pod 啟動時把一行字寫進 volume。最後部署兩份 nginx,開一個 <code>type=LoadBalancer</code> 的 Service。</p>
 <p>開頭的 <code>export</code> 讓這個終端機接下來的 <code>kubectl</code> 都改連 workload cluster。之後要回頭操作 kind,開一個新的終端機就好:</p>
-<p>下面先執行到建立 PVC／Pod 的第二個 <code>EOF</code>,接著用區塊後的等待指令取代緊接的 <code>kubectl get pvc</code> 與 <code>kubectl exec</code> 兩行;等待或讀取失敗就停在這一步,全部成功後再從 <code>kubectl create deploy web</code> 繼續。</p>
+<p>下面的區塊照順序執行。<code>kubectl get pvc</code> 如果還不是 <code>Bound</code>,或 <code>kubectl exec</code> 回報 pod 還沒就緒,等一兩分鐘再重跑這兩行;兩行都成功後再從 <code>kubectl create deploy web</code> 繼續。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">KUBECONFIG</span><span class="o">=</span>/tmp/wl.kubeconfig
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># ① nodes Ready</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes

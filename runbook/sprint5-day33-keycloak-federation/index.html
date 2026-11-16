@@ -1717,62 +1717,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這次驗證的是哪一條登入路徑
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#1-idp-https" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1：先讓 IdP 的 HTTPS 能被驗證
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-keycloak" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2：在 Keycloak 定義登入來源
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-keystone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3：把外部身分映射成 Keystone 群組
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-project-role" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4：替群組授予 project role
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-scoped-token-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5：解讀 scoped token 與 VM 結果
+        登入時的兩段請求
       
     </span>
   </a>
@@ -1783,6 +1728,72 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keystone-keycloak-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keycloak-realmclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：在 Keycloak 建 realm、client 與使用者
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：把外部身分映射成 Keystone 群組
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sso-users-team-sso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟：替 sso-users 授予 team-sso 的角色
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#carol-token-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        結果判讀：carol 的 token 與她建出的 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         疑難排解
       
     </span>
@@ -1790,6 +1801,17 @@
   
     <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keystone 啟動失敗：cannot be parsed as a "https" URL
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#mine-4" class="md-nav__link">
@@ -1819,7 +1841,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         想一想
@@ -1830,7 +1852,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         小結
@@ -1841,7 +1863,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -1852,7 +1874,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -3990,62 +4012,7 @@
   <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        這次驗證的是哪一條登入路徑
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#1-idp-https" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 1：先讓 IdP 的 HTTPS 能被驗證
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-keycloak" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 2：在 Keycloak 定義登入來源
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-keystone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 3：把外部身分映射成 Keystone 群組
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-project-role" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 4：替群組授予 project role
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-scoped-token-vm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        步驟 5：解讀 scoped token 與 VM 結果
+        登入時的兩段請求
       
     </span>
   </a>
@@ -4056,6 +4023,72 @@
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
+        開始之前
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keystone-keycloak-https" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keycloak-realmclient" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：在 Keycloak 建 realm、client 與使用者
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keystone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        設定走讀：把外部身分映射成 Keystone 群組
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sso-users-team-sso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步驟：替 sso-users 授予 team-sso 的角色
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#carol-token-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        結果判讀：carol 的 token 與她建出的 VM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         疑難排解
       
     </span>
@@ -4063,6 +4096,17 @@
   
     <nav class="md-nav" aria-label="疑難排解">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mine-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keystone 啟動失敗：cannot be parsed as a "https" URL
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#mine-4" class="md-nav__link">
@@ -4092,7 +4136,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
         想一想
@@ -4103,7 +4147,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
         小結
@@ -4114,7 +4158,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
         延伸閱讀
@@ -4125,7 +4169,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
         下一步
@@ -4153,136 +4197,180 @@
 
 
 <h1 id="day-33-openstack">Day 33：用外部帳號取得 OpenStack 的專案權限<a class="headerlink" href="#day-33-openstack" title="Permanent link">&para;</a></h1>
-<p>公司已經在 Keycloak 管理員工帳號，現在要讓同一個人操作 OpenStack。重新在 Keystone 建一組密碼，會多出一套要維護的認證資料；改接外部身分之後，又要決定登入者能使用哪個 project。本章用 Keycloak 與 Keystone 的 federation，讀完能分辨認證、身分映射與專案角色各自負責什麼。</p>
-<h2 id="_1">這次驗證的是哪一條登入路徑<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
-<p><strong>Federation</strong> 讓 Keystone 接受外部身分系統驗證的結果。外部系統稱為 <strong>IdP</strong>（identity provider），本章使用 Keycloak；Keystone 是接受這些身分資料的服務提供者。兩者使用 <strong>OIDC</strong>（OpenID Connect），以 token 傳遞可驗證的身分資訊。</p>
-<p>本課驗證的是 CLI 的 <code>v3oidcpassword</code> 流程：CLI 先把測試帳號密碼送給 Keycloak，再以取得的 token 向 Keystone 認證。下圖把兩次請求分開：</p>
+<p>Day 27 的 alice 是 Keystone 資料庫裡的本地帳號，密碼也存在 Keystone。公司通常已經用 Keycloak 這類系統管理員工帳號；要讓同一批人操作 OpenStack，如果再替每個人在 Keystone 建一組密碼，入職要建兩次、離職要刪兩次，漏掉一邊，就會留下一個還能登入的帳號。</p>
+<p><strong>Keystone federation</strong> 讓 Keystone 接受外部身分系統驗證過的結果，不再保存這些人的密碼。驗證交給外部系統之後，Keystone 這邊還要決定一件事：登入的人能使用哪個 project、拿到什麼角色。讀完這章，你能分辨認證、身分映射與專案角色各自負責什麼；CLI 登入失敗時，也知道該先查 Keycloak 還是 Keystone。</p>
+<h2 id="_1">登入時的兩段請求<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>Federation 由外部系統確認「這個人是誰」，Keystone 只接收確認後的結果。這個外部系統稱為 <strong>IdP</strong>（identity provider），本章用 Keycloak；Keystone 是接收身分資料、提供服務的一方。兩邊用 <strong>OIDC</strong>（OpenID Connect）溝通：IdP 驗證帳號後簽發 token，token 裡帶著可以驗證真偽的身分資訊。</p>
+<p>本章走 CLI 的 <code>v3oidcpassword</code> 流程：CLI 先把測試帳號 <code>carol</code> 的密碼送給 Keycloak 換 token，再拿這份 token 向 Keystone 認證。下圖把這兩次請求分開畫：</p>
 <p><img alt="CLI 先向 Keycloak 提交測試帳密取得 token，再向 Keystone 提交 token，由映射與角色取得專案權限" src="../../assets/diagrams/os-s5d33-login.svg" /></p>
-<p>Keystone 不替這個外部使用者保存一份本地密碼，但 CLI 仍會接觸密碼。這種 <strong>password grant</strong> 也叫 Direct Access Grants／ROPC，不適合需要瀏覽器互動或 MFA（多因素驗證）的流程。Keycloak 官方不建議採用；本章限於 CLI password grant，Horizon／Skyline 的瀏覽器 SSO（單一登入，讓使用者登入一次後存取多個服務）不在本章範圍內。UI 上出現登入選項，也不能當成登入成功的證據。</p>
-<p>開始前要有 Day 32 的 HTTPS Keystone 入口與 CA 信任、Day 27 的 domain／project／role 概念。本章缺完整憑證產生參數、Keycloak 管理登入、metadata 檔案內容及資源建立命令，以下包含操作摘要與結果解讀；含 <code>...</code> 的片段不能直接執行。</p>
-<h2 id="1-idp-https">步驟 1：先讓 IdP 的 HTTPS 能被驗證<a class="headerlink" href="#1-idp-https" title="Permanent link">&para;</a></h2>
-<p>Keycloak 的 <code>start-dev</code> 是開發模式。本課最初用以下摘要啟動，沒有配置持久化儲存；密碼欄位必須替換，不能把 <code>...</code> 當成實際密碼：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>keycloak<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">KC_BOOTSTRAP_ADMIN_USERNAME</span><span class="o">=</span>admin<span class="w"> </span>-e<span class="w"> </span><span class="nv">KC_BOOTSTRAP_ADMIN_PASSWORD</span><span class="o">=</span>...<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>quay.io/keycloak/keycloak:26.0<span class="w"> </span>start-dev
+<p>第一段只跟 Keycloak 有關，第二段才進入 Keystone 的映射與角色。CLI 登入失敗時，先判斷卡在哪一段；疑難排解最後一項就是照這個切法查。</p>
+<p>這種由用戶端直接拿帳號密碼換 token 的方式叫 <strong>password grant</strong>，Keycloak 稱為 Direct Grant，OAuth 規格裡叫 ROPC。Keystone 不保存 carol 的密碼，但 CLI 仍然經手密碼，Keycloak 官方不建議採用，見 <a href="https://www.keycloak.org/securing-apps/oidc-layers">Keycloak 的 OIDC 流程說明</a>。本章用它，是因為一條 CLI 指令就能走完兩段請求，方便把注意力放在 Keystone 這一側。讓使用者從 Horizon 或 Skyline 用瀏覽器登入一次、就能使用多個服務的 SSO（單一登入），要另外設定，本章不涵蓋。</p>
+<h2 id="_2">開始之前<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>你需要 Day 32 的 HTTPS Keystone 入口與 CA 信任，以及 Day 27 介紹過的 domain、project 與 role。指令裡的 <code>10.0.0.4</code> 是 Keycloak 所在的實驗主機，<code>10.0.0.250</code> 是 Day 32 的 Keystone API 位址，照自己的環境替換。</p>
+<p>這章練的是看懂 Keystone federation 的設定與結果。Keycloak 的憑證與啟動參數、管理員登入、metadata 檔內容與 CLI 的 OIDC 端點缺完整寫法，所以標成「設定走讀」與「結果判讀」的各節只能看懂設定、判讀結果，可以照打的是替群組授予角色那一步，前提是 Kolla 的 federation 部署已經建好 <code>day33-sso</code> domain；要從頭部署，請搭配章末的 Kolla-Ansible Keystone 指南與 Keycloak 文件。</p>
+<h2 id="keystone-keycloak-https">設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS<a class="headerlink" href="#keystone-keycloak-https" title="Permanent link">&para;</a></h2>
+<p>Keystone 自己不處理 OIDC。它前面的 Apache 載入 <strong><code>mod_auth_openidc</code></strong> 模組，由這個模組跟 IdP 溝通。IdP 用 HTTP 位址接上時，Keystone 啟動會出現 Apache 設定錯誤，錯誤訊息指向 IdP 的 HTTP URL；Keycloak 改走 HTTPS 之後才通過。所以先讓 Keycloak 走 HTTPS，憑證也要讓 Keystone 驗證得過，之後才接 federation 設定。錯誤的完整內容見疑難排解的<a href="#mine-1">第一項</a>。</p>
+<p>Keycloak 以容器執行，用 <code>quay.io/keycloak/keycloak:26.0</code> 映像檔的 <code>start-dev</code> 開發模式。用 Day 32 的測試 CA（<code>KollaTestCA</code>）簽一張 Keycloak 憑證，再讓 Keycloak 在 8443 port 提供 HTTPS：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>省略了 CSR 與私鑰的產生、SAN、有效期限，以及 <code>start-dev</code> 前面的容器啟動與掛載參數，不能直接執行；完整寫法見 <a href="https://www.keycloak.org/server/enabletls">Keycloak 的 TLS 設定</a>。</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 用 Day 32 的 KollaTestCA 簽一張 Keycloak 憑證</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-req<span class="w"> </span>-in<span class="w"> </span>keycloak.csr<span class="w"> </span>-CA<span class="w"> </span>root.crt<span class="w"> </span>-CAkey<span class="w"> </span>root.key<span class="w"> </span>...
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Keycloak 改用 https:8443 對外</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>...<span class="w"> </span>start-dev<span class="w"> </span>--https-certificate-file<span class="o">=</span>...<span class="w"> </span>--https-port<span class="o">=</span><span class="m">8443</span>
 </span></code></pre></div>
-<p>這時 IdP 還使用 HTTP。接入本課的 Apache <code>mod_auth_openidc</code> 設定後，Keystone 出現以下啟動錯誤：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>AH00526: Syntax error on line 43 of wsgi-keystone.conf:
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>&#39;http://10.0.0.4:8080/realms/day33/...&#39; cannot be parsed as a &quot;https&quot; URL
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>(scheme == http)!
+<p>往下設定 federation 之前，先確認 Keycloak 的 HTTPS 能用 CA 驗證通過：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>下面這行是 HTTPS 與 CA 檢查的結果摘要，不是上面 <code>start-dev</code> 的輸出；檢查用的指令沒有保留。</p>
+</div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>✅ Keycloak https + CA 驗證通過
 </span></code></pre></div>
-<p><code>mod_auth_openidc</code> 是在 Keystone 前面處理 OIDC 的 Apache 模組。錯誤指向 IdP 的 HTTP URL，因此應先把 IdP 配成 HTTPS，並讓 Keystone 信任其憑證，再部署 federation；不要先接上這段已知會失敗的設定。</p>
-<p>使用 Day 32 的測試 CA 簽發 Keycloak 憑證，再讓 Keycloak 以 HTTPS 提供服務。下面是簽發憑證與啟動的摘要，省略了 CSR、私鑰、SAN、有效期限與容器掛載等參數，不能直接執行：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># 用 Day 32 的 KollaTestCA 簽一張 Keycloak 憑證</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-req<span class="w"> </span>-in<span class="w"> </span>keycloak.csr<span class="w"> </span>-CA<span class="w"> </span>root.crt<span class="w"> </span>-CAkey<span class="w"> </span>root.key<span class="w"> </span>...
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Keycloak 改用 https:8443 對外</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>...<span class="w"> </span>start-dev<span class="w"> </span>--https-certificate-file<span class="o">=</span>...<span class="w"> </span>--https-port<span class="o">=</span><span class="m">8443</span>
+<p>Keycloak 不一定要跟 Keystone 用同一個 CA。條件是憑證上的名稱符合 IdP URL（這裡是 <code>10.0.0.4</code>），而且 Keystone 與其他要連 Keycloak 的用戶端都信任它的簽發鏈；這裡用 <code>KollaTestCA</code>，是因為 Day 32 已經讓 Keystone 信任它，公司管理的其他 CA 也能滿足這個條件。另外有三樣東西要分清楚：憑證私鑰給 Keycloak 自己提供 HTTPS，CA 憑證讓別人驗證這張伺服器憑證，token 簽章用的公鑰讓 Keystone 驗證 token，三者不能互相替代。</p>
+<h2 id="keycloak-realmclient">設定走讀：在 Keycloak 建 realm、client 與使用者<a class="headerlink" href="#keycloak-realmclient" title="Permanent link">&para;</a></h2>
+<p>Keycloak 的 <strong>realm</strong> 是一個獨立管理使用者與登入設定的範圍；<strong>client</strong> 是向這個 realm 申請認證的應用程式，這裡就是 Keystone。這一節建 <code>day33</code> realm、登記 <code>keystone</code> client，再建測試使用者 <code>carol</code>。指令都透過 Keycloak 容器裡的管理工具 <code>kcadm.sh</code> 執行：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>省略了 <code>kcadm.sh</code> 的管理員登入，以及 client secret 與密碼（<code>...</code>），<code>&lt;carol&gt;</code> 要換成 carol 在 Keycloak 的使用者 ID，不能直接執行；登入與查詢使用者 ID 的寫法見 <a href="https://www.keycloak.org/docs/latest/server_admin/index.html#admin-cli">Keycloak Admin CLI 文件</a>。</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">K</span><span class="o">=</span><span class="s2">&quot;docker exec keycloak /opt/keycloak/bin/kcadm.sh&quot;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>realms<span class="w"> </span>-s<span class="w"> </span><span class="nv">realm</span><span class="o">=</span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">enabled</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>clients<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">clientId</span><span class="o">=</span>keystone<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>-s<span class="w"> </span><span class="s1">&#39;redirectUris=[&quot;https://10.0.0.250:5000/redirect_uri&quot;]&#39;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>-s<span class="w"> </span><span class="nv">secret</span><span class="o">=</span>...<span class="w"> </span>-s<span class="w"> </span><span class="nv">directAccessGrantsEnabled</span><span class="o">=</span><span class="nb">true</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>users<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">username</span><span class="o">=</span>carol<span class="w"> </span>-s<span class="w"> </span><span class="nv">enabled</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span>-s<span class="w"> </span><span class="nv">email</span><span class="o">=</span>carol@example.com<span class="w"> </span>-s<span class="w"> </span><span class="nv">firstName</span><span class="o">=</span>Carol<span class="w"> </span>-s<span class="w"> </span><span class="nv">lastName</span><span class="o">=</span>Sso
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nv">$K</span><span class="w"> </span>set-password<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>--userid<span class="w"> </span>&lt;carol&gt;<span class="w"> </span>--new-password<span class="w"> </span>...
 </span></code></pre></div>
-<p>繼續設定 federation 前，必須確認 Keycloak 的 HTTPS 與 CA 信任檢查通過。下列摘要只涵蓋這項檢查：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>✅ Keycloak https + CA 驗證通過
+<p>client 上有兩個設定跟登入方式有關。<code>redirectUris</code> 是瀏覽器登入流程結束時，Keycloak 允許導回的位址，這裡填 Day 32 的 Keystone HTTPS 端點；本章的 CLI 流程不經過瀏覽器，用不到它。<code>directAccessGrantsEnabled=true</code> 打開 password grant，CLI 的 <code>v3oidcpassword</code> 靠它才能拿帳密換 token。改走瀏覽器 SSO 時，Keycloak 建議的是授權碼流程（authorization code），這個開關就用不到。</p>
+<p>建 carol 時，<code>firstName</code>、<code>lastName</code> 不能省。這個 realm 的 user profile 把它們列為必填，少了它們，carol 的帳號會被當成還沒設定完成，向 Keycloak 換 token 只會拿到 <code>invalid_grant</code>。換成自己的 realm 時，先查 user profile 有哪些必填欄位。</p>
+<p><code>start-dev</code> 把 realm、client 與使用者存在容器內的資料庫，刪掉容器（<code>docker rm</code>）就全部消失，必須重新建立。練習環境這樣就夠；要長期使用，改用正式模式並接外部資料庫，見 <a href="https://www.keycloak.org/server/db">Keycloak 的資料庫設定</a>。</p>
+<h2 id="keystone">設定走讀：把外部身分映射成 Keystone 群組<a class="headerlink" href="#keystone" title="Permanent link">&para;</a></h2>
+<p>這一節練習讀懂 mapping 規則與 Kolla 的 federation 設定。Kolla 設定的完整欄位與三個 metadata 檔的內容，要照章末的 Kolla-Ansible Keystone 指南自己補上。</p>
+<p>IdP 簽發的 token 裡帶著身分屬性，稱為 <strong>claim</strong>，例如使用者名稱與 email。<strong>Mapping</strong> 是 Keystone 把這些屬性轉成本地使用者與群組的規則。本章的規則如下：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">[{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">&quot;user&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{0}&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{1}&quot;</span><span class="p">},</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">&quot;group&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sso-users&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;domain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;day33-sso&quot;</span><span class="p">}}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="p">}],</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">&quot;remote&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OIDC-preferred_username&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OIDC-email&quot;</span><span class="p">}]</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}]</span>
 </span></code></pre></div>
-<p>這不表示 Keycloak 必須與 Keystone 使用同一個 CA。真正的條件是憑證名稱符合 IdP URL，且相關用戶端與 Keystone 信任簽發鏈；受管理的其他 CA 也能滿足這個條件。憑證私鑰、OIDC token 簽章用的公鑰與 CA 憑證用途不同，不要互相替代。</p>
-<h2 id="2-keycloak">步驟 2：在 Keycloak 定義登入來源<a class="headerlink" href="#2-keycloak" title="Permanent link">&para;</a></h2>
-<p>Keycloak 的 <strong>realm</strong> 是一個獨立管理使用者與登入設定的範圍；<strong>client</strong> 是向這個 realm 申請認證的應用。本章建立 <code>day33</code> realm，登記 <code>keystone</code> client，再建立測試使用者 <code>carol</code>。</p>
-<p>以下是配置摘要。執行前必須先用 <code>kcadm.sh</code> 完成管理員認證；本課未留存該步驟。<code>&lt;carol&gt;</code> 要換成 Keycloak 使用者 ID，省略的 secret 與密碼需自行安全提供：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">K</span><span class="o">=</span><span class="s2">&quot;docker exec keycloak /opt/keycloak/bin/kcadm.sh&quot;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>realms<span class="w"> </span>-s<span class="w"> </span><span class="nv">realm</span><span class="o">=</span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">enabled</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>clients<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">clientId</span><span class="o">=</span>keystone<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>-s<span class="w"> </span><span class="s1">&#39;redirectUris=[&quot;https://10.0.0.250:5000/redirect_uri&quot;]&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>-s<span class="w"> </span><span class="nv">secret</span><span class="o">=</span>...<span class="w"> </span>-s<span class="w"> </span><span class="nv">directAccessGrantsEnabled</span><span class="o">=</span><span class="nb">true</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nv">$K</span><span class="w"> </span>create<span class="w"> </span>users<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>-s<span class="w"> </span><span class="nv">username</span><span class="o">=</span>carol<span class="w"> </span>-s<span class="w"> </span><span class="nv">enabled</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>-s<span class="w"> </span><span class="nv">email</span><span class="o">=</span>carol@example.com<span class="w"> </span>-s<span class="w"> </span><span class="nv">firstName</span><span class="o">=</span>Carol<span class="w"> </span>-s<span class="w"> </span><span class="nv">lastName</span><span class="o">=</span>Sso
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nv">$K</span><span class="w"> </span>set-password<span class="w"> </span>-r<span class="w"> </span>day33<span class="w"> </span>--userid<span class="w"> </span>&lt;carol&gt;<span class="w"> </span>--new-password<span class="w"> </span>...
-</span></code></pre></div>
-<p><code>redirectUris</code> 限定瀏覽器流程可回到的位址，本課雖有設定，仍未實測該流程。<code>directAccessGrantsEnabled=true</code> 是讓這次 CLI password grant 能執行的開關，不是所有 federation 都需要。正式整合應依 IdP、CLI 與 UI 支援情況選擇授權碼或其他合適流程，不能假設任一替代流程已在本課接通。</p>
-<p><code>firstName</code>／<code>lastName</code> 是本課 realm user profile 要求的欄位；缺少它們曾造成帳號未完成設定。其他 realm 的必填條件可能不同，要查實際 profile 設定。</p>
-<p>此啟動方式把資料留在容器可寫層，刪除容器會失去 realm 與帳號。本課沒有提供可完整重建的腳本或正式資料庫設定；不要把開發模式當成可持續營運的 IdP。</p>
-<h2 id="3-keystone">步驟 3：把外部身分映射成 Keystone 群組<a class="headerlink" href="#3-keystone" title="Permanent link">&para;</a></h2>
-<p><strong>Mapping</strong> 是把 IdP 傳來的身分屬性轉成 Keystone 使用者與群組的規則。這次使用以下內容：</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">[{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;local&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">&quot;user&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{0}&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;{1}&quot;</span><span class="p">},</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">&quot;group&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sso-users&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;domain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;day33-sso&quot;</span><span class="p">}}</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="p">}],</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">&quot;remote&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OIDC-preferred_username&quot;</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;OIDC-email&quot;</span><span class="p">}]</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">}]</span>
-</span></code></pre></div>
-<p><code>remote</code> 依序取出 username 與 email；<code>{0}</code>、<code>{1}</code> 放回 <code>local.user</code>。<code>local.group</code> 則指定 Keystone 的 <code>day33-sso</code> domain 下的 <code>sso-users</code> 群組。</p>
-<p><strong>Protocol</strong> 是 Keystone 中連結 IdP 與 mapping 的物件，指定該 IdP 的登入要套用哪份映射規則。本章以 <code>openid</code> 連結 <code>keycloak</code> 與 <code>keycloak_mapping</code>。可參考 <a href="https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#create-a-protocol">Keystone 的 Create a Protocol 說明</a>。</p>
-<p><strong>這份規則沒有檢查 Keycloak 的來源群組。</strong> 只要通過這個受信任 IdP／protocol 並符合所需屬性的使用者，都會被映射到同一個本地群組。不能解讀成「只有 Keycloak 的 sso-users 成員能進來」。正式部署若要限制部門或群組，需要另外設計並驗證 claim（IdP 傳來的身分屬性）條件。</p>
+<p><code>remote</code> 依序取出 username 與 email，<code>{0}</code>、<code>{1}</code> 分別放回 <code>local.user</code> 的 name 與 email。<code>local.group</code> 指定 Keystone 裡 <code>day33-sso</code> domain 下的 <code>sso-users</code> 群組，所有符合規則的登入者都會成為這個群組的成員。</p>
+<p>這份規則沒有比對任何群組或部門：只要通過 Keycloak 驗證、token 裡帶得出 username 與 email，就會進 <code>sso-users</code>。要只讓某個部門登入，得讓 Keycloak 把群組資訊放進 token，再在 <code>remote</code> 加上比對 claim 值的條件，規則寫法見 <a href="https://docs.openstack.org/keystone/2025.1/admin/federation/mapping_combinations.html">Keystone 的 mapping 組合說明</a>。</p>
+<p>下圖把 carol 的身分屬性一路畫到專案權限：</p>
 <p><img alt="IdP username/email 經 mapping 進入本地 sso-users 群組，再由 group role assignment 取得 team-sso 的 member；此映射沒有來源群組條件" src="../../assets/diagrams/os-s5d33-mapping.svg" /></p>
-<p>圖上前半段是身分映射，後半段才是授權。接著在 Kolla 指定 IdP 與 mapping。這段是縮寫，尚缺 <code>attribute_mapping</code>、metadata 目錄等完整欄位；要以章末 Kolla 2025.1 文件補齊：</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">keystone_identity_providers</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;keycloak&quot;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">openstack_domain</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;day33-sso&quot;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;openid&quot;</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">identifier</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://10.0.0.4:8443/realms/day33&quot;</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="nt">keystone_identity_mappings</span><span class="p">:</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;keycloak_mapping&quot;</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.../mapping.json&quot;</span>
+<p>前半段的 mapping 只決定 carol 屬於 <code>sso-users</code>；後半段的群組角色指派才決定她能在 <code>team-sso</code> 做事，這是下一個步驟要建的部分。</p>
+<p><strong>Protocol</strong> 是 Keystone 中連結 IdP 與 mapping 的物件，指定從這個 IdP 來的登入要套用哪份映射規則。本章以 <code>openid</code> 連結 <code>keycloak</code> 與 <code>keycloak_mapping</code>，見 <a href="https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#create-a-protocol">Keystone 的 Create a Protocol 說明</a>。在 Kolla 裡，IdP、protocol 與 mapping 都寫進 <code>globals.yml</code>：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>省略了 <code>attribute_mapping</code>、metadata 目錄等欄位（<code>...</code>），mapping 檔路徑也只留檔名，不能直接使用；完整欄位見 <a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html">Kolla-Ansible 2025.1 Keystone 指南</a>。</p>
+</div>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">keystone_identity_providers</span><span class="p">:</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;keycloak&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">openstack_domain</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;day33-sso&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">protocol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;openid&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">identifier</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://10.0.0.4:8443/realms/day33&quot;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nt">keystone_identity_mappings</span><span class="p">:</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;keycloak_mapping&quot;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.../mapping.json&quot;</span>
 </span></code></pre></div>
-<p><strong>Metadata</strong> 描述 IdP 的 issuer、認證端點與金鑰位置；<strong>issuer</strong> 是簽發 token 的 IdP 識別值。Kolla 的 metadata 目錄使用 <code>.provider</code>、<code>.client</code> 與 <code>.conf</code> JSON 檔；檔名依 issuer 編碼，示例如下：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>issuer: https://10.0.0.4:8443/realms/day33
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>檔名  : 10.0.0.4%3A8443%2Frealms%2Fday33.provider (+ .client + .conf)
+<p><code>identifier</code> 要填 IdP 的 <strong>issuer</strong>，也就是簽發 token 的 IdP 識別值。<code>mod_auth_openidc</code> 還需要 IdP 的 <strong>metadata</strong>，內容是 issuer、認證端點與金鑰位置。Kolla 的 metadata 目錄放 <code>.provider</code>、<code>.client</code> 與 <code>.conf</code> 三個 JSON 檔，檔名依 issuer 編碼：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>issuer: https://10.0.0.4:8443/realms/day33
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>檔名  : 10.0.0.4%3A8443%2Frealms%2Fday33.provider (+ .client + .conf)
 </span></code></pre></div>
-<p><code>.provider</code> 描述 IdP，<code>.client</code> 放 client ID／secret，<code>.conf</code> 放額外選項。CLI 所用端點還可能需要 <code>keystone_federation_oidc_jwks_uri</code>；JWKS 是驗證 token 簽章用的公鑰集合，不能用 TLS CA 檔代替。本課未附完整 JSON，這裡不能直接完成部署。</p>
-<p>配置與部署完成後，以下是本課物件查詢摘要。它們說明 IdP、mapping 與 protocol 已建立，不代表所有登入方式都通：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>openstack identity provider list  →  keycloak  True  Login with Keycloak
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>openstack mapping list            →  keycloak_mapping
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openstack federation protocol list →  openid  keycloak_mapping
+<p><code>.provider</code> 描述 IdP，<code>.client</code> 放 client ID 與 secret，<code>.conf</code> 放額外選項。CLI 用的端點可能還需要設定 <code>keystone_federation_oidc_jwks_uri</code>；JWKS 是 IdP 公開、用來驗證 token 簽章的公鑰集合，不能拿 TLS 的 CA 檔代替。</p>
+<p>依 Kolla 的 federation 部署任務，<code>openstack_domain</code> 指定的 <code>day33-sso</code> domain 也會在部署時建立（欄位說明見 <a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html">Kolla-Ansible 2025.1 Keystone 指南</a>）。用 <code>openstack identity provider list</code>、<code>openstack mapping list</code> 與 <code>openstack federation protocol list</code> 確認三個物件，下面每一行是一條查詢的摘要，箭頭右邊是列出的重點欄位：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>openstack identity provider list  →  keycloak  True  Login with Keycloak
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>openstack mapping list            →  keycloak_mapping
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>openstack federation protocol list →  openid  keycloak_mapping
 </span></code></pre></div>
-<h2 id="4-project-role">步驟 4：替群組授予 project role<a class="headerlink" href="#4-project-role" title="Permanent link">&para;</a></h2>
-<p>映射到群組後，使用者仍需專案角色才能操作資源。以管理員身分建立本地群組、project 並授予 <code>member</code>：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack<span class="w"> </span>group<span class="w"> </span>create<span class="w"> </span>sso-users<span class="w"> </span>--domain<span class="w"> </span>day33-sso
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>openstack<span class="w"> </span>project<span class="w"> </span>create<span class="w"> </span>team-sso<span class="w"> </span>--domain<span class="w"> </span>day33-sso
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--group<span class="w"> </span>sso-users<span class="w"> </span>--project<span class="w"> </span>team-sso<span class="w"> </span>member
+<p>看兩個地方。IdP 那一行的 <code>True</code> 表示 <code>keycloak</code> 已啟用；protocol 那一行把 <code>openid</code> 接到 <code>keycloak_mapping</code>，從 Keycloak 來的登入就會套用上面的 mapping。三個物件都在，下一步才有東西可以授權；登入仍可能因 metadata 等設定失敗，見<a href="#mine-4">疑難排解</a>。</p>
+<h2 id="sso-users-team-sso">步驟：替 sso-users 授予 team-sso 的角色<a class="headerlink" href="#sso-users-team-sso" title="Permanent link">&para;</a></h2>
+<p>映射到群組之後，使用者還需要專案角色才能操作資源。以管理員身分在 <code>day33-sso</code> domain 建立 <code>sso-users</code> 群組與 <code>team-sso</code> project，再把 <code>member</code> 角色授予這個群組：</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>openstack<span class="w"> </span>group<span class="w"> </span>create<span class="w"> </span>sso-users<span class="w"> </span>--domain<span class="w"> </span>day33-sso
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>openstack<span class="w"> </span>project<span class="w"> </span>create<span class="w"> </span>team-sso<span class="w"> </span>--domain<span class="w"> </span>day33-sso
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>openstack<span class="w"> </span>role<span class="w"> </span>add<span class="w"> </span>--group<span class="w"> </span>sso-users<span class="w"> </span>--project<span class="w"> </span>team-sso<span class="w"> </span>member
 </span></code></pre></div>
-<p>若環境有同名群組或 project，應以 ID 或明確 domain 消除歧義。這裡授予的是 <code>team-sso</code> 的 member，沒有授予整朵雲的 admin。之後登入者能做什麼，還要由各服務的 policy 與額度決定。</p>
-<h2 id="5-scoped-token-vm">步驟 5：解讀 scoped token 與 VM 結果<a class="headerlink" href="#5-scoped-token-vm" title="Permanent link">&para;</a></h2>
-<p><strong>Scoped token</strong> 是帶有特定 project 等授權範圍的 token。以下是本課 CLI 認證摘要，<code>&lt;CA&gt;</code> 是執行 CLI 那台電腦上的 CA 檔；secret／密碼都已省略。實際重做還要依 keystoneauth 的 OIDC 設定提供 discovery 或 access-token endpoint，本課片段未列出它的來源：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>openstack<span class="w"> </span>--os-auth-type<span class="w"> </span>v3oidcpassword<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span>--os-auth-url<span class="w"> </span>https://10.0.0.250:5000/v3<span class="w"> </span>--os-cacert<span class="w"> </span>&lt;CA&gt;<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span>--os-identity-provider<span class="w"> </span>keycloak<span class="w"> </span>--os-protocol<span class="w"> </span>openid<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span>--os-client-id<span class="w"> </span>keystone<span class="w"> </span>--os-client-secret<span class="w"> </span>...<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span>--os-username<span class="w"> </span>carol<span class="w"> </span>--os-password<span class="w"> </span>...<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span>--os-project-name<span class="w"> </span>team-sso<span class="w"> </span>--os-project-domain-name<span class="w"> </span>day33-sso<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span>token<span class="w"> </span>issue
+<p>環境裡如果已有同名的群組或 project，改用 ID 或明確指定 domain，避免授權到別的對象。這裡只給了 <code>team-sso</code> 的 member，沒有任何系統層級的 admin 權限；登入者實際能做什麼，還受各服務的 policy 與 Day 27 的額度限制。</p>
+<h2 id="carol-token-vm">結果判讀：carol 的 token 與她建出的 VM<a class="headerlink" href="#carol-token-vm" title="Permanent link">&para;</a></h2>
+<p>這一節的認證指令缺參數，用途是判讀登入結果：哪個結果代表外部認證成功，哪個代表拿到了專案權限。</p>
+<p><strong>Scoped token</strong> 是帶有特定 project 授權範圍的 token。下面指令最後的 <code>--os-project-name</code> 與 <code>--os-project-domain-name</code> 就是在要求這個範圍：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>省略了 client secret 與密碼（<code>...</code>），也沒有列出 keystoneauth OIDC 外掛需要的 discovery endpoint 或 access-token endpoint，不能直接執行；完整參數見 <a href="https://docs.openstack.org/keystoneauth/2025.1/authentication-plugins.html">keystoneauth 的認證外掛</a>。<code>&lt;CA&gt;</code> 是執行 CLI 那台電腦上的 CA 檔。</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>openstack<span class="w"> </span>--os-auth-type<span class="w"> </span>v3oidcpassword<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span>--os-auth-url<span class="w"> </span>https://10.0.0.250:5000/v3<span class="w"> </span>--os-cacert<span class="w"> </span>&lt;CA&gt;<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span>--os-identity-provider<span class="w"> </span>keycloak<span class="w"> </span>--os-protocol<span class="w"> </span>openid<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span>--os-client-id<span class="w"> </span>keystone<span class="w"> </span>--os-client-secret<span class="w"> </span>...<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span>--os-username<span class="w"> </span>carol<span class="w"> </span>--os-password<span class="w"> </span>...<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span>--os-project-name<span class="w"> </span>team-sso<span class="w"> </span>--os-project-domain-name<span class="w"> </span>day33-sso<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span>token<span class="w"> </span>issue
 </span></code></pre></div>
-<p>取得 token 後，Keystone 可列出這個外部帳號對應的 <strong>shadow user</strong>（影子使用者），用來識別外部身分，而不保存它的 IdP 密碼：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>openstack user list --domain day33-sso  →  carol
+<p>拿到 scoped token 之後，可以在 <code>day33-sso</code> domain 列出這個使用者：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>openstack user list --domain day33-sso  →  carol
 </span></code></pre></div>
-<p>所以「外部帳號不需要先手動建立本地密碼」不等於「Keystone 永遠沒有這個使用者的紀錄」。最後的操作摘要顯示，這個身分曾建出 VM：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>carol 建網路 sso-net → 開 sso-vm → ACTIVE
+<p>列出的這筆是 carol 的 <strong>shadow user</strong>（影子使用者），Keystone 用它識別這個外部身分，裡面沒有她的 IdP 密碼。carol 不必事先在 Keystone 建帳號，但登入過之後，可以在 Keystone 列出她的使用者紀錄。</p>
+<p>carol 接著用這個身分建網路 <code>sso-net</code>、開 <code>sso-vm</code>，VM 最後進入 ACTIVE：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>建網路與開 VM 的指令沒有保留，只剩結果；指令寫法見 <a href="../sprint3-day2-openstack-resource-flow/">Day 2</a>。</p>
+</div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>carol 建網路 sso-net → 開 sso-vm → ACTIVE
 </span></code></pre></div>
-<p>此摘要沒有完整建網路與 VM 的命令，也沒有證明瀏覽器 SSO、MFA、離職停權或既有 token 撤銷已完成。IdP 停用帳號之後，既有 Keystone token 與應用憑證的生命週期仍須另外管理，不能承諾立即切斷所有存取。</p>
-<h2 id="_2">疑難排解<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>VM 能開起來，表示整條路都接上了：Keycloak 驗證 carol，mapping 把她放進 <code>sso-users</code>，群組的 member 角色讓她能在 <code>team-sso</code> 建資源。</p>
+<p>IdP 停用帳號之後，既有 Keystone token 與應用憑證的生命週期仍須另外管理，不能承諾立即切斷所有存取。</p>
+<h2 id="_3">疑難排解<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h3 id="mine-1">Keystone 啟動失敗：cannot be parsed as a "https" URL<a class="headerlink" href="#mine-1" title="Permanent link">&para;</a></h3>
+<p>Keycloak 先用 HTTP 的開發模式啟動：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>省略了管理員密碼（<code>...</code>），不能直接執行；容器啟動參數見 <a href="https://www.keycloak.org/server/containers">Keycloak 的容器部署說明</a>。</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--name<span class="w"> </span>keycloak<span class="w"> </span>--network<span class="w"> </span>host<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">KC_BOOTSTRAP_ADMIN_USERNAME</span><span class="o">=</span>admin<span class="w"> </span>-e<span class="w"> </span><span class="nv">KC_BOOTSTRAP_ADMIN_PASSWORD</span><span class="o">=</span>...<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span>quay.io/keycloak/keycloak:26.0<span class="w"> </span>start-dev
+</span></code></pre></div>
+<p>再把這個 HTTP 位址接進 Keystone 的 federation 設定並部署，Keystone 的 Apache 設定會出現以下錯誤：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>AH00526: Syntax error on line 43 of wsgi-keystone.conf:
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>&#39;http://10.0.0.4:8080/realms/day33/...&#39; cannot be parsed as a &quot;https&quot; URL
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>(scheme == http)!
+</span></code></pre></div>
+<p>錯誤訊息指出 IdP 的 HTTP URL 不能當成 https URL 解析，而且是 Apache 設定語法錯誤：出現這個錯誤時，keystone 容器退出（<code>Exited(1)</code>），API 回 503，不只 federation 失效。照「設定走讀：讓 Keystone 能驗證 Keycloak 的 HTTPS」一節讓 Keycloak 改走 HTTPS，再把 <code>globals.yml</code> 的 <code>identifier</code> 與 <code>jwks_uri</code> 都改成那一節的 https 位址（8443 port），例如 <code>identifier</code> 改成 <code>https://10.0.0.4:8443/realms/day33</code>。</p>
 <h3 id="mine-4">OIDC 模組找不到 metadata 檔案<a class="headerlink" href="#mine-4" title="Permanent link">&para;</a></h3>
-<p>核對 issuer、metadata 目錄與檔名的 URL 編碼，以及三個 JSON 檔的用途。步驟 3 保留本課檔名範例，實際內容須依自己的 IdP 填寫。</p>
+<p>核對 issuer、metadata 目錄與檔名的 URL 編碼，以及三個 JSON 檔的用途。映射那一節有檔名的編碼範例，三個檔案的內容依自己的 IdP 填寫。</p>
 <h3 id="mine-5">CLI 回 HTTP 400，無法判斷哪段認證失敗<a class="headerlink" href="#mine-5" title="Permanent link">&para;</a></h3>
-<p>先分清楚 CLI 向 Keycloak 取得 token，或帶著 token 向 Keystone 的 federation auth 端點認證，哪一段失敗。後者回傳的是 <strong>unscoped token</strong>，尚未帶有專案授權範圍；之後仍須取得指定 project 的 scoped token。以下摘要沒有包含可直接執行的 HTTP 請求：</p>
+<p>先分清楚失敗的是哪一段：CLI 向 Keycloak 換 token，或帶著 token 向 Keystone 的 federation auth 端點認證。後者成功時回傳 <strong>unscoped token</strong>，還沒有帶專案授權範圍，之後才換成指定 project 的 scoped token。兩段分開送請求，結果像這樣：</p>
+<div class="admonition note">
+<p class="admonition-title">只保留關鍵片段</p>
+<p>兩段請求的指令沒有保留，只剩結果；Keycloak 換 token 的端點見 <a href="https://www.keycloak.org/securing-apps/oidc-layers">Keycloak 的 OIDC 流程說明</a>，Keystone 的 federation auth 端點見 <a href="https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#configure-protected-endpoints">Keystone 的端點說明</a>。</p>
+</div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>段 1(Keycloak):換 token → 起初 invalid_grant,補完 profile 後拿到
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>段 2(Keystone):帶 token 打 federation auth → HTTP 201
 </span></code></pre></div>
-<p>第一段失敗要查 IdP 的 client、profile 與授權流程；第二段失敗再查信任、mapping 與 protocol。依 <a href="https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html#configure-protected-endpoints">Keystone 的端點說明</a>，federation auth 用來取得 unscoped token，因此這裡的 HTTP 201 只能判定外部認證成功，不能當成取得 <code>team-sso</code> 專案授權的判準。若後續無法取得專案 token，再檢查群組的 project role 與要求的 project 範圍。檢查時不要把密碼、client secret 或有效 token 放進公開 log。</p>
-<h2 id="_3">想一想<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p>段 1 的 <code>invalid_grant</code> 就是 carol 少了 <code>firstName</code>、<code>lastName</code> 的情況，補完 user profile 才拿到 token。第一段失敗，查 Keycloak 的 client、user profile 與授權流程；第二段失敗，再查憑證信任、mapping 與 protocol。</p>
+<p>段 2 的 HTTP 201 拿到的是 unscoped token，表示 Keystone 接受了這個外部身分。要確認 carol 能用 <code>team-sso</code>，看的是帶 <code>--os-project-name team-sso</code> 的那次認證有沒有拿到 scoped token；拿不到時，查群組的 project role 與要求的 project 範圍。檢查時不要把密碼、client secret 或有效 token 放進公開 log。</p>
+<h2 id="_4">想一想<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Carol 能取得外部 token，卻無法選 <code>team-sso</code>。哪一段設定決定 project 權限？</li>
-<li>這份 mapping 是否能限制只有 Keycloak 某個部門群組登入？從哪個欄位能看出答案？</li>
-<li>CLI password grant 成功，為什麼還不能宣告瀏覽器 SSO 與 MFA 都已完成？</li>
+<li>這份 mapping 能不能限制只有 Keycloak 某個部門的人登入？從哪個欄位看得出來？</li>
+<li>CLI 的 password grant 走通之後，同事說「那 Horizon 用瀏覽器登入應該也沒問題」。這兩條登入路徑差在哪？client 上哪個設定只有瀏覽器流程會用到？</li>
 </ul>
-<h2 id="_4">小結<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<p>IdP 驗證帳號，mapping 把身分屬性對應到本地群組，project role 才給出可操作的範圍。判讀 CLI 結果時，要分開確認外部認證與專案授權；federation auth 回 HTTP 201，仍不足以判定能操作 <code>team-sso</code>。瀏覽器 SSO、MFA、持久化與停權流程不在本章驗證範圍內。查錯時先找出失敗段落，再檢查該段的端點、信任與授權條件。</p>
-<h2 id="_5">延伸閱讀<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h2 id="_5">小結<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>IdP 驗證帳號，mapping 把身分屬性對應到本地群組，群組的 project role 才給出可操作的範圍。CLI 換 token 就失敗，查 Keycloak 的 client 與 user profile；federation auth 回 201、卻拿不到 <code>team-sso</code> 的 scoped token，查的是 <code>sso-users</code> 在 <code>team-sso</code> 的角色，不是 Keycloak。</p>
+<h2 id="_6">延伸閱讀<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <p>想再深入，可以從這幾份開始：</p>
 <ul>
 <li><a href="https://docs.openstack.org/keystone/2025.1/admin/federation/configure_federation.html">Keystone 2025.1 Federation 設定</a>：IdP、protocol、mapping 與群組授權。</li>
 <li><a href="https://docs.openstack.org/kolla-ansible/2025.1/reference/shared-services/keystone-guide.html">Kolla-Ansible 2025.1 Keystone 指南</a>：完整 globals 與 metadata 欄位。</li>
-<li><a href="https://www.keycloak.org/securing-apps/oidc-layers">Keycloak 的 OIDC 流程</a>：授權碼、Direct Access Grants 與各流程的限制。</li>
+<li><a href="https://www.keycloak.org/securing-apps/oidc-layers">Keycloak 的 OIDC 流程</a>：授權碼、Direct Grant 與各流程的限制。</li>
 <li><a href="https://docs.openstack.org/keystoneauth/2025.1/authentication-plugins.html">keystoneauth 的認證外掛</a>：OIDC 用戶端的設定與認證方式。</li>
 </ul>
-<h2 id="_6">下一步<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
-<p><a href="../sprint5-day34-cadf-audit/">Day 34</a> 只針對 Nova API 加入 CADF 稽核，練習從事件找出請求者、資源與操作；不假設本章所有登入活動都已被收錄。</p>
+<h2 id="_7">下一步<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<p><a href="../sprint5-day34-cadf-audit/">Day 34</a> 替 Nova API 加上 CADF 稽核，練習從稽核事件找出請求者、資源與操作。</p>
 
 
 
